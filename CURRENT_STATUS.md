@@ -16,6 +16,8 @@ The technical foundation is complete and the repository is safely stored on GitH
 
 No production automation or business logic has been implemented yet.
 
+The MVP and technical architecture are specified/planned only; they have not been implemented.
+
 ---
 
 # Completed
@@ -37,7 +39,7 @@ No production automation or business logic has been implemented yet.
 
 Current commit:
 
-`d15a81e docs: establish SimilarStoic roadmap and current status`
+`e343d93 docs: define SimilarStoic content operating model`
 
 Branch:
 
@@ -252,6 +254,59 @@ Maintain a knowledge map of covered subjects and outstanding knowledge gaps so t
 
 ---
 
+# Architecture Milestone
+
+## Knowledge + Content Intelligence
+
+Atlas is specified as a structured knowledge + content intelligence system, not merely a content archive:
+
+> Topics → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Topics/Angles
+
+Claims retain appropriate provenance, verification/freshness information, applicability context and risk metadata. Previously researched knowledge may be reused after appropriate freshness validation.
+
+Community/forum/social sources remain audience/topic signals and are distinct from authoritative factual evidence. The knowledge system will eventually support portfolio-gap analysis and identify coverage that needs development or updating.
+
+## MVP Scope & User Interface
+
+The planned MVP focuses on:
+
+> Discover → Human Topic Selection/Steering → Research → Angle → Script → Automated QA → Human Review → Approval
+
+Its success criterion is a trustworthy, production-ready SimilarStoic content package with minimal manual management.
+
+Automated video production, automated publishing and advanced analytics are later phases.
+
+The planned core screens are:
+
+- **Command Centre** — strongest opportunities, attention-needed content, Atlas activity, important knowledge/source changes, lightweight performance and Atlas Chat access.
+- **Discover / Opportunities** — 5–10 opportunities with relevance, why-now context, viewer benefit, suggested angle, evidence quality, risk, portfolio relevance and visual potential.
+- **Content Workspace** — lifecycle, research, claims, sources, angle, script, visual plan, QA state and approval controls.
+- **Atlas Chat** — natural-language questions, steering and eventually actions.
+
+The interface prioritises decisions and exceptions over unnecessary technical complexity.
+
+## Modular, Configurable Architecture
+
+The architecture follows a “change without rebuild” principle: data, capabilities, workflows, configuration and interface remain loosely coupled.
+
+Workflow stages should be independently addable, removable, reorderable and configurable where practical. The fixed MVP workflow must not become a permanent hard-coded constraint.
+
+Short-form, long-form, newsletters and company deep dives should be able to reuse the same underlying knowledge/content system.
+
+V1 business rules should be configurable without code where practical, including audience, geography, pillars, topic preferences/scoring, duration, editorial direction, source/freshness/risk requirements, approval rules, US-comparison rules, personal-perspective/CTA rules, visual rules, cadence, cost limits and automation level per stage.
+
+Protected safety, security and integrity constraints are not ordinary configuration. Configuration must be versioned and auditable so historical content retains its production context.
+
+## Cost Tracking & Development Stack
+
+Cost tracking is a first-class requirement. The planned system links AI/API operations to content pieces where possible and eventually tracks usage, model/provider, research/writing/QA/narration/visual/rendering costs, total cost per item, spend over time, unit economics and revenue versus production cost.
+
+Configurable monthly and per-content budget targets and alerts are required.
+
+GPT + Codex are the current primary AI/development stack. Claude or another coding agent is not a dependency or requirement. This is a tooling choice, not an architectural lock-in; provider abstraction remains possible where practical.
+
+---
+
 # Current Phase 1 Work
 
 Completed:
@@ -274,6 +329,11 @@ Completed:
 - Mascot identity, animation and visual-production principles
 - Distribution, analytics and learning model
 - Initial human approval rule
+- Knowledge + content intelligence model
+- Hybrid dashboard + conversational control model
+- MVP editorial-intelligence scope and core screens
+- Modular, configuration-first architecture principles
+- Cost-tracking requirements and current development-stack choice
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -292,9 +352,9 @@ Next:
 
 After Phase 1 is fully defined:
 
-1. Define technical architecture
-2. Prepare the Claude handoff package
-3. Begin engineering the approved operating model
+1. Complete the detailed technical architecture and acceptance review
+2. Prepare the GPT + Codex implementation handoff package
+3. Begin engineering the approved MVP workflow
 
 ---
 

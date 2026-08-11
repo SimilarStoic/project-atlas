@@ -524,6 +524,94 @@ Maintain a knowledge map showing what SimilarStoic has covered and where knowled
 
 ---
 
+# Architecture Principles and MVP Scope
+
+## Knowledge and content intelligence
+
+Project Atlas is specified as a structured knowledge and content-intelligence system, not merely a content archive.
+
+It should connect:
+
+> Topics → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Topics/Angles
+
+Claims should retain appropriate provenance, verification and freshness information, applicability context and risk metadata.
+
+Previously researched knowledge should be reusable after appropriate freshness validation rather than requiring redundant research. Community, forum and social sources remain audience/topic signals and must be kept distinct from authoritative factual evidence.
+
+The knowledge system should eventually support portfolio-gap analysis, including areas of SimilarStoic's coverage that require development or updating.
+
+## Hybrid user interface
+
+Atlas is specified as a hybrid dashboard and conversational-control model.
+
+- The dashboard provides visibility, approvals, workflow status, important changes and useful performance information.
+- Conversational Atlas provides natural-language steering, investigation and eventually actions.
+- The interface prioritises decisions and exceptions, rather than unnecessary technical complexity.
+
+The initial MVP screens are:
+
+1. **Command Centre** — strongest opportunities, content requiring attention, Atlas activity, important knowledge/source changes, lightweight performance summary and access to Atlas Chat.
+2. **Discover / Opportunities** — 5–10 opportunities with relevance, why-now context, viewer benefit, suggested angle, evidence quality, risk, portfolio relevance and visual potential.
+3. **Content Workspace** — an item's lifecycle, research, claims, sources, angle, script, visual plan, QA state and approval controls.
+4. **Atlas Chat** — natural-language questions, steering and eventually actions.
+
+## MVP
+
+The MVP is limited to the editorial-intelligence workflow:
+
+> Discover → Human Topic Selection/Steering → Research → Angle → Script → Automated QA → Human Review → Approval
+
+Its success criterion is a trustworthy, production-ready SimilarStoic content package with minimal manual management.
+
+Automated video production, automated publishing and advanced analytics are later phases, not MVP functionality.
+
+## Modular and configuration-first architecture
+
+The architecture follows a **change without rebuild** principle. Data, capabilities, workflows, configuration and interface should remain loosely coupled.
+
+Workflow stages should be independently addable, removable, reorderable and configurable where practical. The fixed MVP workflow must not become a permanent hard-coded constraint.
+
+New content formats should reuse the same underlying knowledge/content system and eventually support workflows such as short-form, long-form, newsletters and company deep dives.
+
+Where practical, V1 must externalise the following business rules from core application logic:
+
+- Audience, geographic priorities, content pillars and topic preferences
+- Topic scoring criteria and target content duration
+- Tone and editorial direction
+- Source hierarchy, freshness requirements and risk levels
+- Research/corroboration and approval requirements
+- US-comparison, “here's what I'd do” and CTA rules
+- Visual/content rules and publishing-cadence targets
+- Budget/cost limits and automation level per stage
+
+Deeper workflow and capability configuration should be architecture-ready but does not require a full editor in V1.
+
+Protected safety, security and integrity constraints must not be disableable through ordinary configuration. Configuration must be versioned and auditable so historical content retains its production context.
+
+## Cost tracking
+
+Cost tracking is a first-class architectural requirement.
+
+Track AI/API operations and associate costs with individual content pieces where possible. The eventual cost model includes:
+
+- Input/output usage, model/provider and API cost
+- Research, writing, QA, narration, visual-generation and rendering costs
+- Total cost per content piece
+- Daily, weekly and monthly spend
+- Average cost per video
+- Cost per 1,000 views and per follower/subscriber
+- Revenue versus production cost where available
+
+The system should support configurable monthly and per-content budget targets and alerts.
+
+## Development stack
+
+GPT and Codex are the current primary AI/development stack. Claude or another coding agent is not a dependency or requirement.
+
+This is a current tooling choice, not an architectural lock-in. Provider abstraction should remain possible where practical.
+
+---
+
 # Monetisation
 
 SimilarStoic is intended to eventually use a diversified revenue model:
@@ -608,7 +696,9 @@ Implement:
 
 ## Phase 3 — Technical Architecture
 
-Define:
+Status: SPECIFIED, NOT YET IMPLEMENTED
+
+Define in detail:
 - Application architecture
 - Database
 - AI model architecture
@@ -623,6 +713,13 @@ Define:
 - Security
 - Cost controls
 - Deployment
+
+The initial architecture specification includes:
+- Hybrid dashboard and conversational-control interface
+- Modular, configuration-first workflow design
+- Knowledge/content-intelligence provenance model
+- Cost tracking and budget controls
+- GPT + Codex as the current development stack, with provider abstraction where practical
 
 ## Phase 4 — Research Engine
 
