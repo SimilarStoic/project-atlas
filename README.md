@@ -55,6 +55,15 @@ docker compose build
 
 The compose definition is intentionally a scaffold until Atlas gains a runnable service.
 
+## Run the MVP UI shell
+
+Start the local, dependency-free demo interface:
+
+    uv run python -m project_atlas
+
+Then open http://127.0.0.1:8000 in a browser. The MVP uses local demo data only;
+it does not call AI services, research sources, publishing platforms, or analytics services.
+
 ## Status
 
 Foundation only. No business logic, domain models, or externally exposed application behavior has been implemented.

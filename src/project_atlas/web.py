@@ -1,0 +1,89 @@
+"""Dependency-free local server for the Project Atlas MVP UI shell."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import mimetypes
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlparse
+
+from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload, opportunity_payload
+
+STATIC_DIRECTORY = Path(__file__).parent / "static"
+
+
+class AtlasRequestHandler(BaseHTTPRequestHandler):
+    """Serve local demo data and the static browser UI."""
+
+    server_version = "ProjectAtlasMVP/0.1"
+
+    def do_GET(self) -> None:  # noqa: N802
+        """Handle only local static assets and demo API responses."""
+
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/demo/opportunities":
+            self._send_json({"kind": "demo", "opportunities": opportunity_payload()})
+            return
+        if parsed.path == "/api/demo/content":
+            self._send_json({"kind": "demo", "content": content_payload(), "activity": ACTIVITY})
+            return
+        if parsed.path == "/api/demo/chat":
+            message = parse_qs(parsed.query).get("message", [""])[0]
+            self._send_json({"kind": "demo", "reply": chat_reply(message)})
+            return
+
+        requested = "index.html" if parsed.path in {"", "/"} else parsed.path.lstrip("/")
+        asset = STATIC_DIRECTORY / requested
+        if not asset.is_file() or STATIC_DIRECTORY not in asset.resolve().parents:
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+            return
+
+        content_type, _ = mimetypes.guess_type(asset.name)
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", content_type or "application/octet-stream")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(asset.read_bytes())
+
+    def _send_json(self, payload: object) -> None:
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format: str, *args: object) -> None:
+        """Keep local demo-server logs concise."""
+
+        print(f"[Atlas] {format % args}")
+
+
+def create_server(host: str = "127.0.0.1", port: int = 8000) -> ThreadingHTTPServer:
+    """Create the MVP server without starting it, for testability."""
+
+    return ThreadingHTTPServer((host, port), AtlasRequestHandler)
+
+
+def main() -> None:
+    """Start the local MVP UI shell."""
+
+    parser = argparse.ArgumentParser(description="Run the Project Atlas MVP UI shell.")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1).")
+    parser.add_argument("--port", default=8000, type=int, help="Port to bind (default: 8000).")
+    args = parser.parse_args()
+    server = create_server(args.host, args.port)
+    print(f"Project Atlas MVP is running at http://{args.host}:{args.port}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nProject Atlas MVP stopped.")
+    finally:
+        server.server_close()
+
+
+if __name__ == "__main__":
+    main()
