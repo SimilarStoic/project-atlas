@@ -1,5 +1,7 @@
 """Tests for the local MVP UI shell."""
 
+from pathlib import Path
+
 from project_atlas.demo_data import chat_reply, content_payload, opportunity_payload
 from project_atlas.web import create_server
 
@@ -17,10 +19,10 @@ def test_demo_chat_is_local_and_deterministic() -> None:
     assert "ISA" in chat_reply("What should we make tomorrow?")
 
 
-def test_server_can_be_created_for_local_use() -> None:
+def test_server_can_be_created_for_local_use(tmp_path: Path) -> None:
     """The server binds an ephemeral local port for testability."""
 
-    server = create_server(port=0)
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
         assert server.server_address[1] > 0
     finally:

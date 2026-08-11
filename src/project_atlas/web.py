@@ -6,11 +6,12 @@ import argparse
 import json
 import mimetypes
 from http import HTTPStatus
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload, opportunity_payload
+from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload
+from project_atlas.persistence import AtlasRepository
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
 
@@ -25,7 +26,9 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
 
         parsed = urlparse(self.path)
         if parsed.path == "/api/demo/opportunities":
-            self._send_json({"kind": "demo", "opportunities": opportunity_payload()})
+            self._send_json(
+                {"kind": "demo", "opportunities": self.server.repository.discover_payload()}
+            )
             return
         if parsed.path == "/api/demo/content":
             self._send_json({"kind": "demo", "content": content_payload(), "activity": ACTIVITY})
@@ -62,10 +65,24 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         print(f"[Atlas] {format % args}")
 
 
-def create_server(host: str = "127.0.0.1", port: int = 8000) -> ThreadingHTTPServer:
+class AtlasHTTPServer(HTTPServer):
+    """HTTP server that owns the local Atlas application repository."""
+
+    def __init__(self, address: tuple[str, int], repository: AtlasRepository) -> None:
+        super().__init__(address, AtlasRequestHandler)
+        self.repository = repository
+
+    def server_close(self) -> None:
+        super().server_close()
+        self.repository.close()
+
+
+def create_server(
+    host: str = "127.0.0.1", port: int = 8000, database_path: Path | None = None
+) -> AtlasHTTPServer:
     """Create the MVP server without starting it, for testability."""
 
-    return ThreadingHTTPServer((host, port), AtlasRequestHandler)
+    return AtlasHTTPServer((host, port), AtlasRepository(database_path))
 
 
 def main() -> None:

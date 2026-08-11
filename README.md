@@ -64,6 +64,24 @@ Start the local, dependency-free demo interface:
 Then open http://127.0.0.1:8000 in a browser. The MVP uses local demo data only;
 it does not call AI services, research sources, publishing platforms, or analytics services.
 
+## Local persistence
+
+Atlas now stores its first persistent application data in SQLite at
+`data/atlas.db` by default. Set `ATLAS_DB_PATH` to use a different local database:
+
+    $env:ATLAS_DB_PATH = 'C:\path\to\atlas.db'
+    uv run python -m project_atlas
+
+On startup, Atlas applies recorded SQLite schema migrations and then idempotently
+seeds the six existing Discover opportunities. Existing local changes are never
+overwritten by later startup seeding.
+
+This milestone persists only reusable **Subjects**, individual editorial
+**Opportunities**, and their many-to-many relationships. The current Discover
+`pillar` field remains display-only compatibility metadata; it is not a persisted
+Pillar model. Pillars, Research Packs, Claims, Sources, Content Packages, workflow
+configuration, and later domains are intentionally deferred.
+
 ## Status
 
 Foundation only. No business logic, domain models, or externally exposed application behavior has been implemented.
