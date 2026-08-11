@@ -1,0 +1,9 @@
+services:
+  atlas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: project-atlas:local
+    env_file:
+      - path: .env
+        required: false
