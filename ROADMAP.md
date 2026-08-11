@@ -225,22 +225,28 @@ SimilarStoic does not simply report the news.
 
 > SimilarStoic interprets the news for the viewer.
 
-Core question:
+Topic discovery should draw from:
+- Current events
+- Community signals
+- Emerging trends
+- Evergreen knowledge gaps
+- Existing SimilarStoic content
+
+Atlas should produce a curated daily shortlist of 5–10 opportunities. Initially, Atlas proposes and the founder approves or steers the selection. Research begins only after that approval.
+
+The core question is:
 
 > Why does this matter to me?
 
-Topic selection should prioritise:
-- Viewer relevance
+Topic and angle selection should prioritise:
+- Viewer relevance and benefit
+- Curiosity and emotional resonance
 - Timeliness
-- Practical benefit
-- Curiosity
-- Substance
-- Opportunity
-- Audience fit
-- Evidence
+- Substance and portfolio value
+- Brand and audience fit
 - Visual potential
 
-Community questions and online discussions can be used as signals.
+Evidence quality is a minimum gate, not simply another score.
 
 Sources such as Reddit, TikTok, X, forums and comments can identify:
 - What people are talking about
@@ -285,6 +291,10 @@ Facts, interpretation and opinion must be clearly distinguished.
 
 Unverified claims must not be presented as facts.
 
+Research Packs are required before scripting. They must identify contradictions, uncertainty and outdated information, and distinguish facts, interpretations and forecasts.
+
+High-risk financial content requires human review. Material unsupported or inaccurate claims block publication; substantive factual corrections must be surfaced rather than silently hidden.
+
 ---
 
 # Financial Content
@@ -314,31 +324,26 @@ A disclaimer alone must not be treated as sufficient protection for regulated fi
 
 ## Mascot-led hybrid animation
 
-The format should use:
-- Original recurring hamster mascot
-- Consistent visual identity
-- Natural narration
-- Simple animation
-- Visual metaphors
-- Charts
-- Diagrams
-- Typography
-- Selective real-world/original imagery
+The classic hamster is the canonical mascot. Its signature accessory is a small everyday crossbody/sling bag.
 
-The content should work visually but remain understandable as audio.
+The hamster should feel like an ordinary young adult: naturally relaxed, curious, intelligent, relatable and occasionally cheeky. It must not become a finance guru, a corporate mascot or a generic human with a hamster head.
+
+Controlled visual variations are allowed—small, large, squishy or exaggerated—provided the canonical identity remains clear.
+
+Hamster-native behaviour should be used for visual metaphors and humour where appropriate. The hamster does not need to speak; it acts out the story, represents the viewer, reacts to events and demonstrates concepts with props and environments.
+
+The format should use:
+- Consistent illustrated visual identity
+- Natural narration
+- Simple evolving scenes
+- Visual metaphors, charts, diagrams and typography
+- Selective real-world or original imagery where useful
+
+The content must be fully understandable as audio. Important information must still be explained verbally.
 
 Core creative principle:
 
-> The narrator explains. The hamster shows.
-
-The hamster:
-- Does not need to speak
-- Acts out the story
-- Represents the viewer
-- Reacts to events
-- Demonstrates concepts
-- Uses props and environments
-- Provides visual humour and emotional reactions
+> The narrator explains. The hamster illustrates.
 
 ---
 
@@ -350,14 +355,18 @@ Characteristics:
 - Conversational
 - Confident
 - Relaxed
+- Warm
 - Gen-Z appropriate
 - Clear
-- Humorous where appropriate
+- Slightly witty where appropriate
 - Never patronising
 - Never "finance guru"
+- Never robotic, corporate or excessively theatrical
 - Natural rather than obviously AI-generated
 
-The narrator is not visually present.
+One consistent AI narrator voice should be used. The narrator is not visually present.
+
+Audio quality has its own QA process. Pronunciation, pacing and processing should remain consistent. Music and sound effects are optional and should only enhance storytelling.
 
 ---
 
@@ -376,9 +385,13 @@ Typical duration:
 
 > 30–90 seconds.
 
-The structure is a framework, not a rigid template.
+The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
+
+The structure is a framework, not a rigid template. Narration must be fully understandable without visuals; visuals enhance rather than carry essential information.
 
 The content should prioritise viewer value over artificial retention tricks.
+
+Pop-culture references may be used as analogies or references, but production must not depend on reproducing copyrighted footage or characters.
 
 ---
 
@@ -409,12 +422,105 @@ Core principle:
 
 > One research package → multiple pieces of content.
 
+The narration is the master timeline. Build one master video, then adapt it intelligently for relevant platforms.
+
 A single researched subject may generate:
 - Multiple Shorts
 - A 2–5 minute video
 - Eventually a long-form deep dive
 
 Quality and substance take priority over publishing volume.
+
+## Animation and visual production
+
+Production should use reusable illustrated assets and layered scenes rather than relying on single-pass generative video.
+
+Build a reusable asset library for the hamster, expressions, environments and props, while maintaining canonical character consistency across assets and videos.
+
+Animation is audio-first and visually enhanced. It should primarily use evolving illustrated scenes: build a scene and progressively add, remove, move or transform objects as narration develops.
+
+- Major changes in idea, location or concept trigger major scene changes.
+- Minor background animation is optional and only used when it adds relevance, atmosphere, humour or visual life.
+- Use simple baseline animation, exaggerated character states and occasional highly detailed hero frames.
+- Hero frames are visual peaks, not the default rendering style.
+- Scene changes should follow changes in ideas, not arbitrary time intervals.
+
+Numerical charts and data visualisations must be generated programmatically from verified data, rather than created by image generation.
+
+---
+
+# Content Operating Model
+
+## Research and topic approval
+
+1. Discover and shortlist opportunities.
+2. Founder approves or steers the topic.
+3. Build a structured Research Pack from official and primary sources.
+4. Corroborate important claims proportionately to their importance and risk.
+5. Identify contradictions, uncertainty, outdated information and required human review.
+
+Community sources can provide signals, but not factual evidence.
+
+## Angle, hook and content package
+
+Generate multiple angles from verified research. Select the angle with the strongest combination of relevance, benefit, curiosity, timeliness, substance, evidence, emotional resonance, visual potential, portfolio value and brand fit.
+
+Create a structured content package, not only a script. It must include:
+- Narration
+- Scene plan
+- Hamster direction
+- Source and claim mapping
+- A relevant US comparison where useful
+- An appropriate CTA or action
+
+Use the “here's what I'd do” perspective only where genuinely useful and keep it distinct from personalised financial advice.
+
+## Script and editorial QA
+
+Before production, complete:
+- Claim-by-claim verification
+- Meaning-preservation check against the Research Pack
+- Editorial and compliance review
+- Visual fact checking
+- Audio-only comprehension check
+- Freshness check for current or changeable claims
+
+## Final production QA and approval
+
+Before publication, complete:
+- Technical checks
+- Audio checks
+- Factual checks
+- Visual checks
+- Brand-consistency checks
+- Audio-only comprehension
+- Caption and on-screen-text accuracy checks
+- Chart and data-accuracy checks
+
+Initially, every video requires human approval before publication. Automation may increase only after demonstrated reliability.
+
+Preserve the research, sources, scripts, assets and version history for every published item.
+
+## Distribution
+
+Initial platforms are YouTube Shorts, TikTok and Instagram Reels.
+
+Create once and adapt intelligently for each platform. One high-quality short per day remains the initial target, not a mandatory quota.
+
+## Analytics and learning
+
+Collect, where available:
+- Reach
+- Retention
+- Engagement
+- Audience metrics
+- Commercial metrics
+
+Link performance to the topic, pillar, angle, hook, format, visual approach and other content attributes. Use this history to identify patterns and improve future content, without optimising purely for views or compromising editorial integrity and brand trust.
+
+Comments may become topic or content signals, but are not factual evidence.
+
+Maintain a knowledge map showing what SimilarStoic has covered and where knowledge gaps remain. The content system should progressively learn from its own history.
 
 ---
 
@@ -469,18 +575,24 @@ Complete:
 - Narration
 - Publishing strategy
 - Monetisation direction
+- Content operating model
+- Topic discovery and approval model
+- Research Pack and verification standards
+- Angle, hook and content-package requirements
+- Script and final-production QA standards
+- Distribution and learning model
+- Initial human approval rule
 
 Remaining:
-- Final brand identity
-- Final mascot specification
-- Detailed content formats
-- Editorial rules
-- Detailed quality standards
-- Human approval requirements
+- Final production-ready brand identity
+- Final production-ready mascot visual specification
+- Final Phase 1 acceptance review
 
 ## Phase 2 — Content Operating Model
 
-Define:
+Status: DEFINED, NOT YET IMPLEMENTED
+
+Implement:
 - Research
 - Topic discovery
 - Topic scoring

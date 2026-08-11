@@ -37,7 +37,7 @@ No production automation or business logic has been implemented yet.
 
 Current commit:
 
-`52dd49c Initial Project Atlas foundation`
+`d15a81e docs: establish SimilarStoic roadmap and current status`
 
 Branch:
 
@@ -119,23 +119,25 @@ Initial target:
 
 Mascot-led hybrid animation.
 
-Original recurring hamster mascot.
+Classic hamster as the canonical mascot, with a small everyday crossbody/sling bag as its signature accessory.
 
-Narrator explains.
+The hamster should feel like an ordinary young adult: relaxed, curious, intelligent, relatable and occasionally cheeky—not a finance guru, corporate mascot or generic human with a hamster head.
 
-Hamster visually demonstrates.
+Controlled variations such as small, large, squishy and exaggerated are allowed while retaining the canonical identity.
 
 Core rule:
 
-> The narrator explains. The hamster shows.
+> The narrator explains. The hamster illustrates.
 
 ## Narration
 
-One consistent narrator.
+One consistent AI narrator voice.
 
-Natural, conversational, confident and relaxed.
+Natural, warm, conversational, confident, relaxed and slightly witty.
 
 The narrator is not visually present.
+
+Never robotic, corporate, patronising or excessively theatrical. Audio quality, pronunciation, pacing and processing require their own QA process.
 
 ## Short-form
 
@@ -164,9 +166,11 @@ Topics should be:
 - Substantive
 - Visually interesting
 
-Current headlines and community discussions can act as topic signals.
+Topic discovery draws from current events, community signals, trends, evergreen knowledge gaps and existing content.
 
 Community sources are not authoritative evidence.
+
+Atlas produces a curated daily shortlist of 5–10 opportunities. Initially Atlas proposes and the founder approves or steers; research begins only after approval.
 
 ## Editorial Integrity
 
@@ -181,6 +185,8 @@ Current information must be checked for freshness.
 Facts, interpretation and opinion must be distinguished.
 
 Unverified claims must not be published as facts.
+
+Structured Research Packs precede scripting. They identify contradictions, uncertainty and outdated information, and distinguish facts, interpretations and forecasts.
 
 ## Actionable Content
 
@@ -206,6 +212,46 @@ Editorial independence is non-negotiable.
 
 ---
 
+# Content Operating Model Decisions
+
+## Research, Angles & Scripts
+
+Official/primary sources are the foundation of factual claims; important claims are independently corroborated proportionately to their importance and risk. High-risk financial content requires human review.
+
+Generate multiple angles from verified research. Select for viewer relevance, benefit, curiosity, timeliness, substance, evidence, emotional resonance, visual potential, portfolio value and brand fit. Evidence quality is a minimum gate, not simply another score.
+
+Generate hooks after the underlying angle/story. Hooks must not misrepresent, exaggerate or manufacture urgency.
+
+Create a structured content package—not only a script—with narration, scene plan, hamster direction, source/claim mapping, a relevant US comparison where useful, and an appropriate CTA/action. “Here's what I'd do” is used only where genuinely useful and stays distinct from personalised financial advice.
+
+Narration must be understandable as audio without visuals; visuals enhance rather than carry essential information. Pop-culture references can be used as analogies or references, but production must not depend on copyrighted footage or characters.
+
+## QA, Production & Approval
+
+Script QA requires claim-by-claim verification, meaning preservation against the Research Pack, editorial/compliance review, visual fact checking, audio-only comprehension and freshness checks for current/changeable claims.
+
+Material unsupported or inaccurate claims block publication. Substantive factual corrections must be surfaced, not silently hidden.
+
+Videos are built from reusable illustrated assets and layered scenes, not single-pass generative video. Maintain canonical hamster assets, expressions, environments and props. Generate numerical charts/data visualisations programmatically from verified data.
+
+Narration is the master timeline. Use evolving illustrated scenes: major idea/location/concept changes trigger major scene changes; minor background movement is optional and purposeful. Use simple baseline animation, exaggerated character states and occasional highly detailed hero frames; hero frames are visual peaks, not the default.
+
+Final production QA includes technical, audio, factual, visual and brand-consistency checks; audio-only comprehension; caption/text accuracy; and chart/data accuracy.
+
+Initially every video requires human approval before publication. Automation may increase only after demonstrated reliability. Preserve research, sources, scripts, assets and version history for published content.
+
+## Distribution, Analytics & Learning
+
+Initial platforms remain YouTube Shorts, TikTok and Instagram Reels. Create once and adapt intelligently for each platform. One high-quality short per day is the initial target, not a mandatory quota.
+
+Collect reach, retention, engagement, audience and eventually commercial metrics where available. Link performance to topic, pillar, angle, hook, format, visual approach and other attributes to improve future content.
+
+Do not optimise purely for views or compromise editorial integrity and brand trust. Comments can become topic/content signals but are not factual evidence.
+
+Maintain a knowledge map of covered subjects and outstanding knowledge gaps so the content system progressively learns from its own history.
+
+---
+
 # Current Phase 1 Work
 
 Completed:
@@ -221,14 +267,17 @@ Completed:
 - Narration approach
 - Publishing strategy
 - Monetisation direction
+- Content operating model
+- Topic discovery, research and source-verification standards
+- Angle, hook and content-package requirements
+- Script QA and final-production QA
+- Mascot identity, animation and visual-production principles
+- Distribution, analytics and learning model
+- Initial human approval rule
 
 Remaining before Phase 1 is complete:
-- Final brand identity
-- Final mascot specification
-- Detailed content formats
-- Detailed editorial rules
-- Detailed quality standards
-- Human approval rules
+- Final production-ready brand identity
+- Final production-ready mascot visual specification
 - Final Phase 1 acceptance review
 
 ---
@@ -239,14 +288,13 @@ Do not begin engineering yet.
 
 Next:
 
-> **Define the final SimilarStoic brand identity and mascot specification.**
+> **Finalise the production-ready SimilarStoic brand identity and mascot visual specification, then complete the Phase 1 acceptance review.**
 
 After Phase 1 is fully defined:
 
-1. Complete Phase 2 content operating model
-2. Define technical architecture
-3. Prepare Claude handoff package
-4. Begin engineering
+1. Define technical architecture
+2. Prepare the Claude handoff package
+3. Begin engineering the approved operating model
 
 ---
 
