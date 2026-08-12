@@ -51,6 +51,18 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                         {"id": angle.id, "working_title": angle.working_title}
                         for angle in editorial_angles
                     ]
+                    content_pieces = self.server.repository.list_content_pieces_for_editorial_angle(
+                        default_angle.id
+                    )
+                    if content_pieces:
+                        default_content_piece = content_pieces[0]
+                        content_piece = self.server.repository.content_piece_payload(
+                            default_content_piece.id
+                        )
+                        content["content_piece"] = content_piece
+                        content["title"] = content_piece["working_title"]
+                        if content_piece["latest_script"] is not None:
+                            content["script"] = content_piece["latest_script"]["narration_text"]
             self._send_json({"kind": "demo", "content": content, "activity": ACTIVITY})
             return
         if parsed.path == "/api/demo/chat":

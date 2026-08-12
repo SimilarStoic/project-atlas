@@ -4,7 +4,7 @@
 
 Project Atlas is a local, dependency-free editorial control interface and durable
 SQLite foundation for SimilarStoic. It deliberately implements only the approved
-v0.1-v0.4 scope; later workflow, research automation and production systems remain deferred.
+v0.1-v0.5 scope; later workflow, research automation and production systems remain deferred.
 
 ## Technology baseline
 
@@ -129,12 +129,30 @@ The Content Workspace now reads a deterministic persisted EditorialAngle and its
 linked Claims while remaining read-only. Final publication titles, script/narration,
 scene plans, QA, production and workflow remain demo-backed or deferred.
 
-Pillars, generic Topics, final-title and hook models, script and content-package
+Pillars, generic Topics, final-title and hook models, ScriptSection and ContentPackage
 persistence, AI research, agents, research policies, workflows, publishing,
 production and analytics remain deferred.
+
+## Content piece and script persistence
+
+Atlas v0.5 adds the smallest durable bridge from an EditorialAngle to a concrete
+deliverable and its complete audio-first narration:
+
+- A **ContentPiece** belongs to one Opportunity and derives from one EditorialAngle
+  from that same Opportunity. Its provenance is immutable; format key, working title
+  and metadata remain editable.
+- A **Script** belongs to one ContentPiece and stores one complete narration body.
+  Script versions are unique per ContentPiece and immutable after creation; the latest
+  version is derived from the highest version number, not a persisted current-state flag.
+
+Startup idempotently seeds one ISA video ContentPiece from the deterministic ISA
+EditorialAngle and one Script v1 using the existing demo narration. The Content
+Workspace now reads the persistent ContentPiece and latest Script narration read-only.
+Scene plan and QA remain demo-backed; workflow, production, publishing and analytics
+remain deferred.
 
 ## Status
 
 v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
-and v0.4 Editorial Angle persistence are implemented locally. Later Atlas systems
-remain out of scope.
+v0.4 Editorial Angle persistence, and v0.5 Content Piece + Script persistence are
+implemented locally. Later Atlas systems remain out of scope.

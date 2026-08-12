@@ -10,14 +10,14 @@
 
 ## Overall Status
 
-🟡 Product definition continues. Atlas v0.1, v0.2 and v0.3 are complete and pushed; the bounded Atlas v0.4 Editorial Angle Foundation is implemented locally and awaiting review.
+🟡 Product definition continues. Atlas v0.1 through v0.4 are complete and pushed; the bounded Atlas v0.5 Content Piece + Script Foundation is implemented locally and awaiting review.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.4 implements the approved Editorial Angle bridge from Research & Evidence to Editorial
-Development. No further v0.4 implementation beyond this bounded foundation has been approved.
+Atlas v0.5 implements the approved bridge from Editorial Angle to a specific ContentPiece and its
+complete narration Script. No further v0.5 implementation beyond this bounded foundation has been approved.
 
 ---
 
@@ -40,7 +40,7 @@ Development. No further v0.4 implementation beyond this bounded foundation has b
 
 Current commit:
 
-`5a5766b637a5db083a756593893cd59d456e7370 docs: update Atlas v0.3 checkpoint status`
+`2bfc34b63457d89c44e3b865522a5af5aeba1a4e feat: add editorial angle foundation`
 
 Branch:
 
@@ -52,7 +52,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.3 checkpoint; local `main` matched `origin/main` before the local v0.4 implementation.
+Clean at the v0.4 checkpoint; local `main` matched `origin/main` before the local v0.5 implementation.
 
 ## Atlas v0.2 Checkpoint
 
@@ -82,10 +82,9 @@ Clean at the v0.3 checkpoint; local `main` matched `origin/main` before the loca
 - Research policies, AI research, agents, scripts, workflow, publishing, production and
   analytics remain deferred.
 
-## Atlas v0.4 Local Implementation
+## Atlas v0.4 Checkpoint
 
-**Project Atlas v0.4 — Editorial Angle Foundation** is implemented locally and awaiting review,
-commit and push.
+**Project Atlas v0.4 — Editorial Angle Foundation** is complete and pushed.
 
 - EditorialAngle belongs to one Opportunity and references one ResearchPack from that same
   Opportunity.
@@ -94,11 +93,27 @@ commit and push.
 - EditorialAngleClaim records a Claim's `core` or `supporting` role for an Angle. Repository
   validation rejects Claim/Angle links across ResearchPacks.
 - Two distinct persistent ISA Angles are idempotently seeded for the existing v1 ISA ResearchPack.
-- The Content Workspace now reads persistent research and a deterministic persistent EditorialAngle
-  with linked Claims; final title, script, scene plan, QA, production and workflow remain demo-backed
-  or deferred.
-- No script persistence, workflow state, AI angle generation, publishing, production or analytics
+- The Content Workspace reads persistent research and a deterministic persistent EditorialAngle
+  with linked Claims; script, scene plan, QA, production and workflow remained deferred at v0.4.
+- No workflow state, AI angle generation, publishing, production or analytics
   has been introduced.
+
+## Atlas v0.5 Local Implementation
+
+**Project Atlas v0.5 — Content Piece + Script Foundation** is implemented locally and awaiting
+review, commit and push.
+
+- ContentPiece belongs to one Opportunity and derives from one EditorialAngle from that same
+  Opportunity. Its Opportunity/Angle provenance is immutable after creation.
+- Script belongs to one ContentPiece and stores complete narration text. Versions are unique per
+  ContentPiece, immutable after creation, and the latest is derived by highest version number.
+- One persistent ISA video ContentPiece and one immutable Script v1 are idempotently seeded from
+  the deterministic ISA EditorialAngle and existing demo narration.
+- The Content Workspace reads persistent Research, EditorialAngle, ContentPiece and latest Script
+  narration. Scene Plan and QA remain demo-backed; workflow, production, publishing and analytics
+  remain deferred.
+- No visual-plan, scene, QA, approval, workflow, publishing, production or AI-generation
+  persistence has been introduced.
 
 ---
 
@@ -424,7 +439,8 @@ Completed:
 - Finance-centred editorial expansion to money, work, behaviour and life strategy
 - Editorial inclusion test and explicit Pillars / Subjects / Opportunities distinction
 - Atlas v0.3 Research & Evidence persistence foundation
-- Atlas v0.4 Editorial Angle persistence foundation (local, awaiting review/commit/push)
+- Atlas v0.4 Editorial Angle persistence foundation
+- Atlas v0.5 Content Piece + Script persistence foundation (local, awaiting review/commit/push)
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -437,11 +453,11 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Review the bounded Atlas v0.4 Editorial Angle Foundation, then commit and push if approved.**
+> **Review the bounded Atlas v0.5 Content Piece + Script Foundation, then commit and push if approved.**
 
-Implemented v0.3 direction:
+Implemented direction through v0.5:
 
-> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → future script
+> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script
 
 The final Pillar taxonomy, configurable research rules, scoring system and broader evidence policy
 remain intentionally unsettled. v0.3 does not implement those later decisions.

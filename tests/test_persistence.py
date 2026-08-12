@@ -1,4 +1,4 @@
-"""Tests for Atlas persistence through the v0.4 editorial-angle foundation."""
+"""Tests for Atlas persistence through the v0.5 content-piece and script foundation."""
 
 import sqlite3
 from dataclasses import replace
@@ -6,7 +6,7 @@ from dataclasses import replace
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
 
 
-def test_fresh_database_migrates_and_seeds_discovery_research_and_angles(tmp_path) -> None:
+def test_fresh_database_migrates_and_seeds_discovery_research_angles_and_scripts(tmp_path) -> None:
     """Fresh startup applies all migrations and creates the scoped seed data."""
 
     database = tmp_path / "atlas.db"
@@ -15,7 +15,7 @@ def test_fresh_database_migrates_and_seeds_discovery_research_and_angles(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3]
+        ] == [1, 2, 3, 4]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -28,6 +28,11 @@ def test_fresh_database_migrates_and_seeds_discovery_research_and_angles(tmp_pat
             "supports",
         }
         assert len(repository.list_editorial_angles_for_opportunity("uk-isa-rules")) == 2
+        assert len(repository.list_content_pieces_for_opportunity("uk-isa-rules")) == 1
+        assert (
+            len(repository.list_scripts_for_content_piece("content-piece-isa-deadline-video-v1"))
+            == 1
+        )
     finally:
         repository.close()
 
@@ -44,14 +49,16 @@ def test_fresh_database_migrates_and_seeds_discovery_research_and_angles(tmp_pat
             reopened.connection.execute("SELECT COUNT(*) FROM editorial_angle_claims").fetchone()[0]
             == 5
         )
+        assert reopened.connection.execute("SELECT COUNT(*) FROM content_pieces").fetchone()[0] == 1
+        assert reopened.connection.execute("SELECT COUNT(*) FROM scripts").fetchone()[0] == 1
     finally:
         reopened.close()
 
 
-def test_existing_v03_database_migrates_to_v04_without_rewriting_discovery_data(tmp_path) -> None:
-    """The new migration applies cleanly to a database already recorded at v0.3."""
+def test_existing_v04_database_migrates_to_v05_without_rewriting_discovery_data(tmp_path) -> None:
+    """The new migration applies cleanly to a database already recorded at v0.4."""
 
-    database = tmp_path / "atlas-v03.db"
+    database = tmp_path / "atlas-v04.db"
     connection = sqlite3.connect(database)
     try:
         connection.execute(
@@ -63,6 +70,9 @@ def test_existing_v03_database_migrates_to_v04_without_rewriting_discovery_data(
         for statement in MIGRATIONS[1][1]:
             connection.execute(statement)
         connection.execute("INSERT INTO schema_migrations VALUES (2, '2026-08-12T00:00:00+00:00')")
+        for statement in MIGRATIONS[2][1]:
+            connection.execute(statement)
+        connection.execute("INSERT INTO schema_migrations VALUES (3, '2026-08-12T00:00:00+00:00')")
         connection.execute(
             "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -87,9 +97,9 @@ def test_existing_v03_database_migrates_to_v04_without_rewriting_discovery_data(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3]
+        ] == [1, 2, 3, 4]
         assert repository.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='editorial_angles'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='content_pieces'"
         ).fetchone()
     finally:
         repository.close()
@@ -102,7 +112,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                4,
+                5,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -124,7 +134,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 4"
+                "SELECT version FROM schema_migrations WHERE version = 5"
             ).fetchone()
             is None
         )
@@ -264,6 +274,8 @@ def test_seed_reuses_existing_source_url_and_restores_missing_evidence(tmp_path)
     source_url = "https://www.gov.uk/individual-savings-accounts"
     try:
         with repository.connection:
+            repository.connection.execute("DELETE FROM scripts")
+            repository.connection.execute("DELETE FROM content_pieces")
             repository.connection.execute("DELETE FROM editorial_angle_claims")
             repository.connection.execute("DELETE FROM editorial_angles")
             repository.connection.execute("DELETE FROM claim_evidence")
@@ -546,5 +558,239 @@ def test_editorial_angle_seed_restores_missing_links_without_overwriting_edits(t
         payload = reopened.editorial_angle_payload(angle.id)
         assert payload["working_title"] == "The 15-minute ISA decision tree before the deadline."
         assert {claim["role"] for claim in payload["claims"]} == {"core"}
+    finally:
+        reopened.close()
+
+
+def test_content_pieces_retain_provenance_while_normal_edits_persist(tmp_path) -> None:
+    """ContentPieces may be edited normally but cannot move away from their Angle provenance."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        angle = repository.get_editorial_angle("editorial-angle-isa-decision-tree-v1")
+        content_piece = repository.create_content_piece(
+            "content-piece-isa-test-v1",
+            "uk-isa-rules",
+            angle.id,
+            "video",
+            "A test ContentPiece.",
+        )
+        repository.create_content_piece(
+            "content-piece-isa-test-v2",
+            "uk-isa-rules",
+            angle.id,
+            "article",
+            "A second test ContentPiece.",
+        )
+        other_angle = repository.get_editorial_angle("editorial-angle-isa-transfer-process-v1")
+        try:
+            repository.create_content_piece(
+                "content-piece-invalid-v1",
+                "credit-utilisation",
+                angle.id,
+                "video",
+                "Invalid ContentPiece.",
+            )
+        except ValueError as error:
+            assert "same Opportunity" in str(error)
+        else:
+            raise AssertionError("A ContentPiece accepted an Angle from another Opportunity.")
+        for provenance_change in (
+            replace(content_piece, opportunity_id="credit-utilisation"),
+            replace(content_piece, editorial_angle_id=other_angle.id),
+        ):
+            try:
+                repository.update_content_piece(provenance_change)
+            except ValueError as error:
+                assert "provenance are immutable" in str(error)
+            else:
+                raise AssertionError("A ContentPiece update changed historical provenance.")
+        updated = repository.update_content_piece(
+            replace(
+                content_piece,
+                format_key="short_video",
+                working_title="A revised test ContentPiece.",
+                metadata={"edited": True},
+            )
+        )
+        assert updated.format_key == "short_video"
+        assert len(repository.list_content_pieces_for_opportunity("uk-isa-rules")) == 3
+        assert len(repository.list_content_pieces_for_editorial_angle(angle.id)) == 3
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        persisted = reopened.get_content_piece("content-piece-isa-test-v1")
+        assert persisted.working_title == "A revised test ContentPiece."
+        assert persisted.format_key == "short_video"
+        assert persisted.metadata == {"edited": True}
+        assert persisted.opportunity_id == "uk-isa-rules"
+        assert persisted.editorial_angle_id == "editorial-angle-isa-decision-tree-v1"
+    finally:
+        reopened.close()
+
+
+def test_script_versions_are_immutable_and_latest_after_reopen(tmp_path) -> None:
+    """Scripts remain distinct immutable narration versions for one ContentPiece."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        content_piece = repository.create_content_piece(
+            "content-piece-isa-script-test-v1",
+            "uk-isa-rules",
+            "editorial-angle-isa-decision-tree-v1",
+            "video",
+            "A script versioning test ContentPiece.",
+        )
+        script_v1 = repository.create_script(
+            "script-isa-test-v1", content_piece.id, 1, "Original narration version one."
+        )
+        script_v2 = repository.create_script(
+            "script-isa-test-v2", content_piece.id, 2, "Revised narration version two."
+        )
+        try:
+            repository.create_script(
+                "script-isa-test-duplicate-v2", content_piece.id, 2, "Duplicate version."
+            )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("A duplicate ContentPiece/Script version was accepted.")
+        assert [
+            script.version for script in repository.list_scripts_for_content_piece(content_piece.id)
+        ] == [
+            1,
+            2,
+        ]
+        assert repository.latest_script_for_content_piece(content_piece.id) == script_v2
+        assert (
+            repository.get_script(script_v1.id).narration_text == "Original narration version one."
+        )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_script("script-isa-test-v1").narration_text == (
+            "Original narration version one."
+        )
+        assert (
+            reopened.latest_script_for_content_piece("content-piece-isa-script-test-v1").version
+            == 2
+        )
+    finally:
+        reopened.close()
+
+
+def test_content_piece_seed_does_not_overwrite_existing_script_v1_narration(tmp_path) -> None:
+    """Startup preserves persisted historical narration for the seeded Script v1."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        replacement_narration = "Persisted historical Script v1 narration."
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE scripts SET narration_text = ? WHERE id = ?",
+                (replacement_narration, "script-isa-deadline-video-v1"),
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_script("script-isa-deadline-video-v1").narration_text == (
+            replacement_narration
+        )
+        assert (
+            len(reopened.list_scripts_for_content_piece("content-piece-isa-deadline-video-v1")) == 1
+        )
+    finally:
+        reopened.close()
+
+
+def test_content_piece_seed_restores_missing_script_v1_without_overwriting_piece(tmp_path) -> None:
+    """Startup restores only the missing seeded Script while retaining ContentPiece edits."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        content_piece = repository.get_content_piece("content-piece-isa-deadline-video-v1")
+        repository.update_content_piece(
+            replace(content_piece, working_title="Founder-edited ContentPiece title.")
+        )
+        seeded_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
+        with repository.connection:
+            repository.connection.execute(
+                "DELETE FROM scripts WHERE id = ?", ("script-isa-deadline-video-v1",)
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_content_piece("content-piece-isa-deadline-video-v1").working_title == (
+            "Founder-edited ContentPiece title."
+        )
+        assert (
+            reopened.get_script("script-isa-deadline-video-v1").narration_text == seeded_narration
+        )
+        assert (
+            len(reopened.list_scripts_for_content_piece("content-piece-isa-deadline-video-v1")) == 1
+        )
+    finally:
+        reopened.close()
+
+
+def test_content_piece_seed_restores_missing_piece_and_script_without_touching_earlier_data(
+    tmp_path,
+) -> None:
+    """Startup restores the seeded v0.5 pair while retaining v0.2-v0.4 records."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        expected_opportunities = repository.discover_payload()
+        expected_angle_ids = [
+            angle.id for angle in repository.list_editorial_angles_for_opportunity("uk-isa-rules")
+        ]
+        expected_claim_ids = [
+            claim.id for claim in repository.list_claims("research-pack-isa-deadline-v1")
+        ]
+        seeded_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
+        with repository.connection:
+            repository.connection.execute(
+                "DELETE FROM scripts WHERE id = ?", ("script-isa-deadline-video-v1",)
+            )
+            repository.connection.execute(
+                "DELETE FROM content_pieces WHERE id = ?",
+                ("content-piece-isa-deadline-video-v1",),
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert len(reopened.list_content_pieces_for_opportunity("uk-isa-rules")) == 1
+        assert reopened.get_content_piece(
+            "content-piece-isa-deadline-video-v1"
+        ).editorial_angle_id == ("editorial-angle-isa-decision-tree-v1")
+        assert (
+            reopened.get_script("script-isa-deadline-video-v1").narration_text == seeded_narration
+        )
+        assert (
+            len(reopened.list_scripts_for_content_piece("content-piece-isa-deadline-video-v1")) == 1
+        )
+        assert reopened.discover_payload() == expected_opportunities
+        assert len(reopened.list_editorial_angles_for_opportunity("uk-isa-rules")) == 2
+        assert [
+            angle.id for angle in reopened.list_editorial_angles_for_opportunity("uk-isa-rules")
+        ] == expected_angle_ids
+        assert [
+            claim.id for claim in reopened.list_claims("research-pack-isa-deadline-v1")
+        ] == expected_claim_ids
     finally:
         reopened.close()

@@ -138,6 +138,23 @@ function editorialAngle(content) {
   );
 }
 
+function contentPiece(content) {
+  var piece = content.content_piece;
+  if (!piece) {
+    return "";
+  }
+  var script = piece.latest_script;
+  return (
+    '<div class="pack"><label>CONTENT PIECE · PERSISTED</label><h3>' +
+    piece.working_title +
+    "</h3><p><b>Format</b><br>" +
+    piece.format_key +
+    "</p>" +
+    (script ? "<p><b>Latest narration version</b><br>v" + script.version + "</p>" : "") +
+    "</div>"
+  );
+}
+
 function bindActions() {
   document.querySelectorAll(".actions button").forEach(function (element) {
     element.onclick = function () {
@@ -180,7 +197,8 @@ function pack(content) {
     '</b><small>sources</small></div><div><b>Medium</b><small>risk</small></div></div></div>' +
     researchEvidence(research) +
     editorialAngle(content) +
-    '<div class="pack"><label>SCRIPT / NARRATION</label><p>' +
+    contentPiece(content) +
+    '<div class="pack"><label>SCRIPT / NARRATION · PERSISTED</label><p>' +
     content.script +
     '</p></div><div class="pack"><label>VISUAL & HAMSTER SCENE PLAN</label><p>' +
     content.scene_plan +

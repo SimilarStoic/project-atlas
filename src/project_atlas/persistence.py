@@ -1,4 +1,4 @@
-"""SQLite persistence for Atlas discovery, research-evidence, and angle foundations."""
+"""SQLite persistence for Atlas discovery through content-piece and script foundations."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from project_atlas.demo_data import OPPORTUNITIES
+from project_atlas.demo_data import OPPORTUNITIES, content_payload
 
 
 def now() -> str:
@@ -138,6 +138,33 @@ class EditorialAngleClaim:
     claim_id: str
     role: str
     created_at: str
+
+
+@dataclass(frozen=True)
+class ContentPiece:
+    """A concrete deliverable derived from one EditorialAngle."""
+
+    id: str
+    opportunity_id: str
+    editorial_angle_id: str
+    format_key: str
+    working_title: str
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class Script:
+    """An immutable complete narration version for one ContentPiece."""
+
+    id: str
+    content_piece_id: str
+    version: int
+    narration_text: str
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
 
 
 Migration = tuple[int, tuple[str, ...]]
@@ -282,6 +309,41 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX idx_editorial_angles_research_pack "
             "ON editorial_angles (research_pack_id)",
             "CREATE INDEX idx_editorial_angle_claims_claim ON editorial_angle_claims (claim_id)",
+        ),
+    ),
+    (
+        4,
+        (
+            """
+        CREATE TABLE content_pieces (
+          id TEXT PRIMARY KEY,
+          opportunity_id TEXT NOT NULL,
+          editorial_angle_id TEXT NOT NULL,
+          format_key TEXT NOT NULL,
+          working_title TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE RESTRICT,
+          FOREIGN KEY (editorial_angle_id) REFERENCES editorial_angles(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE scripts (
+          id TEXT PRIMARY KEY,
+          content_piece_id TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          narration_text TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          UNIQUE (content_piece_id, version),
+          FOREIGN KEY (content_piece_id) REFERENCES content_pieces(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_content_pieces_opportunity ON content_pieces (opportunity_id)",
+            "CREATE INDEX idx_content_pieces_editorial_angle "
+            "ON content_pieces (editorial_angle_id)",
         ),
     ),
 )
@@ -701,6 +763,161 @@ class AtlasRepository:
             ],
         }
 
+    def create_content_piece(
+        self,
+        content_piece_id: str,
+        opportunity_id: str,
+        editorial_angle_id: str,
+        format_key: str,
+        working_title: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> ContentPiece:
+        """Create a concrete deliverable without detaching it from its Angle provenance."""
+
+        self._validate_content_piece_editorial_angle(opportunity_id, editorial_angle_id)
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO content_pieces VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    content_piece_id,
+                    opportunity_id,
+                    editorial_angle_id,
+                    format_key,
+                    working_title,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_content_piece(content_piece_id)
+
+    def get_content_piece(self, content_piece_id: str) -> ContentPiece:
+        row = self.connection.execute(
+            "SELECT * FROM content_pieces WHERE id = ?", (content_piece_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(content_piece_id)
+        return self._content_piece(row)
+
+    def list_content_pieces_for_opportunity(self, opportunity_id: str) -> list[ContentPiece]:
+        """Return an Opportunity's ContentPieces in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM content_pieces WHERE opportunity_id = ? ORDER BY created_at, id",
+            (opportunity_id,),
+        )
+        return [self._content_piece(row) for row in rows]
+
+    def list_content_pieces_for_editorial_angle(
+        self, editorial_angle_id: str
+    ) -> list[ContentPiece]:
+        """Return the deliverables derived from one EditorialAngle."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM content_pieces WHERE editorial_angle_id = ? ORDER BY created_at, id",
+            (editorial_angle_id,),
+        )
+        return [self._content_piece(row) for row in rows]
+
+    def update_content_piece(self, content_piece: ContentPiece) -> ContentPiece:
+        """Persist normal deliverable edits without changing historical provenance."""
+
+        persisted_piece = self.get_content_piece(content_piece.id)
+        if (
+            content_piece.opportunity_id != persisted_piece.opportunity_id
+            or content_piece.editorial_angle_id != persisted_piece.editorial_angle_id
+        ):
+            raise ValueError(
+                "ContentPiece Opportunity and EditorialAngle provenance are immutable."
+            )
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE content_pieces SET format_key=?, working_title=?, metadata_json=?, "
+                "updated_at=? WHERE id=?",
+                (
+                    content_piece.format_key,
+                    content_piece.working_title,
+                    json.dumps(content_piece.metadata),
+                    now(),
+                    content_piece.id,
+                ),
+            )
+        if result.rowcount != 1:
+            raise KeyError(content_piece.id)
+        return self.get_content_piece(content_piece.id)
+
+    def create_script(
+        self,
+        script_id: str,
+        content_piece_id: str,
+        version: int,
+        narration_text: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> Script:
+        """Create an immutable Script version for a ContentPiece."""
+
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO scripts VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    script_id,
+                    content_piece_id,
+                    version,
+                    narration_text,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_script(script_id)
+
+    def get_script(self, script_id: str) -> Script:
+        row = self.connection.execute("SELECT * FROM scripts WHERE id = ?", (script_id,)).fetchone()
+        if row is None:
+            raise KeyError(script_id)
+        return self._script(row)
+
+    def list_scripts_for_content_piece(self, content_piece_id: str) -> list[Script]:
+        """Return immutable narration versions in ascending version order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM scripts WHERE content_piece_id = ? ORDER BY version", (content_piece_id,)
+        )
+        return [self._script(row) for row in rows]
+
+    def latest_script_for_content_piece(self, content_piece_id: str) -> Script | None:
+        """Return the highest-version Script without persisting a current-state flag."""
+
+        row = self.connection.execute(
+            "SELECT * FROM scripts WHERE content_piece_id = ? ORDER BY version DESC LIMIT 1",
+            (content_piece_id,),
+        ).fetchone()
+        return self._script(row) if row else None
+
+    def content_piece_payload(self, content_piece_id: str) -> dict[str, Any]:
+        """Load a read-only ContentPiece with its latest immutable Script version."""
+
+        content_piece = self.get_content_piece(content_piece_id)
+        latest_script = self.latest_script_for_content_piece(content_piece.id)
+        return {
+            "id": content_piece.id,
+            "opportunity_id": content_piece.opportunity_id,
+            "editorial_angle_id": content_piece.editorial_angle_id,
+            "format_key": content_piece.format_key,
+            "working_title": content_piece.working_title,
+            "latest_script": (
+                {
+                    "id": latest_script.id,
+                    "version": latest_script.version,
+                    "narration_text": latest_script.narration_text,
+                }
+                if latest_script
+                else None
+            ),
+        }
+
     def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
         research_pack = self.get_research_pack(research_pack_id)
         if research_pack.opportunity_id != opportunity_id:
@@ -711,6 +928,13 @@ class AtlasRepository:
         claim = self.get_claim(claim_id)
         if claim.research_pack_id != editorial_angle.research_pack_id:
             raise ValueError("An EditorialAngle Claim must belong to the Angle's ResearchPack.")
+
+    def _validate_content_piece_editorial_angle(
+        self, opportunity_id: str, editorial_angle_id: str
+    ) -> None:
+        editorial_angle = self.get_editorial_angle(editorial_angle_id)
+        if editorial_angle.opportunity_id != opportunity_id:
+            raise ValueError("A ContentPiece must use an EditorialAngle from the same Opportunity.")
 
     @staticmethod
     def _validate_editorial_angle_takeaways(key_takeaways: list[str]) -> None:
@@ -1052,6 +1276,7 @@ class AtlasRepository:
                     )
         self.seed_research_data()
         self.seed_editorial_angle_data()
+        self.seed_content_piece_data()
 
     def seed_research_data(self) -> None:
         """Seed one read-only demonstration ResearchPack without overwriting local edits."""
@@ -1289,6 +1514,39 @@ class AtlasRepository:
                     (editorial_angle_id, claim_id, role, stamp),
                 )
 
+    def seed_content_piece_data(self) -> None:
+        """Seed one persistent ISA deliverable and its immutable demo narration version."""
+
+        stamp = now()
+        demo_content = content_payload()
+        content_piece = (
+            "content-piece-isa-deadline-video-v1",
+            "uk-isa-rules",
+            "editorial-angle-isa-decision-tree-v1",
+            "video",
+            demo_content["title"],
+            "{}",
+            stamp,
+            stamp,
+        )
+        script = (
+            "script-isa-deadline-video-v1",
+            "content-piece-isa-deadline-video-v1",
+            1,
+            demo_content["script"],
+            "{}",
+            stamp,
+            stamp,
+        )
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO content_pieces VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                content_piece,
+            )
+            self.connection.execute(
+                "INSERT OR IGNORE INTO scripts VALUES (?, ?, ?, ?, ?, ?, ?)", script
+            )
+
     @staticmethod
     def _subject(row: sqlite3.Row) -> Subject:
         return Subject(
@@ -1395,4 +1653,29 @@ class AtlasRepository:
     def _editorial_angle_claim(row: sqlite3.Row) -> EditorialAngleClaim:
         return EditorialAngleClaim(
             row["editorial_angle_id"], row["claim_id"], row["role"], row["created_at"]
+        )
+
+    @staticmethod
+    def _content_piece(row: sqlite3.Row) -> ContentPiece:
+        return ContentPiece(
+            row["id"],
+            row["opportunity_id"],
+            row["editorial_angle_id"],
+            row["format_key"],
+            row["working_title"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _script(row: sqlite3.Row) -> Script:
+        return Script(
+            row["id"],
+            row["content_piece_id"],
+            row["version"],
+            row["narration_text"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
         )

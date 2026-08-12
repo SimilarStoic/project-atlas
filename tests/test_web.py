@@ -33,16 +33,26 @@ def test_server_can_be_created_for_local_use(tmp_path: Path) -> None:
         server.server_close()
 
 
-def test_content_endpoint_adapts_persisted_research_and_angle_without_changing_demo_package(
+def test_content_endpoint_adapts_persisted_research_angle_piece_and_script(
     tmp_path: Path,
 ) -> None:
-    """The Content Workspace receives v0.4 data plus its remaining demo content fields."""
+    """The Content Workspace receives v0.5 data plus its remaining demo content fields."""
 
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
         angle = server.repository.get_editorial_angle("editorial-angle-isa-decision-tree-v1")
         server.repository.update_editorial_angle(
             replace(angle, thesis="A persisted thesis exposed through the Content Workspace.")
+        )
+        content_piece = server.repository.get_content_piece("content-piece-isa-deadline-video-v1")
+        server.repository.update_content_piece(
+            replace(content_piece, working_title="A persisted ContentPiece title.")
+        )
+        server.repository.create_script(
+            "script-isa-deadline-video-v2",
+            content_piece.id,
+            2,
+            "A persisted latest narration version exposed through the Content Workspace.",
         )
         thread = threading.Thread(target=server.handle_request)
         thread.start()
@@ -63,7 +73,12 @@ def test_content_endpoint_adapts_persisted_research_and_angle_without_changing_d
             "core",
             "supporting",
         }
-        assert content["script"] == content_payload()["script"]
+        assert content["content_piece"]["working_title"] == "A persisted ContentPiece title."
+        assert content["content_piece"]["latest_script"]["version"] == 2
+        assert content["title"] == "A persisted ContentPiece title."
+        assert content["script"] == (
+            "A persisted latest narration version exposed through the Content Workspace."
+        )
         assert content["scene_plan"] == content_payload()["scene_plan"]
         assert content["qa"] == content_payload()["qa"]
     finally:
