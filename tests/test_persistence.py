@@ -88,7 +88,12 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
             ]
             == 0
         )
-        assert len(repository.list_visual_style_profiles()) == 1
+        assert [
+            (profile.id, profile.version) for profile in repository.list_visual_style_profiles()
+        ] == [
+            ("visual-style-profile-similarstoic-core-v1", 1),
+            ("visual-style-profile-similarstoic-core-v2", 2),
+        ]
     finally:
         repository.close()
 
@@ -1754,18 +1759,42 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
     database = tmp_path / "atlas.db"
     repository = AtlasRepository(database)
     try:
-        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
-        assert (profile.style_key, profile.version, profile.name) == (
+        v1 = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        v2 = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
+        assert (v1.style_key, v1.version, v1.name) == (
             "similarstoic-core",
             1,
             "SimilarStoic Core",
         )
-        assert set(profile.rules["asset_types"]) == {
-            "environment",
-            "character",
-            "graphic",
-            "prop",
-        }
+        assert (v2.style_key, v2.version, v2.name) == (
+            "similarstoic-core",
+            2,
+            "SimilarStoic Core",
+        )
+        assert (
+            set(v1.rules["asset_types"])
+            == set(v2.rules["asset_types"])
+            == {
+                "environment",
+                "character",
+                "graphic",
+                "prop",
+            }
+        )
+        assert "rendering_language" not in v1.rules["global"]
+        assert (
+            "hand-drawn black or dark line illustration" in v2.rules["global"]["rendering_language"]
+        )
+        assert v2.rules["global"]["background"] == "predominantly white or very light background"
+        assert "no colour unless helpful" in v2.rules["global"]["colour"]
+        assert v2.rules["global"]["shading"] == "no soft or tonal shading"
+        assert {
+            "soft shaded colour",
+            "subtle colour variation",
+            "gradient shading",
+            "textured colouring or fills",
+        } <= set(v2.rules["global"]["avoid"])
+        assert v2.rules["asset_types"]["environment"]["role"] == "background setting layer only"
         assert not hasattr(repository, "update_visual_style_profile")
         assert not hasattr(repository, "delete_visual_style_profile")
         for invalid_version in (0, -1, True, "1"):
@@ -1821,17 +1850,37 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
         with repository.connection:
             repository.connection.execute(
                 "UPDATE visual_style_profiles SET name = ? WHERE id = ?",
-                ("Founder-preserved profile", profile.id),
+                ("Founder-preserved v1 profile", v1.id),
+            )
+            repository.connection.execute(
+                "UPDATE visual_style_profiles SET name = ? WHERE id = ?",
+                ("Founder-preserved v2 profile", v2.id),
             )
     finally:
         repository.close()
 
     reopened = AtlasRepository(database)
     try:
-        assert reopened.get_visual_style_profile(profile.id).name == "Founder-preserved profile"
-        assert len(reopened.list_visual_style_profiles()) == 1
+        assert reopened.get_visual_style_profile(v1.id).name == "Founder-preserved v1 profile"
+        assert reopened.get_visual_style_profile(v2.id).name == "Founder-preserved v2 profile"
+        assert len(reopened.list_visual_style_profiles()) == 2
     finally:
         reopened.close()
+
+    restored = AtlasRepository(database)
+    try:
+        with restored.connection:
+            restored.connection.execute("DELETE FROM visual_style_profiles WHERE id = ?", (v2.id,))
+    finally:
+        restored.close()
+
+    restored = AtlasRepository(database)
+    try:
+        assert restored.get_visual_style_profile(v1.id).name == "Founder-preserved v1 profile"
+        assert restored.get_visual_style_profile(v2.id).version == 2
+        assert len(restored.list_visual_style_profiles()) == 2
+    finally:
+        restored.close()
 
 
 def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_path) -> None:
@@ -1839,7 +1888,7 @@ def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_pa
 
     repository = AtlasRepository(tmp_path / "atlas.db")
     try:
-        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
         prop = repository.create_asset_spec(
             "asset-spec-isa-style-prop-v1",
             "scene-isa-deadline-video-v1-01",
@@ -1859,6 +1908,7 @@ def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_pa
             second = composer.compose(asset_spec, profile).payload()
             assert first == second
             assert first["schema_version"] == 2
+            assert first["style"]["version"] == 2
             assert first["style"]["rules"]["asset_type"] == asset_spec.asset_type
             assert (
                 first["style"]["rules"]["asset_type_rules"]
@@ -1866,11 +1916,19 @@ def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_pa
             )
             assert "character" not in first["style"]["rules"]
             assert asset_spec.generation_prompt in first["prompt"]
+            assert "rendering language:" in first["prompt"]
+            assert "no colour unless helpful" in first["prompt"]
+            assert "soft shaded colour" in first["prompt"]
+            assert "gradient shading" in first["prompt"]
+            assert first["prompt"].index("visual ideas:") < first["prompt"].index(
+                "rendering language:"
+            )
+            assert first["prompt"].index("rendering language:") < first["prompt"].index("shapes:")
     finally:
         repository.close()
 
 
-def test_generation_service_uses_profile_v2_provenance_and_missing_profile_stops_early(
+def test_generation_service_uses_profile_provenance_and_missing_profile_stops_early(
     tmp_path, monkeypatch
 ) -> None:
     """Styled runs freeze exact profile lineage; an unavailable profile never invokes a provider."""
@@ -1899,42 +1957,37 @@ def test_generation_service_uses_profile_v2_provenance_and_missing_profile_stops
         service = GenerationService(repository, generator, LocalAssetStorage(tmp_path / "assets"))
         assert (
             service.visual_style_summary()["profile_id"]
-            == "visual-style-profile-similarstoic-core-v1"
+            == "visual-style-profile-similarstoic-core-v2"
         )
         result = service.generate_asset_spec(asset_spec.id)
-        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
         assert result.execution.visual_style_profile_id == profile.id
         assert result.execution.generation_input["schema_version"] == 2
         assert result.execution.generation_input["style"]["profile_id"] == profile.id
         assert result.execution.generation_input["style"]["style_key"] == profile.style_key
         assert result.execution.generation_input["style"]["version"] == profile.version
         assert generator.inputs[0].prompt == result.execution.generation_input["prompt"]
+        assert isinstance(generator.inputs[0], GenerationInput)
 
-        configured = repository.create_visual_style_profile(
-            "visual-style-profile-similarstoic-core-v2",
-            "similarstoic-core",
-            2,
-            "SimilarStoic Core v2",
-            "A test-only later profile.",
-            "Use test-only guidance.",
-            {},
+        v1_id = "visual-style-profile-similarstoic-core-v1"
+        monkeypatch.setenv("ATLAS_VISUAL_STYLE_PROFILE_ID", v1_id)
+        configured_generator = FakeImageGenerator()
+        configured = GenerationService(
+            repository, configured_generator, LocalAssetStorage(tmp_path / "configured-assets")
         )
-        monkeypatch.setenv("ATLAS_VISUAL_STYLE_PROFILE_ID", configured.id)
-        assert (
-            GenerationService(
-                repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "configured-assets")
-            ).visual_style_summary()["profile_id"]
-            == configured.id
-        )
+        assert configured.visual_style_summary()["profile_id"] == v1_id
+        v1_result = configured.generate_asset_spec(asset_spec.id)
+        assert v1_result.execution.visual_style_profile_id == v1_id
+        assert v1_result.execution.generation_input["style"]["version"] == 1
 
-        assert len(repository.list_generation_executions_for_asset_spec(asset_spec.id)) == 1
-        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 1
+        assert len(repository.list_generation_executions_for_asset_spec(asset_spec.id)) == 2
+        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 2
     finally:
         repository.close()
 
 
 def test_existing_v1_generation_execution_remains_readable_after_style_migration(tmp_path) -> None:
-    """v0.8 execution history remains an unchanged v1 snapshot with null style lineage."""
+    """v0.8 input and historical SimilarStoic Core v1 lineage remain readable."""
 
     repository = AtlasRepository(tmp_path / "atlas.db")
     try:
@@ -1949,5 +2002,15 @@ def test_existing_v1_generation_execution_remains_readable_after_style_migration
         )
         assert execution.visual_style_profile_id is None
         assert execution.generation_input == v1_input
+        styled = GenerationService(
+            repository,
+            FakeImageGenerator(),
+            LocalAssetStorage(tmp_path / "v1-assets"),
+            "visual-style-profile-similarstoic-core-v1",
+        ).generate_asset_spec(asset_spec.id)
+        assert (
+            styled.execution.visual_style_profile_id == "visual-style-profile-similarstoic-core-v1"
+        )
+        assert styled.execution.generation_input["style"]["version"] == 1
     finally:
         repository.close()

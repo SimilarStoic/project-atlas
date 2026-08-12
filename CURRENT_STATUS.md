@@ -14,13 +14,13 @@
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
-The bounded Atlas v0.9 Visual Style Control Foundation is complete and pushed.
+The bounded Atlas v0.9 Visual Style Control Foundation and v0.10 Visual Style Fidelity Refinement are
+complete and pushed. V0.10 is a provisional visual-style baseline, not final art direction.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8 and v0.9 are complete and pushed. Atlas v0.9 implements the approved bounded style-control layer
-between a persistent executable AssetSpec and its provider-neutral GenerationInput. No further v0.9
-implementation beyond this bounded foundation has been approved.
+Atlas v0.8, v0.9 and v0.10 are complete and pushed. Atlas v0.10 evolves the approved style-control layer
+through an immutable SimilarStoic Core v2 profile only.
 
 ---
 
@@ -43,7 +43,7 @@ implementation beyond this bounded foundation has been approved.
 
 Current commit:
 
-`9eac8bae020a3c79598964e61a80ddeb4e498053 feat: add generation execution foundation`
+`873703e5ee578a75ce437a83131cdc3ca7bfc071 feat: add visual style control foundation`
 
 Branch:
 
@@ -55,7 +55,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.9 checkpoint; local `main` matched `origin/main`.
+Clean at the v0.9 checkpoint before the local v0.10 refinement; local `main` matched `origin/main`.
 
 ## Atlas v0.2 Checkpoint
 
@@ -183,6 +183,25 @@ but is now complete and pushed.
 - `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value uses SimilarStoic Core v1.
   Character/StyleBible/reference-image continuity, profile editing, QA, workflow, production and publishing
   remain deferred.
+
+## Atlas v0.10 Checkpoint
+
+**Project Atlas v0.10 — Visual Style Fidelity Refinement** is complete and pushed as a provisional
+visual-style baseline.
+
+- SimilarStoic Core v2 is seeded beside the preserved immutable SimilarStoic Core v1 profile; no
+  migration was required.
+- V2 retains the sparse, light, one-idea and asset-decomposition rules from v0.9 while strengthening
+  visibly hand-drawn dark-line language: organic uneven lines, simplified imperfect forms, mostly
+  white/unfilled space and only an optional restrained flat block accent colour; tonal shading and
+  textured fills are explicitly avoided.
+- The deterministic default is v2. `ATLAS_VISUAL_STYLE_PROFILE_ID` can still explicitly select v1.
+  Existing v1 executions and their GenerationInput v2 snapshots remain unchanged.
+- V2 is the current text-guided production baseline, not the final SimilarStoic visual identity. Further
+  art-direction refinement remains intentionally deferred; a future immutable profile version may
+  supersede v2, and reference-grounded style fidelity may be explored later if justified.
+- Style-reference images, character identity/continuity, profile editing, QA, workflow, production,
+  publishing and other future style architecture remain deferred.
 
 ---
 

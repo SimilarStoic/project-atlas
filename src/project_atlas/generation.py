@@ -22,7 +22,7 @@ from project_atlas.persistence import (
     VisualStyleProfile,
 )
 
-DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v1"
+DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v2"
 
 
 @dataclass(frozen=True)
@@ -152,6 +152,7 @@ class PromptComposer:
         "background",
         "composition",
         "visual_ideas",
+        "rendering_language",
         "shapes",
         "shading",
         "colour",

@@ -730,6 +730,17 @@ the concrete AssetSpec requirement, freezes the resolved style in GenerationInpu
 GenerationExecution-to-profile lineage. Style selection is configuration-only; Character/StyleBible/reference
 continuity, profile editing, QA, workflow, production and publishing remain deferred.
 
+### Atlas v0.10 — Visual Style Fidelity Refinement
+Status: COMPLETE
+
+SimilarStoic Core v2 is an immutable, self-contained VisualStyleProfile version that strengthens
+human-drawn dark-line rendering with mostly white/unfilled space and optional limited flat block
+colour, while preserving v0.9's sparse, light, asset-decomposed composition. V1 remains readable and selectable through
+`ATLAS_VISUAL_STYLE_PROFILE_ID`; v2 is the deterministic default. No migration or new style layer
+was required. V2 is the current text-guided production baseline, not the final SimilarStoic visual identity:
+future immutable profile versions may supersede it, and reference-grounded style fidelity may be explored
+later if justified. Style-reference images and character identity/continuity remain deferred.
+
 ## Phase 0 — Foundation
 Status: COMPLETE
 

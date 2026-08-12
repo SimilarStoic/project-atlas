@@ -2629,7 +2629,7 @@ class AtlasRepository:
                 )
 
     def seed_visual_style_profile_data(self) -> None:
-        """Seed the immutable SimilarStoic Core visual-language profile once."""
+        """Seed immutable SimilarStoic Core visual-language profile versions once."""
 
         rules = {
             "schema_version": 1,
@@ -2712,6 +2712,108 @@ class AtlasRepository:
                 },
             },
         }
+        v2_rules = {
+            "schema_version": 1,
+            "global": {
+                "background": "predominantly white or very light background",
+                "composition": "sparse composition",
+                "visual_ideas": "one dominant visual idea",
+                "rendering_language": (
+                    "visibly hand-drawn black or dark line illustration with natural stroke "
+                    "variation, slightly uneven contours and simplified readable forms; keep "
+                    "most of the scene white and unfilled, using no colour unless helpful and "
+                    "then only one restrained flat block accent colour"
+                ),
+                "shapes": "simple deliberately imperfect geometry",
+                "shading": "no soft or tonal shading",
+                "colour": (
+                    "no colour unless helpful; at most one restrained flat block accent colour"
+                ),
+                "negative_space": "generous negative space",
+                "detail": "minimal environmental detail and only necessary props",
+                "avoid": [
+                    "mechanically perfect vector lines",
+                    "perfectly uniform outlines",
+                    "overly symmetrical object geometry",
+                    "soft shaded colour",
+                    "subtle colour variation",
+                    "multiple shades of the same object",
+                    "painterly fill treatment",
+                    "airbrushed shading",
+                    "textured colouring or fills",
+                    "gradient shading",
+                    "blended colour transitions",
+                    "polished digital illustration finish",
+                    "generic stock-illustration appearance",
+                    "hyper-clean iconography",
+                    "photorealism",
+                    "realistic depth rendering",
+                    "detailed decorative clutter",
+                    "dense information-heavy compositions",
+                    (
+                        "invented explanatory text, posters, labels, dashboards, written "
+                        "information or signage unless explicitly required by the AssetSpec"
+                    ),
+                ],
+                "narration": (
+                    "visuals reinforce narration and must not become necessary for understanding "
+                    "the explanation"
+                ),
+            },
+            "asset_types": {
+                "environment": {
+                    "role": "background setting layer only",
+                    "layer_discipline": (
+                        "leave clear space for later foreground composition and do not invent "
+                        "sibling AssetSpec requirements"
+                    ),
+                    "prefer": [
+                        "white or light open canvas",
+                        "minimal setting cues",
+                        "generous negative space",
+                        "few essential objects",
+                    ],
+                    "avoid": [
+                        "foreground characters unless they are part of the environment itself",
+                        "standalone props",
+                        "explanatory graphics",
+                        "full explainer composition",
+                        "dense signage",
+                        "information boards",
+                        "invented written material",
+                        "multiple narrative events",
+                        "unnecessary decorative props",
+                        "fully furnished or detail-heavy rooms",
+                    ],
+                },
+                "character": {
+                    "role": "clear character pose, action or reaction",
+                    "prefer": [
+                        "character as dominant subject",
+                        "plain or minimal background",
+                        "clear silhouette and body language",
+                        "very few competing props",
+                    ],
+                },
+                "prop": {
+                    "role": "one standalone object or small coherent object group",
+                    "prefer": [
+                        "simple isolated presentation",
+                        "minimal background",
+                        "no unrelated scene construction",
+                    ],
+                },
+                "graphic": {
+                    "role": "one clear explanatory graphic",
+                    "prefer": [
+                        "simple structure",
+                        "minimal labels",
+                        "only text explicitly required by the AssetSpec",
+                        "high immediate readability",
+                    ],
+                },
+            },
+        }
         stamp = now()
         with self.connection:
             self.connection.execute(
@@ -2725,6 +2827,26 @@ class AtlasRepository:
                     "The sparse, hand-drawn editorial illustration direction for SimilarStoic.",
                     "Use a simple hand-drawn or line-drawn editorial illustration style.",
                     json.dumps(rules, sort_keys=True),
+                    stamp,
+                ),
+            )
+            self.connection.execute(
+                "INSERT OR IGNORE INTO visual_style_profiles "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                (
+                    "visual-style-profile-similarstoic-core-v2",
+                    "similarstoic-core",
+                    2,
+                    "SimilarStoic Core",
+                    (
+                        "The sparse, visibly hand-drawn editorial sketch direction for "
+                        "SimilarStoic."
+                    ),
+                    (
+                        "Use a visibly hand-drawn editorial sketch with organic, imperfect "
+                        "linework and simple readable forms."
+                    ),
+                    json.dumps(v2_rules, sort_keys=True),
                     stamp,
                 ),
             )

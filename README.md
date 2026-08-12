@@ -3,7 +3,7 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.9 scope;
+SQLite foundation for SimilarStoic. It implements the v0.1-v0.10 scope;
 later workflow,
 research automation and production systems remain deferred.
 
@@ -228,10 +228,22 @@ lineage. Existing v0.8 `GenerationInput` v1 history remains readable unchanged.
 Environment AssetSpecs describe only the setting/background layer. Character, prop and
 graphic requirements remain separate production assets for later composition.
 
-The active immutable profile is configured with `ATLAS_VISUAL_STYLE_PROFILE_ID`, falling
-back to the deterministic SimilarStoic Core v1 seed. Character entities, StyleBibles,
-reference-image continuity, profile editing, QA, workflow and production systems remain
-deferred.
+Atlas v0.10 adds immutable `SimilarStoic Core` v2 alongside the preserved v1 profile.
+V2 strengthens the hand-drawn rendering language—organic dark linework, simplified forms, mostly
+white/unfilled space, and no colour unless a single restrained flat block accent is helpful—while
+avoiding tonal shading, textured fills and polished digital-illustration finish. It retains v0.9's
+sparse, light, decomposed composition rules. The active immutable
+profile is configured with `ATLAS_VISUAL_STYLE_PROFILE_ID`, falling back deterministically to v2;
+v1 remains selectable. No schema migration was required: both profile versions are idempotent seed
+data, and existing executions retain their frozen v1 lineage unchanged.
+
+SimilarStoic Core v2 is the current text-guided production baseline, not the final SimilarStoic visual
+identity. Further visual art direction remains intentionally deferred; a future immutable profile version
+may supersede v2, and reference-grounded style fidelity may be considered later if justified. Existing v1
+and v2 GenerationExecutions retain their original frozen style provenance.
+
+Style-reference images, Character entities and continuity, profile editing, QA, workflow and production
+systems remain deferred.
 
 ## Status
 
@@ -239,5 +251,5 @@ v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
 v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
 Asset persistence, v0.8 Generation Execution, and v0.9 Visual Style Control are complete and
-pushed. Later Atlas systems remain
-out of scope.
+pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visual-style baseline. Later
+Atlas systems remain out of scope.

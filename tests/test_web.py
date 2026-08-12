@@ -114,9 +114,9 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
         thread.join(timeout=2)
         content = payload["content"]
         assert content["visual_style"] == {
-            "profile_id": "visual-style-profile-similarstoic-core-v1",
+            "profile_id": "visual-style-profile-similarstoic-core-v2",
             "style_key": "similarstoic-core",
-            "version": 1,
+            "version": 2,
             "name": "SimilarStoic Core",
         }
         assert content["selected_angle"] == "The 15-minute ISA decision tree before the deadline."
@@ -189,6 +189,30 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
         )
         assert content["scene_plan"] != content_payload()["scene_plan"]
         assert content["qa"] == content_payload()["qa"]
+    finally:
+        server.server_close()
+
+
+def test_content_endpoint_can_expose_explicitly_configured_v1_style(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Profile selection remains configuration-only while v2 is the default."""
+
+    monkeypatch.setenv("ATLAS_VISUAL_STYLE_PROFILE_ID", "visual-style-profile-similarstoic-core-v1")
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    try:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content") as response:
+            content = json.load(response)["content"]
+        thread.join(timeout=2)
+        assert content["visual_style"] == {
+            "profile_id": "visual-style-profile-similarstoic-core-v1",
+            "style_key": "similarstoic-core",
+            "version": 1,
+            "name": "SimilarStoic Core",
+        }
+        assert not {"selected", "current", "best", "approved"} & content["visual_style"].keys()
     finally:
         server.server_close()
 
@@ -266,7 +290,7 @@ def test_generation_endpoint_uses_persisted_prompt_and_exposes_execution(tmp_pat
         assert payload["execution"]["outcome"] == "succeeded"
         assert (
             payload["execution"]["visual_style_profile_id"]
-            == "visual-style-profile-similarstoic-core-v1"
+            == "visual-style-profile-similarstoic-core-v2"
         )
         assert payload["asset"]["generation_execution_id"] == payload["execution"]["id"]
         assert asset_spec.generation_prompt in generator.inputs[0].prompt
