@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-11 August 2026
+12 August 2026
 
 ## Current Phase
 
@@ -10,13 +10,13 @@
 
 ## Overall Status
 
-🟡 Product definition in progress.
+🟡 Product definition continues; Atlas v0.2 implementation is complete.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
-No production automation or business logic has been implemented yet.
+The v0.1 UI baseline and v0.2 persistent discovery foundation are implemented and safely stored on GitHub.
 
-The MVP and technical architecture are specified/planned only; they have not been implemented.
+Atlas v0.3 — Research & Evidence Foundation is in the DESIGN/APPROVED-FOR-IMPLEMENTATION stage. It has not yet been implemented.
 
 ---
 
@@ -39,7 +39,7 @@ The MVP and technical architecture are specified/planned only; they have not bee
 
 Current commit:
 
-`e343d93 docs: define SimilarStoic content operating model`
+`34191ad1054fafb6d3d869f759cd44dc358ec59d feat: add persistent discovery data foundation`
 
 Branch:
 
@@ -51,7 +51,19 @@ Remote:
 
 Working tree:
 
-Clean
+Clean at the v0.2 checkpoint; local `main` matched `origin/main`.
+
+## Atlas v0.2 Checkpoint
+
+**Project Atlas v0.2 — Persistent Discovery Foundation** is complete and pushed.
+
+- The v0.1 UI baseline is preserved.
+- Subjects are persistent.
+- Opportunities are persistent.
+- Opportunity/Subject relationships are persistent.
+- SQLite persistence, explicit migrations and a repository layer are established.
+- No generic Topics model was introduced.
+- Pillars remain deliberately deferred.
 
 ---
 
@@ -73,7 +85,23 @@ Young professionals and beginners alike.
 
 ## Territory
 
-> Wealth + Opportunity + Technology + Independence
+> MONEY + WORK + BEHAVIOUR + LIFE STRATEGY
+
+> Understand money. Understand yourself. Build a better life.
+
+Finance remains a major centre of gravity, an important commercial foundation, a core source of high-intent content and central to the SimilarStoic identity. The expanded territory extends the finance-centred strategy; it does not replace finance.
+
+Relevant territory may include money, wealth and investing; work, careers and income; time; behaviour and psychology; life strategy; status and consumption; relationships and social decisions where relevant; energy and attention; mental models; modern adulthood; financial independence; and broader economic ideas made personally understandable.
+
+These are strategic examples, not a final Atlas Pillar taxonomy.
+
+## Editorial Inclusion Test
+
+> Does understanding this help someone make better decisions about their money, work, time or future?
+
+If yes, the idea may belong within SimilarStoic. SimilarStoic must not drift into generic self-improvement merely because a subject is popular or clickable.
+
+Life design connected to money, time or work; psychology of consumption/status; careers/income; and financial relationships are potentially strong fits. Generic fitness advice with no meaningful connection is generally outside the intended territory.
 
 ## Long-Term Transformation
 
@@ -95,11 +123,21 @@ Confident, approachable, humorous and relatable without becoming a guru or sacri
 
 ## Content Pillars
 
+The current editorial portfolio themes guide strategy but do not define the final persistent Atlas Pillar taxonomy.
+
 1. Build & Protect Wealth
 2. Keep More of What You Earn
 3. Increase Income & Leverage
 4. Spot the Next Opportunity
 5. Think & Decide Better
+
+## Atlas Domain Distinction
+
+- **Pillars** are strategic portfolio organisation.
+- **Subjects** are reusable concepts and knowledge domains.
+- **Opportunities** are specific editorial possibilities and may involve multiple Subjects.
+
+These concepts must not be collapsed into one generic Topic model. The final Pillar taxonomy and its relationships remain deliberately deferred.
 
 ## Geography
 
@@ -130,6 +168,10 @@ Controlled variations such as small, large, squishy and exaggerated are allowed 
 Core rule:
 
 > The narrator explains. The hamster illustrates.
+
+> **THE COMPLETE VIDEO MUST BE UNDERSTANDABLE FROM AUDIO ALONE.**
+
+Visuals may enhance, entertain, reinforce, provide humour and provide metaphor; they must not contain information required to understand the explanation. This remains a hard requirement for future script, scene and visual-planning architecture.
 
 ## Narration
 
@@ -189,6 +231,10 @@ Facts, interpretation and opinion must be distinguished.
 Unverified claims must not be published as facts.
 
 Structured Research Packs precede scripting. They identify contradictions, uncertainty and outdated information, and distinguish facts, interpretations and forecasts.
+
+The v0.3 Research & Evidence Foundation will support different claim/statement types, provenance, source relationships, verification states and freshness requirements. It must not assume every statement has the same evidence burden or hard-code a narrow financial-news workflow.
+
+For example, current ISA rules need current authoritative, jurisdiction-aware financial/tax evidence and strong freshness checks. Behavioural, life-strategy and philosophical pieces may combine economic evidence, behavioural/psychological research, statistics, academic or expert sources, calculations, illustrative examples and editorial interpretation.
 
 ## Actionable Content
 
@@ -260,9 +306,11 @@ Maintain a knowledge map of covered subjects and outstanding knowledge gaps so t
 
 Atlas is specified as a structured knowledge + content intelligence system, not merely a content archive:
 
-> Topics → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Topics/Angles
+> Pillars (portfolio) → Subjects (knowledge) → Opportunities → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Opportunities/Angles
 
 Claims retain appropriate provenance, verification/freshness information, applicability context and risk metadata. Previously researched knowledge may be reused after appropriate freshness validation.
+
+Pillars remain strategic portfolio organisation, Subjects remain reusable knowledge domains, and Opportunities remain specific editorial possibilities. This documentation does not define the final Pillar taxonomy.
 
 Community/forum/social sources remain audience/topic signals and are distinct from authoritative factual evidence. The knowledge system will eventually support portfolio-gap analysis and identify coverage that needs development or updating.
 
@@ -334,6 +382,10 @@ Completed:
 - MVP editorial-intelligence scope and core screens
 - Modular, configuration-first architecture principles
 - Cost-tracking requirements and current development-stack choice
+- Atlas v0.1 editorial control interface baseline
+- Atlas v0.2 persistent discovery foundation
+- Finance-centred editorial expansion to money, work, behaviour and life strategy
+- Editorial inclusion test and explicit Pillars / Subjects / Opportunities distinction
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -344,17 +396,21 @@ Remaining before Phase 1 is complete:
 
 # Next Step
 
-Do not begin engineering yet.
-
 Next:
 
-> **Finalise the production-ready SimilarStoic brand identity and mascot visual specification, then complete the Phase 1 acceptance review.**
+> **Design the Atlas v0.3 Research & Evidence Foundation, then complete the bounded implementation task.**
 
-After Phase 1 is fully defined:
+Approved v0.3 conceptual direction:
 
-1. Complete the detailed technical architecture and acceptance review
-2. Prepare the GPT + Codex implementation handoff package
-3. Begin engineering the approved MVP workflow
+> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → editorial interpretation
+
+v0.3 is approved for implementation design but is not implemented. The final Research & Evidence schema, final Pillar taxonomy, research rules, scoring system and evidence taxonomy remain intentionally unsettled.
+
+## Development Method
+
+> DEFINE → DESIGN WITH USER → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → COMMIT → PUSH → NEXT MILESTONE
+
+This is the established method for preserving **change without rebuild**.
 
 ---
 

@@ -37,13 +37,39 @@ The audience includes both young professionals and beginners.
 
 ## Broader Territory
 
-SimilarStoic operates at the intersection of:
+SimilarStoic operates across:
 
-- Wealth
-- Opportunity
-- Technology
-- Independence
-- Better decision-making
+> MONEY + WORK + BEHAVIOUR + LIFE STRATEGY
+
+A useful high-level expression is:
+
+> Understand money. Understand yourself. Build a better life.
+
+Finance remains a major centre of gravity, an important commercial foundation, a core source of high-intent content and central to the SimilarStoic identity. This is an expansion of the finance-centred strategy, not a pivot away from it.
+
+The broader editorial universe may include money and investing; work, careers and income; time, behaviour and psychology; life strategy; status and consumption; relationships or social decisions where relevant; energy and attention; mental models; modern adulthood; financial independence; and broader economic ideas made personally understandable.
+
+These are strategic territories, not a final Atlas Pillar taxonomy.
+
+## Editorial inclusion test
+
+Use this strategic filter:
+
+> Does understanding this help someone make better decisions about their money, work, time or future?
+
+If yes, the idea may belong within SimilarStoic.
+
+SimilarStoic must not drift into generic self-improvement simply because a subject is popular or clickable. Life design connected to money, time or work; the psychology of consumption or status; careers and income; and financial relationships are potentially strong fits. Generic fitness advice with no meaningful connection is generally outside the intended territory.
+
+## Atlas domain distinction
+
+Atlas deliberately distinguishes:
+
+- **Pillars** — strategic portfolio organisation.
+- **Subjects** — reusable concepts and knowledge domains.
+- **Opportunities** — specific editorial possibilities that may involve multiple Subjects.
+
+These concepts must not be collapsed into a generic Topic model. The final Pillar taxonomy and its relationships remain deliberately deferred.
 
 ## Long-Term Viewer Transformation
 
@@ -89,6 +115,8 @@ Another core principle:
 ---
 
 # Content Pillars
+
+The following are current editorial portfolio themes. They guide strategy today but do not define the final persistent Atlas Pillar taxonomy.
 
 ## 1. Build & Protect Wealth
 
@@ -295,6 +323,14 @@ Research Packs are required before scripting. They must identify contradictions,
 
 High-risk financial content requires human review. Material unsupported or inaccurate claims block publication; substantive factual corrections must be surfaced rather than silently hidden.
 
+## Research and evidence direction
+
+The future Research & Evidence system must be flexible enough for different statement and content types to carry different evidence obligations.
+
+Current ISA rules may require current authoritative primary sources, jurisdiction-aware financial/tax evidence and strong freshness requirements. A behavioural piece such as “Why earning more doesn't make you feel richer” may combine economic evidence, behavioural research, statistics, academic or expert sources, illustrative examples and editorial interpretation. “How much money is enough?” may combine objective claims, calculations, research findings, editorial interpretation and philosophical framing.
+
+Atlas must not assume every statement has the same evidence burden. The future system should support different claim/statement types, provenance, source relationships, verification states and freshness requirements without hard-coding a narrow financial-news workflow. The final Research & Evidence schema is intentionally deferred to the next architectural milestone.
+
 ---
 
 # Financial Content
@@ -339,7 +375,9 @@ The format should use:
 - Visual metaphors, charts, diagrams and typography
 - Selective real-world or original imagery where useful
 
-The content must be fully understandable as audio. Important information must still be explained verbally.
+> **THE COMPLETE VIDEO MUST BE UNDERSTANDABLE FROM AUDIO ALONE.**
+
+Visuals may enhance, entertain, reinforce, provide humour and provide metaphor. They must not contain information required to understand the explanation. This remains a hard requirement for future script, scene and visual-planning architecture.
 
 Core creative principle:
 
@@ -532,9 +570,11 @@ Project Atlas is specified as a structured knowledge and content-intelligence sy
 
 It should connect:
 
-> Topics → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Topics/Angles
+> Pillars (portfolio) → Subjects (knowledge) → Opportunities → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Opportunities/Angles
 
 Claims should retain appropriate provenance, verification and freshness information, applicability context and risk metadata.
+
+Pillars remain strategic portfolio organisation, Subjects remain reusable knowledge domains, and Opportunities remain specific editorial possibilities. This roadmap does not define the final Pillar taxonomy.
 
 Previously researched knowledge should be reusable after appropriate freshness validation rather than requiring redundant research. Community, forum and social sources remain audience/topic signals and must be kept distinct from authoritative factual evidence.
 
@@ -634,6 +674,27 @@ Commercial relationships must never determine:
 ---
 
 # Development Roadmap
+
+## Current implementation milestones
+
+### Atlas v0.1 — MVP Editorial Control Interface
+Status: COMPLETE
+
+The local browser shell for Command Centre, Discover, Content Workspace and Atlas Chat is established.
+
+### Atlas v0.2 — Persistent Discovery Foundation
+Status: COMPLETE
+
+Subjects, Opportunities and their relationships are now persistent through SQLite, explicit migrations and a repository layer. No generic Topics model was introduced. Pillars remain deliberately deferred.
+
+### Atlas v0.3 — Research & Evidence Foundation
+Status: DESIGN/APPROVED FOR IMPLEMENTATION
+
+Approved conceptual direction:
+
+> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → editorial interpretation
+
+This milestone is not yet implemented. It will establish principles and architecture for flexible claim types, provenance, source relationships, verification states and freshness requirements; it will not assume that every statement carries the same evidence burden.
 
 ## Phase 0 — Foundation
 Status: COMPLETE
@@ -826,3 +887,9 @@ Potentially expand:
 8. Never publish unverified factual claims.
 9. Keep human approval for consequential decisions until automation is proven.
 10. Document important decisions so future AI agents can recover context.
+
+## Development method
+
+> DEFINE → DESIGN WITH USER → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → COMMIT → PUSH → NEXT MILESTONE
+
+This process supports **change without rebuild**. It does not imply that the final Atlas workflow, Pillar taxonomy, research rules, scoring system or evidence taxonomy is already settled.
