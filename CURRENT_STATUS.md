@@ -10,14 +10,14 @@
 
 ## Overall Status
 
-🟡 Product definition continues; Atlas v0.3 implementation is complete locally and awaiting review.
+🟡 Product definition continues. Atlas v0.1, v0.2 and v0.3 are complete and pushed; Atlas v0.4 is now in design only.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
-The v0.1 UI baseline and v0.2 persistent discovery foundation are implemented and safely stored on GitHub.
+The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.3 — Research & Evidence Foundation is implemented locally for review. It has not yet
-been committed or pushed.
+No v0.4 implementation has been approved. The next architectural question is the bridge from
+Research & Evidence to Editorial Development, likely through an Editorial Angle layer.
 
 ---
 
@@ -40,7 +40,7 @@ been committed or pushed.
 
 Current commit:
 
-`34191ad1054fafb6d3d869f759cd44dc358ec59d feat: add persistent discovery data foundation`
+`6e5d5f048513782426d1a66d45cd1b4d4a395786 feat: add research and evidence foundation`
 
 Branch:
 
@@ -52,7 +52,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.2 checkpoint; local `main` matched `origin/main`.
+Clean at the v0.3 checkpoint; local `main` matches `origin/main`.
 
 ## Atlas v0.2 Checkpoint
 
@@ -66,10 +66,9 @@ Clean at the v0.2 checkpoint; local `main` matched `origin/main`.
 - No generic Topics model was introduced.
 - Pillars remain deliberately deferred.
 
-## Atlas v0.3 Local Implementation
+## Atlas v0.3 Checkpoint
 
-**Project Atlas v0.3 — Research & Evidence Foundation** is implemented locally and awaiting
-review, commit and push.
+**Project Atlas v0.3 — Research & Evidence Foundation** is complete and pushed.
 
 - A versioned ResearchPack belongs to one Opportunity.
 - Claims are version-specific and belong to one ResearchPack.
@@ -406,7 +405,7 @@ Completed:
 - Atlas v0.2 persistent discovery foundation
 - Finance-centred editorial expansion to money, work, behaviour and life strategy
 - Editorial inclusion test and explicit Pillars / Subjects / Opportunities distinction
-- Atlas v0.3 Research & Evidence persistence foundation (local, awaiting review/commit/push)
+- Atlas v0.3 Research & Evidence persistence foundation
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -419,7 +418,7 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Review the bounded Atlas v0.3 implementation, then commit and push if approved.**
+> **Design the bounded Atlas v0.4 bridge from Research & Evidence to Editorial Development / Editorial Angle. No v0.4 implementation has been approved.**
 
 Implemented v0.3 direction:
 
