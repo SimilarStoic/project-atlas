@@ -717,9 +717,18 @@ Status: COMPLETE
 AssetSpec now persistently records each provider-neutral visual requirement for one Scene, and immutable Asset versions register concrete outputs without generation, selection, approval or workflow semantics. QA remains demo-backed.
 
 ### Atlas v0.8 — Generation Execution Foundation
-Status: IMPLEMENTED LOCALLY, AWAITING REVIEW
+Status: COMPLETE
 
 GenerationExecution now records one immutable terminal synchronous attempt against one AssetSpec, including frozen input provenance. A successful operation registers one linked immutable Asset; failure records no Asset. OpenAI is the first replaceable image adapter; queues, retries, QA, workflow, rendering and publishing remain deferred.
+
+### Atlas v0.9 — Visual Style Control Foundation
+Status: COMPLETE
+
+VisualStyleProfile now provides immutable, versioned SimilarStoic visual direction between AssetSpec and
+provider-neutral GenerationInput. Atlas deterministically composes global and matching asset-type rules with
+the concrete AssetSpec requirement, freezes the resolved style in GenerationInput v2, and records direct
+GenerationExecution-to-profile lineage. Style selection is configuration-only; Character/StyleBible/reference
+continuity, profile editing, QA, workflow, production and publishing remain deferred.
 
 ## Phase 0 — Foundation
 Status: COMPLETE

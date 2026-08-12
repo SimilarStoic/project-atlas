@@ -160,6 +160,10 @@ function visualPlan(content) {
   if (!plan) {
     return "";
   }
+  var style = content.visual_style;
+  var visualStyle = style
+    ? '<p><b>Visual style</b><br>' + style.name + " · v" + style.version + "</p>"
+    : "";
   var scenes = plan.scenes
     .map(function (scene) {
       var assetSpecs = scene.asset_specs
@@ -234,7 +238,9 @@ function visualPlan(content) {
   return (
     '<div class="pack"><label>VISUAL PLAN &amp; SCENES · PERSISTED</label><p><b>Direction</b><br>' +
     plan.visual_direction +
-    '</p><p><b>Ordered scenes</b></p><ul class="qa">' +
+    "</p>" +
+    visualStyle +
+    '<p><b>Ordered scenes</b></p><ul class="qa">' +
     scenes +
     "</ul></div>"
   );

@@ -14,7 +14,15 @@ from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from project_atlas.persistence import Asset, AssetSpec, AtlasRepository, GenerationExecution
+from project_atlas.persistence import (
+    Asset,
+    AssetSpec,
+    AtlasRepository,
+    GenerationExecution,
+    VisualStyleProfile,
+)
+
+DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v1"
 
 
 @dataclass(frozen=True)
@@ -25,15 +33,19 @@ class GenerationInput:
     prompt: str
     continuity_key: str | None
     parameters: dict[str, Any]
+    style: dict[str, Any] | None = None
 
     def payload(self) -> dict[str, Any]:
-        return {
-            "schema_version": 1,
+        payload = {
+            "schema_version": 2 if self.style is not None else 1,
             "asset_type": self.asset_type,
             "prompt": self.prompt,
             "continuity_key": self.continuity_key,
             "parameters": self.parameters,
         }
+        if self.style is not None:
+            payload["style"] = self.style
+        return payload
 
 
 @dataclass(frozen=True)
@@ -73,6 +85,10 @@ class UnsupportedGenerationType(ValueError):
     """Raised before invoking a generator for a non-executable AssetSpec type."""
 
 
+class MissingVisualStyleProfile(ValueError):
+    """Raised before generator invocation when configured style provenance is unavailable."""
+
+
 class AssetStorageFailure(Exception):
     """Raised when Atlas cannot safely create a locally managed asset file."""
 
@@ -93,6 +109,13 @@ def default_asset_storage_root() -> Path:
     """Return the configured local root for generated Atlas asset files."""
 
     return Path(os.environ.get("ATLAS_ASSET_STORAGE_ROOT", "data/assets"))
+
+
+def configured_visual_style_profile_id() -> str:
+    """Return the configured immutable profile ID or the deterministic seeded fallback."""
+
+    configured = os.environ.get("ATLAS_VISUAL_STYLE_PROFILE_ID", "").strip()
+    return configured or DEFAULT_VISUAL_STYLE_PROFILE_ID
 
 
 def asset_spec_snapshot(asset_spec: AssetSpec) -> dict[str, Any]:
@@ -120,6 +143,95 @@ def generation_input_for(asset_spec: AssetSpec) -> GenerationInput:
         continuity_key=asset_spec.continuity_key,
         parameters={},
     )
+
+
+class PromptComposer:
+    """Compose a deterministic Atlas-owned visual prompt from one profile and AssetSpec."""
+
+    _GLOBAL_RULE_ORDER = (
+        "background",
+        "composition",
+        "visual_ideas",
+        "shapes",
+        "shading",
+        "colour",
+        "negative_space",
+        "detail",
+        "avoid",
+        "narration",
+    )
+    _ASSET_TYPE_RULE_ORDER = (
+        "role",
+        "layer_discipline",
+        "prefer",
+        "background",
+        "detail",
+        "text",
+        "avoid",
+    )
+
+    def compose(self, asset_spec: AssetSpec, profile: VisualStyleProfile) -> GenerationInput:
+        """Return one v2 input with only the style rules relevant to the AssetSpec type."""
+
+        global_rules, asset_type_rules = self._resolved_rules(asset_spec, profile)
+        prompt = "\n\n".join(
+            (
+                f"Visual style guidance: {profile.generation_guidance}",
+                "Global visual rules: " + self._render_rules(global_rules, self._GLOBAL_RULE_ORDER),
+                f"{asset_spec.asset_type} visual rules: "
+                + self._render_rules(asset_type_rules, self._ASSET_TYPE_RULE_ORDER),
+                f"AssetSpec requirement: {asset_spec.generation_prompt}",
+            )
+        )
+        return GenerationInput(
+            asset_type=asset_spec.asset_type,
+            prompt=prompt,
+            continuity_key=asset_spec.continuity_key,
+            parameters={},
+            style={
+                "profile_id": profile.id,
+                "style_key": profile.style_key,
+                "version": profile.version,
+                "generation_guidance": profile.generation_guidance,
+                "rules": {
+                    "schema_version": profile.rules.get("schema_version", 1),
+                    "global": global_rules,
+                    "asset_type": asset_spec.asset_type,
+                    "asset_type_rules": asset_type_rules,
+                },
+            },
+        )
+
+    @staticmethod
+    def _resolved_rules(
+        asset_spec: AssetSpec, profile: VisualStyleProfile
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        global_rules = profile.rules.get("global", {})
+        asset_types = profile.rules.get("asset_types", {})
+        if not isinstance(global_rules, dict) or not isinstance(asset_types, dict):
+            raise ValueError(
+                "VisualStyleProfile rules must contain global and asset_types objects."
+            )
+        asset_type_rules = asset_types.get(asset_spec.asset_type, {})
+        if not isinstance(asset_type_rules, dict):
+            raise ValueError("VisualStyleProfile AssetSpec-type rules must be an object.")
+        return global_rules.copy(), asset_type_rules.copy()
+
+    @staticmethod
+    def _render_rules(rules: dict[str, Any], known_order: tuple[str, ...]) -> str:
+        ordered_keys = [key for key in known_order if key in rules]
+        ordered_keys.extend(sorted(key for key in rules if key not in known_order))
+        if not ordered_keys:
+            return "No additional rules."
+        rendered = []
+        for key in ordered_keys:
+            value = rules[key]
+            if isinstance(value, list):
+                value_text = "; ".join(str(item) for item in value)
+            else:
+                value_text = str(value)
+            rendered.append(f"{key.replace('_', ' ')}: {value_text}")
+        return "; ".join(rendered) + "."
 
 
 class LocalAssetStorage:
@@ -318,10 +430,28 @@ class GenerationService:
         repository: AtlasRepository,
         generator: AssetGenerator,
         storage: LocalAssetStorage,
+        visual_style_profile_id: str | None = None,
     ) -> None:
         self.repository = repository
         self.generator = generator
         self.storage = storage
+        self.visual_style_profile_id = (
+            visual_style_profile_id.strip()
+            if isinstance(visual_style_profile_id, str) and visual_style_profile_id.strip()
+            else configured_visual_style_profile_id()
+        )
+        self.prompt_composer = PromptComposer()
+
+    def visual_style_summary(self) -> dict[str, Any]:
+        """Return the active immutable profile identity for read-only Workspace display."""
+
+        profile = self._active_visual_style_profile()
+        return {
+            "profile_id": profile.id,
+            "style_key": profile.style_key,
+            "version": profile.version,
+            "name": profile.name,
+        }
 
     def generate_asset_spec(self, asset_spec_id: str) -> GenerationResult:
         """Synchronously generate and durably register one AssetSpec output."""
@@ -331,10 +461,12 @@ class GenerationService:
             raise UnsupportedGenerationType(
                 f"AssetSpec type {asset_spec.asset_type!r} is not executable by this generator."
             )
+        profile = self._active_visual_style_profile()
         snapshot = asset_spec_snapshot(asset_spec)
-        generation_input = generation_input_for(asset_spec).payload()
+        generation_input_object = self.prompt_composer.compose(asset_spec, profile)
+        generation_input = generation_input_object.payload()
         try:
-            artifact = self.generator.generate(generation_input_for(asset_spec))
+            artifact = self.generator.generate(generation_input_object)
             self._validate_artifact(artifact)
         except GenerationFailure as error:
             return GenerationResult(
@@ -344,6 +476,7 @@ class GenerationService:
                     snapshot,
                     generation_input,
                     self.generator.generator_key,
+                    visual_style_profile_id=profile.id,
                     provider_key=error.provider_key,
                     model_key=error.model_key,
                     provider_request_id=error.provider_request_id,
@@ -366,6 +499,7 @@ class GenerationService:
                     snapshot,
                     generation_input,
                     self.generator.generator_key,
+                    visual_style_profile_id=profile.id,
                     provider_key=artifact.provider_key,
                     model_key=artifact.model_key,
                     provider_request_id=artifact.provider_request_id,
@@ -385,6 +519,7 @@ class GenerationService:
                 self.generator.generator_key,
                 self.storage.relative_path(stored_path),
                 artifact.media_type,
+                visual_style_profile_id=profile.id,
                 provider_key=artifact.provider_key,
                 model_key=artifact.model_key,
                 provider_request_id=artifact.provider_request_id,
@@ -399,6 +534,14 @@ class GenerationService:
                 ) from cleanup_error
             raise error
         return GenerationResult(execution, asset)
+
+    def _active_visual_style_profile(self) -> VisualStyleProfile:
+        try:
+            return self.repository.get_visual_style_profile(self.visual_style_profile_id)
+        except KeyError as error:
+            raise MissingVisualStyleProfile(
+                f"Configured VisualStyleProfile {self.visual_style_profile_id!r} does not exist."
+            ) from error
 
     @staticmethod
     def _validate_artifact(artifact: GeneratedArtifact) -> None:

@@ -228,6 +228,21 @@ class Asset:
     created_at: str
 
 
+@dataclass(frozen=True)
+class VisualStyleProfile:
+    """An immutable, versioned visual-language configuration for generation."""
+
+    id: str
+    style_key: str
+    version: int
+    name: str
+    description: str
+    generation_guidance: str
+    rules: dict[str, Any]
+    metadata: dict[str, Any]
+    created_at: str
+
+
 Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
@@ -239,6 +254,7 @@ class GenerationExecution:
 
     id: str
     asset_spec_id: str
+    visual_style_profile_id: str | None
     asset_spec_snapshot: dict[str, Any]
     generation_input: dict[str, Any]
     generator_key: str
@@ -533,6 +549,34 @@ MIGRATIONS: tuple[Migration, ...] = (
         CREATE UNIQUE INDEX idx_assets_generation_execution
           ON assets (generation_execution_id)
           WHERE generation_execution_id IS NOT NULL
+        """,
+        ),
+    ),
+    (
+        8,
+        (
+            """
+        CREATE TABLE visual_style_profiles (
+          id TEXT PRIMARY KEY,
+          style_key TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT NOT NULL,
+          generation_guidance TEXT NOT NULL,
+          rules_json TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE (style_key, version)
+        )
+        """,
+            """
+        ALTER TABLE generation_executions
+        ADD COLUMN visual_style_profile_id TEXT NULL
+        REFERENCES visual_style_profiles(id) ON DELETE RESTRICT
+        """,
+            """
+        CREATE INDEX idx_generation_executions_visual_style_profile
+          ON generation_executions (visual_style_profile_id)
         """,
         ),
     ),
@@ -1287,6 +1331,58 @@ class AtlasRepository:
             ],
         }
 
+    def create_visual_style_profile(
+        self,
+        profile_id: str,
+        style_key: str,
+        version: int,
+        name: str,
+        description: str,
+        generation_guidance: str,
+        rules: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
+    ) -> VisualStyleProfile:
+        """Create one immutable version of an Atlas visual-style profile."""
+
+        profile_metadata = {} if metadata is None else metadata
+        self._validate_visual_style_profile(
+            version, style_key, name, description, generation_guidance, rules, profile_metadata
+        )
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO visual_style_profiles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    profile_id,
+                    style_key.strip(),
+                    version,
+                    name.strip(),
+                    description.strip(),
+                    generation_guidance.strip(),
+                    json.dumps(rules, sort_keys=True),
+                    json.dumps(profile_metadata, sort_keys=True),
+                    now(),
+                ),
+            )
+        return self.get_visual_style_profile(profile_id)
+
+    def get_visual_style_profile(self, profile_id: str) -> VisualStyleProfile:
+        """Return one immutable visual-style profile."""
+
+        row = self.connection.execute(
+            "SELECT * FROM visual_style_profiles WHERE id = ?", (profile_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(profile_id)
+        return self._visual_style_profile(row)
+
+    def list_visual_style_profiles(self) -> list[VisualStyleProfile]:
+        """Return immutable profiles in stable style/version order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM visual_style_profiles ORDER BY style_key, version"
+        )
+        return [self._visual_style_profile(row) for row in rows]
+
     def create_asset_spec(
         self,
         asset_spec_id: str,
@@ -1408,6 +1504,7 @@ class AtlasRepository:
         generation_input: dict[str, Any],
         generator_key: str,
         *,
+        visual_style_profile_id: str | None = None,
         provider_key: str | None = None,
         model_key: str | None = None,
         provider_request_id: str | None = None,
@@ -1424,6 +1521,7 @@ class AtlasRepository:
                 asset_spec_snapshot,
                 generation_input,
                 generator_key,
+                visual_style_profile_id,
                 "failed",
                 provider_key,
                 model_key,
@@ -1445,6 +1543,7 @@ class AtlasRepository:
         storage_path: str,
         media_type: str,
         *,
+        visual_style_profile_id: str | None = None,
         provider_key: str | None = None,
         model_key: str | None = None,
         provider_request_id: str | None = None,
@@ -1459,6 +1558,7 @@ class AtlasRepository:
                 asset_spec_snapshot,
                 generation_input,
                 generator_key,
+                visual_style_profile_id,
                 "succeeded",
                 provider_key,
                 model_key,
@@ -1568,6 +1668,7 @@ class AtlasRepository:
         return {
             "id": execution.id,
             "asset_spec_id": execution.asset_spec_id,
+            "visual_style_profile_id": execution.visual_style_profile_id,
             "generator_key": execution.generator_key,
             "provider_key": execution.provider_key,
             "model_key": execution.model_key,
@@ -1613,6 +1714,7 @@ class AtlasRepository:
         asset_spec_snapshot: dict[str, Any],
         generation_input: dict[str, Any],
         generator_key: str,
+        visual_style_profile_id: str | None,
         outcome: str,
         provider_key: str | None,
         model_key: str | None,
@@ -1636,8 +1738,13 @@ class AtlasRepository:
         )
         if asset_spec_snapshot.get("asset_spec_id") != asset_spec_id:
             raise ValueError("GenerationExecution snapshot must identify its persisted AssetSpec.")
+        self._validate_generation_execution_style(generation_input, visual_style_profile_id)
         self.connection.execute(
-            "INSERT INTO generation_executions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO generation_executions "
+            "(id, asset_spec_id, asset_spec_snapshot_json, generation_input_json, generator_key, "
+            "provider_key, model_key, provider_request_id, outcome, error_code, error_message, "
+            "response_metadata_json, created_at, visual_style_profile_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 execution_id,
                 asset_spec_id,
@@ -1652,6 +1759,7 @@ class AtlasRepository:
                 self._normalized_optional_identifier(error_message),
                 json.dumps(response_metadata, sort_keys=True),
                 now(),
+                visual_style_profile_id,
             ),
         )
 
@@ -1694,10 +1802,55 @@ class AtlasRepository:
         for value in (provider_key, model_key, provider_request_id, error_code, error_message):
             AtlasRepository._normalized_optional_identifier(value)
 
+    def _validate_generation_execution_style(
+        self, generation_input: dict[str, Any], visual_style_profile_id: str | None
+    ) -> None:
+        schema_version = generation_input.get("schema_version")
+        if schema_version != 2:
+            if visual_style_profile_id is not None:
+                raise ValueError("GenerationInput v1 cannot identify a VisualStyleProfile.")
+            return
+        if visual_style_profile_id is None:
+            raise ValueError("GenerationInput v2 must identify a VisualStyleProfile.")
+        style = generation_input.get("style")
+        if not isinstance(style, dict):
+            raise ValueError("GenerationInput v2 style must be an object.")
+        profile = self.get_visual_style_profile(visual_style_profile_id)
+        if (
+            style.get("profile_id") != profile.id
+            or style.get("style_key") != profile.style_key
+            or style.get("version") != profile.version
+        ):
+            raise ValueError("GenerationInput v2 style must match its VisualStyleProfile.")
+
     @staticmethod
     def _validate_asset_spec_text(*values: str) -> None:
         if not all(isinstance(value, str) and value.strip() for value in values):
             raise ValueError("AssetSpec required text fields must not be empty or whitespace-only.")
+
+    @staticmethod
+    def _validate_visual_style_profile(
+        version: int,
+        style_key: str,
+        name: str,
+        description: str,
+        generation_guidance: str,
+        rules: dict[str, Any],
+        metadata: dict[str, Any],
+    ) -> None:
+        if type(version) is not int or version < 1:
+            raise ValueError("VisualStyleProfile version must be a positive integer.")
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (style_key, name, description, generation_guidance)
+        ):
+            raise ValueError(
+                "VisualStyleProfile required text fields must not be empty or whitespace-only."
+            )
+        if not isinstance(rules, dict):
+            raise ValueError("VisualStyleProfile rules must be an object.")
+        if not isinstance(metadata, dict):
+            raise ValueError("VisualStyleProfile metadata must be an object.")
 
     @staticmethod
     def _validate_editorial_angle_takeaways(key_takeaways: list[str]) -> None:
@@ -2042,6 +2195,7 @@ class AtlasRepository:
         self.seed_content_piece_data()
         self.seed_visual_plan_data()
         self.seed_asset_spec_data()
+        self.seed_visual_style_profile_data()
 
     def seed_research_data(self) -> None:
         """Seed one read-only demonstration ResearchPack without overwriting local edits."""
@@ -2390,13 +2544,13 @@ class AtlasRepository:
                 "environment",
                 "Establish the calm kitchen-table decision context.",
                 (
-                    "A calm kitchen table with room for four labelled envelopes and a tax-year "
-                    "calendar."
+                    "A simple, calm young-professional kitchen-table setting with minimal kitchen "
+                    "and table cues and generous clear background space."
                 ),
                 (
-                    "Illustrated calm kitchen-table environment for a UK ISA decision video, "
-                    "with space for four labelled envelopes and a tax-year calendar; warm, "
-                    "clear, lightly humorous SimilarStoic visual language."
+                    "Simple calm young-professional kitchen-table background for a SimilarStoic "
+                    "ISA decision scene, with a predominantly open light canvas, minimal kitchen "
+                    "and table cues, and generous clear space for later foreground layers."
                 ),
                 "isa-kitchen-environment",
                 "{}",
@@ -2473,6 +2627,107 @@ class AtlasRepository:
                     "INSERT OR IGNORE INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     asset_spec,
                 )
+
+    def seed_visual_style_profile_data(self) -> None:
+        """Seed the immutable SimilarStoic Core visual-language profile once."""
+
+        rules = {
+            "schema_version": 1,
+            "global": {
+                "background": "predominantly white or very light background",
+                "composition": "sparse composition",
+                "visual_ideas": "one dominant visual idea",
+                "shapes": "clean simple shapes",
+                "shading": "restrained shading",
+                "colour": "restrained accent colour",
+                "negative_space": "generous negative space",
+                "detail": "minimal environmental detail and only necessary props",
+                "avoid": [
+                    "photorealism",
+                    "cinematic or highly rendered imagery",
+                    "detailed decorative clutter",
+                    "dense information-heavy compositions",
+                    (
+                        "invented explanatory text, posters, labels, dashboards, "
+                        "written information or signage unless explicitly required "
+                        "by the AssetSpec"
+                    ),
+                ],
+                "narration": (
+                    "visuals reinforce narration and must not become necessary for understanding "
+                    "the explanation"
+                ),
+            },
+            "asset_types": {
+                "environment": {
+                    "role": "background setting layer only",
+                    "layer_discipline": (
+                        "leave clear space for later foreground composition and do not invent "
+                        "sibling AssetSpec requirements"
+                    ),
+                    "prefer": [
+                        "white or light open canvas",
+                        "minimal setting cues",
+                        "generous negative space",
+                        "few essential objects",
+                    ],
+                    "avoid": [
+                        "foreground characters unless they are part of the environment itself",
+                        "standalone props",
+                        "explanatory graphics",
+                        "full explainer composition",
+                        "dense signage",
+                        "information boards",
+                        "invented written material",
+                        "multiple narrative events",
+                        "unnecessary decorative props",
+                        "fully furnished or detail-heavy rooms",
+                    ],
+                },
+                "character": {
+                    "role": "clear character pose, action or reaction",
+                    "prefer": [
+                        "character as dominant subject",
+                        "plain or minimal background",
+                        "clear silhouette and body language",
+                        "very few competing props",
+                    ],
+                },
+                "prop": {
+                    "role": "one standalone object or small coherent object group",
+                    "prefer": [
+                        "simple isolated presentation",
+                        "minimal background",
+                        "no unrelated scene construction",
+                    ],
+                },
+                "graphic": {
+                    "role": "one clear explanatory graphic",
+                    "prefer": [
+                        "simple structure",
+                        "minimal labels",
+                        "only text explicitly required by the AssetSpec",
+                        "high immediate readability",
+                    ],
+                },
+            },
+        }
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO visual_style_profiles "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                (
+                    "visual-style-profile-similarstoic-core-v1",
+                    "similarstoic-core",
+                    1,
+                    "SimilarStoic Core",
+                    "The sparse, hand-drawn editorial illustration direction for SimilarStoic.",
+                    "Use a simple hand-drawn or line-drawn editorial illustration style.",
+                    json.dumps(rules, sort_keys=True),
+                    stamp,
+                ),
+            )
 
     @staticmethod
     def _subject(row: sqlite3.Row) -> Subject:
@@ -2665,10 +2920,25 @@ class AtlasRepository:
         )
 
     @staticmethod
+    def _visual_style_profile(row: sqlite3.Row) -> VisualStyleProfile:
+        return VisualStyleProfile(
+            row["id"],
+            row["style_key"],
+            row["version"],
+            row["name"],
+            row["description"],
+            row["generation_guidance"],
+            json.loads(row["rules_json"]),
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
     def _generation_execution(row: sqlite3.Row) -> GenerationExecution:
         return GenerationExecution(
             row["id"],
             row["asset_spec_id"],
+            row["visual_style_profile_id"],
             json.loads(row["asset_spec_snapshot_json"]),
             json.loads(row["generation_input_json"]),
             row["generator_key"],

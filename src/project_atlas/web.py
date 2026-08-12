@@ -15,6 +15,7 @@ from project_atlas.generation import (
     AssetGenerator,
     GenerationService,
     LocalAssetStorage,
+    MissingVisualStyleProfile,
     OpenAIImageGenerator,
     UnsupportedGenerationType,
 )
@@ -40,6 +41,7 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/demo/content":
             content = content_payload().copy()
             content.pop("scene_plan", None)
+            content["visual_style"] = self.server.generation_service.visual_style_summary()
             research_pack = self.server.repository.latest_research_pack_payload("uk-isa-rules")
             if research_pack is not None:
                 content["research"] = research_pack
@@ -128,6 +130,9 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "AssetSpec not found."}, HTTPStatus.NOT_FOUND)
             return
         except UnsupportedGenerationType as error:
+            self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+            return
+        except MissingVisualStyleProfile as error:
             self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             return
         except Exception:

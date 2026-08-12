@@ -113,6 +113,12 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
             payload = json.load(response)
         thread.join(timeout=2)
         content = payload["content"]
+        assert content["visual_style"] == {
+            "profile_id": "visual-style-profile-similarstoic-core-v1",
+            "style_key": "similarstoic-core",
+            "version": 1,
+            "name": "SimilarStoic Core",
+        }
         assert content["selected_angle"] == "The 15-minute ISA decision tree before the deadline."
         assert content["research"]["opportunity_id"] == "uk-isa-rules"
         assert content["research"]["version"] == 1
@@ -258,8 +264,13 @@ def test_generation_endpoint_uses_persisted_prompt_and_exposes_execution(tmp_pat
             payload = json.load(response)
         thread.join(timeout=2)
         assert payload["execution"]["outcome"] == "succeeded"
+        assert (
+            payload["execution"]["visual_style_profile_id"]
+            == "visual-style-profile-similarstoic-core-v1"
+        )
         assert payload["asset"]["generation_execution_id"] == payload["execution"]["id"]
-        assert generator.inputs[0].prompt == asset_spec.generation_prompt
+        assert asset_spec.generation_prompt in generator.inputs[0].prompt
+        assert generator.inputs[0].style["style_key"] == "similarstoic-core"
         assert (
             tmp_path / "assets" / server.repository.get_asset(payload["asset"]["id"]).storage_path
         ).exists()

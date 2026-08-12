@@ -10,7 +10,9 @@ from project_atlas.generation import (
     GenerationInput,
     GenerationService,
     LocalAssetStorage,
+    MissingVisualStyleProfile,
     OpenAIImageGenerator,
+    PromptComposer,
     UnsupportedGenerationType,
 )
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
@@ -51,7 +53,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -86,6 +88,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
             ]
             == 0
         )
+        assert len(repository.list_visual_style_profiles()) == 1
     finally:
         repository.close()
 
@@ -183,11 +186,15 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
         assert repository.get_asset("existing-manual-asset").generation_execution_id is None
+        assert (
+            repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1").version
+            == 1
+        )
     finally:
         repository.close()
 
@@ -199,7 +206,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                8,
+                9,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -221,7 +228,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 8"
+                "SELECT version FROM schema_migrations WHERE version = 9"
             ).fetchone()
             is None
         )
@@ -1420,6 +1427,49 @@ def test_asset_spec_seed_is_idempotent_and_restores_missing_requirements(tmp_pat
         reopened.close()
 
 
+def test_seeded_scene_one_environment_remains_a_background_layer(tmp_path) -> None:
+    """Scene 1 keeps setting, character action, and later calendar graphic requirements separate."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        environment = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        character = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        calendar = repository.get_asset_spec("asset-spec-isa-scene-02-tax-year-calendar-v1")
+        assert environment.scene_id == "scene-isa-deadline-video-v1-01"
+        assert environment.asset_type == "environment"
+        assert environment.generation_prompt == (
+            "Simple calm young-professional kitchen-table background for a SimilarStoic "
+            "ISA decision scene, with a predominantly open light canvas, minimal kitchen "
+            "and table cues, and generous clear space for later foreground layers."
+        )
+        prompt_words = environment.generation_prompt.lower()
+        assert not any(
+            forbidden in prompt_words
+            for forbidden in ("hamster", "person", "character", "envelope", "calendar", "signage")
+        )
+        assert character.scene_id == environment.scene_id
+        assert character.asset_type == "character"
+        assert "sorting four labelled envelopes" in character.generation_prompt
+        assert calendar.scene_id == "scene-isa-deadline-video-v1-02"
+        assert calendar.asset_type == "graphic"
+
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        generation_input = PromptComposer().compose(environment, profile).payload()
+        environment_rules = generation_input["style"]["rules"]["asset_type_rules"]
+        assert generation_input["schema_version"] == 2
+        assert environment.generation_prompt in generation_input["prompt"]
+        assert environment_rules["role"] == "background setting layer only"
+        assert "sibling AssetSpec requirements" in environment_rules["layer_discipline"]
+        assert (
+            "foreground characters unless they are part of the environment itself"
+            in environment_rules["avoid"]
+        )
+        assert character.generation_prompt not in generation_input["prompt"]
+        assert calendar.generation_prompt not in generation_input["prompt"]
+    finally:
+        repository.close()
+
+
 def test_generation_execution_failure_is_immutable_and_validated(tmp_path) -> None:
     """Failed terminal attempts retain validated immutable provenance without an Asset."""
 
@@ -1466,6 +1516,7 @@ def test_generation_execution_failure_is_immutable_and_validated(tmp_path) -> No
                         snapshot,
                         generation_input,
                         "test-generator",
+                        None,
                         invalid_outcome,
                         None,
                         None,
@@ -1519,7 +1570,7 @@ def test_generation_service_persists_one_asset_and_frozen_provenance(tmp_path) -
         )
         persisted = repository.get_generation_execution(result.execution.id)
         assert persisted.asset_spec_snapshot["generation_prompt"] == asset_spec.generation_prompt
-        assert persisted.generation_input["prompt"] == asset_spec.generation_prompt
+        assert asset_spec.generation_prompt in persisted.generation_input["prompt"]
         second = service.generate_asset_spec(asset_spec.id)
         assert second.asset is not None
         assert second.asset.version == 2
@@ -1695,3 +1746,208 @@ def test_openai_adapter_requires_configured_key_without_network() -> None:
         assert error.provider_key == "openai"
     else:
         raise AssertionError("OpenAI image generation ran without a configured API key.")
+
+
+def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> None:
+    """Profiles are versioned immutable configuration, not editable workflow state."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        assert (profile.style_key, profile.version, profile.name) == (
+            "similarstoic-core",
+            1,
+            "SimilarStoic Core",
+        )
+        assert set(profile.rules["asset_types"]) == {
+            "environment",
+            "character",
+            "graphic",
+            "prop",
+        }
+        assert not hasattr(repository, "update_visual_style_profile")
+        assert not hasattr(repository, "delete_visual_style_profile")
+        for invalid_version in (0, -1, True, "1"):
+            try:
+                repository.create_visual_style_profile(
+                    f"invalid-version-{invalid_version}",
+                    "test-style",
+                    invalid_version,
+                    "Test",
+                    "Test description.",
+                    "Test guidance.",
+                    {},
+                )
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("A non-positive/exact-integer profile version was accepted.")
+        for field_name in ("style_key", "name", "description", "generation_guidance"):
+            values = {
+                "style_key": "test-style",
+                "version": 1,
+                "name": "Test",
+                "description": "Test description.",
+                "generation_guidance": "Test guidance.",
+                "rules": {},
+            }
+            values[field_name] = "   "
+            try:
+                repository.create_visual_style_profile(
+                    f"invalid-{field_name}",
+                    **values,
+                )
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("An empty VisualStyleProfile text field was accepted.")
+        for invalid_rules, invalid_metadata in (([], {}), ({}, [])):
+            try:
+                repository.create_visual_style_profile(
+                    "invalid-profile-json",
+                    "test-style",
+                    1,
+                    "Test",
+                    "Test description.",
+                    "Test guidance.",
+                    invalid_rules,  # type: ignore[arg-type]
+                    invalid_metadata,  # type: ignore[arg-type]
+                )
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("A non-object profile JSON field was accepted.")
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE visual_style_profiles SET name = ? WHERE id = ?",
+                ("Founder-preserved profile", profile.id),
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_visual_style_profile(profile.id).name == "Founder-preserved profile"
+        assert len(reopened.list_visual_style_profiles()) == 1
+    finally:
+        reopened.close()
+
+
+def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_path) -> None:
+    """The Atlas composer is deterministic and never leaks other type rules into v2 input."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        prop = repository.create_asset_spec(
+            "asset-spec-isa-style-prop-v1",
+            "scene-isa-deadline-video-v1-01",
+            "prop",
+            "Clarify the decision.",
+            "One envelope.",
+            "Illustrate one practical envelope.",
+        )
+        composer = PromptComposer()
+        for asset_spec in (
+            repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1"),
+            repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1"),
+            repository.get_asset_spec("asset-spec-isa-scene-02-tax-year-calendar-v1"),
+            prop,
+        ):
+            first = composer.compose(asset_spec, profile).payload()
+            second = composer.compose(asset_spec, profile).payload()
+            assert first == second
+            assert first["schema_version"] == 2
+            assert first["style"]["rules"]["asset_type"] == asset_spec.asset_type
+            assert (
+                first["style"]["rules"]["asset_type_rules"]
+                == profile.rules["asset_types"][asset_spec.asset_type]
+            )
+            assert "character" not in first["style"]["rules"]
+            assert asset_spec.generation_prompt in first["prompt"]
+    finally:
+        repository.close()
+
+
+def test_generation_service_uses_profile_v2_provenance_and_missing_profile_stops_early(
+    tmp_path, monkeypatch
+) -> None:
+    """Styled runs freeze exact profile lineage; an unavailable profile never invokes a provider."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        blocked_generator = FakeImageGenerator()
+        blocked = GenerationService(
+            repository,
+            blocked_generator,
+            LocalAssetStorage(tmp_path / "blocked-assets"),
+            "missing-visual-style-profile",
+        )
+        try:
+            blocked.generate_asset_spec(asset_spec.id)
+        except MissingVisualStyleProfile as error:
+            assert "does not exist" in str(error)
+        else:
+            raise AssertionError("A missing VisualStyleProfile crossed the generator boundary.")
+        assert blocked_generator.inputs == []
+        assert repository.list_generation_executions_for_asset_spec(asset_spec.id) == []
+        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+
+        generator = FakeImageGenerator()
+        service = GenerationService(repository, generator, LocalAssetStorage(tmp_path / "assets"))
+        assert (
+            service.visual_style_summary()["profile_id"]
+            == "visual-style-profile-similarstoic-core-v1"
+        )
+        result = service.generate_asset_spec(asset_spec.id)
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        assert result.execution.visual_style_profile_id == profile.id
+        assert result.execution.generation_input["schema_version"] == 2
+        assert result.execution.generation_input["style"]["profile_id"] == profile.id
+        assert result.execution.generation_input["style"]["style_key"] == profile.style_key
+        assert result.execution.generation_input["style"]["version"] == profile.version
+        assert generator.inputs[0].prompt == result.execution.generation_input["prompt"]
+
+        configured = repository.create_visual_style_profile(
+            "visual-style-profile-similarstoic-core-v2",
+            "similarstoic-core",
+            2,
+            "SimilarStoic Core v2",
+            "A test-only later profile.",
+            "Use test-only guidance.",
+            {},
+        )
+        monkeypatch.setenv("ATLAS_VISUAL_STYLE_PROFILE_ID", configured.id)
+        assert (
+            GenerationService(
+                repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "configured-assets")
+            ).visual_style_summary()["profile_id"]
+            == configured.id
+        )
+
+        assert len(repository.list_generation_executions_for_asset_spec(asset_spec.id)) == 1
+        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 1
+    finally:
+        repository.close()
+
+
+def test_existing_v1_generation_execution_remains_readable_after_style_migration(tmp_path) -> None:
+    """v0.8 execution history remains an unchanged v1 snapshot with null style lineage."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        v1_input = {"schema_version": 1, "asset_type": "environment", "prompt": "Historical"}
+        execution = repository.create_failed_generation_execution(
+            "generation-execution-v1-history",
+            asset_spec.id,
+            {"schema_version": 1, "asset_spec_id": asset_spec.id},
+            v1_input,
+            "historical-generator",
+        )
+        assert execution.visual_style_profile_id is None
+        assert execution.generation_input == v1_input
+    finally:
+        repository.close()

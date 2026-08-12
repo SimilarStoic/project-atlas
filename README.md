@@ -3,8 +3,8 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.7 scope and
-the bounded v0.8 Generation Execution Foundation locally; later workflow,
+SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.9 scope;
+later workflow,
 research automation and production systems remain deferred.
 
 ## Technology baseline
@@ -209,11 +209,35 @@ configurable `ATLAS_ASSET_STORAGE_ROOT` (default `data/assets/`). Startup perfor
 seeds zero executions and zero Assets. Queues, retries, batch generation, QA, approval, rendering,
 workflow, production, publishing, analytics and agents remain deferred.
 
+## Visual style control foundation
+
+Atlas v0.9 adds a durable visual-style layer between an **AssetSpec** and its
+provider-neutral **GenerationInput**. An immutable, versioned **VisualStyleProfile**
+stores reusable SimilarStoic visual direction; it has no editor, selected/current state
+or provider-specific fields. One idempotently seeded `SimilarStoic Core` v1 profile
+requires a sparse hand-drawn or line-drawn editorial style, predominantly light
+backgrounds, restrained detail and colour, one dominant visual idea, and no invented
+written material unless the AssetSpec requires it.
+
+Atlas-owned deterministic prompt composition resolves profile-wide and matching
+AssetSpec-type rules (`environment`, `character`, `prop`, or `graphic`) before the
+concrete persisted AssetSpec requirement. Styled runs persist `GenerationInput` v2 with
+only the resolved style rules, while retaining a direct GenerationExecution-to-profile
+lineage. Existing v0.8 `GenerationInput` v1 history remains readable unchanged.
+
+Environment AssetSpecs describe only the setting/background layer. Character, prop and
+graphic requirements remain separate production assets for later composition.
+
+The active immutable profile is configured with `ATLAS_VISUAL_STYLE_PROFILE_ID`, falling
+back to the deterministic SimilarStoic Core v1 seed. Character entities, StyleBibles,
+reference-image continuity, profile editing, QA, workflow and production systems remain
+deferred.
+
 ## Status
 
 v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
 v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
-Asset persistence is complete and pushed. v0.8 Generation Execution is implemented locally and
-awaiting review. Later Atlas systems remain
+Asset persistence, v0.8 Generation Execution, and v0.9 Visual Style Control are complete and
+pushed. Later Atlas systems remain
 out of scope.

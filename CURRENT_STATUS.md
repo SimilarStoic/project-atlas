@@ -14,13 +14,13 @@
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
-The bounded Atlas v0.8 Generation Execution Foundation is implemented locally and awaiting review.
+The bounded Atlas v0.9 Visual Style Control Foundation is complete and pushed.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8 implements the approved synchronous bridge from one persistent executable AssetSpec to
-one immutable GenerationExecution and, on success, one immutable Asset. No further v0.8 implementation
-beyond this bounded foundation has been approved.
+Atlas v0.8 and v0.9 are complete and pushed. Atlas v0.9 implements the approved bounded style-control layer
+between a persistent executable AssetSpec and its provider-neutral GenerationInput. No further v0.9
+implementation beyond this bounded foundation has been approved.
 
 ---
 
@@ -43,7 +43,7 @@ beyond this bounded foundation has been approved.
 
 Current commit:
 
-`447c7c4657444119f5bc9fab77248f5aeb2f841b feat: add asset specification and asset foundation`
+`9eac8bae020a3c79598964e61a80ddeb4e498053 feat: add generation execution foundation`
 
 Branch:
 
@@ -55,7 +55,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.7 checkpoint; local `main` matched `origin/main`.
+Clean at the v0.9 checkpoint; local `main` matched `origin/main`.
 
 ## Atlas v0.2 Checkpoint
 
@@ -150,10 +150,10 @@ Clean at the v0.7 checkpoint; local `main` matched `origin/main`.
 - Provider integration, asset generation jobs, production, workflow, publishing, analytics and agents
   remain deferred.
 
-## Atlas v0.8 Local Implementation
+## Atlas v0.8 Checkpoint
 
 **Project Atlas v0.8 â€” Generation Execution Foundation** is implemented locally and awaiting review,
-commit and push.
+but is now complete and pushed.
 
 - GenerationExecution records one immutable terminal synchronous generator attempt with exactly
   `succeeded` or `failed` outcome, a frozen AssetSpec snapshot, normalized Atlas generation input and
@@ -166,6 +166,23 @@ commit and push.
   environment-configured and never persisted; generated files are stored under Atlas-managed local storage.
 - No execution or Asset is seeded, and startup never invokes generation. Queues, retries, batch generation,
   QA, approval, rendering, workflow, production, publishing, analytics and agents remain deferred.
+
+## Atlas v0.9 Checkpoint
+
+**Project Atlas v0.9 Visual Style Control Foundation** is complete and pushed.
+
+- VisualStyleProfile is immutable and versioned, with no editor or active/current/selected state. The
+  deterministic SimilarStoic Core v1 seed preserves sparse, light, hand-drawn editorial direction without
+  duplicating that brand guidance into AssetSpecs.
+- Atlas-owned deterministic PromptComposer resolves profile-wide and matching AssetSpec-type rules before
+  the AssetSpec's concrete generation requirement. Provider adapters receive only the composed prompt in a
+  provider-neutral GenerationInput v2.
+- New executions retain exact resolved style provenance in GenerationInput v2 and a restrictive direct
+  GenerationExecution-to-VisualStyleProfile lineage. Existing v0.8 GenerationInput v1 rows remain readable
+  with null profile lineage.
+- `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value uses SimilarStoic Core v1.
+  Character/StyleBible/reference-image continuity, profile editing, QA, workflow, production and publishing
+  remain deferred.
 
 ---
 
@@ -495,7 +512,8 @@ Completed:
 - Atlas v0.5 Content Piece + Script persistence foundation
 - Atlas v0.6 Visual Plan + Scene persistence foundation
 - Atlas v0.7 Asset Specification + Asset persistence foundation
-- Atlas v0.8 Generation Execution foundation (local, awaiting review/commit/push)
+- Atlas v0.8 Generation Execution foundation
+- Atlas v0.9 Visual Style Control foundation
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -508,12 +526,13 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Review the bounded Atlas v0.8 Generation Execution Foundation, then commit and push if approved.**
+> **Continue with the next bounded Atlas milestone only after explicit design approval.**
 
-Implemented direction through v0.8:
+Implemented direction through v0.9:
 
-v0.8 adds GenerationExecution provenance between an AssetSpec and any generated Asset; manual and
-imported Assets remain valid without that nullable provenance.
+v0.8 adds GenerationExecution provenance between an AssetSpec and any generated Asset; v0.9 adds
+immutable VisualStyleProfile provenance and deterministic prompt composition. Manual and imported Assets
+remain valid without execution provenance.
 
 > Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → GenerationExecution → Assets
 
