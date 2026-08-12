@@ -3,7 +3,43 @@
 import sqlite3
 from dataclasses import replace
 
+from project_atlas.generation import (
+    AssetStorageFailure,
+    GeneratedArtifact,
+    GenerationFailure,
+    GenerationInput,
+    GenerationService,
+    LocalAssetStorage,
+    OpenAIImageGenerator,
+    UnsupportedGenerationType,
+)
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
+
+
+class FakeImageGenerator:
+    """Deterministic provider-neutral generator used only by v0.8 tests."""
+
+    generator_key = "fake-image"
+
+    def __init__(self, *, failure: GenerationFailure | None = None) -> None:
+        self.failure = failure
+        self.inputs: list[object] = []
+
+    def supports(self, asset_type: str) -> bool:
+        return asset_type in {"environment", "character", "graphic", "prop"}
+
+    def generate(self, generation_input: object) -> GeneratedArtifact:
+        self.inputs.append(generation_input)
+        if self.failure:
+            raise self.failure
+        return GeneratedArtifact(
+            b"deterministic png bytes",
+            "image/png",
+            provider_key="fake-provider",
+            model_key="fake-model-v1",
+            provider_request_id="request-fake-1",
+            response_metadata={"test": True},
+        )
 
 
 def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_path) -> None:
@@ -15,7 +51,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6]
+        ] == [1, 2, 3, 4, 5, 6, 7]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -44,6 +80,12 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert len(repository.list_scenes_for_visual_plan("visual-plan-isa-deadline-video-v1")) == 3
         assert len(repository.list_asset_specs_for_scene("scene-isa-deadline-video-v1-01")) == 2
         assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM generation_executions").fetchone()[
+                0
+            ]
+            == 0
+        )
     finally:
         repository.close()
 
@@ -66,12 +108,16 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert reopened.connection.execute("SELECT COUNT(*) FROM scenes").fetchone()[0] == 3
         assert reopened.connection.execute("SELECT COUNT(*) FROM asset_specs").fetchone()[0] == 5
         assert reopened.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+        assert (
+            reopened.connection.execute("SELECT COUNT(*) FROM generation_executions").fetchone()[0]
+            == 0
+        )
     finally:
         reopened.close()
 
 
-def test_existing_v06_database_migrates_to_v07_without_rewriting_discovery_data(tmp_path) -> None:
-    """The new migration applies cleanly to a database already recorded at v0.6."""
+def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets(tmp_path) -> None:
+    """Migration 7 adds nullable execution provenance without rebuilding Assets."""
 
     database = tmp_path / "atlas-v06.db"
     connection = sqlite3.connect(database)
@@ -79,21 +125,12 @@ def test_existing_v06_database_migrates_to_v07_without_rewriting_discovery_data(
         connection.execute(
             "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
         )
-        for statement in MIGRATIONS[0][1]:
-            connection.execute(statement)
-        connection.execute("INSERT INTO schema_migrations VALUES (1, '2026-08-11T00:00:00+00:00')")
-        for statement in MIGRATIONS[1][1]:
-            connection.execute(statement)
-        connection.execute("INSERT INTO schema_migrations VALUES (2, '2026-08-12T00:00:00+00:00')")
-        for statement in MIGRATIONS[2][1]:
-            connection.execute(statement)
-        connection.execute("INSERT INTO schema_migrations VALUES (3, '2026-08-12T00:00:00+00:00')")
-        for statement in MIGRATIONS[3][1]:
-            connection.execute(statement)
-        connection.execute("INSERT INTO schema_migrations VALUES (4, '2026-08-12T00:00:00+00:00')")
-        for statement in MIGRATIONS[4][1]:
-            connection.execute(statement)
-        connection.execute("INSERT INTO schema_migrations VALUES (5, '2026-08-12T00:00:00+00:00')")
+        for version, statements in MIGRATIONS[:6]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-12T00:00:00+00:00')", (version,)
+            )
         connection.execute(
             "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -108,6 +145,34 @@ def test_existing_v06_database_migrates_to_v07_without_rewriting_discovery_data(
                 "2026-08-11T00:00:00+00:00",
             ),
         )
+        connection.execute(
+            "INSERT INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "existing-asset-spec",
+                "scene-existing",
+                "graphic",
+                "Existing purpose",
+                "Existing description",
+                "Existing prompt",
+                None,
+                "{}",
+                "2026-08-12T00:00:00+00:00",
+                "2026-08-12T00:00:00+00:00",
+            ),
+        )
+        connection.execute(
+            "INSERT INTO assets VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "existing-manual-asset",
+                "existing-asset-spec",
+                1,
+                "existing.png",
+                "image/png",
+                "manual",
+                "{}",
+                "2026-08-12T00:00:00+00:00",
+            ),
+        )
         connection.commit()
     finally:
         connection.close()
@@ -118,10 +183,11 @@ def test_existing_v06_database_migrates_to_v07_without_rewriting_discovery_data(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6]
+        ] == [1, 2, 3, 4, 5, 6, 7]
         assert repository.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='asset_specs'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
+        assert repository.get_asset("existing-manual-asset").generation_execution_id is None
     finally:
         repository.close()
 
@@ -133,7 +199,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                7,
+                8,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -155,7 +221,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-            "SELECT version FROM schema_migrations WHERE version = 7"
+                "SELECT version FROM schema_migrations WHERE version = 8"
             ).fetchone()
             is None
         )
@@ -1352,3 +1418,280 @@ def test_asset_spec_seed_is_idempotent_and_restores_missing_requirements(tmp_pat
         assert reopened.get_visual_plan("visual-plan-isa-deadline-video-v1").id
     finally:
         reopened.close()
+
+
+def test_generation_execution_failure_is_immutable_and_validated(tmp_path) -> None:
+    """Failed terminal attempts retain validated immutable provenance without an Asset."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        snapshot = {
+            "schema_version": 1,
+            "asset_spec_id": asset_spec.id,
+            "scene_id": asset_spec.scene_id,
+        }
+        generation_input = {"schema_version": 1, "asset_type": "environment", "prompt": "Test"}
+        failed = repository.create_failed_generation_execution(
+            "generation-execution-failure-v1",
+            asset_spec.id,
+            snapshot,
+            generation_input,
+            " test-generator ",
+            provider_key="test-provider",
+            error_code="provider_rejected",
+            error_message="The provider rejected this deterministic test.",
+            response_metadata={"status": 400},
+        )
+        assert failed.generator_key == "test-generator"
+        assert failed.outcome == "failed"
+        assert repository.get_asset_for_generation_execution(failed.id) is None
+        assert repository.list_generation_executions_for_asset_spec(asset_spec.id) == [failed]
+        assert not hasattr(repository, "update_generation_execution")
+        for invalid_outcome in ("queued", "", "succeeded "):
+            try:
+                (
+                    repository.create_failed_generation_execution(
+                        f"invalid-outcome-{invalid_outcome or 'empty'}",
+                        asset_spec.id,
+                        snapshot,
+                        generation_input,
+                        "test-generator",
+                        response_metadata={},
+                    )
+                    if invalid_outcome == "failed"
+                    else repository._insert_generation_execution(
+                        f"invalid-outcome-{invalid_outcome or 'empty'}",
+                        asset_spec.id,
+                        snapshot,
+                        generation_input,
+                        "test-generator",
+                        invalid_outcome,
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
+                        {},
+                    )
+                )
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("An invalid GenerationExecution outcome was accepted.")
+        for invalid_generator_key in ("", "   "):
+            try:
+                repository.create_failed_generation_execution(
+                    f"invalid-generator-{len(invalid_generator_key)}",
+                    asset_spec.id,
+                    snapshot,
+                    generation_input,
+                    invalid_generator_key,
+                )
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("An empty GenerationExecution generator key was accepted.")
+    finally:
+        repository.close()
+
+
+def test_generation_service_persists_one_asset_and_frozen_provenance(tmp_path) -> None:
+    """One successful synchronous generation creates one linked immutable Asset."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    generator = FakeImageGenerator()
+    storage_root = tmp_path / "assets"
+    service = GenerationService(repository, generator, LocalAssetStorage(storage_root))
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        result = service.generate_asset_spec(asset_spec.id)
+        assert result.execution.outcome == "succeeded"
+        assert result.asset is not None
+        assert result.asset.asset_spec_id == result.execution.asset_spec_id == asset_spec.id
+        assert result.asset.generation_execution_id == result.execution.id
+        assert result.asset.version == 1
+        stored = storage_root / result.asset.storage_path
+        assert stored.read_bytes() == b"deterministic png bytes"
+        repository.update_asset_spec(
+            replace(asset_spec, generation_prompt="Founder-edited prompt after execution.")
+        )
+        persisted = repository.get_generation_execution(result.execution.id)
+        assert persisted.asset_spec_snapshot["generation_prompt"] == asset_spec.generation_prompt
+        assert persisted.generation_input["prompt"] == asset_spec.generation_prompt
+        second = service.generate_asset_spec(asset_spec.id)
+        assert second.asset is not None
+        assert second.asset.version == 2
+        assert repository.get_asset_for_generation_execution(second.execution.id) == second.asset
+        try:
+            with repository.connection:
+                repository.connection.execute(
+                    "UPDATE assets SET generation_execution_id = ? WHERE id = ?",
+                    (result.execution.id, second.asset.id),
+                )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("One GenerationExecution linked to multiple Assets.")
+        manual = repository.create_asset(
+            "manual-asset-after-generation-v1",
+            asset_spec.id,
+            3,
+            "manual.png",
+            "image/png",
+            "manual",
+        )
+        assert manual.generation_execution_id is None
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_asset_for_generation_execution(result.execution.id) is not None
+        assert reopened.get_generation_execution(result.execution.id).outcome == "succeeded"
+    finally:
+        reopened.close()
+
+
+def test_seeded_character_asset_spec_generates_with_same_spec_provenance(tmp_path) -> None:
+    """The recurring persisted hamster is an executable still-image AssetSpec."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        assert asset_spec.asset_type == "character"
+        result = GenerationService(
+            repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "assets")
+        ).generate_asset_spec(asset_spec.id)
+        assert result.execution.outcome == "succeeded"
+        assert result.asset is not None
+        assert result.execution.asset_spec_id == asset_spec.id
+        assert result.asset.asset_spec_id == asset_spec.id
+        assert result.asset.generation_execution_id == result.execution.id
+        assert len(repository.list_generation_executions_for_asset_spec(asset_spec.id)) == 1
+        assert repository.get_asset_for_generation_execution(result.execution.id) == result.asset
+    finally:
+        repository.close()
+
+
+def test_generation_service_records_generator_and_storage_failures_without_assets(tmp_path) -> None:
+    """Expected invoked-boundary failures are durable failures, never fake success."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    asset_spec_id = "asset-spec-isa-scene-01-kitchen-background-v1"
+    try:
+        generator_failure = GenerationService(
+            repository,
+            FakeImageGenerator(
+                failure=GenerationFailure(
+                    "Provider rejected the request.",
+                    error_code="rejected",
+                    provider_key="fake-provider",
+                    model_key="fake-model-v1",
+                )
+            ),
+            LocalAssetStorage(tmp_path / "assets"),
+        ).generate_asset_spec(asset_spec_id)
+        assert generator_failure.execution.outcome == "failed"
+        assert generator_failure.asset is None
+        assert generator_failure.execution.error_code == "rejected"
+        blocked_root = tmp_path / "blocked-root"
+        blocked_root.write_text("not a directory")
+        storage_failure = GenerationService(
+            repository, FakeImageGenerator(), LocalAssetStorage(blocked_root)
+        ).generate_asset_spec(asset_spec_id)
+        assert storage_failure.execution.outcome == "failed"
+        assert storage_failure.execution.error_code == "storage_failure"
+        assert storage_failure.asset is None
+        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+    finally:
+        repository.close()
+
+
+def test_generation_service_rejects_unsupported_asset_types_before_history(tmp_path) -> None:
+    """Open-ended future AssetSpec types cannot create execution history prematurely."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        unsupported = repository.create_asset_spec(
+            "asset-spec-unsupported-audio-v1",
+            "scene-isa-deadline-video-v1-01",
+            "audio",
+            "Future audio requirement.",
+            "A future audio asset.",
+            "Generate future audio.",
+        )
+        service = GenerationService(
+            repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "assets")
+        )
+        try:
+            service.generate_asset_spec(unsupported.id)
+        except UnsupportedGenerationType:
+            pass
+        else:
+            raise AssertionError("An unsupported AssetSpec type crossed the generator boundary.")
+        assert repository.list_generation_executions_for_asset_spec(unsupported.id) == []
+    finally:
+        repository.close()
+
+
+def test_local_asset_storage_preserves_immutable_paths_and_rejects_traversal(tmp_path) -> None:
+    """Storage writes under its root and never overwrites a pre-existing immutable file."""
+
+    storage = LocalAssetStorage(tmp_path / "assets")
+    stored = storage.write("asset-spec-safe-v1", "asset-safe-v1", b"first", "image/png")
+    assert stored.read_bytes() == b"first"
+    try:
+        storage.write("asset-spec-safe-v1", "asset-safe-v1", b"second", "image/png")
+    except AssetStorageFailure as error:
+        assert "already exists" in str(error)
+    else:
+        raise AssertionError("Atlas storage overwrote an immutable Asset file.")
+    assert stored.read_bytes() == b"first"
+    try:
+        storage.write("..", "asset-safe-v2", b"escape", "image/png")
+    except AssetStorageFailure as error:
+        assert "safe path components" in str(error)
+    else:
+        raise AssertionError("Atlas storage allowed traversal outside its configured root.")
+
+
+def test_generation_service_removes_new_file_when_database_persistence_fails(tmp_path) -> None:
+    """A database failure compensates by removing only the newly written artifact file."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    storage_root = tmp_path / "assets"
+    service = GenerationService(repository, FakeImageGenerator(), LocalAssetStorage(storage_root))
+    original = repository.record_successful_generation
+
+    def fail_persistence(*args: object, **kwargs: object) -> object:
+        raise sqlite3.DatabaseError("deterministic persistence failure")
+
+    repository.record_successful_generation = fail_persistence  # type: ignore[method-assign]
+    try:
+        try:
+            service.generate_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        except sqlite3.DatabaseError:
+            pass
+        else:
+            raise AssertionError(
+                "A database failure was silently converted into generation success."
+            )
+        assert list(storage_root.rglob("*.png")) == []
+    finally:
+        repository.record_successful_generation = original  # type: ignore[method-assign]
+        repository.close()
+
+
+def test_openai_adapter_requires_configured_key_without_network() -> None:
+    """The concrete adapter fails clearly before any request when no secret is configured."""
+
+    generator = OpenAIImageGenerator(api_key="")
+    try:
+        generator.generate(GenerationInput("environment", "Test prompt", None, {}))
+    except GenerationFailure as error:
+        assert error.error_code == "missing_api_key"
+        assert error.provider_key == "openai"
+    else:
+        raise AssertionError("OpenAI image generation ran without a configured API key.")

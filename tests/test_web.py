@@ -4,10 +4,36 @@ import json
 import threading
 from dataclasses import replace
 from pathlib import Path
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 from project_atlas.demo_data import chat_reply, content_payload, opportunity_payload
+from project_atlas.generation import GeneratedArtifact, GenerationFailure
 from project_atlas.web import create_server
+
+
+class FakeImageGenerator:
+    """Deterministic generator for HTTP tests; it never uses the network."""
+
+    generator_key = "fake-http-image"
+
+    def __init__(self, failure: GenerationFailure | None = None) -> None:
+        self.failure = failure
+        self.inputs: list[object] = []
+
+    def supports(self, asset_type: str) -> bool:
+        return asset_type in {"environment", "character", "graphic", "prop"}
+
+    def generate(self, generation_input: object) -> GeneratedArtifact:
+        self.inputs.append(generation_input)
+        if self.failure:
+            raise self.failure
+        return GeneratedArtifact(
+            b"http fake image",
+            "image/png",
+            provider_key="fake-http-provider",
+            model_key="fake-http-model",
+            provider_request_id="fake-http-request",
+        )
 
 
 def test_demo_data_represents_future_content_concepts() -> None:
@@ -122,6 +148,21 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
         )
         assert persisted_asset_spec["description"] == "A persisted AssetSpec description."
         assert persisted_asset_spec["generation_prompt"]
+        persisted_asset_specs = [
+            candidate
+            for scene in content["visual_plan"]["scenes"]
+            for candidate in scene["asset_specs"]
+        ]
+        assert {candidate["asset_type"] for candidate in persisted_asset_specs} == {
+            "environment",
+            "character",
+            "graphic",
+        }
+        assert all(
+            candidate["generation_supported"]
+            for candidate in persisted_asset_specs
+            if candidate["asset_type"] == "character"
+        )
         assert persisted_asset_spec["assets"] == [
             {
                 "id": "asset-isa-kitchen-background-v1",
@@ -188,5 +229,87 @@ def test_demo_endpoints_keep_discover_and_chat_compatible(tmp_path: Path) -> Non
                 assert len(json.loads(body)["opportunities"]) == 6
             else:
                 assert "ISA" in json.loads(body)["reply"]
+    finally:
+        server.server_close()
+
+
+def test_generation_endpoint_uses_persisted_prompt_and_exposes_execution(tmp_path: Path) -> None:
+    """POST generation ignores caller prompt text and returns durable provenance."""
+
+    generator = FakeImageGenerator()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=generator,
+        asset_storage_root=tmp_path / "assets",
+    )
+    try:
+        asset_spec = server.repository.get_asset_spec(
+            "asset-spec-isa-scene-01-kitchen-background-v1"
+        )
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        request = Request(
+            f"http://127.0.0.1:{server.server_address[1]}/api/asset-specs/{asset_spec.id}/generate",
+            data=b'{"prompt":"caller supplied replacement"}',
+            method="POST",
+        )
+        with urlopen(request) as response:
+            payload = json.load(response)
+        thread.join(timeout=2)
+        assert payload["execution"]["outcome"] == "succeeded"
+        assert payload["asset"]["generation_execution_id"] == payload["execution"]["id"]
+        assert generator.inputs[0].prompt == asset_spec.generation_prompt
+        assert (
+            tmp_path / "assets" / server.repository.get_asset(payload["asset"]["id"]).storage_path
+        ).exists()
+
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content") as response:
+            content = json.load(response)["content"]
+        thread.join(timeout=2)
+        persisted_spec = next(
+            candidate
+            for scene in content["visual_plan"]["scenes"]
+            for candidate in scene["asset_specs"]
+            if candidate["id"] == asset_spec.id
+        )
+        assert persisted_spec["generation_executions"][-1]["outcome"] == "succeeded"
+        assert persisted_spec["assets"][-1]["generation_execution_id"] == payload["execution"]["id"]
+        assert persisted_spec["generation_supported"] is True
+    finally:
+        server.server_close()
+
+
+def test_generation_endpoint_represents_provider_failure_without_asset(tmp_path: Path) -> None:
+    """A provider failure is visible to the Workspace but does not register an Asset."""
+
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=FakeImageGenerator(
+            GenerationFailure("Fake provider rejected generation.", error_code="rejected")
+        ),
+        asset_storage_root=tmp_path / "assets",
+    )
+    try:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        request = Request(
+            "http://127.0.0.1:"
+            f"{server.server_address[1]}/api/asset-specs/"
+            "asset-spec-isa-scene-01-kitchen-background-v1/generate",
+            method="POST",
+        )
+        with urlopen(request) as response:
+            payload = json.load(response)
+        thread.join(timeout=2)
+        assert payload["execution"]["outcome"] == "failed"
+        assert payload["execution"]["error_code"] == "rejected"
+        assert payload["asset"] is None
+        assert (
+            server.repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+        )
     finally:
         server.server_close()

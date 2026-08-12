@@ -8,9 +8,16 @@ import mimetypes
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload
+from project_atlas.generation import (
+    AssetGenerator,
+    GenerationService,
+    LocalAssetStorage,
+    OpenAIImageGenerator,
+    UnsupportedGenerationType,
+)
 from project_atlas.persistence import AtlasRepository
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
@@ -72,6 +79,13 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                                 visual_plans[0].id
                             )
                             content["visual_plan"] = visual_plan
+                            for scene in visual_plan["scenes"]:
+                                for asset_spec in scene["asset_specs"]:
+                                    asset_spec["generation_supported"] = (
+                                        self.server.generation_service.generator.supports(
+                                            asset_spec["asset_type"]
+                                        )
+                                    )
                             content["scene_plan"] = " ".join(
                                 scene["visual_intent"] for scene in visual_plan["scenes"]
                             )
@@ -95,9 +109,54 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(asset.read_bytes())
 
-    def _send_json(self, payload: object) -> None:
+    def do_POST(self) -> None:  # noqa: N802
+        """Execute only one persisted AssetSpec generation request at a time."""
+
+        path = urlparse(self.path).path
+        prefix = "/api/asset-specs/"
+        suffix = "/generate"
+        if not (path.startswith(prefix) and path.endswith(suffix)):
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+            return
+        asset_spec_id = unquote(path[len(prefix) : -len(suffix)]).strip("/")
+        if not asset_spec_id:
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+            return
+        try:
+            result = self.server.generation_service.generate_asset_spec(asset_spec_id)
+        except KeyError:
+            self._send_json({"error": "AssetSpec not found."}, HTTPStatus.NOT_FOUND)
+            return
+        except UnsupportedGenerationType as error:
+            self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+            return
+        except Exception:
+            self._send_json(
+                {"error": "Atlas could not persist the generation result."},
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+            return
+        self._send_json(
+            {
+                "kind": "generation",
+                "execution": self.server.repository.generation_execution_payload(
+                    result.execution.id
+                ),
+                "asset": (
+                    {
+                        "id": result.asset.id,
+                        "version": result.asset.version,
+                        "generation_execution_id": result.asset.generation_execution_id,
+                    }
+                    if result.asset
+                    else None
+                ),
+            }
+        )
+
+    def _send_json(self, payload: object, status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(payload).encode("utf-8")
-        self.send_response(HTTPStatus.OK)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
@@ -112,9 +171,15 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
 class AtlasHTTPServer(HTTPServer):
     """HTTP server that owns the local Atlas application repository."""
 
-    def __init__(self, address: tuple[str, int], repository: AtlasRepository) -> None:
+    def __init__(
+        self,
+        address: tuple[str, int],
+        repository: AtlasRepository,
+        generation_service: GenerationService,
+    ) -> None:
         super().__init__(address, AtlasRequestHandler)
         self.repository = repository
+        self.generation_service = generation_service
 
     def server_close(self) -> None:
         super().server_close()
@@ -122,11 +187,24 @@ class AtlasHTTPServer(HTTPServer):
 
 
 def create_server(
-    host: str = "127.0.0.1", port: int = 8000, database_path: Path | None = None
+    host: str = "127.0.0.1",
+    port: int = 8000,
+    database_path: Path | None = None,
+    generator: AssetGenerator | None = None,
+    asset_storage_root: Path | None = None,
 ) -> AtlasHTTPServer:
     """Create the MVP server without starting it, for testability."""
 
-    return AtlasHTTPServer((host, port), AtlasRepository(database_path))
+    repository = AtlasRepository(database_path)
+    return AtlasHTTPServer(
+        (host, port),
+        repository,
+        GenerationService(
+            repository,
+            generator or OpenAIImageGenerator(),
+            LocalAssetStorage(asset_storage_root),
+        ),
+    )
 
 
 def main() -> None:

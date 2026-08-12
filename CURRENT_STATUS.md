@@ -14,11 +14,13 @@
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
+The bounded Atlas v0.8 Generation Execution Foundation is implemented locally and awaiting review.
+
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.7 implements the approved bridge from a persistent Scene to durable AssetSpecs and
-immutable Asset versions. No further v0.7 implementation beyond this bounded foundation has
-been approved.
+Atlas v0.8 implements the approved synchronous bridge from one persistent executable AssetSpec to
+one immutable GenerationExecution and, on success, one immutable Asset. No further v0.8 implementation
+beyond this bounded foundation has been approved.
 
 ---
 
@@ -147,6 +149,23 @@ Clean at the v0.7 checkpoint; local `main` matched `origin/main`.
   Scenes. QA remains demo-backed.
 - Provider integration, asset generation jobs, production, workflow, publishing, analytics and agents
   remain deferred.
+
+## Atlas v0.8 Local Implementation
+
+**Project Atlas v0.8 â€” Generation Execution Foundation** is implemented locally and awaiting review,
+commit and push.
+
+- GenerationExecution records one immutable terminal synchronous generator attempt with exactly
+  `succeeded` or `failed` outcome, a frozen AssetSpec snapshot, normalized Atlas generation input and
+  generic generator/provider/model/request provenance.
+- A successful operation atomically creates one GenerationExecution and one linked immutable Asset;
+  generated Asset versions remain scoped to AssetSpec. Failed executions create no Asset.
+- Assets remain broader than generated outputs: manual/imported Assets retain nullable execution
+  provenance.
+- OpenAI is the first replaceable Image API adapter behind an Atlas-owned generator boundary. Keys are
+  environment-configured and never persisted; generated files are stored under Atlas-managed local storage.
+- No execution or Asset is seeded, and startup never invokes generation. Queues, retries, batch generation,
+  QA, approval, rendering, workflow, production, publishing, analytics and agents remain deferred.
 
 ---
 
@@ -476,6 +495,7 @@ Completed:
 - Atlas v0.5 Content Piece + Script persistence foundation
 - Atlas v0.6 Visual Plan + Scene persistence foundation
 - Atlas v0.7 Asset Specification + Asset persistence foundation
+- Atlas v0.8 Generation Execution foundation (local, awaiting review/commit/push)
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -488,11 +508,14 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Atlas v0.7 Asset Specification + Asset Foundation is complete and pushed. The next bounded milestone remains to be designed and approved.**
+> **Review the bounded Atlas v0.8 Generation Execution Foundation, then commit and push if approved.**
 
-Implemented direction through v0.7:
+Implemented direction through v0.8:
 
-> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → Assets
+v0.8 adds GenerationExecution provenance between an AssetSpec and any generated Asset; manual and
+imported Assets remain valid without that nullable provenance.
+
+> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → GenerationExecution → Assets
 
 The final Pillar taxonomy, configurable research rules, scoring system and broader evidence policy
 remain intentionally unsettled. v0.3 does not implement those later decisions.

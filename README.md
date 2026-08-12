@@ -3,8 +3,8 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.7 scope,
-including the complete and pushed Asset Specification + Asset Foundation; later workflow,
+SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.7 scope and
+the bounded v0.8 Generation Execution Foundation locally; later workflow,
 research automation and production systems remain deferred.
 
 ## Technology baseline
@@ -193,13 +193,27 @@ Startup idempotently seeds five ISA AssetSpecs across the existing three Scenes:
 kitchen-table environment and hamster sorting envelopes, a tax-year calendar, and a
 decision-tree graphic plus hamster reaction. It deliberately seeds no Asset outputs.
 The Content Workspace now reads persisted AssetSpecs and their registered Assets
-read-only beneath each Scene. QA remains demo-backed; generation providers, jobs,
-production, publishing, workflow, analytics and agents remain deferred.
+read-only beneath each Scene. QA remains demo-backed.
+
+## Generation execution foundation
+
+Atlas v0.8 adds one synchronous image-generation operation for one persisted, executable
+AssetSpec. A terminal immutable **GenerationExecution** freezes the AssetSpec snapshot and
+normalized provider-neutral input actually used, then retains generic generator/provider/model/request
+provenance and success or failure details. A success atomically registers exactly one immutable Asset;
+manual/imported Assets remain valid without execution provenance.
+
+OpenAI is the first replaceable Image API adapter, configured through `OPENAI_API_KEY` and
+`ATLAS_OPENAI_IMAGE_MODEL`; no API secret is persisted. Generated files are stored safely below the
+configurable `ATLAS_ASSET_STORAGE_ROOT` (default `data/assets/`). Startup performs no generation and
+seeds zero executions and zero Assets. Queues, retries, batch generation, QA, approval, rendering,
+workflow, production, publishing, analytics and agents remain deferred.
 
 ## Status
 
 v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
 v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
-Asset persistence is complete and pushed. Later Atlas systems remain
+Asset persistence is complete and pushed. v0.8 Generation Execution is implemented locally and
+awaiting review. Later Atlas systems remain
 out of scope.

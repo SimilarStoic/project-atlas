@@ -716,6 +716,11 @@ Status: COMPLETE
 
 AssetSpec now persistently records each provider-neutral visual requirement for one Scene, and immutable Asset versions register concrete outputs without generation, selection, approval or workflow semantics. QA remains demo-backed.
 
+### Atlas v0.8 — Generation Execution Foundation
+Status: IMPLEMENTED LOCALLY, AWAITING REVIEW
+
+GenerationExecution now records one immutable terminal synchronous attempt against one AssetSpec, including frozen input provenance. A successful operation registers one linked immutable Asset; failure records no Asset. OpenAI is the first replaceable image adapter; queues, retries, QA, workflow, rendering and publishing remain deferred.
+
 ## Phase 0 — Foundation
 Status: COMPLETE
 

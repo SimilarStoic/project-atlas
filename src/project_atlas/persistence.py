@@ -219,6 +219,7 @@ class Asset:
 
     id: str
     asset_spec_id: str
+    generation_execution_id: str | None
     version: int
     storage_path: str
     media_type: str
@@ -229,6 +230,26 @@ class Asset:
 
 Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
+GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
+
+
+@dataclass(frozen=True)
+class GenerationExecution:
+    """An immutable terminal generator attempt against one AssetSpec snapshot."""
+
+    id: str
+    asset_spec_id: str
+    asset_spec_snapshot: dict[str, Any]
+    generation_input: dict[str, Any]
+    generator_key: str
+    provider_key: str | None
+    model_key: str | None
+    provider_request_id: str | None
+    outcome: str
+    error_code: str | None
+    error_message: str | None
+    response_metadata: dict[str, Any]
+    created_at: str
 
 
 MIGRATIONS: tuple[Migration, ...] = (
@@ -476,6 +497,43 @@ MIGRATIONS: tuple[Migration, ...] = (
         )
         """,
             "CREATE INDEX idx_asset_specs_scene ON asset_specs (scene_id)",
+        ),
+    ),
+    (
+        7,
+        (
+            """
+        CREATE TABLE generation_executions (
+          id TEXT PRIMARY KEY,
+          asset_spec_id TEXT NOT NULL,
+          asset_spec_snapshot_json TEXT NOT NULL,
+          generation_input_json TEXT NOT NULL,
+          generator_key TEXT NOT NULL,
+          provider_key TEXT NULL,
+          model_key TEXT NULL,
+          provider_request_id TEXT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('succeeded', 'failed')),
+          error_code TEXT NULL,
+          error_message TEXT NULL,
+          response_metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (asset_spec_id) REFERENCES asset_specs(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        ALTER TABLE assets
+        ADD COLUMN generation_execution_id TEXT NULL
+        REFERENCES generation_executions(id) ON DELETE RESTRICT
+        """,
+            """
+        CREATE INDEX idx_generation_executions_asset_spec_created
+          ON generation_executions (asset_spec_id, created_at)
+        """,
+            """
+        CREATE UNIQUE INDEX idx_assets_generation_execution
+          ON assets (generation_execution_id)
+          WHERE generation_execution_id IS NOT NULL
+        """,
         ),
     ),
 )
@@ -1243,9 +1301,7 @@ class AtlasRepository:
         """Create a provider-neutral asset requirement for one persisted Scene."""
 
         self.get_scene(scene_id)
-        self._validate_asset_spec_text(
-            asset_type, purpose, description, generation_prompt
-        )
+        self._validate_asset_spec_text(asset_type, purpose, description, generation_prompt)
         stamp = now()
         with self.connection:
             self.connection.execute(
@@ -1328,7 +1384,9 @@ class AtlasRepository:
         self._validate_asset_version(version)
         with self.connection:
             self.connection.execute(
-                "INSERT INTO assets VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO assets (id, asset_spec_id, version, storage_path, media_type, "
+                "source_kind, metadata_json, created_at, generation_execution_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)",
                 (
                     asset_id,
                     asset_spec_id,
@@ -1341,6 +1399,121 @@ class AtlasRepository:
                 ),
             )
         return self.get_asset(asset_id)
+
+    def create_failed_generation_execution(
+        self,
+        execution_id: str,
+        asset_spec_id: str,
+        asset_spec_snapshot: dict[str, Any],
+        generation_input: dict[str, Any],
+        generator_key: str,
+        *,
+        provider_key: str | None = None,
+        model_key: str | None = None,
+        provider_request_id: str | None = None,
+        error_code: str | None = None,
+        error_message: str | None = None,
+        response_metadata: dict[str, Any] | None = None,
+    ) -> GenerationExecution:
+        """Record one immutable failed generator attempt without creating an Asset."""
+
+        with self.connection:
+            self._insert_generation_execution(
+                execution_id,
+                asset_spec_id,
+                asset_spec_snapshot,
+                generation_input,
+                generator_key,
+                "failed",
+                provider_key,
+                model_key,
+                provider_request_id,
+                error_code,
+                error_message,
+                response_metadata or {},
+            )
+        return self.get_generation_execution(execution_id)
+
+    def record_successful_generation(
+        self,
+        execution_id: str,
+        asset_id: str,
+        asset_spec_id: str,
+        asset_spec_snapshot: dict[str, Any],
+        generation_input: dict[str, Any],
+        generator_key: str,
+        storage_path: str,
+        media_type: str,
+        *,
+        provider_key: str | None = None,
+        model_key: str | None = None,
+        provider_request_id: str | None = None,
+        response_metadata: dict[str, Any] | None = None,
+    ) -> tuple[GenerationExecution, Asset]:
+        """Atomically record a succeeded execution and its one immutable Asset."""
+
+        with self.connection:
+            self._insert_generation_execution(
+                execution_id,
+                asset_spec_id,
+                asset_spec_snapshot,
+                generation_input,
+                generator_key,
+                "succeeded",
+                provider_key,
+                model_key,
+                provider_request_id,
+                None,
+                None,
+                response_metadata or {},
+            )
+            version = self.connection.execute(
+                "SELECT COALESCE(MAX(version), 0) + 1 FROM assets WHERE asset_spec_id = ?",
+                (asset_spec_id,),
+            ).fetchone()[0]
+            self.connection.execute(
+                "INSERT INTO assets (id, asset_spec_id, version, storage_path, media_type, "
+                "source_kind, metadata_json, created_at, generation_execution_id) "
+                "VALUES (?, ?, ?, ?, ?, 'generated', '{}', ?, ?)",
+                (
+                    asset_id,
+                    asset_spec_id,
+                    version,
+                    storage_path,
+                    media_type,
+                    now(),
+                    execution_id,
+                ),
+            )
+        return self.get_generation_execution(execution_id), self.get_asset(asset_id)
+
+    def get_generation_execution(self, execution_id: str) -> GenerationExecution:
+        row = self.connection.execute(
+            "SELECT * FROM generation_executions WHERE id = ?", (execution_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(execution_id)
+        return self._generation_execution(row)
+
+    def list_generation_executions_for_asset_spec(
+        self, asset_spec_id: str
+    ) -> list[GenerationExecution]:
+        """Return immutable execution history in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM generation_executions WHERE asset_spec_id = ? "
+            "ORDER BY created_at, id",
+            (asset_spec_id,),
+        )
+        return [self._generation_execution(row) for row in rows]
+
+    def get_asset_for_generation_execution(self, execution_id: str) -> Asset | None:
+        """Return the one Asset registered from an execution, if it succeeded."""
+
+        row = self.connection.execute(
+            "SELECT * FROM assets WHERE generation_execution_id = ?", (execution_id,)
+        ).fetchone()
+        return self._asset(row) if row else None
 
     def get_asset(self, asset_id: str) -> Asset:
         row = self.connection.execute("SELECT * FROM assets WHERE id = ?", (asset_id,)).fetchone()
@@ -1360,7 +1533,7 @@ class AtlasRepository:
         """Load one Scene asset requirement and its registered immutable outputs."""
 
         asset_spec = self.get_asset_spec(asset_spec_id)
-        return {
+        payload = {
             "id": asset_spec.id,
             "scene_id": asset_spec.scene_id,
             "asset_type": asset_spec.asset_type,
@@ -1368,16 +1541,46 @@ class AtlasRepository:
             "description": asset_spec.description,
             "generation_prompt": asset_spec.generation_prompt,
             "continuity_key": asset_spec.continuity_key,
-            "assets": [
-                {
-                    "id": asset.id,
-                    "version": asset.version,
-                    "storage_path": asset.storage_path,
-                    "media_type": asset.media_type,
-                    "source_kind": asset.source_kind,
-                }
-                for asset in self.list_assets_for_asset_spec(asset_spec.id)
+            "assets": [],
+            "generation_executions": [
+                self.generation_execution_payload(execution.id)
+                for execution in self.list_generation_executions_for_asset_spec(asset_spec.id)
             ],
+        }
+        for asset in self.list_assets_for_asset_spec(asset_spec.id):
+            item = {
+                "id": asset.id,
+                "version": asset.version,
+                "storage_path": asset.storage_path,
+                "media_type": asset.media_type,
+                "source_kind": asset.source_kind,
+            }
+            if asset.generation_execution_id is not None:
+                item["generation_execution_id"] = asset.generation_execution_id
+            payload["assets"].append(item)
+        return payload
+
+    def generation_execution_payload(self, execution_id: str) -> dict[str, Any]:
+        """Load read-only execution provenance for the Content Workspace."""
+
+        execution = self.get_generation_execution(execution_id)
+        asset = self.get_asset_for_generation_execution(execution.id)
+        return {
+            "id": execution.id,
+            "asset_spec_id": execution.asset_spec_id,
+            "generator_key": execution.generator_key,
+            "provider_key": execution.provider_key,
+            "model_key": execution.model_key,
+            "provider_request_id": execution.provider_request_id,
+            "outcome": execution.outcome,
+            "error_code": execution.error_code,
+            "error_message": execution.error_message,
+            "created_at": execution.created_at,
+            "asset": (
+                {"id": asset.id, "version": asset.version, "media_type": asset.media_type}
+                if asset
+                else None
+            ),
         }
 
     def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
@@ -1403,10 +1606,93 @@ class AtlasRepository:
         if script.content_piece_id != content_piece_id:
             raise ValueError("A VisualPlan must use a Script from the same ContentPiece.")
 
+    def _insert_generation_execution(
+        self,
+        execution_id: str,
+        asset_spec_id: str,
+        asset_spec_snapshot: dict[str, Any],
+        generation_input: dict[str, Any],
+        generator_key: str,
+        outcome: str,
+        provider_key: str | None,
+        model_key: str | None,
+        provider_request_id: str | None,
+        error_code: str | None,
+        error_message: str | None,
+        response_metadata: dict[str, Any],
+    ) -> None:
+        self.get_asset_spec(asset_spec_id)
+        self._validate_generation_execution(
+            asset_spec_snapshot,
+            generation_input,
+            generator_key,
+            outcome,
+            provider_key,
+            model_key,
+            provider_request_id,
+            error_code,
+            error_message,
+            response_metadata,
+        )
+        if asset_spec_snapshot.get("asset_spec_id") != asset_spec_id:
+            raise ValueError("GenerationExecution snapshot must identify its persisted AssetSpec.")
+        self.connection.execute(
+            "INSERT INTO generation_executions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                execution_id,
+                asset_spec_id,
+                json.dumps(asset_spec_snapshot, sort_keys=True),
+                json.dumps(generation_input, sort_keys=True),
+                generator_key.strip(),
+                self._normalized_optional_identifier(provider_key),
+                self._normalized_optional_identifier(model_key),
+                self._normalized_optional_identifier(provider_request_id),
+                outcome,
+                self._normalized_optional_identifier(error_code),
+                self._normalized_optional_identifier(error_message),
+                json.dumps(response_metadata, sort_keys=True),
+                now(),
+            ),
+        )
+
     @staticmethod
     def _validate_asset_version(version: int) -> None:
         if type(version) is not int or version < 1:
             raise ValueError("Asset version must be a positive integer.")
+
+    @staticmethod
+    def _normalized_optional_identifier(value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Optional generation identifiers must be null or non-empty text.")
+        return value.strip()
+
+    @staticmethod
+    def _validate_generation_execution(
+        asset_spec_snapshot: dict[str, Any],
+        generation_input: dict[str, Any],
+        generator_key: str,
+        outcome: str,
+        provider_key: str | None,
+        model_key: str | None,
+        provider_request_id: str | None,
+        error_code: str | None,
+        error_message: str | None,
+        response_metadata: dict[str, Any],
+    ) -> None:
+        if not isinstance(generator_key, str) or not generator_key.strip():
+            raise ValueError("GenerationExecution generator key must be non-empty text.")
+        if outcome not in GENERATION_EXECUTION_OUTCOMES:
+            raise ValueError("GenerationExecution outcome must be succeeded or failed.")
+        if not isinstance(asset_spec_snapshot, dict):
+            raise ValueError("GenerationExecution AssetSpec snapshot must be an object.")
+        if not isinstance(generation_input, dict):
+            raise ValueError("GenerationExecution generation input must be an object.")
+        if not isinstance(response_metadata, dict):
+            raise ValueError("GenerationExecution response metadata must be an object.")
+        for value in (provider_key, model_key, provider_request_id, error_code, error_message):
+            AtlasRepository._normalized_optional_identifier(value)
 
     @staticmethod
     def _validate_asset_spec_text(*values: str) -> None:
@@ -2369,10 +2655,29 @@ class AtlasRepository:
         return Asset(
             row["id"],
             row["asset_spec_id"],
+            row["generation_execution_id"],
             row["version"],
             row["storage_path"],
             row["media_type"],
             row["source_kind"],
             json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _generation_execution(row: sqlite3.Row) -> GenerationExecution:
+        return GenerationExecution(
+            row["id"],
+            row["asset_spec_id"],
+            json.loads(row["asset_spec_snapshot_json"]),
+            json.loads(row["generation_input_json"]),
+            row["generator_key"],
+            row["provider_key"],
+            row["model_key"],
+            row["provider_request_id"],
+            row["outcome"],
+            row["error_code"],
+            row["error_message"],
+            json.loads(row["response_metadata_json"]),
             row["created_at"],
         )

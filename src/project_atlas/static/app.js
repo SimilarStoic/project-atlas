@@ -170,6 +170,20 @@ function visualPlan(content) {
           var registeredAssets = assetSpec.assets.length
             ? "<p><b>Registered assets</b><br>" + assetSpec.assets.length + "</p>"
             : "<p><b>Registered assets</b><br>0</p>";
+          var executions = assetSpec.generation_executions || [];
+          var latestExecution = executions.length ? executions[executions.length - 1] : null;
+          var executionStatus = latestExecution
+            ? "<p><b>Latest generation</b><br>" +
+              latestExecution.outcome +
+              " Â· " +
+              latestExecution.generator_key +
+              (latestExecution.model_key ? " / " + latestExecution.model_key : "") +
+              (latestExecution.error_message ? "<br><small>" + latestExecution.error_message + "</small>" : "") +
+              "</p>"
+            : "";
+          var generateAction = assetSpec.generation_supported
+            ? '<button class="generate-asset" data-asset-spec-id="' + assetSpec.id + '">Generate</button>'
+            : "";
           return (
             '<li><b>' +
             assetSpec.asset_type +
@@ -182,6 +196,8 @@ function visualPlan(content) {
             "</p>" +
             continuity +
             registeredAssets +
+            executionStatus +
+            generateAction +
             "</li>"
           );
         })
@@ -231,6 +247,42 @@ function bindActions() {
         screen("chat");
       }
       say(element.textContent + " is recorded locally for this demo.");
+    };
+  });
+}
+
+function bindGenerationActions() {
+  document.querySelectorAll(".generate-asset").forEach(function (element) {
+    element.onclick = function () {
+      element.disabled = true;
+      fetch("/api/asset-specs/" + encodeURIComponent(element.dataset.assetSpecId) + "/generate", {
+        method: "POST",
+      })
+        .then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) {
+              throw new Error(data.error || "Generation could not start.");
+            }
+            return data;
+          });
+        })
+        .then(function (data) {
+          var message = data.execution.outcome === "succeeded"
+            ? "Generated Asset v" + data.asset.version + " is registered."
+            : data.execution.error_message || "Generation failed and was recorded.";
+          say(message);
+          return fetch("/api/demo/content");
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (payload) {
+          pack(payload.content);
+        })
+        .catch(function (error) {
+          say(error.message || "Generation could not be completed.");
+          element.disabled = false;
+        });
     };
   });
 }
@@ -287,6 +339,7 @@ function pack(content) {
     qa +
     '</ul><div class="actions"><button>Approve</button><button>Request changes</button><button>Reject</button></div></div></div></div>';
   bindActions();
+  bindGenerationActions();
 }
 
 Promise.all([
