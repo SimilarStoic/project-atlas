@@ -32,6 +32,7 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/demo/content":
             content = content_payload().copy()
+            content.pop("scene_plan", None)
             research_pack = self.server.repository.latest_research_pack_payload("uk-isa-rules")
             if research_pack is not None:
                 content["research"] = research_pack
@@ -63,6 +64,17 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                         content["title"] = content_piece["working_title"]
                         if content_piece["latest_script"] is not None:
                             content["script"] = content_piece["latest_script"]["narration_text"]
+                        visual_plans = self.server.repository.list_visual_plans_for_content_piece(
+                            default_content_piece.id
+                        )
+                        if visual_plans:
+                            visual_plan = self.server.repository.visual_plan_payload(
+                                visual_plans[0].id
+                            )
+                            content["visual_plan"] = visual_plan
+                            content["scene_plan"] = " ".join(
+                                scene["visual_intent"] for scene in visual_plan["scenes"]
+                            )
             self._send_json({"kind": "demo", "content": content, "activity": ACTIVITY})
             return
         if parsed.path == "/api/demo/chat":

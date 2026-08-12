@@ -688,13 +688,28 @@ Status: COMPLETE
 Subjects, Opportunities and their relationships are now persistent through SQLite, explicit migrations and a repository layer. No generic Topics model was introduced. Pillars remain deliberately deferred.
 
 ### Atlas v0.3 — Research & Evidence Foundation
-Status: DESIGN/APPROVED FOR IMPLEMENTATION
+Status: COMPLETE
 
-Approved conceptual direction:
+Implemented direction:
 
 > Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → editorial interpretation
 
-This milestone is not yet implemented. It will establish principles and architecture for flexible claim types, provenance, source relationships, verification states and freshness requirements; it will not assume that every statement carries the same evidence burden.
+This milestone established flexible claim types, provenance, source relationships, verification states and freshness requirements without assuming every statement carries the same evidence burden.
+
+### Atlas v0.4 — Editorial Angle Foundation
+Status: COMPLETE
+
+EditorialAngle and EditorialAngleClaim persist the editorial proposition and its grounded Claim roles without status, selection or approval workflow semantics.
+
+### Atlas v0.5 — Content Piece + Script Foundation
+Status: COMPLETE
+
+ContentPiece persists a concrete deliverable from an EditorialAngle; immutable Script versions preserve complete audio-first narration.
+
+### Atlas v0.6 — Visual Plan + Scene Foundation
+Status: IMPLEMENTED LOCALLY, AWAITING REVIEW
+
+VisualPlan now persistently links one ContentPiece to one exact Script version, with ordered Scenes that reinforce the narration without becoming semantically necessary for audio-only comprehension. QA remains demo-backed.
 
 ## Phase 0 — Foundation
 Status: COMPLETE

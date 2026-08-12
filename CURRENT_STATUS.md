@@ -10,14 +10,15 @@
 
 ## Overall Status
 
-🟡 Product definition continues. Atlas v0.1 through v0.4 are complete and pushed; the bounded Atlas v0.5 Content Piece + Script Foundation is implemented locally and awaiting review.
+🟡 Product definition continues. Atlas v0.1 through v0.5 are complete and pushed; the bounded Atlas v0.6 Visual Plan + Scene Foundation is implemented locally and awaiting review.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.5 implements the approved bridge from Editorial Angle to a specific ContentPiece and its
-complete narration Script. No further v0.5 implementation beyond this bounded foundation has been approved.
+Atlas v0.6 implements the approved bridge from an exact immutable Script version to a persistent
+VisualPlan and ordered Scenes. No further v0.6 implementation beyond this bounded foundation has
+been approved.
 
 ---
 
@@ -40,7 +41,7 @@ complete narration Script. No further v0.5 implementation beyond this bounded fo
 
 Current commit:
 
-`2bfc34b63457d89c44e3b865522a5af5aeba1a4e feat: add editorial angle foundation`
+`5f63a55f2d592a8d6a2124fb077509b7c1dc66ca feat: add content piece and script foundation`
 
 Branch:
 
@@ -52,7 +53,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.4 checkpoint; local `main` matched `origin/main` before the local v0.5 implementation.
+Clean at the v0.5 checkpoint; local `main` matched `origin/main` before the local v0.6 implementation.
 
 ## Atlas v0.2 Checkpoint
 
@@ -98,10 +99,9 @@ Clean at the v0.4 checkpoint; local `main` matched `origin/main` before the loca
 - No workflow state, AI angle generation, publishing, production or analytics
   has been introduced.
 
-## Atlas v0.5 Local Implementation
+## Atlas v0.5 Checkpoint
 
-**Project Atlas v0.5 — Content Piece + Script Foundation** is implemented locally and awaiting
-review, commit and push.
+**Project Atlas v0.5 — Content Piece + Script Foundation** is complete and pushed.
 
 - ContentPiece belongs to one Opportunity and derives from one EditorialAngle from that same
   Opportunity. Its Opportunity/Angle provenance is immutable after creation.
@@ -110,10 +110,26 @@ review, commit and push.
 - One persistent ISA video ContentPiece and one immutable Script v1 are idempotently seeded from
   the deterministic ISA EditorialAngle and existing demo narration.
 - The Content Workspace reads persistent Research, EditorialAngle, ContentPiece and latest Script
-  narration. Scene Plan and QA remain demo-backed; workflow, production, publishing and analytics
-  remain deferred.
+  narration. Scene Plan and QA remained demo-backed at this checkpoint; workflow, production,
+  publishing and analytics remain deferred.
 - No visual-plan, scene, QA, approval, workflow, publishing, production or AI-generation
-  persistence has been introduced.
+  persistence was introduced in v0.5.
+
+## Atlas v0.6 Local Implementation
+
+**Project Atlas v0.6 — Visual Plan + Scene Foundation** is implemented locally and awaiting
+review, commit and push.
+
+- VisualPlan belongs to one ContentPiece and one exact immutable Script version from that same
+  ContentPiece. Its ContentPiece/Script provenance is immutable after creation.
+- Scene belongs to one VisualPlan, uses an ordered unique sequence within that plan, and retains a
+  human-readable narration excerpt only; Script narration remains authoritative and audio-complete.
+- One persistent ISA VisualPlan and three ordered Scenes are idempotently seeded from the existing
+  kitchen-table, envelopes, tax-year calendar and decision-tree demo direction.
+- The Content Workspace now reads persistent VisualPlan and Scene data; the compatibility Scene
+  Plan display derives from persistence. QA remains demo-backed.
+- Asset generation, production, workflow, publishing, analytics, AI visual planning and agents
+  remain deferred.
 
 ---
 
@@ -440,7 +456,8 @@ Completed:
 - Editorial inclusion test and explicit Pillars / Subjects / Opportunities distinction
 - Atlas v0.3 Research & Evidence persistence foundation
 - Atlas v0.4 Editorial Angle persistence foundation
-- Atlas v0.5 Content Piece + Script persistence foundation (local, awaiting review/commit/push)
+- Atlas v0.5 Content Piece + Script persistence foundation
+- Atlas v0.6 Visual Plan + Scene persistence foundation (local, awaiting review/commit/push)
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -453,11 +470,11 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Review the bounded Atlas v0.5 Content Piece + Script Foundation, then commit and push if approved.**
+> **Review the bounded Atlas v0.6 Visual Plan + Scene Foundation, then commit and push if approved.**
 
-Implemented direction through v0.5:
+Implemented direction through v0.6:
 
-> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script
+> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes
 
 The final Pillar taxonomy, configurable research rules, scoring system and broader evidence policy
 remain intentionally unsettled. v0.3 does not implement those later decisions.

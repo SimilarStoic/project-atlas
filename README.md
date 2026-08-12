@@ -4,7 +4,7 @@
 
 Project Atlas is a local, dependency-free editorial control interface and durable
 SQLite foundation for SimilarStoic. It deliberately implements only the approved
-v0.1-v0.5 scope; later workflow, research automation and production systems remain deferred.
+v0.1-v0.6 scope; later workflow, research automation and production systems remain deferred.
 
 ## Technology baseline
 
@@ -151,8 +151,33 @@ Workspace now reads the persistent ContentPiece and latest Script narration read
 Scene plan and QA remain demo-backed; workflow, production, publishing and analytics
 remain deferred.
 
+## Visual plan and scene persistence
+
+Atlas v0.6 adds the smallest durable bridge from one exact immutable Script version
+to its visual production blueprint:
+
+- A **VisualPlan** belongs to one ContentPiece and references one Script from that
+  same ContentPiece. Its ContentPiece/Script provenance is immutable; visual direction
+  and metadata remain editable.
+- An ordered **Scene** belongs to one VisualPlan. Its `narration_excerpt` is a
+  human-readable locator only: the Script remains the authoritative, complete
+  audio-first narration. Scene sequence is unique within its VisualPlan; editable
+  scene detail never moves it to another plan.
+
+Startup idempotently seeds one ISA VisualPlan for the seeded ContentPiece and
+Script v1, with three ordered Scenes migrated from the existing kitchen-table,
+calendar, envelopes and decision-tree direction. The Content Workspace now reads
+the persistent VisualPlan and Scenes read-only; its compatibility `scene_plan`
+display is derived from those records. QA remains demo-backed.
+
+This preserves the SimilarStoic rule that the complete video is understandable
+from audio alone: visuals clarify, reinforce and provide metaphor, but do not
+replace essential narration. Asset generation, production, publishing, workflow,
+analytics and agents remain deferred.
+
 ## Status
 
 v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
-v0.4 Editorial Angle persistence, and v0.5 Content Piece + Script persistence are
-implemented locally. Later Atlas systems remain out of scope.
+v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
+v0.6 Visual Plan + Scene persistence are implemented locally. Later Atlas systems
+remain out of scope.

@@ -33,10 +33,10 @@ def test_server_can_be_created_for_local_use(tmp_path: Path) -> None:
         server.server_close()
 
 
-def test_content_endpoint_adapts_persisted_research_angle_piece_and_script(
+def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scenes(
     tmp_path: Path,
 ) -> None:
-    """The Content Workspace receives v0.5 data plus its remaining demo content fields."""
+    """The Content Workspace receives persistence through v0.6 while QA remains demo-backed."""
 
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
@@ -53,6 +53,19 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_and_script(
             content_piece.id,
             2,
             "A persisted latest narration version exposed through the Content Workspace.",
+        )
+        visual_plan = server.repository.get_visual_plan("visual-plan-isa-deadline-video-v1")
+        server.repository.update_visual_plan(
+            replace(
+                visual_plan,
+                visual_direction=(
+                    "A persisted visual direction exposed through the Content Workspace."
+                ),
+            )
+        )
+        scene = server.repository.get_scene("scene-isa-deadline-video-v1-01")
+        server.repository.update_scene(
+            replace(scene, visual_intent="A persisted first ordered Scene intent.")
         )
         thread = threading.Thread(target=server.handle_request)
         thread.start()
@@ -79,7 +92,40 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_and_script(
         assert content["script"] == (
             "A persisted latest narration version exposed through the Content Workspace."
         )
-        assert content["scene_plan"] == content_payload()["scene_plan"]
+        assert content["visual_plan"]["visual_direction"] == (
+            "A persisted visual direction exposed through the Content Workspace."
+        )
+        assert [scene["sequence"] for scene in content["visual_plan"]["scenes"]] == [1, 2, 3]
+        assert content["visual_plan"]["scenes"][0]["visual_intent"] == (
+            "A persisted first ordered Scene intent."
+        )
+        assert content["scene_plan"] == " ".join(
+            scene["visual_intent"] for scene in content["visual_plan"]["scenes"]
+        )
+        assert content["scene_plan"] != content_payload()["scene_plan"]
+        assert content["qa"] == content_payload()["qa"]
+    finally:
+        server.server_close()
+
+
+def test_content_endpoint_has_no_demo_scene_plan_fallback_without_visual_plan(
+    tmp_path: Path,
+) -> None:
+    """QA remains demo-backed when a temporary setup has no persisted VisualPlan."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    try:
+        with server.repository.connection:
+            server.repository.connection.execute("DELETE FROM scenes")
+            server.repository.connection.execute("DELETE FROM visual_plans")
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content") as response:
+            payload = json.load(response)
+        thread.join(timeout=2)
+        content = payload["content"]
+        assert "visual_plan" not in content
+        assert "scene_plan" not in content
         assert content["qa"] == content_payload()["qa"]
     finally:
         server.server_close()

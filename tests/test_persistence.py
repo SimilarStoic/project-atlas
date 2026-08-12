@@ -6,7 +6,7 @@ from dataclasses import replace
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
 
 
-def test_fresh_database_migrates_and_seeds_discovery_research_angles_and_scripts(tmp_path) -> None:
+def test_fresh_database_migrates_and_seeds_discovery_through_visual_plans(tmp_path) -> None:
     """Fresh startup applies all migrations and creates the scoped seed data."""
 
     database = tmp_path / "atlas.db"
@@ -15,7 +15,7 @@ def test_fresh_database_migrates_and_seeds_discovery_research_angles_and_scripts
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4]
+        ] == [1, 2, 3, 4, 5]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -33,6 +33,15 @@ def test_fresh_database_migrates_and_seeds_discovery_research_angles_and_scripts
             len(repository.list_scripts_for_content_piece("content-piece-isa-deadline-video-v1"))
             == 1
         )
+        assert (
+            len(
+                repository.list_visual_plans_for_content_piece(
+                    "content-piece-isa-deadline-video-v1"
+                )
+            )
+            == 1
+        )
+        assert len(repository.list_scenes_for_visual_plan("visual-plan-isa-deadline-video-v1")) == 3
     finally:
         repository.close()
 
@@ -51,14 +60,16 @@ def test_fresh_database_migrates_and_seeds_discovery_research_angles_and_scripts
         )
         assert reopened.connection.execute("SELECT COUNT(*) FROM content_pieces").fetchone()[0] == 1
         assert reopened.connection.execute("SELECT COUNT(*) FROM scripts").fetchone()[0] == 1
+        assert reopened.connection.execute("SELECT COUNT(*) FROM visual_plans").fetchone()[0] == 1
+        assert reopened.connection.execute("SELECT COUNT(*) FROM scenes").fetchone()[0] == 3
     finally:
         reopened.close()
 
 
-def test_existing_v04_database_migrates_to_v05_without_rewriting_discovery_data(tmp_path) -> None:
-    """The new migration applies cleanly to a database already recorded at v0.4."""
+def test_existing_v05_database_migrates_to_v06_without_rewriting_discovery_data(tmp_path) -> None:
+    """The new migration applies cleanly to a database already recorded at v0.5."""
 
-    database = tmp_path / "atlas-v04.db"
+    database = tmp_path / "atlas-v05.db"
     connection = sqlite3.connect(database)
     try:
         connection.execute(
@@ -73,6 +84,9 @@ def test_existing_v04_database_migrates_to_v05_without_rewriting_discovery_data(
         for statement in MIGRATIONS[2][1]:
             connection.execute(statement)
         connection.execute("INSERT INTO schema_migrations VALUES (3, '2026-08-12T00:00:00+00:00')")
+        for statement in MIGRATIONS[3][1]:
+            connection.execute(statement)
+        connection.execute("INSERT INTO schema_migrations VALUES (4, '2026-08-12T00:00:00+00:00')")
         connection.execute(
             "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -97,9 +111,9 @@ def test_existing_v04_database_migrates_to_v05_without_rewriting_discovery_data(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4]
+        ] == [1, 2, 3, 4, 5]
         assert repository.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='content_pieces'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='visual_plans'"
         ).fetchone()
     finally:
         repository.close()
@@ -112,7 +126,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                5,
+                6,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -134,7 +148,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 5"
+                "SELECT version FROM schema_migrations WHERE version = 6"
             ).fetchone()
             is None
         )
@@ -274,6 +288,8 @@ def test_seed_reuses_existing_source_url_and_restores_missing_evidence(tmp_path)
     source_url = "https://www.gov.uk/individual-savings-accounts"
     try:
         with repository.connection:
+            repository.connection.execute("DELETE FROM scenes")
+            repository.connection.execute("DELETE FROM visual_plans")
             repository.connection.execute("DELETE FROM scripts")
             repository.connection.execute("DELETE FROM content_pieces")
             repository.connection.execute("DELETE FROM editorial_angle_claims")
@@ -724,6 +740,8 @@ def test_content_piece_seed_restores_missing_script_v1_without_overwriting_piece
         )
         seeded_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
         with repository.connection:
+            repository.connection.execute("DELETE FROM scenes")
+            repository.connection.execute("DELETE FROM visual_plans")
             repository.connection.execute(
                 "DELETE FROM scripts WHERE id = ?", ("script-isa-deadline-video-v1",)
             )
@@ -762,6 +780,8 @@ def test_content_piece_seed_restores_missing_piece_and_script_without_touching_e
         ]
         seeded_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
         with repository.connection:
+            repository.connection.execute("DELETE FROM scenes")
+            repository.connection.execute("DELETE FROM visual_plans")
             repository.connection.execute(
                 "DELETE FROM scripts WHERE id = ?", ("script-isa-deadline-video-v1",)
             )
@@ -794,3 +814,280 @@ def test_content_piece_seed_restores_missing_piece_and_script_without_touching_e
         ] == expected_claim_ids
     finally:
         reopened.close()
+
+
+def test_visual_plans_retain_provenance_while_normal_edits_persist(tmp_path) -> None:
+    """VisualPlans remain tied to one ContentPiece and exact Script version."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        plan = repository.create_visual_plan(
+            "visual-plan-isa-test-v1",
+            "content-piece-isa-deadline-video-v1",
+            "script-isa-deadline-video-v1",
+            "A test visual direction.",
+        )
+        repository.create_visual_plan(
+            "visual-plan-isa-test-v2",
+            "content-piece-isa-deadline-video-v1",
+            "script-isa-deadline-video-v1",
+            "A second test visual direction.",
+        )
+        other_piece = repository.create_content_piece(
+            "content-piece-isa-visual-plan-test-v1",
+            "uk-isa-rules",
+            "editorial-angle-isa-decision-tree-v1",
+            "video",
+            "A VisualPlan validation test ContentPiece.",
+        )
+        other_script = repository.create_script(
+            "script-isa-visual-plan-test-v1",
+            other_piece.id,
+            1,
+            "A separate test narration.",
+        )
+        try:
+            repository.create_visual_plan(
+                "visual-plan-isa-mismatch-v1",
+                "content-piece-isa-deadline-video-v1",
+                other_script.id,
+                "Invalid cross-ContentPiece VisualPlan.",
+            )
+        except ValueError as error:
+            assert "same ContentPiece" in str(error)
+        else:
+            raise AssertionError("A VisualPlan accepted a Script from another ContentPiece.")
+        for provenance_change in (
+            replace(plan, content_piece_id=other_piece.id),
+            replace(plan, script_id=other_script.id),
+        ):
+            try:
+                repository.update_visual_plan(provenance_change)
+            except ValueError as error:
+                assert "provenance are immutable" in str(error)
+            else:
+                raise AssertionError("A VisualPlan update changed historical provenance.")
+        updated = repository.update_visual_plan(
+            replace(
+                plan,
+                visual_direction="A revised test visual direction.",
+                metadata={"edited": True},
+            )
+        )
+        assert updated.visual_direction == "A revised test visual direction."
+        assert (
+            len(
+                repository.list_visual_plans_for_content_piece(
+                    "content-piece-isa-deadline-video-v1"
+                )
+            )
+            == 3
+        )
+        assert len(repository.list_visual_plans_for_script("script-isa-deadline-video-v1")) == 3
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        persisted = reopened.get_visual_plan("visual-plan-isa-test-v1")
+        assert persisted.visual_direction == "A revised test visual direction."
+        assert persisted.metadata == {"edited": True}
+        assert persisted.content_piece_id == "content-piece-isa-deadline-video-v1"
+        assert persisted.script_id == "script-isa-deadline-video-v1"
+    finally:
+        reopened.close()
+
+
+def test_scenes_are_ordered_editable_and_owned_by_one_visual_plan(tmp_path) -> None:
+    """Scenes order per plan, retain their owner, and support nullable direction detail."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        plan = repository.create_visual_plan(
+            "visual-plan-isa-scene-test-v1",
+            "content-piece-isa-deadline-video-v1",
+            "script-isa-deadline-video-v1",
+            "A scene ordering test direction.",
+        )
+        other_plan = repository.create_visual_plan(
+            "visual-plan-isa-scene-test-v2",
+            "content-piece-isa-deadline-video-v1",
+            "script-isa-deadline-video-v1",
+            "A second scene ordering test direction.",
+        )
+        second_scene = repository.create_scene(
+            "scene-isa-scene-test-v1-02",
+            plan.id,
+            2,
+            "Second narration locator.",
+            "Second visual intent.",
+        )
+        first_scene = repository.create_scene(
+            "scene-isa-scene-test-v1-01",
+            plan.id,
+            1,
+            "First narration locator.",
+            "First visual intent.",
+            "The hamster freezes in reaction.",
+            "Supporting text only.",
+            "Move to the second scene.",
+        )
+        assert [scene.id for scene in repository.list_scenes_for_visual_plan(plan.id)] == [
+            first_scene.id,
+            second_scene.id,
+        ]
+        assert second_scene.hamster_action is None
+        assert second_scene.on_screen_text is None
+        assert second_scene.transition_note is None
+        try:
+            repository.update_scene(
+                replace(
+                    second_scene,
+                    sequence=1,
+                    visual_intent="This collision must not persist.",
+                )
+            )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("A Scene sequence collision was accepted during update.")
+        unchanged_second_scene = repository.get_scene(second_scene.id)
+        assert unchanged_second_scene.sequence == 2
+        assert unchanged_second_scene.visual_intent == "Second visual intent."
+        try:
+            repository.create_scene(
+                "scene-isa-scene-test-v1-duplicate",
+                plan.id,
+                1,
+                "Duplicate narration locator.",
+                "Duplicate visual intent.",
+            )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("A duplicate Scene sequence was accepted within one VisualPlan.")
+        same_sequence_elsewhere = repository.create_scene(
+            "scene-isa-scene-test-v2-01",
+            other_plan.id,
+            1,
+            "Other plan narration locator.",
+            "Other plan visual intent.",
+        )
+        assert repository.list_scenes_for_visual_plan(other_plan.id) == [same_sequence_elsewhere]
+        try:
+            repository.update_scene(replace(first_scene, visual_plan_id=other_plan.id))
+        except ValueError as error:
+            assert "provenance is immutable" in str(error)
+        else:
+            raise AssertionError("A Scene update changed VisualPlan provenance.")
+        updated = repository.update_scene(
+            replace(
+                second_scene,
+                sequence=3,
+                narration_excerpt="Revised narration locator.",
+                visual_intent="Revised visual intent.",
+                hamster_action="The hamster stuffs its cheeks.",
+                on_screen_text="Still supporting.",
+                transition_note="End the visual sequence.",
+                metadata={"edited": True},
+            )
+        )
+        assert [scene.sequence for scene in repository.list_scenes_for_visual_plan(plan.id)] == [
+            1,
+            3,
+        ]
+        assert updated.sequence == 3
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        persisted = reopened.get_scene("scene-isa-scene-test-v1-02")
+        assert persisted.narration_excerpt == "Revised narration locator."
+        assert persisted.visual_intent == "Revised visual intent."
+        assert persisted.hamster_action == "The hamster stuffs its cheeks."
+        assert persisted.on_screen_text == "Still supporting."
+        assert persisted.transition_note == "End the visual sequence."
+        assert persisted.metadata == {"edited": True}
+    finally:
+        reopened.close()
+
+
+def test_visual_plan_seed_is_idempotent_and_restores_missing_structure(tmp_path) -> None:
+    """VisualPlan startup restores missing seed rows without overwriting valid earlier edits."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        content_piece = repository.get_content_piece("content-piece-isa-deadline-video-v1")
+        repository.update_content_piece(
+            replace(content_piece, working_title="Founder-edited ContentPiece title.")
+        )
+        visual_plan = repository.get_visual_plan("visual-plan-isa-deadline-video-v1")
+        repository.update_visual_plan(
+            replace(visual_plan, visual_direction="Founder-edited VisualPlan direction.")
+        )
+        edited_scene = repository.get_scene("scene-isa-deadline-video-v1-01")
+        repository.update_scene(replace(edited_scene, visual_intent="Founder-edited Scene intent."))
+        original_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_content_piece("content-piece-isa-deadline-video-v1").working_title == (
+            "Founder-edited ContentPiece title."
+        )
+        assert reopened.get_visual_plan("visual-plan-isa-deadline-video-v1").visual_direction == (
+            "Founder-edited VisualPlan direction."
+        )
+        assert reopened.get_scene("scene-isa-deadline-video-v1-01").visual_intent == (
+            "Founder-edited Scene intent."
+        )
+        assert (
+            reopened.get_script("script-isa-deadline-video-v1").narration_text == original_narration
+        )
+        with reopened.connection:
+            reopened.connection.execute(
+                "DELETE FROM scenes WHERE id = ?", ("scene-isa-deadline-video-v1-03",)
+            )
+    finally:
+        reopened.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert len(reopened.list_scenes_for_visual_plan("visual-plan-isa-deadline-video-v1")) == 3
+        assert reopened.get_scene("scene-isa-deadline-video-v1-01").visual_intent == (
+            "Founder-edited Scene intent."
+        )
+        with reopened.connection:
+            reopened.connection.execute(
+                "DELETE FROM scenes WHERE visual_plan_id = ?",
+                ("visual-plan-isa-deadline-video-v1",),
+            )
+            reopened.connection.execute(
+                "DELETE FROM visual_plans WHERE id = ?",
+                ("visual-plan-isa-deadline-video-v1",),
+            )
+    finally:
+        reopened.close()
+
+    restored = AtlasRepository(database)
+    try:
+        assert (
+            len(restored.list_visual_plans_for_content_piece("content-piece-isa-deadline-video-v1"))
+            == 1
+        )
+        assert len(restored.list_scenes_for_visual_plan("visual-plan-isa-deadline-video-v1")) == 3
+        assert restored.get_content_piece("content-piece-isa-deadline-video-v1").working_title == (
+            "Founder-edited ContentPiece title."
+        )
+        assert (
+            restored.get_script("script-isa-deadline-video-v1").narration_text == original_narration
+        )
+        assert len(restored.list_editorial_angles_for_opportunity("uk-isa-rules")) == 2
+        assert len(restored.list_claims("research-pack-isa-deadline-v1")) == 3
+    finally:
+        restored.close()

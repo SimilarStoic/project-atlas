@@ -155,6 +155,46 @@ function contentPiece(content) {
   );
 }
 
+function visualPlan(content) {
+  var plan = content.visual_plan;
+  if (!plan) {
+    return "";
+  }
+  var scenes = plan.scenes
+    .map(function (scene) {
+      var hamsterAction = scene.hamster_action
+        ? "<p><b>Hamster action</b><br>" + scene.hamster_action + "</p>"
+        : "";
+      var onScreenText = scene.on_screen_text
+        ? "<p><b>Supporting on-screen text</b><br>" + scene.on_screen_text + "</p>"
+        : "";
+      var transition = scene.transition_note
+        ? "<p><b>Transition</b><br>" + scene.transition_note + "</p>"
+        : "";
+      return (
+        '<li><b>Scene ' +
+        scene.sequence +
+        "</b> · " +
+        scene.narration_excerpt +
+        "<br><small>" +
+        scene.visual_intent +
+        "</small>" +
+        hamsterAction +
+        onScreenText +
+        transition +
+        "</li>"
+      );
+    })
+    .join("");
+  return (
+    '<div class="pack"><label>VISUAL PLAN &amp; SCENES · PERSISTED</label><p><b>Direction</b><br>' +
+    plan.visual_direction +
+    '</p><p><b>Ordered scenes</b></p><ul class="qa">' +
+    scenes +
+    "</ul></div>"
+  );
+}
+
 function bindActions() {
   document.querySelectorAll(".actions button").forEach(function (element) {
     element.onclick = function () {
@@ -168,6 +208,11 @@ function bindActions() {
 
 function pack(content) {
   q("#content-title").textContent = content.title;
+  var scenePlanCompatibility = content.scene_plan
+    ? '<div class="pack"><label>SCENE PLAN COMPATIBILITY · PERSISTED</label><p>' +
+      content.scene_plan +
+      "</p></div>"
+    : "";
   var qa = content.qa
     .map(function (item) {
       return (
@@ -200,9 +245,10 @@ function pack(content) {
     contentPiece(content) +
     '<div class="pack"><label>SCRIPT / NARRATION · PERSISTED</label><p>' +
     content.script +
-    '</p></div><div class="pack"><label>VISUAL & HAMSTER SCENE PLAN</label><p>' +
-    content.scene_plan +
-    '</p></div></div><div><div class="pack"><label>CONTENT CONTEXT</label><p><b>Audience</b><br>' +
+    "</p></div>" +
+    visualPlan(content) +
+    scenePlanCompatibility +
+    '</div><div><div class="pack"><label>CONTENT CONTEXT</label><p><b>Audience</b><br>' +
     content.target_audience +
     '</p><p><b>Pillar</b><br>' +
     content.pillar +

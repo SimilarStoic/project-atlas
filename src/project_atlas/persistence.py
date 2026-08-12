@@ -1,4 +1,4 @@
-"""SQLite persistence for Atlas discovery through content-piece and script foundations."""
+"""SQLite persistence for Atlas discovery through visual-plan and scene foundations."""
 
 from __future__ import annotations
 
@@ -162,6 +162,36 @@ class Script:
     content_piece_id: str
     version: int
     narration_text: str
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class VisualPlan:
+    """A visual translation plan for one immutable Script version."""
+
+    id: str
+    content_piece_id: str
+    script_id: str
+    visual_direction: str
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class Scene:
+    """An ordered, non-authoritative visual locator within one VisualPlan."""
+
+    id: str
+    visual_plan_id: str
+    sequence: int
+    narration_excerpt: str
+    visual_intent: str
+    hamster_action: str | None
+    on_screen_text: str | None
+    transition_note: str | None
     metadata: dict[str, Any]
     created_at: str
     updated_at: str
@@ -344,6 +374,43 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX idx_content_pieces_opportunity ON content_pieces (opportunity_id)",
             "CREATE INDEX idx_content_pieces_editorial_angle "
             "ON content_pieces (editorial_angle_id)",
+        ),
+    ),
+    (
+        5,
+        (
+            """
+        CREATE TABLE visual_plans (
+          id TEXT PRIMARY KEY,
+          content_piece_id TEXT NOT NULL,
+          script_id TEXT NOT NULL,
+          visual_direction TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (content_piece_id) REFERENCES content_pieces(id) ON DELETE RESTRICT,
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE scenes (
+          id TEXT PRIMARY KEY,
+          visual_plan_id TEXT NOT NULL,
+          sequence INTEGER NOT NULL,
+          narration_excerpt TEXT NOT NULL,
+          visual_intent TEXT NOT NULL,
+          hamster_action TEXT NULL,
+          on_screen_text TEXT NULL,
+          transition_note TEXT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          UNIQUE (visual_plan_id, sequence),
+          FOREIGN KEY (visual_plan_id) REFERENCES visual_plans(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_visual_plans_content_piece ON visual_plans (content_piece_id)",
+            "CREATE INDEX idx_visual_plans_script ON visual_plans (script_id)",
         ),
     ),
 )
@@ -918,6 +985,181 @@ class AtlasRepository:
             ),
         }
 
+    def create_visual_plan(
+        self,
+        visual_plan_id: str,
+        content_piece_id: str,
+        script_id: str,
+        visual_direction: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> VisualPlan:
+        """Create a visual plan without detaching it from its exact Script version."""
+
+        self._validate_visual_plan_script(content_piece_id, script_id)
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO visual_plans VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    visual_plan_id,
+                    content_piece_id,
+                    script_id,
+                    visual_direction,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_visual_plan(visual_plan_id)
+
+    def get_visual_plan(self, visual_plan_id: str) -> VisualPlan:
+        row = self.connection.execute(
+            "SELECT * FROM visual_plans WHERE id = ?", (visual_plan_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(visual_plan_id)
+        return self._visual_plan(row)
+
+    def list_visual_plans_for_content_piece(self, content_piece_id: str) -> list[VisualPlan]:
+        """Return a ContentPiece's visual plans in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM visual_plans WHERE content_piece_id = ? ORDER BY created_at, id",
+            (content_piece_id,),
+        )
+        return [self._visual_plan(row) for row in rows]
+
+    def list_visual_plans_for_script(self, script_id: str) -> list[VisualPlan]:
+        """Return all visual plans for one immutable Script version."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM visual_plans WHERE script_id = ? ORDER BY created_at, id",
+            (script_id,),
+        )
+        return [self._visual_plan(row) for row in rows]
+
+    def update_visual_plan(self, visual_plan: VisualPlan) -> VisualPlan:
+        """Persist normal visual-direction edits without changing Script provenance."""
+
+        persisted_plan = self.get_visual_plan(visual_plan.id)
+        if (
+            visual_plan.content_piece_id != persisted_plan.content_piece_id
+            or visual_plan.script_id != persisted_plan.script_id
+        ):
+            raise ValueError("VisualPlan ContentPiece and Script provenance are immutable.")
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE visual_plans SET visual_direction=?, metadata_json=?, "
+                "updated_at=? WHERE id=?",
+                (
+                    visual_plan.visual_direction,
+                    json.dumps(visual_plan.metadata),
+                    now(),
+                    visual_plan.id,
+                ),
+            )
+        if result.rowcount != 1:
+            raise KeyError(visual_plan.id)
+        return self.get_visual_plan(visual_plan.id)
+
+    def create_scene(
+        self,
+        scene_id: str,
+        visual_plan_id: str,
+        sequence: int,
+        narration_excerpt: str,
+        visual_intent: str,
+        hamster_action: str | None = None,
+        on_screen_text: str | None = None,
+        transition_note: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Scene:
+        """Create one ordered Scene whose excerpt only locates Script narration."""
+
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO scenes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    scene_id,
+                    visual_plan_id,
+                    sequence,
+                    narration_excerpt,
+                    visual_intent,
+                    hamster_action,
+                    on_screen_text,
+                    transition_note,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_scene(scene_id)
+
+    def get_scene(self, scene_id: str) -> Scene:
+        row = self.connection.execute("SELECT * FROM scenes WHERE id = ?", (scene_id,)).fetchone()
+        if row is None:
+            raise KeyError(scene_id)
+        return self._scene(row)
+
+    def list_scenes_for_visual_plan(self, visual_plan_id: str) -> list[Scene]:
+        """Return one VisualPlan's scenes in their explicit sequence order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM scenes WHERE visual_plan_id = ? ORDER BY sequence", (visual_plan_id,)
+        )
+        return [self._scene(row) for row in rows]
+
+    def update_scene(self, scene: Scene) -> Scene:
+        """Persist normal scene edits without moving the Scene to another VisualPlan."""
+
+        persisted_scene = self.get_scene(scene.id)
+        if scene.visual_plan_id != persisted_scene.visual_plan_id:
+            raise ValueError("Scene VisualPlan provenance is immutable.")
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE scenes SET sequence=?, narration_excerpt=?, visual_intent=?, "
+                "hamster_action=?, on_screen_text=?, transition_note=?, metadata_json=?, "
+                "updated_at=? WHERE id=?",
+                (
+                    scene.sequence,
+                    scene.narration_excerpt,
+                    scene.visual_intent,
+                    scene.hamster_action,
+                    scene.on_screen_text,
+                    scene.transition_note,
+                    json.dumps(scene.metadata),
+                    now(),
+                    scene.id,
+                ),
+            )
+        if result.rowcount != 1:
+            raise KeyError(scene.id)
+        return self.get_scene(scene.id)
+
+    def visual_plan_payload(self, visual_plan_id: str) -> dict[str, Any]:
+        """Load one visual plan with its ordered, non-authoritative Scene locators."""
+
+        visual_plan = self.get_visual_plan(visual_plan_id)
+        return {
+            "id": visual_plan.id,
+            "content_piece_id": visual_plan.content_piece_id,
+            "script_id": visual_plan.script_id,
+            "visual_direction": visual_plan.visual_direction,
+            "scenes": [
+                {
+                    "id": scene.id,
+                    "sequence": scene.sequence,
+                    "narration_excerpt": scene.narration_excerpt,
+                    "visual_intent": scene.visual_intent,
+                    "hamster_action": scene.hamster_action,
+                    "on_screen_text": scene.on_screen_text,
+                    "transition_note": scene.transition_note,
+                }
+                for scene in self.list_scenes_for_visual_plan(visual_plan.id)
+            ],
+        }
+
     def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
         research_pack = self.get_research_pack(research_pack_id)
         if research_pack.opportunity_id != opportunity_id:
@@ -935,6 +1177,11 @@ class AtlasRepository:
         editorial_angle = self.get_editorial_angle(editorial_angle_id)
         if editorial_angle.opportunity_id != opportunity_id:
             raise ValueError("A ContentPiece must use an EditorialAngle from the same Opportunity.")
+
+    def _validate_visual_plan_script(self, content_piece_id: str, script_id: str) -> None:
+        script = self.get_script(script_id)
+        if script.content_piece_id != content_piece_id:
+            raise ValueError("A VisualPlan must use a Script from the same ContentPiece.")
 
     @staticmethod
     def _validate_editorial_angle_takeaways(key_takeaways: list[str]) -> None:
@@ -1277,6 +1524,7 @@ class AtlasRepository:
         self.seed_research_data()
         self.seed_editorial_angle_data()
         self.seed_content_piece_data()
+        self.seed_visual_plan_data()
 
     def seed_research_data(self) -> None:
         """Seed one read-only demonstration ResearchPack without overwriting local edits."""
@@ -1547,6 +1795,73 @@ class AtlasRepository:
                 "INSERT OR IGNORE INTO scripts VALUES (?, ?, ?, ?, ?, ?, ?)", script
             )
 
+    def seed_visual_plan_data(self) -> None:
+        """Seed the existing ISA scene-plan direction as one durable VisualPlan."""
+
+        stamp = now()
+        visual_plan = (
+            "visual-plan-isa-deadline-video-v1",
+            "content-piece-isa-deadline-video-v1",
+            "script-isa-deadline-video-v1",
+            (
+                "Calm kitchen-table ISA decision tree with the sling-bag hamster, a tax-year "
+                "calendar, four labelled envelopes and progressively introduced branches."
+            ),
+            "{}",
+            stamp,
+            stamp,
+        )
+        scenes = (
+            (
+                "scene-isa-deadline-video-v1-01",
+                "visual-plan-isa-deadline-video-v1",
+                1,
+                "If you have spare cash before 5 April",
+                "Establish the calm kitchen-table decision context before the deadline.",
+                "The sling-bag hamster sorts four labelled envelopes at the table.",
+                None,
+                "Introduce a tax-year calendar beside the envelopes.",
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "scene-isa-deadline-video-v1-02",
+                "visual-plan-isa-deadline-video-v1",
+                2,
+                "the question is not simply 'should I invest?'",
+                "Use the calendar to reinforce the decision context without replacing narration.",
+                "The hamster pauses and checks the calendar.",
+                "Should I invest?",
+                "Begin building the decision tree one branch at a time.",
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "scene-isa-deadline-video-v1-03",
+                "visual-plan-isa-deadline-video-v1",
+                3,
+                "whether you are about to lose a tax-year opportunity you cannot get back",
+                "Complete the visual decision tree to reinforce the time-limited opportunity.",
+                "The hamster reacts to the completed decision-tree branches.",
+                None,
+                None,
+                "{}",
+                stamp,
+                stamp,
+            ),
+        )
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO visual_plans VALUES (?, ?, ?, ?, ?, ?, ?)", visual_plan
+            )
+            for scene in scenes:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO scenes VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    scene,
+                )
+
     @staticmethod
     def _subject(row: sqlite3.Row) -> Subject:
         return Subject(
@@ -1675,6 +1990,34 @@ class AtlasRepository:
             row["content_piece_id"],
             row["version"],
             row["narration_text"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _visual_plan(row: sqlite3.Row) -> VisualPlan:
+        return VisualPlan(
+            row["id"],
+            row["content_piece_id"],
+            row["script_id"],
+            row["visual_direction"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _scene(row: sqlite3.Row) -> Scene:
+        return Scene(
+            row["id"],
+            row["visual_plan_id"],
+            row["sequence"],
+            row["narration_excerpt"],
+            row["visual_intent"],
+            row["hamster_action"],
+            row["on_screen_text"],
+            row["transition_note"],
             json.loads(row["metadata_json"]),
             row["created_at"],
             row["updated_at"],
