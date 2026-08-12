@@ -10,7 +10,7 @@
 
 ## Overall Status
 
-🟡 Product definition continues. Atlas v0.1 through v0.6 are complete and pushed; the bounded Atlas v0.7 Asset Specification + Asset Foundation is implemented locally and awaiting review.
+🟡 Product definition continues. Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -41,7 +41,7 @@ been approved.
 
 Current commit:
 
-`9c4e19aa32521f11ddacd08faa683f885ee8bd19 feat: add visual plan and scene foundation`
+`447c7c4657444119f5bc9fab77248f5aeb2f841b feat: add asset specification and asset foundation`
 
 Branch:
 
@@ -53,7 +53,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.6 checkpoint; local `main` matched `origin/main` before the local v0.7 implementation.
+Clean at the v0.7 checkpoint; local `main` matched `origin/main`.
 
 ## Atlas v0.2 Checkpoint
 
@@ -130,10 +130,9 @@ Clean at the v0.6 checkpoint; local `main` matched `origin/main` before the loca
 - Asset generation, production, workflow, publishing, analytics, AI visual planning and agents
   remain deferred.
 
-## Atlas v0.7 Local Implementation
+## Atlas v0.7 Checkpoint
 
-**Project Atlas v0.7 — Asset Specification + Asset Foundation** is implemented locally and awaiting
-review, commit and push.
+**Project Atlas v0.7 — Asset Specification + Asset Foundation** is complete and pushed.
 
 - AssetSpec belongs to one Scene and stores an asset type, purpose, description, canonical
   provider-neutral generation prompt, optional continuity key and extension metadata. Its Scene
@@ -476,7 +475,7 @@ Completed:
 - Atlas v0.4 Editorial Angle persistence foundation
 - Atlas v0.5 Content Piece + Script persistence foundation
 - Atlas v0.6 Visual Plan + Scene persistence foundation
-- Atlas v0.7 Asset Specification + Asset persistence foundation (local, awaiting review/commit/push)
+- Atlas v0.7 Asset Specification + Asset persistence foundation
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -489,7 +488,7 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Review the bounded Atlas v0.7 Asset Specification + Asset Foundation, then commit and push if approved.**
+> **Atlas v0.7 Asset Specification + Asset Foundation is complete and pushed. The next bounded milestone remains to be designed and approved.**
 
 Implemented direction through v0.7:
 

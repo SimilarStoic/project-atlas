@@ -712,7 +712,7 @@ Status: COMPLETE
 VisualPlan now persistently links one ContentPiece to one exact Script version, with ordered Scenes that reinforce the narration without becoming semantically necessary for audio-only comprehension. QA remains demo-backed.
 
 ### Atlas v0.7 — Asset Specification + Asset Foundation
-Status: IMPLEMENTED LOCALLY, AWAITING REVIEW
+Status: COMPLETE
 
 AssetSpec now persistently records each provider-neutral visual requirement for one Scene, and immutable Asset versions register concrete outputs without generation, selection, approval or workflow semantics. QA remains demo-backed.
 

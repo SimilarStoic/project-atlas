@@ -3,8 +3,8 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.6 scope and
-the bounded v0.7 Asset Specification + Asset Foundation locally; later workflow,
+SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.7 scope,
+including the complete and pushed Asset Specification + Asset Foundation; later workflow,
 research automation and production systems remain deferred.
 
 ## Technology baseline
@@ -201,5 +201,5 @@ production, publishing, workflow, analytics and agents remain deferred.
 v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
 v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
-Asset persistence is implemented locally and awaiting review. Later Atlas systems remain
+Asset persistence is complete and pushed. Later Atlas systems remain
 out of scope.
