@@ -10,13 +10,14 @@
 
 ## Overall Status
 
-🟡 Product definition continues; Atlas v0.2 implementation is complete.
+🟡 Product definition continues; Atlas v0.3 implementation is complete locally and awaiting review.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
 The v0.1 UI baseline and v0.2 persistent discovery foundation are implemented and safely stored on GitHub.
 
-Atlas v0.3 — Research & Evidence Foundation is in the DESIGN/APPROVED-FOR-IMPLEMENTATION stage. It has not yet been implemented.
+Atlas v0.3 — Research & Evidence Foundation is implemented locally for review. It has not yet
+been committed or pushed.
 
 ---
 
@@ -64,6 +65,23 @@ Clean at the v0.2 checkpoint; local `main` matched `origin/main`.
 - SQLite persistence, explicit migrations and a repository layer are established.
 - No generic Topics model was introduced.
 - Pillars remain deliberately deferred.
+
+## Atlas v0.3 Local Implementation
+
+**Project Atlas v0.3 — Research & Evidence Foundation** is implemented locally and awaiting
+review, commit and push.
+
+- A versioned ResearchPack belongs to one Opportunity.
+- Claims are version-specific and belong to one ResearchPack.
+- Sources are reusable Atlas-wide records, deduplicated by exact URL.
+- ClaimEvidence records Source provenance for Claims, including stance, reference and notes.
+- Claim fields persist recognised type, risk, freshness and review semantics without numeric
+  truth, confidence, source-authority or evidence-strength scores.
+- One persistent ISA ResearchPack is seeded for the existing Content Workspace item only.
+- The Content Workspace now reads that persisted research read-only; angle, script, scene plan
+  and QA remain on their local demo-data path.
+- Research policies, AI research, agents, scripts, workflow, publishing, production and
+  analytics remain deferred.
 
 ---
 
@@ -232,7 +250,9 @@ Unverified claims must not be published as facts.
 
 Structured Research Packs precede scripting. They identify contradictions, uncertainty and outdated information, and distinguish facts, interpretations and forecasts.
 
-The v0.3 Research & Evidence Foundation will support different claim/statement types, provenance, source relationships, verification states and freshness requirements. It must not assume every statement has the same evidence burden or hard-code a narrow financial-news workflow.
+The v0.3 Research & Evidence Foundation supports different claim/statement types, provenance,
+source relationships, verification states and freshness requirements. It does not assume every
+statement has the same evidence burden or hard-code a narrow financial-news workflow.
 
 For example, current ISA rules need current authoritative, jurisdiction-aware financial/tax evidence and strong freshness checks. Behavioural, life-strategy and philosophical pieces may combine economic evidence, behavioural/psychological research, statistics, academic or expert sources, calculations, illustrative examples and editorial interpretation.
 
@@ -386,6 +406,7 @@ Completed:
 - Atlas v0.2 persistent discovery foundation
 - Finance-centred editorial expansion to money, work, behaviour and life strategy
 - Editorial inclusion test and explicit Pillars / Subjects / Opportunities distinction
+- Atlas v0.3 Research & Evidence persistence foundation (local, awaiting review/commit/push)
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -398,13 +419,14 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Design the Atlas v0.3 Research & Evidence Foundation, then complete the bounded implementation task.**
+> **Review the bounded Atlas v0.3 implementation, then commit and push if approved.**
 
-Approved v0.3 conceptual direction:
+Implemented v0.3 direction:
 
 > Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → editorial interpretation
 
-v0.3 is approved for implementation design but is not implemented. The final Research & Evidence schema, final Pillar taxonomy, research rules, scoring system and evidence taxonomy remain intentionally unsettled.
+The final Pillar taxonomy, configurable research rules, scoring system and broader evidence policy
+remain intentionally unsettled. v0.3 does not implement those later decisions.
 
 ## Development Method
 

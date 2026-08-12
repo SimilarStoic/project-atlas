@@ -1,4 +1,4 @@
-"""SQLite persistence for Atlas Subjects and Opportunities only."""
+"""SQLite persistence for Atlas discovery and research-evidence foundations."""
 
 from __future__ import annotations
 
@@ -50,6 +50,69 @@ class Opportunity:
     updated_at: str
 
 
+@dataclass(frozen=True)
+class ResearchPack:
+    """A versioned research snapshot owned by one Opportunity."""
+
+    id: str
+    opportunity_id: str
+    version: int
+    summary: str
+    as_of_date: str | None
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class Claim:
+    """A version-specific editorial or research statement."""
+
+    id: str
+    research_pack_id: str
+    text: str
+    claim_type: str
+    risk_level: str
+    freshness_type: str
+    verification_status: str
+    verification_notes: str
+    reviewed_at: str | None
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class Source:
+    """A reusable Atlas-wide source, identified by its exact URL."""
+
+    id: str
+    source_type: str
+    title: str
+    publisher: str
+    author: str | None
+    url: str
+    publication_date: str | None
+    accessed_at: str
+    jurisdiction: str | None
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class ClaimEvidence:
+    """The provenance relationship between a Claim and a Source."""
+
+    claim_id: str
+    source_id: str
+    stance: str
+    reference: str | None
+    notes: str
+    created_at: str
+    updated_at: str
+
+
 Migration = tuple[int, tuple[str, ...]]
 
 
@@ -86,6 +149,74 @@ MIGRATIONS: tuple[Migration, ...] = (
         CREATE INDEX idx_opportunity_subjects_subject
           ON opportunity_subjects (subject_id, opportunity_id)
         """,
+        ),
+    ),
+    (
+        2,
+        (
+            """
+        CREATE TABLE research_packs (
+          id TEXT PRIMARY KEY,
+          opportunity_id TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          summary TEXT NOT NULL,
+          as_of_date TEXT NULL,
+          metadata_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          UNIQUE (opportunity_id, version),
+          FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE claims (
+          id TEXT PRIMARY KEY,
+          research_pack_id TEXT NOT NULL,
+          text TEXT NOT NULL,
+          claim_type TEXT NOT NULL,
+          risk_level TEXT NOT NULL,
+          freshness_type TEXT NOT NULL,
+          verification_status TEXT NOT NULL,
+          verification_notes TEXT NOT NULL,
+          reviewed_at TEXT NULL,
+          metadata_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (research_pack_id) REFERENCES research_packs(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE sources (
+          id TEXT PRIMARY KEY,
+          source_type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          publisher TEXT NOT NULL,
+          author TEXT NULL,
+          url TEXT NOT NULL UNIQUE,
+          publication_date TEXT NULL,
+          accessed_at TEXT NOT NULL,
+          jurisdiction TEXT NULL,
+          metadata_json TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+        """,
+            """
+        CREATE TABLE claim_evidence (
+          claim_id TEXT NOT NULL,
+          source_id TEXT NOT NULL,
+          stance TEXT NOT NULL,
+          reference TEXT NULL,
+          notes TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (claim_id, source_id),
+          FOREIGN KEY (claim_id) REFERENCES claims(id) ON DELETE RESTRICT,
+          FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_claims_research_pack ON claims (research_pack_id)",
+            "CREATE INDEX idx_claim_evidence_source ON claim_evidence (source_id, claim_id)",
         ),
     ),
 )
@@ -255,6 +386,304 @@ class AtlasRepository:
             for item in self.list_opportunities()
         ]
 
+    def create_research_pack(
+        self,
+        research_pack_id: str,
+        opportunity_id: str,
+        version: int,
+        summary: str,
+        as_of_date: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ResearchPack:
+        """Create an immutable, versioned research snapshot for an Opportunity."""
+
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO research_packs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    research_pack_id,
+                    opportunity_id,
+                    version,
+                    summary,
+                    as_of_date,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_research_pack(research_pack_id)
+
+    def get_research_pack(self, research_pack_id: str) -> ResearchPack:
+        row = self.connection.execute(
+            "SELECT * FROM research_packs WHERE id = ?", (research_pack_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(research_pack_id)
+        return self._research_pack(row)
+
+    def list_research_packs(self, opportunity_id: str) -> list[ResearchPack]:
+        rows = self.connection.execute(
+            "SELECT * FROM research_packs WHERE opportunity_id = ? ORDER BY version",
+            (opportunity_id,),
+        )
+        return [self._research_pack(row) for row in rows]
+
+    def latest_research_pack(self, opportunity_id: str) -> ResearchPack | None:
+        row = self.connection.execute(
+            "SELECT * FROM research_packs WHERE opportunity_id = ? "
+            "ORDER BY version DESC LIMIT 1",
+            (opportunity_id,),
+        ).fetchone()
+        return self._research_pack(row) if row else None
+
+    def create_claim(
+        self,
+        claim_id: str,
+        research_pack_id: str,
+        text: str,
+        claim_type: str,
+        risk_level: str,
+        freshness_type: str,
+        verification_status: str,
+        verification_notes: str,
+        reviewed_at: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Claim:
+        """Create a Claim that remains owned by its ResearchPack version."""
+
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    claim_id,
+                    research_pack_id,
+                    text,
+                    claim_type,
+                    risk_level,
+                    freshness_type,
+                    verification_status,
+                    verification_notes,
+                    reviewed_at,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_claim(claim_id)
+
+    def get_claim(self, claim_id: str) -> Claim:
+        row = self.connection.execute("SELECT * FROM claims WHERE id = ?", (claim_id,)).fetchone()
+        if row is None:
+            raise KeyError(claim_id)
+        return self._claim(row)
+
+    def list_claims(self, research_pack_id: str) -> list[Claim]:
+        rows = self.connection.execute(
+            "SELECT * FROM claims WHERE research_pack_id = ? ORDER BY created_at, id",
+            (research_pack_id,),
+        )
+        return [self._claim(row) for row in rows]
+
+    def update_claim(self, claim: Claim) -> Claim:
+        """Update Claim detail without moving it to a different ResearchPack."""
+
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE claims SET text=?, claim_type=?, risk_level=?, freshness_type=?, "
+                "verification_status=?, verification_notes=?, reviewed_at=?, metadata_json=?, "
+                "updated_at=? WHERE id=?",
+                (
+                    claim.text,
+                    claim.claim_type,
+                    claim.risk_level,
+                    claim.freshness_type,
+                    claim.verification_status,
+                    claim.verification_notes,
+                    claim.reviewed_at,
+                    json.dumps(claim.metadata),
+                    now(),
+                    claim.id,
+                ),
+            )
+        if result.rowcount != 1:
+            raise KeyError(claim.id)
+        return self.get_claim(claim.id)
+
+    def create_source(
+        self,
+        source_id: str,
+        source_type: str,
+        title: str,
+        publisher: str,
+        url: str,
+        accessed_at: str,
+        author: str | None = None,
+        publication_date: str | None = None,
+        jurisdiction: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Source:
+        """Create a global Source or return the existing Source for an exact URL."""
+
+        existing = self.get_source_by_url(url)
+        if existing is not None:
+            return existing
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO sources VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    source_id,
+                    source_type,
+                    title,
+                    publisher,
+                    author,
+                    url,
+                    publication_date,
+                    accessed_at,
+                    jurisdiction,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_source(source_id)
+
+    def get_source(self, source_id: str) -> Source:
+        row = self.connection.execute("SELECT * FROM sources WHERE id = ?", (source_id,)).fetchone()
+        if row is None:
+            raise KeyError(source_id)
+        return self._source(row)
+
+    def get_source_by_url(self, url: str) -> Source | None:
+        row = self.connection.execute("SELECT * FROM sources WHERE url = ?", (url,)).fetchone()
+        return self._source(row) if row else None
+
+    def link_claim_evidence(
+        self,
+        claim_id: str,
+        source_id: str,
+        stance: str,
+        reference: str | None = None,
+        notes: str = "",
+    ) -> ClaimEvidence:
+        """Link a Source to a Claim, updating only that explicit relationship if it exists."""
+
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO claim_evidence VALUES (?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(claim_id, source_id) DO UPDATE SET stance=excluded.stance, "
+                "reference=excluded.reference, notes=excluded.notes, "
+                "updated_at=excluded.updated_at",
+                (claim_id, source_id, stance, reference, notes, stamp, stamp),
+            )
+        return self.get_claim_evidence(claim_id, source_id)
+
+    def get_claim_evidence(self, claim_id: str, source_id: str) -> ClaimEvidence:
+        row = self.connection.execute(
+            "SELECT * FROM claim_evidence WHERE claim_id = ? AND source_id = ?",
+            (claim_id, source_id),
+        ).fetchone()
+        if row is None:
+            raise KeyError((claim_id, source_id))
+        return self._claim_evidence(row)
+
+    def evidence_for_claim(self, claim_id: str) -> list[tuple[ClaimEvidence, Source]]:
+        rows = self.connection.execute(
+            "SELECT claim_evidence.*, sources.source_type, sources.title, sources.publisher, "
+            "sources.author, sources.url, sources.publication_date, sources.accessed_at, "
+            "sources.jurisdiction, sources.metadata_json AS source_metadata_json, "
+            "sources.created_at AS source_created_at, sources.updated_at AS source_updated_at "
+            "FROM claim_evidence JOIN sources ON sources.id = claim_evidence.source_id "
+            "WHERE claim_evidence.claim_id = ? ORDER BY sources.title",
+            (claim_id,),
+        )
+        return [
+            (
+                self._claim_evidence(row),
+                Source(
+                    row["source_id"],
+                    row["source_type"],
+                    row["title"],
+                    row["publisher"],
+                    row["author"],
+                    row["url"],
+                    row["publication_date"],
+                    row["accessed_at"],
+                    row["jurisdiction"],
+                    json.loads(row["source_metadata_json"]),
+                    row["source_created_at"],
+                    row["source_updated_at"],
+                ),
+            )
+            for row in rows
+        ]
+
+    def claims_for_source(self, source_id: str) -> list[Claim]:
+        rows = self.connection.execute(
+            "SELECT claims.* FROM claims JOIN claim_evidence "
+            "ON claim_evidence.claim_id = claims.id WHERE claim_evidence.source_id = ? "
+            "ORDER BY claims.created_at, claims.id",
+            (source_id,),
+        )
+        return [self._claim(row) for row in rows]
+
+    def research_pack_payload(self, research_pack_id: str) -> dict[str, Any]:
+        """Load a complete ResearchPack for the read-only Content Workspace API."""
+
+        pack = self.get_research_pack(research_pack_id)
+        claims = []
+        for claim in self.list_claims(pack.id):
+            evidence = []
+            for relationship, source in self.evidence_for_claim(claim.id):
+                evidence.append(
+                    {
+                        "stance": relationship.stance,
+                        "reference": relationship.reference,
+                        "notes": relationship.notes,
+                        "source": {
+                            "id": source.id,
+                            "source_type": source.source_type,
+                            "title": source.title,
+                            "publisher": source.publisher,
+                            "url": source.url,
+                            "jurisdiction": source.jurisdiction,
+                        },
+                    }
+                )
+            claims.append(
+                {
+                    "id": claim.id,
+                    "text": claim.text,
+                    "claim_type": claim.claim_type,
+                    "risk_level": claim.risk_level,
+                    "freshness_type": claim.freshness_type,
+                    "verification_status": claim.verification_status,
+                    "verification_notes": claim.verification_notes,
+                    "reviewed_at": claim.reviewed_at,
+                    "evidence": evidence,
+                }
+            )
+        return {
+            "id": pack.id,
+            "opportunity_id": pack.opportunity_id,
+            "version": pack.version,
+            "summary": pack.summary,
+            "as_of_date": pack.as_of_date,
+            "claims": claims,
+            "source_count": len(
+                {item["source"]["id"] for claim in claims for item in claim["evidence"]}
+            ),
+        }
+
+    def latest_research_pack_payload(self, opportunity_id: str) -> dict[str, Any] | None:
+        """Load the current highest-version snapshot for an Opportunity."""
+
+        pack = self.latest_research_pack(opportunity_id)
+        return self.research_pack_payload(pack.id) if pack else None
+
     def seed_demo_data(self) -> None:
         subjects = (
             ("subject-isa", "isa", "ISA", "UK individual savings accounts."),
@@ -334,6 +763,167 @@ class AtlasRepository:
                             stamp,
                         ),
                     )
+        self.seed_research_data()
+
+    def seed_research_data(self) -> None:
+        """Seed one read-only demonstration ResearchPack without overwriting local edits."""
+
+        stamp = now()
+        research_pack = (
+            "research-pack-isa-deadline-v1",
+            "uk-isa-rules",
+            1,
+            (
+                "Research Pack v1 brings together the existing ISA allowance, transfer and "
+                "tax-year timing material used by the Content Workspace demo. Its claims remain "
+                "unreviewed until date-sensitive editorial wording receives human review."
+            ),
+            None,
+            "{}",
+            stamp,
+            stamp,
+        )
+        claims = (
+            (
+                "claim-isa-tax-year-v1",
+                "research-pack-isa-deadline-v1",
+                "The ISA tax year runs from 6 April to 5 April.",
+                "factual",
+                "medium",
+                "date_sensitive",
+                "unreviewed",
+                "Retain date-sensitive wording review before publication.",
+                None,
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "claim-isa-allowance-v1",
+                "research-pack-isa-deadline-v1",
+                "ISA subscriptions use the allowance available for the relevant tax year.",
+                "factual",
+                "medium",
+                "current",
+                "unreviewed",
+                "The current allowance amount is intentionally not stated until reviewed.",
+                None,
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "claim-isa-transfer-v1",
+                "research-pack-isa-deadline-v1",
+                (
+                    "An ISA transfer needs to follow the receiving provider's process to preserve "
+                    "the tax wrapper."
+                ),
+                "factual",
+                "medium",
+                "date_sensitive",
+                "in_review",
+                "Transfer detail needs provider and current-rule wording review.",
+                None,
+                "{}",
+                stamp,
+                stamp,
+            ),
+        )
+        sources = (
+            (
+                "source-govuk-individual-savings-accounts",
+                "official_primary",
+                "Individual Savings Accounts (ISAs)",
+                "GOV.UK",
+                None,
+                "https://www.gov.uk/individual-savings-accounts",
+                None,
+                "2026-08-12",
+                "United Kingdom",
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "source-govuk-isa-manager-transfers",
+                "official_primary",
+                "Transfer an ISA if you're an ISA manager",
+                "GOV.UK",
+                None,
+                "https://www.gov.uk/guidance/transfer-an-isa-if-youre-an-isa-manager",
+                None,
+                "2026-08-12",
+                "United Kingdom",
+                "{}",
+                stamp,
+                stamp,
+            ),
+        )
+        evidence = (
+            (
+                "claim-isa-tax-year-v1",
+                "source-govuk-individual-savings-accounts",
+                "supports",
+                "Overview",
+                "Provides the tax-year framing used in the existing deadline-oriented demo.",
+            ),
+            (
+                "claim-isa-allowance-v1",
+                "source-govuk-individual-savings-accounts",
+                "supports",
+                "Overview",
+                (
+                    "Provides the general allowance context; the exact current figure remains "
+                    "unreviewed."
+                ),
+            ),
+            (
+                "claim-isa-transfer-v1",
+                "source-govuk-individual-savings-accounts",
+                "contextualises",
+                "Transferring an ISA",
+                "Gives general transfer context for the viewer-facing explanation.",
+            ),
+            (
+                "claim-isa-transfer-v1",
+                "source-govuk-isa-manager-transfers",
+                "supports",
+                "Transfer process",
+                "Supports the need to use a provider-led transfer process.",
+            ),
+        )
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO research_packs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                research_pack,
+            )
+            for claim in claims:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    claim,
+                )
+            for source in sources:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO sources VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    source,
+                )
+            persisted_source_ids = {
+                source[0]: self.get_source_by_url(source[5]).id for source in sources
+            }
+            for claim_id, seed_source_id, stance, reference, notes in evidence:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO claim_evidence VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        claim_id,
+                        persisted_source_ids[seed_source_id],
+                        stance,
+                        reference,
+                        notes,
+                        stamp,
+                        stamp,
+                    ),
+                )
 
     @staticmethod
     def _subject(row: sqlite3.Row) -> Subject:
@@ -358,6 +948,65 @@ class AtlasRepository:
             row["score"],
             row["status"],
             json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _research_pack(row: sqlite3.Row) -> ResearchPack:
+        return ResearchPack(
+            row["id"],
+            row["opportunity_id"],
+            row["version"],
+            row["summary"],
+            row["as_of_date"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _claim(row: sqlite3.Row) -> Claim:
+        return Claim(
+            row["id"],
+            row["research_pack_id"],
+            row["text"],
+            row["claim_type"],
+            row["risk_level"],
+            row["freshness_type"],
+            row["verification_status"],
+            row["verification_notes"],
+            row["reviewed_at"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _source(row: sqlite3.Row) -> Source:
+        return Source(
+            row["id"],
+            row["source_type"],
+            row["title"],
+            row["publisher"],
+            row["author"],
+            row["url"],
+            row["publication_date"],
+            row["accessed_at"],
+            row["jurisdiction"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _claim_evidence(row: sqlite3.Row) -> ClaimEvidence:
+        return ClaimEvidence(
+            row["claim_id"],
+            row["source_id"],
+            row["stance"],
+            row["reference"],
+            row["notes"],
             row["created_at"],
             row["updated_at"],
         )

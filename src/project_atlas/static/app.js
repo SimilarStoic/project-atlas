@@ -1,2 +1,216 @@
-var q=function(s){return document.querySelector(s)};function screen(n){document.querySelectorAll(".screen").forEach(function(x){x.classList.toggle("active",x.id===n)});document.querySelectorAll("[data-screen]").forEach(function(x){x.classList.toggle("active",x.dataset.screen===n)});q("#title").textContent={command:"Good morning, Jude.",discover:"Discover the next useful story.",workspace:"Shape the production-ready package.",chat:"Ask, steer, investigate."}[n]}document.querySelectorAll("[data-screen]").forEach(function(x){x.onclick=function(){screen(x.dataset.screen)}});function say(t){q("#toast").textContent=t;q("#toast").classList.add("show");setTimeout(function(){q("#toast").classList.remove("show")},1800)}function opp(o){return '<article class="opportunity"><span class="score">'+o.score+'</span><div><label>'+o.pillar+'</label><h3>'+o.topic+'</h3><p>'+o.why_now+'</p><span class="tag">'+o.evidence_quality+'</span><span class="tag">Risk: '+o.risk+'</span><span class="tag">Visual: '+o.visual_potential+'</span></div><div><b>Suggested angle</b><p>'+o.suggested_angle+'</p><b>Viewer benefit</b><p>'+o.viewer_benefit+'</p><p><b>Portfolio:</b> '+o.portfolio_relevance+'</p></div><div class="actions"><button>Approve</button><button>Modify</button><button>Reject</button><button>Ask Atlas</button></div></article>'}function pack(c){q("#content-title").textContent=c.title;var qa=c.qa.map(function(x){return '<li><span>'+x.label+'</span><b class="'+(x.state==="Passed"?"pass":"review")+'">'+x.state+'</b></li>'}).join("");q("#workspace").innerHTML='<div class="pack"><label>LIFECYCLE</label><p>'+c.lifecycle.join(" → ")+'</p></div><div class="workspace"><div><div class="pack"><label>RESEARCH PACK</label><p>'+c.research_summary+'</p><div class="facts"><div><b>'+c.claim_count+'</b><small>mapped claims</small></div><div><b>'+c.source_count+'</b><small>sources</small></div><div><b>Medium</b><small>risk</small></div></div></div><div class="pack"><label>SELECTED ANGLE</label><h3>'+c.selected_angle+'</h3><label>SCRIPT / NARRATION</label><p>'+c.script+'</p></div><div class="pack"><label>VISUAL & HAMSTER SCENE PLAN</label><p>'+c.scene_plan+'</p></div></div><div><div class="pack"><label>CONTENT CONTEXT</label><p><b>Audience</b><br>'+c.target_audience+'</p><p><b>Pillar</b><br>'+c.pillar+'</p><p><b>Risk</b><br>'+c.risk+'</p></div><div class="pack"><label>QA STATUS</label><ul class="qa">'+qa+'</ul><div class="actions"><button>Approve</button><button>Request changes</button><button>Reject</button></div></div></div></div>'}Promise.all([fetch("/api/demo/opportunities").then(function(r){return r.json()}),fetch("/api/demo/content").then(function(r){return r.json()})]).then(function(d){q("#opportunities").innerHTML=d[0].opportunities.map(opp).join("");q("#activity").innerHTML=d[1].activity.map(function(x){return "<li><b>"+x.time+"</b> "+x.text+"</li>"}).join("");pack(d[1].content);document.querySelectorAll(".actions button").forEach(function(x){x.onclick=function(){if(x.textContent==="Ask Atlas")screen("chat");say(x.textContent+" is recorded locally for this demo.")}})}).catch(function(){say("Demo data could not be loaded.")});function ask(t){if(!t.trim())return;q("#messages").innerHTML+='<p class="user">'+t+'</p>';q("#input").value="";fetch("/api/demo/chat?message="+encodeURIComponent(t)).then(function(r){return r.json()}).then(function(d){q("#messages").innerHTML+='<p class="atlas">'+d.reply+'</p>'})}q("#chat-form").onsubmit=function(e){e.preventDefault();ask(q("#input").value)};document.querySelectorAll("#suggestions button").forEach(function(x){x.onclick=function(){ask(x.textContent)}})
-fetch("/api/demo/content").then(function(r){return r.json()}).then(function(d){pack(d.content);document.querySelectorAll(".actions button").forEach(function(x){x.onclick=function(){if(x.textContent==="Ask Atlas")screen("chat");say(x.textContent+" is recorded locally for this demo.")}})}).catch(function(){say("Content package could not be loaded.")});
+var q = function (selector) {
+  return document.querySelector(selector);
+};
+
+function screen(name) {
+  document.querySelectorAll(".screen").forEach(function (element) {
+    element.classList.toggle("active", element.id === name);
+  });
+  document.querySelectorAll("[data-screen]").forEach(function (element) {
+    element.classList.toggle("active", element.dataset.screen === name);
+  });
+  q("#title").textContent = {
+    command: "Good morning, Jude.",
+    discover: "Discover the next useful story.",
+    workspace: "Shape the production-ready package.",
+    chat: "Ask, steer, investigate.",
+  }[name];
+}
+
+document.querySelectorAll("[data-screen]").forEach(function (element) {
+  element.onclick = function () {
+    screen(element.dataset.screen);
+  };
+});
+
+function say(text) {
+  q("#toast").textContent = text;
+  q("#toast").classList.add("show");
+  setTimeout(function () {
+    q("#toast").classList.remove("show");
+  }, 1800);
+}
+
+function opportunity(item) {
+  return (
+    '<article class="opportunity"><span class="score">' +
+    item.score +
+    '</span><div><label>' +
+    item.pillar +
+    "</label><h3>" +
+    item.topic +
+    "</h3><p>" +
+    item.why_now +
+    '</p><span class="tag">' +
+    item.evidence_quality +
+    '</span><span class="tag">Risk: ' +
+    item.risk +
+    '</span><span class="tag">Visual: ' +
+    item.visual_potential +
+    "</span></div><div><b>Suggested angle</b><p>" +
+    item.suggested_angle +
+    "</p><b>Viewer benefit</b><p>" +
+    item.viewer_benefit +
+    "</p><p><b>Portfolio:</b> " +
+    item.portfolio_relevance +
+    '</p></div><div class="actions"><button>Approve</button><button>Modify</button><button>Reject</button><button>Ask Atlas</button></div></article>'
+  );
+}
+
+function researchEvidence(research) {
+  if (!research) {
+    return "";
+  }
+  var claims = research.claims
+    .map(function (claim) {
+      var sources = claim.evidence
+        .map(function (evidence) {
+          var source = evidence.source;
+          var reference = evidence.reference ? " · " + evidence.reference : "";
+          return (
+            "<li><b>" +
+            evidence.stance +
+            "</b> · <a href=\"" +
+            source.url +
+            '\" target="_blank" rel="noreferrer">' +
+            source.publisher +
+            ": " +
+            source.title +
+            "</a>" +
+            reference +
+            "<br><small>" +
+            evidence.notes +
+            "</small></li>"
+          );
+        })
+        .join("");
+      return (
+        '<div class="pack"><label>' +
+        claim.claim_type +
+        " · " +
+        claim.verification_status +
+        "</label><h3>" +
+        claim.text +
+        "</h3><p>Risk: " +
+        claim.risk_level +
+        " · Freshness: " +
+        claim.freshness_type +
+        "</p><p>" +
+        claim.verification_notes +
+        "</p><ul class=\"qa\">" +
+        sources +
+        "</ul></div>"
+      );
+    })
+    .join("");
+  return '<div class="pack"><label>CLAIMS &amp; EVIDENCE · PERSISTED RESEARCH</label>' + claims + "</div>";
+}
+
+function bindActions() {
+  document.querySelectorAll(".actions button").forEach(function (element) {
+    element.onclick = function () {
+      if (element.textContent === "Ask Atlas") {
+        screen("chat");
+      }
+      say(element.textContent + " is recorded locally for this demo.");
+    };
+  });
+}
+
+function pack(content) {
+  q("#content-title").textContent = content.title;
+  var qa = content.qa
+    .map(function (item) {
+      return (
+        "<li><span>" +
+        item.label +
+        '</span><b class="' +
+        (item.state === "Passed" ? "pass" : "review") +
+        '">' +
+        item.state +
+        "</b></li>"
+      );
+    })
+    .join("");
+  var research = content.research;
+  var version = research ? " v" + research.version : "";
+  q("#workspace").innerHTML =
+    '<div class="pack"><label>LIFECYCLE</label><p>' +
+    content.lifecycle.join(" → ") +
+    '</p></div><div class="workspace"><div><div class="pack"><label>RESEARCH PACK' +
+    version +
+    "</label><p>" +
+    content.research_summary +
+    '</p><div class="facts"><div><b>' +
+    content.claim_count +
+    '</b><small>mapped claims</small></div><div><b>' +
+    content.source_count +
+    '</b><small>sources</small></div><div><b>Medium</b><small>risk</small></div></div></div>' +
+    researchEvidence(research) +
+    '<div class="pack"><label>SELECTED ANGLE</label><h3>' +
+    content.selected_angle +
+    '</h3><label>SCRIPT / NARRATION</label><p>' +
+    content.script +
+    '</p></div><div class="pack"><label>VISUAL & HAMSTER SCENE PLAN</label><p>' +
+    content.scene_plan +
+    '</p></div></div><div><div class="pack"><label>CONTENT CONTEXT</label><p><b>Audience</b><br>' +
+    content.target_audience +
+    '</p><p><b>Pillar</b><br>' +
+    content.pillar +
+    '</p><p><b>Risk</b><br>' +
+    content.risk +
+    '</p></div><div class="pack"><label>QA STATUS</label><ul class="qa">' +
+    qa +
+    '</ul><div class="actions"><button>Approve</button><button>Request changes</button><button>Reject</button></div></div></div></div>';
+  bindActions();
+}
+
+Promise.all([
+  fetch("/api/demo/opportunities").then(function (response) {
+    return response.json();
+  }),
+  fetch("/api/demo/content").then(function (response) {
+    return response.json();
+  }),
+])
+  .then(function (data) {
+    q("#opportunities").innerHTML = data[0].opportunities.map(opportunity).join("");
+    var activity = q("#activity");
+    if (activity) {
+      activity.innerHTML = data[1].activity
+        .map(function (item) {
+          return "<li><b>" + item.time + "</b> " + item.text + "</li>";
+        })
+        .join("");
+    }
+    pack(data[1].content);
+    bindActions();
+  })
+  .catch(function () {
+    say("Demo data could not be loaded.");
+  });
+
+function ask(text) {
+  if (!text.trim()) {
+    return;
+  }
+  q("#messages").innerHTML += '<p class="user">' + text + "</p>";
+  q("#input").value = "";
+  fetch("/api/demo/chat?message=" + encodeURIComponent(text))
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      q("#messages").innerHTML += '<p class="atlas">' + data.reply + "</p>";
+    });
+}
+
+q("#chat-form").onsubmit = function (event) {
+  event.preventDefault();
+  ask(q("#input").value);
+};
+document.querySelectorAll("#suggestions button").forEach(function (element) {
+  element.onclick = function () {
+    ask(element.textContent);
+  };
+});

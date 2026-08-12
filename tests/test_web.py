@@ -1,6 +1,9 @@
 """Tests for the local MVP UI shell."""
 
+import json
+import threading
 from pathlib import Path
+from urllib.request import urlopen
 
 from project_atlas.demo_data import chat_reply, content_payload, opportunity_payload
 from project_atlas.web import create_server
@@ -25,5 +28,27 @@ def test_server_can_be_created_for_local_use(tmp_path: Path) -> None:
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
         assert server.server_address[1] > 0
+    finally:
+        server.server_close()
+
+
+def test_content_endpoint_adapts_persisted_research_without_changing_demo_package(
+    tmp_path: Path,
+) -> None:
+    """The Content Workspace receives v0.3 research plus its remaining demo content fields."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    try:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content") as response:
+            payload = json.load(response)
+        thread.join(timeout=2)
+        content = payload["content"]
+        assert content["selected_angle"] == content_payload()["selected_angle"]
+        assert content["research"]["opportunity_id"] == "uk-isa-rules"
+        assert content["research"]["version"] == 1
+        assert len(content["research"]["claims"]) == 3
+        assert content["research"]["claims"][0]["evidence"]
     finally:
         server.server_close()

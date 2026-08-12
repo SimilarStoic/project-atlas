@@ -31,7 +31,14 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             )
             return
         if parsed.path == "/api/demo/content":
-            self._send_json({"kind": "demo", "content": content_payload(), "activity": ACTIVITY})
+            content = content_payload().copy()
+            research_pack = self.server.repository.latest_research_pack_payload("uk-isa-rules")
+            if research_pack is not None:
+                content["research"] = research_pack
+                content["research_summary"] = research_pack["summary"]
+                content["claim_count"] = len(research_pack["claims"])
+                content["source_count"] = research_pack["source_count"]
+            self._send_json({"kind": "demo", "content": content, "activity": ACTIVITY})
             return
         if parsed.path == "/api/demo/chat":
             message = parse_qs(parsed.query).get("message", [""])[0]

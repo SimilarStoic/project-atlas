@@ -2,7 +2,9 @@
 
 > Working title — a scalable Python application platform.
 
-Project Atlas is deliberately at the foundation stage. The repository provides a production-oriented structure, development tooling, and operational scaffolding; application and business logic will be added in future milestones.
+Project Atlas is a local, dependency-free editorial control interface and durable
+SQLite foundation for SimilarStoic. It deliberately implements only the approved
+v0.1-v0.3 scope; later workflow, research automation and production systems remain deferred.
 
 ## Technology baseline
 
@@ -76,12 +78,43 @@ On startup, Atlas applies recorded SQLite schema migrations and then idempotentl
 seeds the six existing Discover opportunities. Existing local changes are never
 overwritten by later startup seeding.
 
-This milestone persists only reusable **Subjects**, individual editorial
+This foundation persists reusable **Subjects**, individual editorial
 **Opportunities**, and their many-to-many relationships. The current Discover
 `pillar` field remains display-only compatibility metadata; it is not a persisted
-Pillar model. Pillars, Research Packs, Claims, Sources, Content Packages, workflow
-configuration, and later domains are intentionally deferred.
+Pillar model.
+
+## Research and evidence persistence
+
+Atlas v0.3 adds a small, general Research & Evidence foundation:
+
+- A versioned **ResearchPack** belongs to exactly one Opportunity. Versions are
+  unique per Opportunity and the latest pack is the highest version number.
+- Each **Claim** belongs to exactly one ResearchPack version and retains its text,
+  claim type, risk level, freshness type, review state, notes and review timestamp.
+- **Sources** are global reusable records, deduplicated by exact stored URL.
+- **ClaimEvidence** records the Claim/Source relationship, including its stance,
+  optional locator and editorial/research notes.
+
+Recognised Claim semantics are factual, interpretive, illustrative and editorial;
+low, medium and high risk; stable, date-sensitive and current freshness; and
+unreviewed, in-review, supported, disputed and insufficient review states.
+`supported` means assembled evidence is considered sufficient for the intended
+editorial use at its review point, not that a claim is permanently true.
+
+The persistence model deliberately has no numeric truth, confidence, source-authority
+or evidence-strength scores. It also has no universal evidence policy: different
+content domains can acquire appropriate requirements later without replacing this
+foundation.
+
+Startup seeds one persistent ISA ResearchPack for the existing Content Workspace
+opportunity. It is idempotent and does not overwrite local changes. The Content
+Workspace reads that persisted ResearchPack, Claims, Sources and ClaimEvidence
+read-only; its angle, script, scene plan and QA fields remain local demo data.
+
+Pillars, generic Topics, scripts, content-package persistence, AI research, agents,
+research policies, workflows, publishing, production and analytics remain deferred.
 
 ## Status
 
-Foundation only. No business logic, domain models, or externally exposed application behavior has been implemented.
+v0.1 UI shell, v0.2 persistent discovery and v0.3 Research & Evidence persistence
+are implemented locally. Later Atlas systems remain out of scope.
