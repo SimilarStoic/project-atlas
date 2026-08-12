@@ -10,14 +10,14 @@
 
 ## Overall Status
 
-🟡 Product definition continues. Atlas v0.1 through v0.5 are complete and pushed; the bounded Atlas v0.6 Visual Plan + Scene Foundation is implemented locally and awaiting review.
+🟡 Product definition continues. Atlas v0.1 through v0.6 are complete and pushed; the bounded Atlas v0.7 Asset Specification + Asset Foundation is implemented locally and awaiting review.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.6 implements the approved bridge from an exact immutable Script version to a persistent
-VisualPlan and ordered Scenes. No further v0.6 implementation beyond this bounded foundation has
+Atlas v0.7 implements the approved bridge from a persistent Scene to durable AssetSpecs and
+immutable Asset versions. No further v0.7 implementation beyond this bounded foundation has
 been approved.
 
 ---
@@ -41,7 +41,7 @@ been approved.
 
 Current commit:
 
-`5f63a55f2d592a8d6a2124fb077509b7c1dc66ca feat: add content piece and script foundation`
+`9c4e19aa32521f11ddacd08faa683f885ee8bd19 feat: add visual plan and scene foundation`
 
 Branch:
 
@@ -53,7 +53,7 @@ Remote:
 
 Working tree:
 
-Clean at the v0.5 checkpoint; local `main` matched `origin/main` before the local v0.6 implementation.
+Clean at the v0.6 checkpoint; local `main` matched `origin/main` before the local v0.7 implementation.
 
 ## Atlas v0.2 Checkpoint
 
@@ -115,10 +115,9 @@ Clean at the v0.5 checkpoint; local `main` matched `origin/main` before the loca
 - No visual-plan, scene, QA, approval, workflow, publishing, production or AI-generation
   persistence was introduced in v0.5.
 
-## Atlas v0.6 Local Implementation
+## Atlas v0.6 Checkpoint
 
-**Project Atlas v0.6 — Visual Plan + Scene Foundation** is implemented locally and awaiting
-review, commit and push.
+**Project Atlas v0.6 — Visual Plan + Scene Foundation** is complete and pushed.
 
 - VisualPlan belongs to one ContentPiece and one exact immutable Script version from that same
   ContentPiece. Its ContentPiece/Script provenance is immutable after creation.
@@ -126,9 +125,28 @@ review, commit and push.
   human-readable narration excerpt only; Script narration remains authoritative and audio-complete.
 - One persistent ISA VisualPlan and three ordered Scenes are idempotently seeded from the existing
   kitchen-table, envelopes, tax-year calendar and decision-tree demo direction.
-- The Content Workspace now reads persistent VisualPlan and Scene data; the compatibility Scene
-  Plan display derives from persistence. QA remains demo-backed.
+- The Content Workspace reads persistent VisualPlan and Scene data; the compatibility Scene Plan
+  display derives from persistence. QA remains demo-backed.
 - Asset generation, production, workflow, publishing, analytics, AI visual planning and agents
+  remain deferred.
+
+## Atlas v0.7 Local Implementation
+
+**Project Atlas v0.7 — Asset Specification + Asset Foundation** is implemented locally and awaiting
+review, commit and push.
+
+- AssetSpec belongs to one Scene and stores an asset type, purpose, description, canonical
+  provider-neutral generation prompt, optional continuity key and extension metadata. Its Scene
+  provenance is immutable after creation.
+- Asset belongs to one AssetSpec and records an immutable versioned registered output with a storage
+  path, media type, source kind and metadata. There is no current, selected, approved, generated or
+  workflow state.
+- Five persistent ISA AssetSpecs are idempotently seeded across the three existing Scenes: kitchen
+  environment, hamster sorting envelopes, tax-year calendar, decision-tree graphic and hamster
+  reaction. No Asset outputs are seeded.
+- The Content Workspace now reads persistent AssetSpecs and registered Assets beneath persisted
+  Scenes. QA remains demo-backed.
+- Provider integration, asset generation jobs, production, workflow, publishing, analytics and agents
   remain deferred.
 
 ---
@@ -457,7 +475,8 @@ Completed:
 - Atlas v0.3 Research & Evidence persistence foundation
 - Atlas v0.4 Editorial Angle persistence foundation
 - Atlas v0.5 Content Piece + Script persistence foundation
-- Atlas v0.6 Visual Plan + Scene persistence foundation (local, awaiting review/commit/push)
+- Atlas v0.6 Visual Plan + Scene persistence foundation
+- Atlas v0.7 Asset Specification + Asset persistence foundation (local, awaiting review/commit/push)
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -470,11 +489,11 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Review the bounded Atlas v0.6 Visual Plan + Scene Foundation, then commit and push if approved.**
+> **Review the bounded Atlas v0.7 Asset Specification + Asset Foundation, then commit and push if approved.**
 
-Implemented direction through v0.6:
+Implemented direction through v0.7:
 
-> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes
+> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → Assets
 
 The final Pillar taxonomy, configurable research rules, scoring system and broader evidence policy
 remain intentionally unsettled. v0.3 does not implement those later decisions.

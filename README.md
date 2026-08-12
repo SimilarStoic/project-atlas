@@ -3,8 +3,9 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It deliberately implements only the approved
-v0.1-v0.6 scope; later workflow, research automation and production systems remain deferred.
+SQLite foundation for SimilarStoic. It implements the approved v0.1-v0.6 scope and
+the bounded v0.7 Asset Specification + Asset Foundation locally; later workflow,
+research automation and production systems remain deferred.
 
 ## Technology baseline
 
@@ -175,9 +176,30 @@ from audio alone: visuals clarify, reinforce and provide metaphor, but do not
 replace essential narration. Asset generation, production, publishing, workflow,
 analytics and agents remain deferred.
 
+## Asset specification and asset persistence
+
+Atlas v0.7 adds the smallest durable bridge from a persisted Scene to its required
+visual ingredients and registered outputs:
+
+- An **AssetSpec** belongs to one Scene. It records an open-ended asset type, purpose,
+  description, canonical provider-neutral generation prompt, optional continuity key
+  and extension metadata. Its Scene provenance is immutable; the requirement detail
+  remains editable.
+- An **Asset** belongs to one AssetSpec. Versions are unique per AssetSpec and immutable
+  after creation; each records only a storage path, media type, source kind and metadata.
+  There is no current, selected, approved, generated or workflow state.
+
+Startup idempotently seeds five ISA AssetSpecs across the existing three Scenes: a
+kitchen-table environment and hamster sorting envelopes, a tax-year calendar, and a
+decision-tree graphic plus hamster reaction. It deliberately seeds no Asset outputs.
+The Content Workspace now reads persisted AssetSpecs and their registered Assets
+read-only beneath each Scene. QA remains demo-backed; generation providers, jobs,
+production, publishing, workflow, analytics and agents remain deferred.
+
 ## Status
 
 v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
 v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
-v0.6 Visual Plan + Scene persistence are implemented locally. Later Atlas systems
-remain out of scope.
+v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
+Asset persistence is implemented locally and awaiting review. Later Atlas systems remain
+out of scope.

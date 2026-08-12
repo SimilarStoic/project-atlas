@@ -1,4 +1,4 @@
-"""SQLite persistence for Atlas discovery through visual-plan and scene foundations."""
+"""SQLite persistence for Atlas discovery through asset-spec and asset foundations."""
 
 from __future__ import annotations
 
@@ -195,6 +195,36 @@ class Scene:
     metadata: dict[str, Any]
     created_at: str
     updated_at: str
+
+
+@dataclass(frozen=True)
+class AssetSpec:
+    """A durable, provider-neutral asset requirement owned by one Scene."""
+
+    id: str
+    scene_id: str
+    asset_type: str
+    purpose: str
+    description: str
+    generation_prompt: str
+    continuity_key: str | None
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class Asset:
+    """An immutable registered asset version produced for one AssetSpec."""
+
+    id: str
+    asset_spec_id: str
+    version: int
+    storage_path: str
+    media_type: str
+    source_kind: str
+    metadata: dict[str, Any]
+    created_at: str
 
 
 Migration = tuple[int, tuple[str, ...]]
@@ -411,6 +441,41 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
             "CREATE INDEX idx_visual_plans_content_piece ON visual_plans (content_piece_id)",
             "CREATE INDEX idx_visual_plans_script ON visual_plans (script_id)",
+        ),
+    ),
+    (
+        6,
+        (
+            """
+        CREATE TABLE asset_specs (
+          id TEXT PRIMARY KEY,
+          scene_id TEXT NOT NULL,
+          asset_type TEXT NOT NULL,
+          purpose TEXT NOT NULL,
+          description TEXT NOT NULL,
+          generation_prompt TEXT NOT NULL,
+          continuity_key TEXT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (scene_id) REFERENCES scenes(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE assets (
+          id TEXT PRIMARY KEY,
+          asset_spec_id TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          storage_path TEXT NOT NULL,
+          media_type TEXT NOT NULL,
+          source_kind TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE (asset_spec_id, version),
+          FOREIGN KEY (asset_spec_id) REFERENCES asset_specs(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_asset_specs_scene ON asset_specs (scene_id)",
         ),
     ),
 )
@@ -1155,8 +1220,163 @@ class AtlasRepository:
                     "hamster_action": scene.hamster_action,
                     "on_screen_text": scene.on_screen_text,
                     "transition_note": scene.transition_note,
+                    "asset_specs": [
+                        self.asset_spec_payload(asset_spec.id)
+                        for asset_spec in self.list_asset_specs_for_scene(scene.id)
+                    ],
                 }
                 for scene in self.list_scenes_for_visual_plan(visual_plan.id)
+            ],
+        }
+
+    def create_asset_spec(
+        self,
+        asset_spec_id: str,
+        scene_id: str,
+        asset_type: str,
+        purpose: str,
+        description: str,
+        generation_prompt: str,
+        continuity_key: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> AssetSpec:
+        """Create a provider-neutral asset requirement for one persisted Scene."""
+
+        self.get_scene(scene_id)
+        self._validate_asset_spec_text(
+            asset_type, purpose, description, generation_prompt
+        )
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    asset_spec_id,
+                    scene_id,
+                    asset_type,
+                    purpose,
+                    description,
+                    generation_prompt,
+                    continuity_key,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_asset_spec(asset_spec_id)
+
+    def get_asset_spec(self, asset_spec_id: str) -> AssetSpec:
+        row = self.connection.execute(
+            "SELECT * FROM asset_specs WHERE id = ?", (asset_spec_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(asset_spec_id)
+        return self._asset_spec(row)
+
+    def list_asset_specs_for_scene(self, scene_id: str) -> list[AssetSpec]:
+        """Return one Scene's asset requirements in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM asset_specs WHERE scene_id = ? ORDER BY created_at, id", (scene_id,)
+        )
+        return [self._asset_spec(row) for row in rows]
+
+    def update_asset_spec(self, asset_spec: AssetSpec) -> AssetSpec:
+        """Persist requirement edits without changing the owning Scene provenance."""
+
+        persisted_spec = self.get_asset_spec(asset_spec.id)
+        if asset_spec.scene_id != persisted_spec.scene_id:
+            raise ValueError("AssetSpec Scene provenance is immutable.")
+        self._validate_asset_spec_text(
+            asset_spec.asset_type,
+            asset_spec.purpose,
+            asset_spec.description,
+            asset_spec.generation_prompt,
+        )
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE asset_specs SET asset_type=?, purpose=?, description=?, "
+                "generation_prompt=?, continuity_key=?, metadata_json=?, updated_at=? WHERE id=?",
+                (
+                    asset_spec.asset_type,
+                    asset_spec.purpose,
+                    asset_spec.description,
+                    asset_spec.generation_prompt,
+                    asset_spec.continuity_key,
+                    json.dumps(asset_spec.metadata),
+                    now(),
+                    asset_spec.id,
+                ),
+            )
+        if result.rowcount != 1:
+            raise KeyError(asset_spec.id)
+        return self.get_asset_spec(asset_spec.id)
+
+    def create_asset(
+        self,
+        asset_id: str,
+        asset_spec_id: str,
+        version: int,
+        storage_path: str,
+        media_type: str,
+        source_kind: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> Asset:
+        """Register an immutable asset version for one AssetSpec."""
+
+        self.get_asset_spec(asset_spec_id)
+        self._validate_asset_version(version)
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO assets VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    asset_id,
+                    asset_spec_id,
+                    version,
+                    storage_path,
+                    media_type,
+                    source_kind,
+                    json.dumps(metadata or {}),
+                    now(),
+                ),
+            )
+        return self.get_asset(asset_id)
+
+    def get_asset(self, asset_id: str) -> Asset:
+        row = self.connection.execute("SELECT * FROM assets WHERE id = ?", (asset_id,)).fetchone()
+        if row is None:
+            raise KeyError(asset_id)
+        return self._asset(row)
+
+    def list_assets_for_asset_spec(self, asset_spec_id: str) -> list[Asset]:
+        """Return immutable asset versions in ascending version order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM assets WHERE asset_spec_id = ? ORDER BY version", (asset_spec_id,)
+        )
+        return [self._asset(row) for row in rows]
+
+    def asset_spec_payload(self, asset_spec_id: str) -> dict[str, Any]:
+        """Load one Scene asset requirement and its registered immutable outputs."""
+
+        asset_spec = self.get_asset_spec(asset_spec_id)
+        return {
+            "id": asset_spec.id,
+            "scene_id": asset_spec.scene_id,
+            "asset_type": asset_spec.asset_type,
+            "purpose": asset_spec.purpose,
+            "description": asset_spec.description,
+            "generation_prompt": asset_spec.generation_prompt,
+            "continuity_key": asset_spec.continuity_key,
+            "assets": [
+                {
+                    "id": asset.id,
+                    "version": asset.version,
+                    "storage_path": asset.storage_path,
+                    "media_type": asset.media_type,
+                    "source_kind": asset.source_kind,
+                }
+                for asset in self.list_assets_for_asset_spec(asset_spec.id)
             ],
         }
 
@@ -1182,6 +1402,16 @@ class AtlasRepository:
         script = self.get_script(script_id)
         if script.content_piece_id != content_piece_id:
             raise ValueError("A VisualPlan must use a Script from the same ContentPiece.")
+
+    @staticmethod
+    def _validate_asset_version(version: int) -> None:
+        if type(version) is not int or version < 1:
+            raise ValueError("Asset version must be a positive integer.")
+
+    @staticmethod
+    def _validate_asset_spec_text(*values: str) -> None:
+        if not all(isinstance(value, str) and value.strip() for value in values):
+            raise ValueError("AssetSpec required text fields must not be empty or whitespace-only.")
 
     @staticmethod
     def _validate_editorial_angle_takeaways(key_takeaways: list[str]) -> None:
@@ -1525,6 +1755,7 @@ class AtlasRepository:
         self.seed_editorial_angle_data()
         self.seed_content_piece_data()
         self.seed_visual_plan_data()
+        self.seed_asset_spec_data()
 
     def seed_research_data(self) -> None:
         """Seed one read-only demonstration ResearchPack without overwriting local edits."""
@@ -1862,6 +2093,101 @@ class AtlasRepository:
                     scene,
                 )
 
+    def seed_asset_spec_data(self) -> None:
+        """Seed the existing ISA Scene requirements without registering generated Assets."""
+
+        stamp = now()
+        asset_specs = (
+            (
+                "asset-spec-isa-scene-01-kitchen-background-v1",
+                "scene-isa-deadline-video-v1-01",
+                "environment",
+                "Establish the calm kitchen-table decision context.",
+                (
+                    "A calm kitchen table with room for four labelled envelopes and a tax-year "
+                    "calendar."
+                ),
+                (
+                    "Illustrated calm kitchen-table environment for a UK ISA decision video, "
+                    "with space for four labelled envelopes and a tax-year calendar; warm, "
+                    "clear, lightly humorous SimilarStoic visual language."
+                ),
+                "isa-kitchen-environment",
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "asset-spec-isa-scene-01-hamster-sorting-v1",
+                "scene-isa-deadline-video-v1-01",
+                "character",
+                "Illustrate the viewer sorting practical ISA options.",
+                "The sling-bag hamster sorts four labelled envelopes at the kitchen table.",
+                (
+                    "Illustrated SimilarStoic hamster with its small everyday sling bag, calmly "
+                    "sorting four labelled envelopes at a kitchen table; retain the canonical "
+                    "relaxed, curious young-adult character identity."
+                ),
+                "similarstoic-hamster-core",
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "asset-spec-isa-scene-02-tax-year-calendar-v1",
+                "scene-isa-deadline-video-v1-02",
+                "graphic",
+                "Reinforce the tax-year deadline context without replacing narration.",
+                "A readable tax-year calendar that supports the ISA decision context.",
+                (
+                    "Clear illustrated tax-year calendar graphic for a UK ISA decision video, "
+                    "supporting an audio-first explanation; calm, simple, legible and not "
+                    "dependent on text for the essential argument."
+                ),
+                None,
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "asset-spec-isa-scene-03-decision-tree-v1",
+                "scene-isa-deadline-video-v1-03",
+                "graphic",
+                "Complete the visual decision tree for the time-limited ISA opportunity.",
+                "A completed decision-tree graphic that reinforces the narrated practical checks.",
+                (
+                    "Illustrated decision-tree graphic for a UK ISA deadline video, with calm "
+                    "clear branches that reinforce rather than replace the audio-first explanation."
+                ),
+                None,
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "asset-spec-isa-scene-03-hamster-reaction-v1",
+                "scene-isa-deadline-video-v1-03",
+                "character",
+                "Add a relatable reaction to the completed decision-tree branches.",
+                "The sling-bag hamster reacts to the completed decision-tree branches.",
+                (
+                    "Illustrated SimilarStoic hamster with its small everyday sling bag reacting "
+                    "to a completed decision tree; retain the canonical relaxed, curious "
+                    "young-adult character identity with a lightly cheeky expression."
+                ),
+                "similarstoic-hamster-core",
+                "{}",
+                stamp,
+                stamp,
+            ),
+        )
+        with self.connection:
+            for asset_spec in asset_specs:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    asset_spec,
+                )
+
     @staticmethod
     def _subject(row: sqlite3.Row) -> Subject:
         return Subject(
@@ -2021,4 +2347,32 @@ class AtlasRepository:
             json.loads(row["metadata_json"]),
             row["created_at"],
             row["updated_at"],
+        )
+
+    @staticmethod
+    def _asset_spec(row: sqlite3.Row) -> AssetSpec:
+        return AssetSpec(
+            row["id"],
+            row["scene_id"],
+            row["asset_type"],
+            row["purpose"],
+            row["description"],
+            row["generation_prompt"],
+            row["continuity_key"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _asset(row: sqlite3.Row) -> Asset:
+        return Asset(
+            row["id"],
+            row["asset_spec_id"],
+            row["version"],
+            row["storage_path"],
+            row["media_type"],
+            row["source_kind"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
         )

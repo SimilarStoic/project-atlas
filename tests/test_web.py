@@ -67,6 +67,20 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
         server.repository.update_scene(
             replace(scene, visual_intent="A persisted first ordered Scene intent.")
         )
+        asset_spec = server.repository.get_asset_spec(
+            "asset-spec-isa-scene-01-kitchen-background-v1"
+        )
+        server.repository.update_asset_spec(
+            replace(asset_spec, description="A persisted AssetSpec description.")
+        )
+        server.repository.create_asset(
+            "asset-isa-kitchen-background-v1",
+            asset_spec.id,
+            1,
+            "assets/isa-kitchen-background-v1.png",
+            "image/png",
+            "manual",
+        )
         thread = threading.Thread(target=server.handle_request)
         thread.start()
         with urlopen(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content") as response:
@@ -99,6 +113,30 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
         assert content["visual_plan"]["scenes"][0]["visual_intent"] == (
             "A persisted first ordered Scene intent."
         )
+        asset_specs = content["visual_plan"]["scenes"][0]["asset_specs"]
+        assert len(asset_specs) == 2
+        persisted_asset_spec = next(
+            asset_spec
+            for asset_spec in asset_specs
+            if asset_spec["id"] == "asset-spec-isa-scene-01-kitchen-background-v1"
+        )
+        assert persisted_asset_spec["description"] == "A persisted AssetSpec description."
+        assert persisted_asset_spec["generation_prompt"]
+        assert persisted_asset_spec["assets"] == [
+            {
+                "id": "asset-isa-kitchen-background-v1",
+                "version": 1,
+                "storage_path": "assets/isa-kitchen-background-v1.png",
+                "media_type": "image/png",
+                "source_kind": "manual",
+            }
+        ]
+        assert all(
+            not asset_spec["assets"]
+            for scene in content["visual_plan"]["scenes"]
+            for asset_spec in scene["asset_specs"]
+            if asset_spec["id"] != "asset-spec-isa-scene-01-kitchen-background-v1"
+        )
         assert content["scene_plan"] == " ".join(
             scene["visual_intent"] for scene in content["visual_plan"]["scenes"]
         )
@@ -116,6 +154,8 @@ def test_content_endpoint_has_no_demo_scene_plan_fallback_without_visual_plan(
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
         with server.repository.connection:
+            server.repository.connection.execute("DELETE FROM assets")
+            server.repository.connection.execute("DELETE FROM asset_specs")
             server.repository.connection.execute("DELETE FROM scenes")
             server.repository.connection.execute("DELETE FROM visual_plans")
         thread = threading.Thread(target=server.handle_request)

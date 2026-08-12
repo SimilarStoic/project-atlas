@@ -1,4 +1,4 @@
-"""Tests for Atlas persistence through the v0.5 content-piece and script foundation."""
+"""Tests for Atlas persistence through the v0.7 asset-spec and asset foundation."""
 
 import sqlite3
 from dataclasses import replace
@@ -6,7 +6,7 @@ from dataclasses import replace
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
 
 
-def test_fresh_database_migrates_and_seeds_discovery_through_visual_plans(tmp_path) -> None:
+def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_path) -> None:
     """Fresh startup applies all migrations and creates the scoped seed data."""
 
     database = tmp_path / "atlas.db"
@@ -15,7 +15,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_visual_plans(tmp_pa
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5]
+        ] == [1, 2, 3, 4, 5, 6]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -42,6 +42,8 @@ def test_fresh_database_migrates_and_seeds_discovery_through_visual_plans(tmp_pa
             == 1
         )
         assert len(repository.list_scenes_for_visual_plan("visual-plan-isa-deadline-video-v1")) == 3
+        assert len(repository.list_asset_specs_for_scene("scene-isa-deadline-video-v1-01")) == 2
+        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
     finally:
         repository.close()
 
@@ -62,14 +64,16 @@ def test_fresh_database_migrates_and_seeds_discovery_through_visual_plans(tmp_pa
         assert reopened.connection.execute("SELECT COUNT(*) FROM scripts").fetchone()[0] == 1
         assert reopened.connection.execute("SELECT COUNT(*) FROM visual_plans").fetchone()[0] == 1
         assert reopened.connection.execute("SELECT COUNT(*) FROM scenes").fetchone()[0] == 3
+        assert reopened.connection.execute("SELECT COUNT(*) FROM asset_specs").fetchone()[0] == 5
+        assert reopened.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
     finally:
         reopened.close()
 
 
-def test_existing_v05_database_migrates_to_v06_without_rewriting_discovery_data(tmp_path) -> None:
-    """The new migration applies cleanly to a database already recorded at v0.5."""
+def test_existing_v06_database_migrates_to_v07_without_rewriting_discovery_data(tmp_path) -> None:
+    """The new migration applies cleanly to a database already recorded at v0.6."""
 
-    database = tmp_path / "atlas-v05.db"
+    database = tmp_path / "atlas-v06.db"
     connection = sqlite3.connect(database)
     try:
         connection.execute(
@@ -87,6 +91,9 @@ def test_existing_v05_database_migrates_to_v06_without_rewriting_discovery_data(
         for statement in MIGRATIONS[3][1]:
             connection.execute(statement)
         connection.execute("INSERT INTO schema_migrations VALUES (4, '2026-08-12T00:00:00+00:00')")
+        for statement in MIGRATIONS[4][1]:
+            connection.execute(statement)
+        connection.execute("INSERT INTO schema_migrations VALUES (5, '2026-08-12T00:00:00+00:00')")
         connection.execute(
             "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -111,9 +118,9 @@ def test_existing_v05_database_migrates_to_v06_without_rewriting_discovery_data(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5]
+        ] == [1, 2, 3, 4, 5, 6]
         assert repository.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='visual_plans'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='asset_specs'"
         ).fetchone()
     finally:
         repository.close()
@@ -126,7 +133,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                6,
+                7,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -148,7 +155,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 6"
+            "SELECT version FROM schema_migrations WHERE version = 7"
             ).fetchone()
             is None
         )
@@ -288,6 +295,8 @@ def test_seed_reuses_existing_source_url_and_restores_missing_evidence(tmp_path)
     source_url = "https://www.gov.uk/individual-savings-accounts"
     try:
         with repository.connection:
+            repository.connection.execute("DELETE FROM assets")
+            repository.connection.execute("DELETE FROM asset_specs")
             repository.connection.execute("DELETE FROM scenes")
             repository.connection.execute("DELETE FROM visual_plans")
             repository.connection.execute("DELETE FROM scripts")
@@ -740,6 +749,8 @@ def test_content_piece_seed_restores_missing_script_v1_without_overwriting_piece
         )
         seeded_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
         with repository.connection:
+            repository.connection.execute("DELETE FROM assets")
+            repository.connection.execute("DELETE FROM asset_specs")
             repository.connection.execute("DELETE FROM scenes")
             repository.connection.execute("DELETE FROM visual_plans")
             repository.connection.execute(
@@ -780,6 +791,8 @@ def test_content_piece_seed_restores_missing_piece_and_script_without_touching_e
         ]
         seeded_narration = repository.get_script("script-isa-deadline-video-v1").narration_text
         with repository.connection:
+            repository.connection.execute("DELETE FROM assets")
+            repository.connection.execute("DELETE FROM asset_specs")
             repository.connection.execute("DELETE FROM scenes")
             repository.connection.execute("DELETE FROM visual_plans")
             repository.connection.execute(
@@ -1051,6 +1064,9 @@ def test_visual_plan_seed_is_idempotent_and_restores_missing_structure(tmp_path)
         )
         with reopened.connection:
             reopened.connection.execute(
+                "DELETE FROM asset_specs WHERE scene_id = ?", ("scene-isa-deadline-video-v1-03",)
+            )
+            reopened.connection.execute(
                 "DELETE FROM scenes WHERE id = ?", ("scene-isa-deadline-video-v1-03",)
             )
     finally:
@@ -1063,6 +1079,8 @@ def test_visual_plan_seed_is_idempotent_and_restores_missing_structure(tmp_path)
             "Founder-edited Scene intent."
         )
         with reopened.connection:
+            reopened.connection.execute("DELETE FROM assets")
+            reopened.connection.execute("DELETE FROM asset_specs")
             reopened.connection.execute(
                 "DELETE FROM scenes WHERE visual_plan_id = ?",
                 ("visual-plan-isa-deadline-video-v1",),
@@ -1091,3 +1109,246 @@ def test_visual_plan_seed_is_idempotent_and_restores_missing_structure(tmp_path)
         assert len(restored.list_claims("research-pack-isa-deadline-v1")) == 3
     finally:
         restored.close()
+
+
+def test_asset_specs_retain_scene_provenance_while_normal_edits_persist(tmp_path) -> None:
+    """Asset requirements remain owned by their original Scene across normal edits."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        first_scene = repository.get_scene("scene-isa-deadline-video-v1-01")
+        other_scene = repository.get_scene("scene-isa-deadline-video-v1-02")
+        required_text = {
+            "asset_type": "prop",
+            "purpose": "Give the hamster a practical decision prop.",
+            "description": "A labelled envelope used in the ISA decision scene.",
+            "generation_prompt": "Illustrated labelled envelope for a calm UK ISA decision scene.",
+        }
+        for field_name in required_text:
+            for invalid_value in ("", "   "):
+                values = {**required_text, field_name: invalid_value}
+                try:
+                    repository.create_asset_spec(
+                        f"asset-spec-isa-invalid-{field_name}-{len(invalid_value)}",
+                        first_scene.id,
+                        values["asset_type"],
+                        values["purpose"],
+                        values["description"],
+                        values["generation_prompt"],
+                    )
+                except ValueError as error:
+                    assert "must not be empty or whitespace-only" in str(error)
+                else:
+                    raise AssertionError("An AssetSpec accepted invalid required text.")
+        first_spec = repository.create_asset_spec(
+            "asset-spec-isa-test-v1",
+            first_scene.id,
+            required_text["asset_type"],
+            required_text["purpose"],
+            required_text["description"],
+            required_text["generation_prompt"],
+            "isa-envelope-prop",
+        )
+        second_spec = repository.create_asset_spec(
+            "asset-spec-isa-test-v2",
+            first_scene.id,
+            "graphic",
+            "Reinforce a practical branch.",
+            "A simple supporting decision graphic.",
+            "Simple illustrated decision graphic that supports the narration.",
+        )
+        assert repository.get_asset_spec(first_spec.id) == first_spec
+        assert [
+            asset_spec.id for asset_spec in repository.list_asset_specs_for_scene(first_scene.id)
+        ][-2:] == [first_spec.id, second_spec.id]
+        try:
+            repository.update_asset_spec(replace(first_spec, scene_id=other_scene.id))
+        except ValueError as error:
+            assert "provenance is immutable" in str(error)
+        else:
+            raise AssertionError("An AssetSpec update changed Scene provenance.")
+        for field_name in required_text:
+            for invalid_value in ("", "   "):
+                try:
+                    repository.update_asset_spec(replace(first_spec, **{field_name: invalid_value}))
+                except ValueError as error:
+                    assert "must not be empty or whitespace-only" in str(error)
+                else:
+                    raise AssertionError("An AssetSpec update accepted invalid required text.")
+        assert repository.get_asset_spec(first_spec.id) == first_spec
+        updated = repository.update_asset_spec(
+            replace(
+                first_spec,
+                asset_type="illustration",
+                purpose="Clarify the viewer's practical ISA decision.",
+                description="A revised labelled envelope used in the ISA decision scene.",
+                generation_prompt="Revised provider-neutral envelope illustration prompt.",
+                continuity_key=None,
+                metadata={"edited": True},
+            )
+        )
+        assert updated.scene_id == first_scene.id
+        assert updated.continuity_key is None
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        persisted = reopened.get_asset_spec("asset-spec-isa-test-v1")
+        assert persisted.scene_id == "scene-isa-deadline-video-v1-01"
+        assert persisted.asset_type == "illustration"
+        assert persisted.purpose == "Clarify the viewer's practical ISA decision."
+        assert persisted.metadata == {"edited": True}
+    finally:
+        reopened.close()
+
+
+def test_assets_are_immutable_versions_scoped_to_one_asset_spec(tmp_path) -> None:
+    """Asset records remain distinct immutable versions without a current-state flag."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        asset_spec = repository.create_asset_spec(
+            "asset-spec-isa-asset-test-v1",
+            "scene-isa-deadline-video-v1-01",
+            "prop",
+            "Support a practical decision.",
+            "A test envelope prop.",
+            "Provider-neutral envelope prop prompt.",
+        )
+        other_spec = repository.create_asset_spec(
+            "asset-spec-isa-asset-test-v2",
+            "scene-isa-deadline-video-v1-02",
+            "graphic",
+            "Support a decision check.",
+            "A test calendar graphic.",
+            "Provider-neutral calendar graphic prompt.",
+        )
+        version_one = repository.create_asset(
+            "asset-isa-test-v1",
+            asset_spec.id,
+            1,
+            "assets/isa-envelope-v1.png",
+            "image/png",
+            "manual",
+            {"colour": "blue"},
+        )
+        version_two = repository.create_asset(
+            "asset-isa-test-v2",
+            asset_spec.id,
+            2,
+            "assets/isa-envelope-v2.png",
+            "image/png",
+            "generated",
+        )
+        other_version_one = repository.create_asset(
+            "asset-isa-other-test-v1",
+            other_spec.id,
+            1,
+            "assets/isa-calendar-v1.svg",
+            "image/svg+xml",
+            "manual",
+        )
+        assert repository.get_asset(version_one.id) == version_one
+        assert repository.list_assets_for_asset_spec(asset_spec.id) == [version_one, version_two]
+        assert repository.list_assets_for_asset_spec(other_spec.id) == [other_version_one]
+        try:
+            repository.create_asset(
+                "asset-isa-test-duplicate-v1",
+                asset_spec.id,
+                1,
+                "assets/duplicate.png",
+                "image/png",
+                "manual",
+            )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("An AssetSpec accepted a duplicate Asset version.")
+        for invalid_version in (0, -1, "1"):
+            try:
+                repository.create_asset(
+                    f"asset-isa-invalid-version-{invalid_version}",
+                    asset_spec.id,
+                    invalid_version,
+                    "assets/invalid.png",
+                    "image/png",
+                    "manual",
+                )
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("An Asset accepted a non-positive or non-integer version.")
+        assert not hasattr(repository, "update_asset")
+        try:
+            repository.create_asset(
+                "asset-isa-missing-spec-v1",
+                "missing-asset-spec",
+                1,
+                "assets/missing.png",
+                "image/png",
+                "manual",
+            )
+        except KeyError as error:
+            assert error.args == ("missing-asset-spec",)
+        else:
+            raise AssertionError("An Asset was created without an AssetSpec.")
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert [
+            (asset.id, asset.version, asset.storage_path)
+            for asset in reopened.list_assets_for_asset_spec("asset-spec-isa-asset-test-v1")
+        ] == [
+            ("asset-isa-test-v1", 1, "assets/isa-envelope-v1.png"),
+            ("asset-isa-test-v2", 2, "assets/isa-envelope-v2.png"),
+        ]
+    finally:
+        reopened.close()
+
+
+def test_asset_spec_seed_is_idempotent_and_restores_missing_requirements(tmp_path) -> None:
+    """Startup restores only missing AssetSpecs and never creates seeded Asset outputs."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        edited_spec = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        repository.update_asset_spec(
+            replace(edited_spec, purpose="Founder-edited kitchen environment purpose.")
+        )
+        edited_scene = repository.get_scene("scene-isa-deadline-video-v1-01")
+        repository.update_scene(replace(edited_scene, visual_intent="Founder-edited Scene intent."))
+        with repository.connection:
+            repository.connection.execute(
+                "DELETE FROM asset_specs WHERE id = ?",
+                ("asset-spec-isa-scene-03-decision-tree-v1",),
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.connection.execute("SELECT COUNT(*) FROM asset_specs").fetchone()[0] == 5
+        assert reopened.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+        assert reopened.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1").purpose == (
+            "Founder-edited kitchen environment purpose."
+        )
+        assert reopened.get_scene("scene-isa-deadline-video-v1-01").visual_intent == (
+            "Founder-edited Scene intent."
+        )
+        assert reopened.get_asset_spec("asset-spec-isa-scene-03-decision-tree-v1").asset_type == (
+            "graphic"
+        )
+        assert reopened.get_opportunity("uk-isa-rules").title
+        assert reopened.get_research_pack("research-pack-isa-deadline-v1").version == 1
+        assert reopened.get_editorial_angle("editorial-angle-isa-decision-tree-v1").id
+        assert reopened.get_content_piece("content-piece-isa-deadline-video-v1").id
+        assert reopened.get_script("script-isa-deadline-video-v1").version == 1
+        assert reopened.get_visual_plan("visual-plan-isa-deadline-video-v1").id
+    finally:
+        reopened.close()

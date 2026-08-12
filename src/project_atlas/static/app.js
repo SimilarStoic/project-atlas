@@ -162,6 +162,30 @@ function visualPlan(content) {
   }
   var scenes = plan.scenes
     .map(function (scene) {
+      var assetSpecs = scene.asset_specs
+        .map(function (assetSpec) {
+          var continuity = assetSpec.continuity_key
+            ? "<p><b>Continuity key</b><br>" + assetSpec.continuity_key + "</p>"
+            : "";
+          var registeredAssets = assetSpec.assets.length
+            ? "<p><b>Registered assets</b><br>" + assetSpec.assets.length + "</p>"
+            : "<p><b>Registered assets</b><br>0</p>";
+          return (
+            '<li><b>' +
+            assetSpec.asset_type +
+            "</b> · " +
+            assetSpec.purpose +
+            "<br><small>" +
+            assetSpec.description +
+            "</small><p><b>Canonical generation prompt</b><br>" +
+            assetSpec.generation_prompt +
+            "</p>" +
+            continuity +
+            registeredAssets +
+            "</li>"
+          );
+        })
+        .join("");
       var hamsterAction = scene.hamster_action
         ? "<p><b>Hamster action</b><br>" + scene.hamster_action + "</p>"
         : "";
@@ -182,6 +206,11 @@ function visualPlan(content) {
         hamsterAction +
         onScreenText +
         transition +
+        (assetSpecs
+          ? '<p><b>Asset requirements · persisted</b></p><ul class="qa">' +
+            assetSpecs +
+            "</ul>"
+          : "") +
         "</li>"
       );
     })
