@@ -38,6 +38,19 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 content["research_summary"] = research_pack["summary"]
                 content["claim_count"] = len(research_pack["claims"])
                 content["source_count"] = research_pack["source_count"]
+                editorial_angles = self.server.repository.list_editorial_angles_for_research_pack(
+                    research_pack["id"]
+                )
+                if editorial_angles:
+                    default_angle = editorial_angles[0]
+                    content["selected_angle"] = default_angle.working_title
+                    content["editorial_angle"] = self.server.repository.editorial_angle_payload(
+                        default_angle.id
+                    )
+                    content["editorial_angles"] = [
+                        {"id": angle.id, "working_title": angle.working_title}
+                        for angle in editorial_angles
+                    ]
             self._send_json({"kind": "demo", "content": content, "activity": ACTIVITY})
             return
         if parsed.path == "/api/demo/chat":

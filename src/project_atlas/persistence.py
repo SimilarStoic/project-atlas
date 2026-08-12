@@ -1,4 +1,4 @@
-"""SQLite persistence for Atlas discovery and research-evidence foundations."""
+"""SQLite persistence for Atlas discovery, research-evidence, and angle foundations."""
 
 from __future__ import annotations
 
@@ -113,7 +113,35 @@ class ClaimEvidence:
     updated_at: str
 
 
+@dataclass(frozen=True)
+class EditorialAngle:
+    """A durable editorial proposition grounded in one ResearchPack."""
+
+    id: str
+    opportunity_id: str
+    research_pack_id: str
+    working_title: str
+    thesis: str
+    audience_promise: str
+    framing: str
+    key_takeaways: list[str]
+    metadata: dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class EditorialAngleClaim:
+    """A Claim's role in an EditorialAngle."""
+
+    editorial_angle_id: str
+    claim_id: str
+    role: str
+    created_at: str
+
+
 Migration = tuple[int, tuple[str, ...]]
+EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 
 
 MIGRATIONS: tuple[Migration, ...] = (
@@ -217,6 +245,43 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
             "CREATE INDEX idx_claims_research_pack ON claims (research_pack_id)",
             "CREATE INDEX idx_claim_evidence_source ON claim_evidence (source_id, claim_id)",
+        ),
+    ),
+    (
+        3,
+        (
+            """
+        CREATE TABLE editorial_angles (
+          id TEXT PRIMARY KEY,
+          opportunity_id TEXT NOT NULL,
+          research_pack_id TEXT NOT NULL,
+          working_title TEXT NOT NULL,
+          thesis TEXT NOT NULL,
+          audience_promise TEXT NOT NULL,
+          framing TEXT NOT NULL,
+          key_takeaways_json TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE RESTRICT,
+          FOREIGN KEY (research_pack_id) REFERENCES research_packs(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE editorial_angle_claims (
+          editorial_angle_id TEXT NOT NULL,
+          claim_id TEXT NOT NULL,
+          role TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          PRIMARY KEY (editorial_angle_id, claim_id),
+          FOREIGN KEY (editorial_angle_id) REFERENCES editorial_angles(id) ON DELETE RESTRICT,
+          FOREIGN KEY (claim_id) REFERENCES claims(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_editorial_angles_opportunity ON editorial_angles (opportunity_id)",
+            "CREATE INDEX idx_editorial_angles_research_pack "
+            "ON editorial_angles (research_pack_id)",
+            "CREATE INDEX idx_editorial_angle_claims_claim ON editorial_angle_claims (claim_id)",
         ),
     ),
 )
@@ -436,6 +501,228 @@ class AtlasRepository:
             (opportunity_id,),
         ).fetchone()
         return self._research_pack(row) if row else None
+
+    def create_editorial_angle(
+        self,
+        editorial_angle_id: str,
+        opportunity_id: str,
+        research_pack_id: str,
+        working_title: str,
+        thesis: str,
+        audience_promise: str,
+        framing: str,
+        key_takeaways: list[str],
+        metadata: dict[str, Any] | None = None,
+    ) -> EditorialAngle:
+        """Create an editorial proposition grounded in its Opportunity's ResearchPack."""
+
+        self._validate_angle_research_pack(opportunity_id, research_pack_id)
+        self._validate_editorial_angle_takeaways(key_takeaways)
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO editorial_angles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    editorial_angle_id,
+                    opportunity_id,
+                    research_pack_id,
+                    working_title,
+                    thesis,
+                    audience_promise,
+                    framing,
+                    json.dumps(key_takeaways),
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                ),
+            )
+        return self.get_editorial_angle(editorial_angle_id)
+
+    def get_editorial_angle(self, editorial_angle_id: str) -> EditorialAngle:
+        row = self.connection.execute(
+            "SELECT * FROM editorial_angles WHERE id = ?", (editorial_angle_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(editorial_angle_id)
+        return self._editorial_angle(row)
+
+    def list_editorial_angles_for_opportunity(self, opportunity_id: str) -> list[EditorialAngle]:
+        """Return an Opportunity's angles in stable seed and creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM editorial_angles WHERE opportunity_id = ? ORDER BY created_at, id",
+            (opportunity_id,),
+        )
+        return [self._editorial_angle(row) for row in rows]
+
+    def list_editorial_angles_for_research_pack(
+        self, research_pack_id: str
+    ) -> list[EditorialAngle]:
+        """Return all editorial propositions supported by one ResearchPack."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM editorial_angles WHERE research_pack_id = ? ORDER BY created_at, id",
+            (research_pack_id,),
+        )
+        return [self._editorial_angle(row) for row in rows]
+
+    def update_editorial_angle(self, editorial_angle: EditorialAngle) -> EditorialAngle:
+        """Persist normal edits without changing the Angle's historical provenance."""
+
+        persisted_angle = self.get_editorial_angle(editorial_angle.id)
+        if (
+            editorial_angle.opportunity_id != persisted_angle.opportunity_id
+            or editorial_angle.research_pack_id != persisted_angle.research_pack_id
+        ):
+            raise ValueError(
+                "EditorialAngle Opportunity and ResearchPack provenance are immutable."
+            )
+        self._validate_editorial_angle_takeaways(editorial_angle.key_takeaways)
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE editorial_angles SET working_title=?, "
+                "thesis=?, audience_promise=?, framing=?, key_takeaways_json=?, metadata_json=?, "
+                "updated_at=? WHERE id=?",
+                (
+                    editorial_angle.working_title,
+                    editorial_angle.thesis,
+                    editorial_angle.audience_promise,
+                    editorial_angle.framing,
+                    json.dumps(editorial_angle.key_takeaways),
+                    json.dumps(editorial_angle.metadata),
+                    now(),
+                    editorial_angle.id,
+                ),
+            )
+        if result.rowcount != 1:
+            raise KeyError(editorial_angle.id)
+        return self.get_editorial_angle(editorial_angle.id)
+
+    def link_claim_to_editorial_angle(
+        self, editorial_angle_id: str, claim_id: str, role: str
+    ) -> EditorialAngleClaim:
+        """Link a same-pack Claim once without overwriting an existing role."""
+
+        self._validate_angle_claim_research_pack(editorial_angle_id, claim_id)
+        self._validate_editorial_angle_claim_role(role)
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO editorial_angle_claims VALUES (?, ?, ?, ?)",
+                (editorial_angle_id, claim_id, role, now()),
+            )
+        return self.get_editorial_angle_claim(editorial_angle_id, claim_id)
+
+    def get_editorial_angle_claim(
+        self, editorial_angle_id: str, claim_id: str
+    ) -> EditorialAngleClaim:
+        row = self.connection.execute(
+            "SELECT * FROM editorial_angle_claims WHERE editorial_angle_id = ? AND claim_id = ?",
+            (editorial_angle_id, claim_id),
+        ).fetchone()
+        if row is None:
+            raise KeyError((editorial_angle_id, claim_id))
+        return self._editorial_angle_claim(row)
+
+    def update_editorial_angle_claim_role(
+        self, editorial_angle_id: str, claim_id: str, role: str
+    ) -> EditorialAngleClaim:
+        """Update only an existing Claim's application-level role in an Angle."""
+
+        self._validate_angle_claim_research_pack(editorial_angle_id, claim_id)
+        self._validate_editorial_angle_claim_role(role)
+        with self.connection:
+            result = self.connection.execute(
+                "UPDATE editorial_angle_claims SET role=? "
+                "WHERE editorial_angle_id=? AND claim_id=?",
+                (role, editorial_angle_id, claim_id),
+            )
+        if result.rowcount != 1:
+            raise KeyError((editorial_angle_id, claim_id))
+        return self.get_editorial_angle_claim(editorial_angle_id, claim_id)
+
+    def claims_for_editorial_angle(
+        self, editorial_angle_id: str
+    ) -> list[tuple[EditorialAngleClaim, Claim]]:
+        """Load Claims and their roles for a persistent EditorialAngle."""
+
+        rows = self.connection.execute(
+            "SELECT editorial_angle_claims.*, claims.research_pack_id, claims.text, "
+            "claims.claim_type, claims.risk_level, claims.freshness_type, "
+            "claims.verification_status, claims.verification_notes, claims.reviewed_at, "
+            "claims.metadata_json AS claim_metadata_json, claims.created_at AS claim_created_at, "
+            "claims.updated_at AS claim_updated_at FROM editorial_angle_claims "
+            "JOIN claims ON claims.id = editorial_angle_claims.claim_id "
+            "WHERE editorial_angle_claims.editorial_angle_id = ? "
+            "ORDER BY editorial_angle_claims.created_at, claims.id",
+            (editorial_angle_id,),
+        )
+        return [
+            (
+                self._editorial_angle_claim(row),
+                Claim(
+                    row["claim_id"],
+                    row["research_pack_id"],
+                    row["text"],
+                    row["claim_type"],
+                    row["risk_level"],
+                    row["freshness_type"],
+                    row["verification_status"],
+                    row["verification_notes"],
+                    row["reviewed_at"],
+                    json.loads(row["claim_metadata_json"]),
+                    row["claim_created_at"],
+                    row["claim_updated_at"],
+                ),
+            )
+            for row in rows
+        ]
+
+    def editorial_angle_payload(self, editorial_angle_id: str) -> dict[str, Any]:
+        """Load one read-only angle with the persistent Claims that ground it."""
+
+        angle = self.get_editorial_angle(editorial_angle_id)
+        return {
+            "id": angle.id,
+            "opportunity_id": angle.opportunity_id,
+            "research_pack_id": angle.research_pack_id,
+            "working_title": angle.working_title,
+            "thesis": angle.thesis,
+            "audience_promise": angle.audience_promise,
+            "framing": angle.framing,
+            "key_takeaways": angle.key_takeaways,
+            "claims": [
+                {
+                    "id": claim.id,
+                    "text": claim.text,
+                    "claim_type": claim.claim_type,
+                    "role": relationship.role,
+                }
+                for relationship, claim in self.claims_for_editorial_angle(angle.id)
+            ],
+        }
+
+    def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
+        research_pack = self.get_research_pack(research_pack_id)
+        if research_pack.opportunity_id != opportunity_id:
+            raise ValueError("An EditorialAngle must use a ResearchPack from the same Opportunity.")
+
+    def _validate_angle_claim_research_pack(self, editorial_angle_id: str, claim_id: str) -> None:
+        editorial_angle = self.get_editorial_angle(editorial_angle_id)
+        claim = self.get_claim(claim_id)
+        if claim.research_pack_id != editorial_angle.research_pack_id:
+            raise ValueError("An EditorialAngle Claim must belong to the Angle's ResearchPack.")
+
+    @staticmethod
+    def _validate_editorial_angle_takeaways(key_takeaways: list[str]) -> None:
+        if not key_takeaways or not all(isinstance(takeaway, str) for takeaway in key_takeaways):
+            raise ValueError(
+                "EditorialAngle key takeaways must be a non-empty ordered list of strings."
+            )
+
+    @staticmethod
+    def _validate_editorial_angle_claim_role(role: str) -> None:
+        if role not in EDITORIAL_ANGLE_CLAIM_ROLES:
+            raise ValueError("EditorialAngle Claim role must be core or supporting.")
 
     def create_claim(
         self,
@@ -764,6 +1051,7 @@ class AtlasRepository:
                         ),
                     )
         self.seed_research_data()
+        self.seed_editorial_angle_data()
 
     def seed_research_data(self) -> None:
         """Seed one read-only demonstration ResearchPack without overwriting local edits."""
@@ -925,6 +1213,82 @@ class AtlasRepository:
                     ),
                 )
 
+    def seed_editorial_angle_data(self) -> None:
+        """Seed two distinct ISA editorial propositions without overwriting local edits."""
+
+        stamp = now()
+        angles = (
+            (
+                "editorial-angle-isa-decision-tree-v1",
+                "uk-isa-rules",
+                "research-pack-isa-deadline-v1",
+                "The 15-minute ISA decision tree before the deadline.",
+                (
+                    "Before the ISA tax-year deadline, the useful question is whether a viewer "
+                    "has unused allowance and can avoid losing a tax-efficient opportunity."
+                ),
+                (
+                    "Understand the deadline context and the practical checks needed before "
+                    "unused ISA allowance expires."
+                ),
+                "A time-bound decision tree for a UK professional considering an ISA contribution.",
+                json.dumps(
+                    [
+                        "The ISA tax year runs from 6 April to 5 April.",
+                        "Subscriptions use the allowance for the relevant tax year.",
+                        "Transfers need the receiving provider's process to preserve the wrapper.",
+                    ]
+                ),
+                "{}",
+                stamp,
+                stamp,
+            ),
+            (
+                "editorial-angle-isa-transfer-process-v1",
+                "uk-isa-rules",
+                "research-pack-isa-deadline-v1",
+                "Moving an ISA? The transfer process protects the wrapper.",
+                (
+                    "Moving an ISA is not simply moving money: using the receiving provider's "
+                    "process is part of preserving its tax wrapper."
+                ),
+                (
+                    "Recognise why the transfer route matters before moving ISA savings or "
+                    "investments."
+                ),
+                "A practical mistake-avoidance framing for viewers considering an ISA transfer.",
+                json.dumps(
+                    [
+                        "An ISA transfer needs to follow the receiving provider's process.",
+                        "The process matters for preserving the ISA tax wrapper.",
+                        "Allowance context is relevant before making new ISA subscriptions.",
+                    ]
+                ),
+                "{}",
+                stamp,
+                stamp,
+            ),
+        )
+        relationships = (
+            ("editorial-angle-isa-decision-tree-v1", "claim-isa-tax-year-v1", "core"),
+            ("editorial-angle-isa-decision-tree-v1", "claim-isa-allowance-v1", "core"),
+            ("editorial-angle-isa-decision-tree-v1", "claim-isa-transfer-v1", "supporting"),
+            ("editorial-angle-isa-transfer-process-v1", "claim-isa-transfer-v1", "core"),
+            ("editorial-angle-isa-transfer-process-v1", "claim-isa-allowance-v1", "supporting"),
+        )
+        with self.connection:
+            for angle in angles:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO editorial_angles "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    angle,
+                )
+            for editorial_angle_id, claim_id, role in relationships:
+                self.connection.execute(
+                    "INSERT OR IGNORE INTO editorial_angle_claims VALUES (?, ?, ?, ?)",
+                    (editorial_angle_id, claim_id, role, stamp),
+                )
+
     @staticmethod
     def _subject(row: sqlite3.Row) -> Subject:
         return Subject(
@@ -1009,4 +1373,26 @@ class AtlasRepository:
             row["notes"],
             row["created_at"],
             row["updated_at"],
+        )
+
+    @staticmethod
+    def _editorial_angle(row: sqlite3.Row) -> EditorialAngle:
+        return EditorialAngle(
+            row["id"],
+            row["opportunity_id"],
+            row["research_pack_id"],
+            row["working_title"],
+            row["thesis"],
+            row["audience_promise"],
+            row["framing"],
+            json.loads(row["key_takeaways_json"]),
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+            row["updated_at"],
+        )
+
+    @staticmethod
+    def _editorial_angle_claim(row: sqlite3.Row) -> EditorialAngleClaim:
+        return EditorialAngleClaim(
+            row["editorial_angle_id"], row["claim_id"], row["role"], row["created_at"]
         )

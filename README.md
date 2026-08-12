@@ -4,7 +4,7 @@
 
 Project Atlas is a local, dependency-free editorial control interface and durable
 SQLite foundation for SimilarStoic. It deliberately implements only the approved
-v0.1-v0.3 scope; later workflow, research automation and production systems remain deferred.
+v0.1-v0.4 scope; later workflow, research automation and production systems remain deferred.
 
 ## Technology baseline
 
@@ -109,12 +109,32 @@ foundation.
 Startup seeds one persistent ISA ResearchPack for the existing Content Workspace
 opportunity. It is idempotent and does not overwrite local changes. The Content
 Workspace reads that persisted ResearchPack, Claims, Sources and ClaimEvidence
-read-only; its angle, script, scene plan and QA fields remain local demo data.
+read-only.
 
-Pillars, generic Topics, scripts, content-package persistence, AI research, agents,
-research policies, workflows, publishing, production and analytics remain deferred.
+## Editorial angle persistence
+
+Atlas v0.4 adds the smallest durable bridge from Research & Evidence to editorial
+development:
+
+- An **EditorialAngle** belongs to one Opportunity and references one ResearchPack
+  from that same Opportunity. It stores a provisional working title, thesis,
+  audience promise, framing, ordered intended takeaways and extension metadata.
+- **EditorialAngleClaim** records the `core` or `supporting` role of a Claim in an
+  EditorialAngle. Repository validation requires every linked Claim to belong to
+  the Angle's ResearchPack.
+
+Startup idempotently seeds two distinct ISA EditorialAngles for the existing v1
+ResearchPack: a deadline decision-tree framing and an ISA-transfer-process framing.
+The Content Workspace now reads a deterministic persisted EditorialAngle and its
+linked Claims while remaining read-only. Final publication titles, script/narration,
+scene plans, QA, production and workflow remain demo-backed or deferred.
+
+Pillars, generic Topics, final-title and hook models, script and content-package
+persistence, AI research, agents, research policies, workflows, publishing,
+production and analytics remain deferred.
 
 ## Status
 
-v0.1 UI shell, v0.2 persistent discovery and v0.3 Research & Evidence persistence
-are implemented locally. Later Atlas systems remain out of scope.
+v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
+and v0.4 Editorial Angle persistence are implemented locally. Later Atlas systems
+remain out of scope.

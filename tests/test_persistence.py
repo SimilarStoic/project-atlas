@@ -1,4 +1,4 @@
-"""Tests for Atlas persistence through the v0.3 research-evidence foundation."""
+"""Tests for Atlas persistence through the v0.4 editorial-angle foundation."""
 
 import sqlite3
 from dataclasses import replace
@@ -6,8 +6,8 @@ from dataclasses import replace
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
 
 
-def test_fresh_database_migrates_and_seeds_discovery_and_one_research_pack(tmp_path) -> None:
-    """Fresh startup applies both migrations and creates only the scoped seed data."""
+def test_fresh_database_migrates_and_seeds_discovery_research_and_angles(tmp_path) -> None:
+    """Fresh startup applies all migrations and creates the scoped seed data."""
 
     database = tmp_path / "atlas.db"
     repository = AtlasRepository(database)
@@ -15,7 +15,7 @@ def test_fresh_database_migrates_and_seeds_discovery_and_one_research_pack(tmp_p
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2]
+        ] == [1, 2, 3]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -27,6 +27,7 @@ def test_fresh_database_migrates_and_seeds_discovery_and_one_research_pack(tmp_p
             "contextualises",
             "supports",
         }
+        assert len(repository.list_editorial_angles_for_opportunity("uk-isa-rules")) == 2
     finally:
         repository.close()
 
@@ -36,14 +37,21 @@ def test_fresh_database_migrates_and_seeds_discovery_and_one_research_pack(tmp_p
         assert reopened.connection.execute("SELECT COUNT(*) FROM claims").fetchone()[0] == 3
         assert reopened.connection.execute("SELECT COUNT(*) FROM sources").fetchone()[0] == 2
         assert reopened.connection.execute("SELECT COUNT(*) FROM claim_evidence").fetchone()[0] == 4
+        assert (
+            reopened.connection.execute("SELECT COUNT(*) FROM editorial_angles").fetchone()[0] == 2
+        )
+        assert (
+            reopened.connection.execute("SELECT COUNT(*) FROM editorial_angle_claims").fetchone()[0]
+            == 5
+        )
     finally:
         reopened.close()
 
 
-def test_existing_v02_database_migrates_to_v03_without_rewriting_discovery_data(tmp_path) -> None:
-    """The new migration applies cleanly to a database already recorded at v0.2."""
+def test_existing_v03_database_migrates_to_v04_without_rewriting_discovery_data(tmp_path) -> None:
+    """The new migration applies cleanly to a database already recorded at v0.3."""
 
-    database = tmp_path / "atlas-v02.db"
+    database = tmp_path / "atlas-v03.db"
     connection = sqlite3.connect(database)
     try:
         connection.execute(
@@ -51,9 +59,10 @@ def test_existing_v02_database_migrates_to_v03_without_rewriting_discovery_data(
         )
         for statement in MIGRATIONS[0][1]:
             connection.execute(statement)
-        connection.execute(
-            "INSERT INTO schema_migrations VALUES (1, '2026-08-11T00:00:00+00:00')"
-        )
+        connection.execute("INSERT INTO schema_migrations VALUES (1, '2026-08-11T00:00:00+00:00')")
+        for statement in MIGRATIONS[1][1]:
+            connection.execute(statement)
+        connection.execute("INSERT INTO schema_migrations VALUES (2, '2026-08-12T00:00:00+00:00')")
         connection.execute(
             "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
@@ -78,9 +87,9 @@ def test_existing_v02_database_migrates_to_v03_without_rewriting_discovery_data(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2]
+        ] == [1, 2, 3]
         assert repository.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='research_packs'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='editorial_angles'"
         ).fetchone()
     finally:
         repository.close()
@@ -93,7 +102,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                3,
+                4,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -107,12 +116,18 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         else:
             raise AssertionError("The intentionally invalid migration did not fail.")
 
-        assert repository.connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='should_not_survive'"
-        ).fetchone() is None
-        assert repository.connection.execute(
-            "SELECT version FROM schema_migrations WHERE version = 3"
-        ).fetchone() is None
+        assert (
+            repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='should_not_survive'"
+            ).fetchone()
+            is None
+        )
+        assert (
+            repository.connection.execute(
+                "SELECT version FROM schema_migrations WHERE version = 4"
+            ).fetchone()
+            is None
+        )
     finally:
         repository.close()
 
@@ -249,6 +264,8 @@ def test_seed_reuses_existing_source_url_and_restores_missing_evidence(tmp_path)
     source_url = "https://www.gov.uk/individual-savings-accounts"
     try:
         with repository.connection:
+            repository.connection.execute("DELETE FROM editorial_angle_claims")
+            repository.connection.execute("DELETE FROM editorial_angles")
             repository.connection.execute("DELETE FROM claim_evidence")
             repository.connection.execute("DELETE FROM claims")
             repository.connection.execute("DELETE FROM research_packs")
@@ -272,9 +289,12 @@ def test_seed_reuses_existing_source_url_and_restores_missing_evidence(tmp_path)
             )
         repository.seed_research_data()
 
-        assert repository.connection.execute(
-            "SELECT COUNT(*) FROM sources WHERE url = ?", (source_url,)
-        ).fetchone()[0] == 1
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM sources WHERE url = ?", (source_url,)
+            ).fetchone()[0]
+            == 1
+        )
         assert repository.get_claim(allowance_claim.id).verification_notes == "Preserve this edit."
         assert {source.id for _, source in repository.evidence_for_claim(allowance_claim.id)} == {
             existing_source.id
@@ -285,13 +305,14 @@ def test_seed_reuses_existing_source_url_and_restores_missing_evidence(tmp_path)
 
     reopened = AtlasRepository(database)
     try:
-        assert reopened.connection.execute(
-            "SELECT COUNT(*) FROM sources WHERE url = ?", (source_url,)
-        ).fetchone()[0] == 1
+        assert (
+            reopened.connection.execute(
+                "SELECT COUNT(*) FROM sources WHERE url = ?", (source_url,)
+            ).fetchone()[0]
+            == 1
+        )
         tax_year_sources = reopened.evidence_for_claim("claim-isa-tax-year-v1")
-        assert {source.id for _, source in tax_year_sources} == {
-            "pre-existing-source-id"
-        }
+        assert {source.id for _, source in tax_year_sources} == {"pre-existing-source-id"}
     finally:
         reopened.close()
 
@@ -324,3 +345,206 @@ def test_discover_serializes_opportunity_without_legacy_display_pillar(tmp_path)
         assert payload["pillar"] == "Not yet classified"
     finally:
         repository.close()
+
+
+def test_editorial_angle_provenance_is_immutable_while_normal_edits_persist(
+    tmp_path,
+) -> None:
+    """Angles retain provenance while normal editorial detail remains editable."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        pack = repository.get_research_pack("research-pack-isa-deadline-v1")
+        angle = repository.create_editorial_angle(
+            "editorial-angle-isa-test-v1",
+            "uk-isa-rules",
+            pack.id,
+            "A test editorial proposition.",
+            "The test thesis is grounded in the ISA research pack.",
+            "Understand the decision context from the available research.",
+            "A test framing for repository coverage.",
+            ["First intended takeaway.", "Second intended takeaway."],
+        )
+        next_pack = repository.create_research_pack(
+            "research-pack-isa-deadline-v2", "uk-isa-rules", 2, "A later ISA snapshot."
+        )
+        for provenance_change in (
+            replace(angle, opportunity_id="credit-utilisation"),
+            replace(angle, research_pack_id=next_pack.id),
+        ):
+            try:
+                repository.update_editorial_angle(provenance_change)
+            except ValueError as error:
+                assert "provenance are immutable" in str(error)
+            else:
+                raise AssertionError("An EditorialAngle update changed historical provenance.")
+        updated = repository.update_editorial_angle(
+            replace(
+                angle,
+                working_title="A revised test editorial proposition.",
+                thesis="The revised test thesis persists after restart.",
+                audience_promise="A revised audience promise.",
+                framing="A revised framing.",
+                key_takeaways=["Revised intended takeaway."],
+                metadata={"edited": True},
+            )
+        )
+        assert updated.thesis == "The revised test thesis persists after restart."
+        assert updated.opportunity_id == "uk-isa-rules"
+        assert updated.research_pack_id == pack.id
+        assert len(repository.list_editorial_angles_for_opportunity("uk-isa-rules")) == 3
+        assert len(repository.list_editorial_angles_for_research_pack(pack.id)) == 3
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        persisted = reopened.get_editorial_angle("editorial-angle-isa-test-v1")
+        assert persisted.working_title == "A revised test editorial proposition."
+        assert persisted.thesis == "The revised test thesis persists after restart."
+        assert persisted.audience_promise == "A revised audience promise."
+        assert persisted.framing == "A revised framing."
+        assert persisted.key_takeaways == ["Revised intended takeaway."]
+        assert persisted.metadata == {"edited": True}
+        assert persisted.opportunity_id == "uk-isa-rules"
+        assert persisted.research_pack_id == "research-pack-isa-deadline-v1"
+    finally:
+        reopened.close()
+
+
+def test_editorial_angle_rejects_research_pack_from_another_opportunity(tmp_path) -> None:
+    """The Angle's Opportunity and ResearchPack must agree in the repository layer."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        other_pack = repository.create_research_pack(
+            "research-pack-credit-v1", "credit-utilisation", 1, "Credit test pack."
+        )
+        try:
+            repository.create_editorial_angle(
+                "editorial-angle-invalid-pack-v1",
+                "uk-isa-rules",
+                other_pack.id,
+                "Invalid angle.",
+                "Invalid thesis.",
+                "Invalid promise.",
+                "Invalid framing.",
+                ["Invalid takeaway."],
+            )
+        except ValueError as error:
+            assert "same Opportunity" in str(error)
+        else:
+            raise AssertionError(
+                "An EditorialAngle accepted a ResearchPack from another Opportunity."
+            )
+    finally:
+        repository.close()
+
+
+def test_editorial_angle_claims_are_reusable_idempotent_and_same_pack_only(tmp_path) -> None:
+    """Claim roles persist without duplicate pairs and cannot cross ResearchPack boundaries."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        first_angle = repository.get_editorial_angle("editorial-angle-isa-decision-tree-v1")
+        second_angle = repository.get_editorial_angle("editorial-angle-isa-transfer-process-v1")
+        allowance_claim = repository.get_claim("claim-isa-allowance-v1")
+        transfer_claim = repository.get_claim("claim-isa-transfer-v1")
+
+        assert len(repository.claims_for_editorial_angle(first_angle.id)) == 3
+        assert len(repository.claims_for_editorial_angle(second_angle.id)) == 2
+        assert {
+            angle.id
+            for angle in repository.list_editorial_angles_for_research_pack(
+                first_angle.research_pack_id
+            )
+        } >= {first_angle.id, second_angle.id}
+
+        relationship = repository.link_claim_to_editorial_angle(
+            first_angle.id, allowance_claim.id, "supporting"
+        )
+        assert relationship.role == "core"
+        assert (
+            repository.update_editorial_angle_claim_role(
+                first_angle.id, allowance_claim.id, "supporting"
+            ).role
+            == "supporting"
+        )
+        assert len(repository.claims_for_editorial_angle(first_angle.id)) == 3
+        try:
+            repository.update_editorial_angle_claim_role(
+                first_angle.id, allowance_claim.id, "primary"
+            )
+        except ValueError as error:
+            assert "core or supporting" in str(error)
+        else:
+            raise AssertionError("An unrecognised EditorialAngleClaim role was accepted.")
+        assert {
+            claim.id for _, claim in repository.claims_for_editorial_angle(second_angle.id)
+        } >= {allowance_claim.id, transfer_claim.id}
+
+        other_pack = repository.create_research_pack(
+            "research-pack-credit-v1", "credit-utilisation", 1, "Credit test pack."
+        )
+        other_claim = repository.create_claim(
+            "claim-credit-v1",
+            other_pack.id,
+            "A claim from another research pack.",
+            "factual",
+            "low",
+            "stable",
+            "unreviewed",
+            "Test-only claim.",
+        )
+        try:
+            repository.link_claim_to_editorial_angle(first_angle.id, other_claim.id, "supporting")
+        except ValueError as error:
+            assert "ResearchPack" in str(error)
+        else:
+            raise AssertionError("An EditorialAngle accepted a Claim from another ResearchPack.")
+    finally:
+        repository.close()
+
+
+def test_editorial_angle_seed_restores_missing_links_without_overwriting_edits(tmp_path) -> None:
+    """Restart seeding restores a missing link while preserving Angle, Claim, and role edits."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        angle = repository.get_editorial_angle("editorial-angle-isa-decision-tree-v1")
+        repository.update_editorial_angle(
+            replace(angle, audience_promise="Founder-edited promise that must persist.")
+        )
+        repository.update_editorial_angle_claim_role(angle.id, "claim-isa-transfer-v1", "core")
+        claim = repository.get_claim("claim-isa-allowance-v1")
+        repository.update_claim(replace(claim, verification_notes="Founder-edited claim note."))
+        with repository.connection:
+            repository.connection.execute(
+                "DELETE FROM editorial_angle_claims WHERE editorial_angle_id = ? AND claim_id = ?",
+                ("editorial-angle-isa-transfer-process-v1", "claim-isa-allowance-v1"),
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        angle = reopened.get_editorial_angle("editorial-angle-isa-decision-tree-v1")
+        assert angle.audience_promise == "Founder-edited promise that must persist."
+        assert len(reopened.list_editorial_angles_for_opportunity("uk-isa-rules")) == 2
+        assert reopened.get_editorial_angle_claim(angle.id, "claim-isa-transfer-v1").role == "core"
+        assert (
+            reopened.get_editorial_angle_claim(
+                "editorial-angle-isa-transfer-process-v1", "claim-isa-allowance-v1"
+            ).role
+            == "supporting"
+        )
+        assert reopened.get_claim("claim-isa-allowance-v1").verification_notes == (
+            "Founder-edited claim note."
+        )
+        payload = reopened.editorial_angle_payload(angle.id)
+        assert payload["working_title"] == "The 15-minute ISA decision tree before the deadline."
+        assert {claim["role"] for claim in payload["claims"]} == {"core"}
+    finally:
+        reopened.close()

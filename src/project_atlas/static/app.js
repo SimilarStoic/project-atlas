@@ -106,6 +106,38 @@ function researchEvidence(research) {
   return '<div class="pack"><label>CLAIMS &amp; EVIDENCE · PERSISTED RESEARCH</label>' + claims + "</div>";
 }
 
+function editorialAngle(content) {
+  var angle = content.editorial_angle;
+  if (!angle) {
+    return '<div class="pack"><label>EDITORIAL ANGLE</label><h3>' + content.selected_angle + "</h3></div>";
+  }
+  var takeaways = angle.key_takeaways
+    .map(function (takeaway) {
+      return "<li>" + takeaway + "</li>";
+    })
+    .join("");
+  var claims = angle.claims
+    .map(function (claim) {
+      return "<li><b>" + claim.role + "</b> · " + claim.text + "</li>";
+    })
+    .join("");
+  return (
+    '<div class="pack"><label>EDITORIAL ANGLE · PERSISTED</label><h3>' +
+    angle.working_title +
+    "</h3><p><b>Thesis</b><br>" +
+    angle.thesis +
+    "</p><p><b>Audience promise</b><br>" +
+    angle.audience_promise +
+    "</p><p><b>Framing</b><br>" +
+    angle.framing +
+    '</p><p><b>Intended takeaways</b></p><ul class="qa">' +
+    takeaways +
+    '</ul><p><b>Grounded claims</b></p><ul class="qa">' +
+    claims +
+    "</ul></div>"
+  );
+}
+
 function bindActions() {
   document.querySelectorAll(".actions button").forEach(function (element) {
     element.onclick = function () {
@@ -147,9 +179,8 @@ function pack(content) {
     content.source_count +
     '</b><small>sources</small></div><div><b>Medium</b><small>risk</small></div></div></div>' +
     researchEvidence(research) +
-    '<div class="pack"><label>SELECTED ANGLE</label><h3>' +
-    content.selected_angle +
-    '</h3><label>SCRIPT / NARRATION</label><p>' +
+    editorialAngle(content) +
+    '<div class="pack"><label>SCRIPT / NARRATION</label><p>' +
     content.script +
     '</p></div><div class="pack"><label>VISUAL & HAMSTER SCENE PLAN</label><p>' +
     content.scene_plan +
