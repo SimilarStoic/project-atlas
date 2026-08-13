@@ -7,6 +7,7 @@ import os
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -225,6 +226,7 @@ class Asset:
     storage_path: str
     media_type: str
     source_kind: str
+    content_digest: str | None
     metadata: dict[str, Any]
     created_at: str
 
@@ -255,6 +257,26 @@ class CharacterProfile:
     identity_description: str
     generation_guidance: str
     metadata: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class CharacterReferenceSet:
+    """An immutable ordered visual-reference basis for one CharacterProfile."""
+
+    id: str
+    character_profile_id: str
+    version: int
+    created_at: str
+
+
+@dataclass(frozen=True)
+class CharacterReferenceSetMember:
+    """One immutable Asset member of a CharacterReferenceSet."""
+
+    character_reference_set_id: str
+    asset_id: str
+    position: int
     created_at: str
 
 
@@ -632,14 +654,61 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
         ),
     ),
+    (
+        10,
+        (
+            """
+        ALTER TABLE assets
+        ADD COLUMN content_digest TEXT NULL
+        """,
+            """
+        CREATE TABLE character_reference_sets (
+          id TEXT PRIMARY KEY,
+          character_profile_id TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE (character_profile_id, version),
+          FOREIGN KEY (character_profile_id) REFERENCES character_profiles(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE character_reference_set_members (
+          character_reference_set_id TEXT NOT NULL,
+          asset_id TEXT NOT NULL,
+          position INTEGER NOT NULL CHECK (position >= 1),
+          created_at TEXT NOT NULL,
+          PRIMARY KEY (character_reference_set_id, asset_id),
+          UNIQUE (character_reference_set_id, position),
+          FOREIGN KEY (character_reference_set_id) REFERENCES character_reference_sets(id)
+            ON DELETE RESTRICT,
+          FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE INDEX idx_character_reference_sets_profile_version
+          ON character_reference_sets (character_profile_id, version)
+        """,
+            """
+        CREATE INDEX idx_character_reference_set_members_asset
+          ON character_reference_set_members (asset_id)
+        """,
+        ),
+    ),
 )
 
 
 class AtlasRepository:
     """A small application/repository boundary over SQLite."""
 
-    def __init__(self, database_path: Path | str | None = None) -> None:
+    def __init__(
+        self,
+        database_path: Path | str | None = None,
+        asset_storage_root: Path | str | None = None,
+    ) -> None:
         self.database_path = Path(database_path or default_database_path())
+        self.asset_storage_root = Path(
+            asset_storage_root or os.environ.get("ATLAS_ASSET_STORAGE_ROOT", "data/assets")
+        ).resolve()
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self.connection = sqlite3.connect(self.database_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
@@ -1591,16 +1660,18 @@ class AtlasRepository:
         media_type: str,
         source_kind: str,
         metadata: dict[str, Any] | None = None,
+        content_digest: str | None = None,
     ) -> Asset:
         """Register an immutable asset version for one AssetSpec."""
 
         self.get_asset_spec(asset_spec_id)
         self._validate_asset_version(version)
+        self._validate_content_digest(content_digest)
         with self.connection:
             self.connection.execute(
                 "INSERT INTO assets (id, asset_spec_id, version, storage_path, media_type, "
-                "source_kind, metadata_json, created_at, generation_execution_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)",
+                "source_kind, metadata_json, created_at, generation_execution_id, content_digest) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)",
                 (
                     asset_id,
                     asset_spec_id,
@@ -1610,6 +1681,7 @@ class AtlasRepository:
                     source_kind,
                     json.dumps(metadata or {}),
                     now(),
+                    content_digest,
                 ),
             )
         return self.get_asset(asset_id)
@@ -1669,9 +1741,13 @@ class AtlasRepository:
         model_key: str | None = None,
         provider_request_id: str | None = None,
         response_metadata: dict[str, Any] | None = None,
+        content_digest: str | None = None,
     ) -> tuple[GenerationExecution, Asset]:
         """Atomically record a succeeded execution and its one immutable Asset."""
 
+        self._validate_content_digest(content_digest)
+        if content_digest is None:
+            raise ValueError("Successful generated Assets must include a content digest.")
         with self.connection:
             self._insert_generation_execution(
                 execution_id,
@@ -1695,8 +1771,8 @@ class AtlasRepository:
             ).fetchone()[0]
             self.connection.execute(
                 "INSERT INTO assets (id, asset_spec_id, version, storage_path, media_type, "
-                "source_kind, metadata_json, created_at, generation_execution_id) "
-                "VALUES (?, ?, ?, ?, ?, 'generated', '{}', ?, ?)",
+                "source_kind, metadata_json, created_at, generation_execution_id, content_digest) "
+                "VALUES (?, ?, ?, ?, ?, 'generated', '{}', ?, ?, ?)",
                 (
                     asset_id,
                     asset_spec_id,
@@ -1705,6 +1781,7 @@ class AtlasRepository:
                     media_type,
                     now(),
                     execution_id,
+                    content_digest,
                 ),
             )
         return self.get_generation_execution(execution_id), self.get_asset(asset_id)
@@ -1750,6 +1827,148 @@ class AtlasRepository:
             "SELECT * FROM assets WHERE asset_spec_id = ? ORDER BY version", (asset_spec_id,)
         )
         return [self._asset(row) for row in rows]
+
+    def managed_asset_path(self, asset_id: str) -> Path:
+        """Resolve one generated Asset only when its stored file is safely managed by Atlas."""
+
+        asset = self.get_asset(asset_id)
+        if asset.source_kind != "generated":
+            raise ValueError("Only Atlas-generated Assets have managed file content.")
+        if asset.media_type not in {"image/png", "image/jpeg", "image/webp"}:
+            raise ValueError("Asset media type is not safe for managed image serving.")
+        if not isinstance(asset.storage_path, str) or not asset.storage_path:
+            raise ValueError("Asset storage path is not a managed relative path.")
+        candidate = (self.asset_storage_root / asset.storage_path).resolve()
+        if self.asset_storage_root not in candidate.parents:
+            raise ValueError("Asset storage path escaped the managed storage root.")
+        if not candidate.is_file():
+            raise ValueError("Managed Asset file does not exist.")
+        return candidate
+
+    def create_character_reference_set(
+        self,
+        reference_set_id: str,
+        character_profile_id: str,
+        asset_ids: list[str],
+    ) -> CharacterReferenceSet:
+        """Atomically record one immutable, ordered visual basis for a CharacterProfile."""
+
+        if not isinstance(reference_set_id, str) or not reference_set_id.strip():
+            raise ValueError("CharacterReferenceSet ID must be non-empty text.")
+        if not isinstance(asset_ids, list) or not asset_ids:
+            raise ValueError("A CharacterReferenceSet must include one or more Asset IDs.")
+        if not all(isinstance(asset_id, str) and asset_id.strip() for asset_id in asset_ids):
+            raise ValueError("CharacterReferenceSet Asset IDs must be non-empty text.")
+        if len(set(asset_ids)) != len(asset_ids):
+            raise ValueError("An Asset cannot appear more than once in one CharacterReferenceSet.")
+        self.get_character_profile(character_profile_id)
+        for asset_id in asset_ids:
+            self._validate_character_reference_asset(asset_id, character_profile_id)
+        with self.connection:
+            self.connection.execute("BEGIN IMMEDIATE")
+            version = self.connection.execute(
+                "SELECT COALESCE(MAX(version), 0) + 1 FROM character_reference_sets "
+                "WHERE character_profile_id = ?",
+                (character_profile_id,),
+            ).fetchone()[0]
+            self.connection.execute(
+                "INSERT INTO character_reference_sets VALUES (?, ?, ?, ?)",
+                (reference_set_id.strip(), character_profile_id, version, now()),
+            )
+            for position, asset_id in enumerate(asset_ids, start=1):
+                self.connection.execute(
+                    "INSERT INTO character_reference_set_members VALUES (?, ?, ?, ?)",
+                    (reference_set_id.strip(), asset_id, position, now()),
+                )
+        return self.get_character_reference_set(reference_set_id)
+
+    def get_character_reference_set(self, reference_set_id: str) -> CharacterReferenceSet:
+        row = self.connection.execute(
+            "SELECT * FROM character_reference_sets WHERE id = ?", (reference_set_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(reference_set_id)
+        return self._character_reference_set(row)
+
+    def list_character_reference_sets(
+        self, character_profile_id: str
+    ) -> list[CharacterReferenceSet]:
+        """Return immutable visual-reference selections in version order."""
+
+        self.get_character_profile(character_profile_id)
+        rows = self.connection.execute(
+            "SELECT * FROM character_reference_sets WHERE character_profile_id = ? "
+            "ORDER BY version",
+            (character_profile_id,),
+        )
+        return [self._character_reference_set(row) for row in rows]
+
+    def list_character_reference_set_members(
+        self, reference_set_id: str
+    ) -> list[CharacterReferenceSetMember]:
+        """Return one immutable reference set's members in explicit position order."""
+
+        self.get_character_reference_set(reference_set_id)
+        rows = self.connection.execute(
+            "SELECT * FROM character_reference_set_members WHERE character_reference_set_id = ? "
+            "ORDER BY position",
+            (reference_set_id,),
+        )
+        return [self._character_reference_set_member(row) for row in rows]
+
+    def list_eligible_character_reference_assets(self, character_profile_id: str) -> list[Asset]:
+        """Return existing generated character Assets that are eligible for visual selection."""
+
+        self.get_character_profile(character_profile_id)
+        rows = self.connection.execute(
+            "SELECT assets.id FROM assets "
+            "JOIN generation_executions "
+            "ON generation_executions.id = assets.generation_execution_id "
+            "WHERE assets.source_kind = 'generated' "
+            "AND generation_executions.outcome = 'succeeded' "
+            "AND generation_executions.character_profile_id = ? "
+            "ORDER BY assets.created_at, assets.id",
+            (character_profile_id,),
+        )
+        eligible = []
+        for row in rows:
+            try:
+                eligible.append(
+                    self._validate_character_reference_asset(row["id"], character_profile_id)
+                )
+            except ValueError:
+                continue
+        return eligible
+
+    def character_reference_set_payload(self, reference_set_id: str) -> dict[str, Any]:
+        """Load one immutable reference selection with concise Asset provenance."""
+
+        reference_set = self.get_character_reference_set(reference_set_id)
+        return {
+            "id": reference_set.id,
+            "version": reference_set.version,
+            "created_at": reference_set.created_at,
+            "character_profile": self.character_profile_summary(reference_set.character_profile_id),
+            "members": [
+                self._character_reference_member_payload(member)
+                for member in self.list_character_reference_set_members(reference_set.id)
+            ],
+        }
+
+    def character_reference_review_payload(self, character_profile_id: str) -> dict[str, Any]:
+        """Load the narrow candidate and immutable-reference history required by the local UI."""
+
+        return {
+            "character_profile": self.character_profile_summary(character_profile_id),
+            "eligible_assets": [
+                self._character_reference_asset_payload(asset)
+                for asset in self.list_eligible_character_reference_assets(character_profile_id)
+            ],
+            "reference_sets": [
+                self.character_reference_set_payload(reference_set.id)
+                for reference_set in self.list_character_reference_sets(character_profile_id)
+            ],
+        }
 
     def asset_spec_payload(self, asset_spec_id: str) -> dict[str, Any]:
         """Load one Scene asset requirement and its registered immutable outputs."""
@@ -1820,6 +2039,55 @@ class AtlasRepository:
             "version": profile.version,
             "identity_description": profile.identity_description,
         }
+
+    def _character_reference_asset_payload(self, asset: Asset) -> dict[str, Any]:
+        execution = self.get_generation_execution(asset.generation_execution_id or "")
+        return {
+            "id": asset.id,
+            "version": asset.version,
+            "media_type": asset.media_type,
+            "content_digest": asset.content_digest,
+            "asset_spec_id": asset.asset_spec_id,
+            "generation_execution": {
+                "id": execution.id,
+                "provider_key": execution.provider_key,
+                "model_key": execution.model_key,
+                "character_profile": self.character_profile_summary(execution.character_profile_id),
+            },
+        }
+
+    def _character_reference_member_payload(
+        self, member: CharacterReferenceSetMember
+    ) -> dict[str, Any]:
+        return {
+            "position": member.position,
+            "asset": self._character_reference_asset_payload(self.get_asset(member.asset_id)),
+        }
+
+    def _validate_character_reference_asset(
+        self, asset_id: str, character_profile_id: str
+    ) -> Asset:
+        asset = self.get_asset(asset_id)
+        if asset.source_kind != "generated" or asset.generation_execution_id is None:
+            raise ValueError(
+                "Character references must be generated Assets with execution provenance."
+            )
+        execution = self.get_generation_execution(asset.generation_execution_id)
+        if execution.outcome != "succeeded":
+            raise ValueError("Character references must originate from succeeded executions.")
+        if execution.asset_spec_snapshot.get("asset_type") != "character":
+            raise ValueError("Character references must originate from character AssetSpecs.")
+        if execution.character_profile_id != character_profile_id:
+            raise ValueError(
+                "Character reference identity lineage must match its CharacterProfile."
+            )
+        self._validate_content_digest(asset.content_digest)
+        if asset.content_digest is None:
+            raise ValueError("Character references require an immutable content digest.")
+        managed_path = self.managed_asset_path(asset.id)
+        if sha256(managed_path.read_bytes()).hexdigest() != asset.content_digest:
+            raise ValueError("Managed Asset bytes do not match the stored content digest.")
+        return asset
 
     def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
         research_pack = self.get_research_pack(research_pack_id)
@@ -1908,6 +2176,17 @@ class AtlasRepository:
     def _validate_asset_version(version: int) -> None:
         if type(version) is not int or version < 1:
             raise ValueError("Asset version must be a positive integer.")
+
+    @staticmethod
+    def _validate_content_digest(content_digest: str | None) -> None:
+        if content_digest is None:
+            return
+        if (
+            not isinstance(content_digest, str)
+            or len(content_digest) != 64
+            or any(character not in "0123456789abcdef" for character in content_digest)
+        ):
+            raise ValueError("Asset content digest must be lowercase SHA-256 hexadecimal text.")
 
     @staticmethod
     def _normalized_optional_identifier(value: str | None) -> str | None:
@@ -3278,7 +3557,23 @@ class AtlasRepository:
             row["storage_path"],
             row["media_type"],
             row["source_kind"],
+            row["content_digest"],
             json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _character_reference_set(row: sqlite3.Row) -> CharacterReferenceSet:
+        return CharacterReferenceSet(
+            row["id"], row["character_profile_id"], row["version"], row["created_at"]
+        )
+
+    @staticmethod
+    def _character_reference_set_member(row: sqlite3.Row) -> CharacterReferenceSetMember:
+        return CharacterReferenceSetMember(
+            row["character_reference_set_id"],
+            row["asset_id"],
+            row["position"],
             row["created_at"],
         )
 

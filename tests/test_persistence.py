@@ -2,6 +2,7 @@
 
 import sqlite3
 from dataclasses import replace
+from hashlib import sha256
 
 from project_atlas.generation import (
     AssetStorageFailure,
@@ -44,6 +45,16 @@ class FakeImageGenerator:
         )
 
 
+def generate_character_asset(repository: AtlasRepository, storage_root, asset_spec_id: str):
+    """Generate one deterministic character Asset through the unchanged production path."""
+
+    result = GenerationService(
+        repository, FakeImageGenerator(), LocalAssetStorage(storage_root)
+    ).generate_asset_spec(asset_spec_id)
+    assert result.asset is not None
+    return result
+
+
 def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_path) -> None:
     """Fresh startup applies all migrations and creates the scoped seed data."""
 
@@ -53,7 +64,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -127,6 +138,381 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         reopened.close()
 
 
+def test_migration_10_adds_reference_tables_without_backfilling_historical_asset_digest(
+    tmp_path,
+) -> None:
+    """Migration 10 preserves migration-9 Assets while adding canonical-reference tables."""
+
+    database = tmp_path / "atlas-v09.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:9]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-13T00:00:00+00:00')",
+                (version,),
+            )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        assert [
+            row["version"]
+            for row in repository.connection.execute("SELECT version FROM schema_migrations")
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        assert repository.connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
+        ).fetchone()
+        assert repository.connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='character_reference_set_members'"
+        ).fetchone()
+        assert (
+            repository.get_asset_spec(
+                "asset-spec-isa-scene-01-hamster-sorting-v1"
+            ).character_profile_id
+            == "character-profile-similarstoic-hamster-core-v1"
+        )
+        assert (
+            repository.connection.execute("PRAGMA table_info(assets)").fetchall()[-1]["name"]
+            == "content_digest"
+        )
+    finally:
+        repository.close()
+
+
+def test_generated_assets_store_digest_of_exact_managed_bytes(tmp_path) -> None:
+    """The unchanged production path records a digest beside every new generated Asset."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        result = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        )
+        asset = result.asset
+        assert asset.content_digest == sha256(b"deterministic png bytes").hexdigest()
+        assert (
+            asset.content_digest
+            == sha256((storage_root / asset.storage_path).read_bytes()).hexdigest()
+        )
+        failed = GenerationService(
+            repository,
+            FakeImageGenerator(failure=GenerationFailure("Rejected", error_code="rejected")),
+            LocalAssetStorage(storage_root),
+        ).generate_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
+        assert failed.asset is None
+        assert len(repository.list_assets_for_asset_spec(failed.execution.asset_spec_id)) == 0
+    finally:
+        repository.close()
+
+
+def test_character_reference_sets_are_ordered_immutable_versions(tmp_path) -> None:
+    """Selection records complete ordered visual bases without a mutable current state."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    profile_id = "character-profile-similarstoic-hamster-core-v1"
+    try:
+        first = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        ).asset
+        second = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-03-hamster-reaction-v1"
+        ).asset
+        reference_set = repository.create_character_reference_set(
+            "character-reference-set-test-v1", profile_id, [second.id, first.id]
+        )
+        assert reference_set.version == 1
+        assert [
+            (member.position, member.asset_id)
+            for member in repository.list_character_reference_set_members(reference_set.id)
+        ] == [(1, second.id), (2, first.id)]
+        replacement = repository.create_character_reference_set(
+            "character-reference-set-test-v2", profile_id, [first.id]
+        )
+        assert replacement.version == 2
+        assert [
+            member.asset_id
+            for member in repository.list_character_reference_set_members(reference_set.id)
+        ] == [second.id, first.id]
+        third = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        ).asset
+        try:
+            with repository.connection:
+                repository.connection.execute(
+                    "INSERT INTO character_reference_set_members "
+                    "(character_reference_set_id, asset_id, position, created_at) "
+                    "VALUES (?, ?, ?, ?)",
+                    (reference_set.id, third.id, 1, "2026-08-13T00:00:00+00:00"),
+                )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("A CharacterReferenceSet accepted duplicate member positions.")
+        assert not hasattr(repository, "update_character_reference_set")
+        assert not hasattr(repository, "delete_character_reference_set")
+    finally:
+        repository.close()
+
+
+def test_character_reference_set_rejects_invalid_or_partial_selection(tmp_path) -> None:
+    """Reference selection validates all members before creating an immutable set."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    profile_id = "character-profile-similarstoic-hamster-core-v1"
+    try:
+        character = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        ).asset
+        environment = (
+            GenerationService(repository, FakeImageGenerator(), LocalAssetStorage(storage_root))
+            .generate_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+            .asset
+        )
+        assert environment is not None
+        graphic = (
+            GenerationService(repository, FakeImageGenerator(), LocalAssetStorage(storage_root))
+            .generate_asset_spec("asset-spec-isa-scene-02-tax-year-calendar-v1")
+            .asset
+        )
+        assert graphic is not None
+        for asset_ids, expected in (
+            ([character.id, character.id], "more than once"),
+            ([environment.id], "character AssetSpecs"),
+            ([graphic.id], "character AssetSpecs"),
+        ):
+            try:
+                repository.create_character_reference_set(
+                    f"character-reference-set-invalid-{len(asset_ids)}-{expected[:3]}",
+                    profile_id,
+                    asset_ids,
+                )
+            except ValueError as error:
+                assert expected in str(error)
+            else:
+                raise AssertionError("Invalid character reference selection was accepted.")
+        assert repository.list_character_reference_sets(profile_id) == []
+
+        manual = repository.create_asset(
+            "manual-character-reference-test-v1",
+            repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1").id,
+            2,
+            "manual-character.png",
+            "image/png",
+            "manual",
+        )
+        try:
+            repository.create_character_reference_set(
+                "character-reference-set-manual", profile_id, [manual.id]
+            )
+        except ValueError as error:
+            assert "generated Assets" in str(error)
+        else:
+            raise AssertionError("A manual Asset was accepted as a reference.")
+
+        imported = repository.create_asset(
+            "imported-character-reference-test-v1",
+            repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1").id,
+            3,
+            "imported-character.png",
+            "image/png",
+            "imported",
+        )
+        executionless_generated = repository.create_asset(
+            "executionless-generated-character-reference-test-v1",
+            repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1").id,
+            4,
+            "generated-but-unlinked-character.png",
+            "image/png",
+            "generated",
+            content_digest=sha256(b"unlinked bytes").hexdigest(),
+        )
+        for asset in (imported, executionless_generated):
+            try:
+                repository.create_character_reference_set(
+                    f"character-reference-set-invalid-{asset.id}", profile_id, [asset.id]
+                )
+            except ValueError as error:
+                assert "generated Assets" in str(error)
+            else:
+                raise AssertionError(
+                    "An Asset without generated execution provenance was accepted."
+                )
+
+        alternate_profile = repository.create_character_profile(
+            "character-profile-reference-test-v2",
+            "reference-test-hamster",
+            1,
+            "Reference test hamster",
+            "A distinct test character identity.",
+            "Depict the distinct test character identity.",
+        )
+        alternate_spec = repository.create_asset_spec(
+            "asset-spec-reference-test-character-v1",
+            "scene-isa-deadline-video-v1-01",
+            "character",
+            "Test another character lineage.",
+            "A different character for eligibility validation.",
+            "Depict a different character.",
+            character_profile_id=alternate_profile.id,
+        )
+        alternate_asset = generate_character_asset(
+            repository, storage_root, alternate_spec.id
+        ).asset
+        try:
+            repository.create_character_reference_set(
+                "character-reference-set-other-profile", profile_id, [alternate_asset.id]
+            )
+        except ValueError as error:
+            assert "identity lineage" in str(error)
+        else:
+            raise AssertionError("A different CharacterProfile Asset was accepted as a reference.")
+
+        unavailable = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-03-hamster-reaction-v1"
+        ).asset
+        (storage_root / unavailable.storage_path).unlink()
+        try:
+            repository.create_character_reference_set(
+                "character-reference-set-missing-file", profile_id, [unavailable.id]
+            )
+        except ValueError as error:
+            assert "does not exist" in str(error)
+        else:
+            raise AssertionError("An unavailable managed Asset was accepted as a reference.")
+
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE assets SET content_digest = NULL WHERE id = ?", (character.id,)
+            )
+        try:
+            repository.create_character_reference_set(
+                "character-reference-set-null-digest", profile_id, [character.id]
+            )
+        except ValueError as error:
+            assert "digest" in str(error)
+        else:
+            raise AssertionError("A digest-less generated Asset was accepted as a reference.")
+        assert repository.list_character_reference_sets(profile_id) == []
+    finally:
+        repository.close()
+
+
+def test_character_reference_eligibility_uses_frozen_execution_asset_spec_type(tmp_path) -> None:
+    """Later AssetSpec edits cannot redefine what an Asset was generated as."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    profile_id = "character-profile-similarstoic-hamster-core-v1"
+    try:
+        character = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        ).asset
+        execution = repository.get_generation_execution(character.generation_execution_id or "")
+        assert execution.outcome == "succeeded"
+        assert execution.asset_spec_snapshot["asset_type"] == "character"
+        current_spec = repository.get_asset_spec(character.asset_spec_id)
+        repository.update_asset_spec(
+            replace(current_spec, asset_type="environment", character_profile_id=None)
+        )
+        assert repository.get_asset_spec(current_spec.id).asset_type == "environment"
+        eligible_asset_ids = [
+            asset.id for asset in repository.list_eligible_character_reference_assets(profile_id)
+        ]
+        assert eligible_asset_ids == [character.id]
+        assert (
+            repository.create_character_reference_set(
+                "character-reference-set-snapshot-character-v1", profile_id, [character.id]
+            ).version
+            == 1
+        )
+
+        graphic = (
+            GenerationService(repository, FakeImageGenerator(), LocalAssetStorage(storage_root))
+            .generate_asset_spec("asset-spec-isa-scene-02-tax-year-calendar-v1")
+            .asset
+        )
+        assert graphic is not None
+        graphic_spec = repository.get_asset_spec(graphic.asset_spec_id)
+        repository.update_asset_spec(
+            replace(graphic_spec, asset_type="character", character_profile_id=profile_id)
+        )
+        try:
+            repository.create_character_reference_set(
+                "character-reference-set-snapshot-graphic-v1", profile_id, [graphic.id]
+            )
+        except ValueError as error:
+            assert "character AssetSpecs" in str(error)
+        else:
+            raise AssertionError(
+                "A historical graphic execution became character-reference eligible."
+            )
+    finally:
+        repository.close()
+
+
+def test_character_reference_rejects_managed_file_digest_mismatch(tmp_path) -> None:
+    """Reference selection verifies stored byte identity rather than trusting file location."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        asset = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        ).asset
+        (storage_root / asset.storage_path).write_bytes(b"altered managed bytes")
+        try:
+            repository.create_character_reference_set(
+                "character-reference-set-digest-mismatch-v1",
+                "character-profile-similarstoic-hamster-core-v1",
+                [asset.id],
+            )
+        except ValueError as error:
+            assert "do not match" in str(error)
+        else:
+            raise AssertionError("Altered managed bytes were accepted as a canonical reference.")
+    finally:
+        repository.close()
+
+
+def test_character_reference_set_restricts_asset_and_membership_deletion(tmp_path) -> None:
+    """Raw SQL cannot silently sever an immutable visual-reference selection."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        asset = generate_character_asset(
+            repository, storage_root, "asset-spec-isa-scene-01-hamster-sorting-v1"
+        ).asset
+        reference_set = repository.create_character_reference_set(
+            "character-reference-set-restrict-v1",
+            "character-profile-similarstoic-hamster-core-v1",
+            [asset.id],
+        )
+        for statement, parameter in (
+            ("DELETE FROM assets WHERE id = ?", asset.id),
+            ("DELETE FROM character_reference_sets WHERE id = ?", reference_set.id),
+        ):
+            try:
+                with repository.connection:
+                    repository.connection.execute(statement, (parameter,))
+            except sqlite3.IntegrityError:
+                pass
+            else:
+                raise AssertionError("Restrictive character-reference provenance was deleted.")
+    finally:
+        repository.close()
+
+
 def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets(tmp_path) -> None:
     """Migration 7 adds nullable execution provenance without rebuilding Assets."""
 
@@ -194,11 +580,12 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
         assert repository.get_asset("existing-manual-asset").generation_execution_id is None
+        assert repository.get_asset("existing-manual-asset").content_digest is None
         assert (
             repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1").version
             == 1
@@ -215,7 +602,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                10,
+                11,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -237,7 +624,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 10"
+                "SELECT version FROM schema_migrations WHERE version = 11"
             ).fetchone()
             is None
         )
@@ -2257,7 +2644,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

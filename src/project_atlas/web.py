@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import uuid
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -91,11 +92,35 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                             content["scene_plan"] = " ".join(
                                 scene["visual_intent"] for scene in visual_plan["scenes"]
                             )
+            content["character_reference_review"] = (
+                self.server.repository.character_reference_review_payload(
+                    "character-profile-similarstoic-hamster-core-v1"
+                )
+            )
             self._send_json({"kind": "demo", "content": content, "activity": ACTIVITY})
             return
         if parsed.path == "/api/demo/chat":
             message = parse_qs(parsed.query).get("message", [""])[0]
             self._send_json({"kind": "demo", "reply": chat_reply(message)})
+            return
+        asset_prefix = "/api/assets/"
+        asset_suffix = "/content"
+        if parsed.path.startswith(asset_prefix) and parsed.path.endswith(asset_suffix):
+            asset_id = unquote(parsed.path[len(asset_prefix) : -len(asset_suffix)]).strip("/")
+            if not asset_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                asset = self.server.repository.get_asset(asset_id)
+                path = self.server.repository.managed_asset_path(asset_id)
+            except (KeyError, ValueError):
+                self.send_error(HTTPStatus.NOT_FOUND, "Asset content not found")
+                return
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", asset.media_type)
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(path.read_bytes())
             return
 
         requested = "index.html" if parsed.path in {"", "/"} else parsed.path.lstrip("/")
@@ -112,9 +137,47 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(asset.read_bytes())
 
     def do_POST(self) -> None:  # noqa: N802
-        """Execute only one persisted AssetSpec generation request at a time."""
+        """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        reference_prefix = "/api/character-profiles/"
+        reference_suffix = "/reference-sets"
+        if path.startswith(reference_prefix) and path.endswith(reference_suffix):
+            character_profile_id = unquote(
+                path[len(reference_prefix) : -len(reference_suffix)]
+            ).strip("/")
+            if not character_profile_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                asset_ids = payload.get("asset_ids") if isinstance(payload, dict) else None
+                if not isinstance(asset_ids, list):
+                    raise ValueError("asset_ids must be an ordered list.")
+                reference_set = self.server.repository.create_character_reference_set(
+                    f"character-reference-set-{uuid.uuid4().hex}",
+                    character_profile_id,
+                    asset_ids,
+                )
+            except (json.JSONDecodeError, ValueError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "CharacterProfile or Asset not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "character_reference_set",
+                    "reference_set": self.server.repository.character_reference_set_payload(
+                        reference_set.id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         prefix = "/api/asset-specs/"
         suffix = "/generate"
         if not (path.startswith(prefix) and path.endswith(suffix)):
@@ -200,7 +263,7 @@ def create_server(
 ) -> AtlasHTTPServer:
     """Create the MVP server without starting it, for testability."""
 
-    repository = AtlasRepository(database_path)
+    repository = AtlasRepository(database_path, asset_storage_root=asset_storage_root)
     return AtlasHTTPServer(
         (host, port),
         repository,

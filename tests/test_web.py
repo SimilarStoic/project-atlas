@@ -1,9 +1,11 @@
 """Tests for the local MVP UI shell."""
 
 import json
+import os
 import threading
 from dataclasses import replace
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from project_atlas.demo_data import chat_reply, content_payload, opportunity_payload
@@ -364,5 +366,170 @@ def test_generation_endpoint_represents_provider_failure_without_asset(tmp_path:
         assert (
             server.repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
         )
+    finally:
+        server.server_close()
+
+
+def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_path: Path) -> None:
+    """The local UI API exposes only eligible generated hamster evidence for selection."""
+
+    storage_root = tmp_path / "assets"
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=FakeImageGenerator(),
+        asset_storage_root=storage_root,
+    )
+    profile_id = "character-profile-similarstoic-hamster-core-v1"
+
+    def request_json(request: Request | str) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    try:
+        first, _ = request_json(
+            Request(
+                "http://127.0.0.1:"
+                f"{server.server_address[1]}/api/asset-specs/"
+                "asset-spec-isa-scene-01-hamster-sorting-v1/generate",
+                method="POST",
+            )
+        )
+        second, _ = request_json(
+            Request(
+                "http://127.0.0.1:"
+                f"{server.server_address[1]}/api/asset-specs/"
+                "asset-spec-isa-scene-03-hamster-reaction-v1/generate",
+                method="POST",
+            )
+        )
+        first_asset_id = first["asset"]["id"]
+        second_asset_id = second["asset"]["id"]
+
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(
+            f"http://127.0.0.1:{server.server_address[1]}/api/assets/{first_asset_id}/content"
+        ) as response:
+            assert response.headers["Content-Type"] == "image/png"
+            assert response.read() == b"http fake image"
+        thread.join(timeout=2)
+
+        content, _ = request_json(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content")
+        review = content["content"]["character_reference_review"]
+        assert review["character_profile"]["id"] == profile_id
+        assert {candidate["id"] for candidate in review["eligible_assets"]} == {
+            first_asset_id,
+            second_asset_id,
+        }
+        assert review["eligible_assets"][0]["content_digest"]
+        assert (
+            review["eligible_assets"][0]["generation_execution"]["character_profile"]["id"]
+            == profile_id
+        )
+
+        created, status = request_json(
+            Request(
+                "http://127.0.0.1:"
+                f"{server.server_address[1]}/api/character-profiles/{profile_id}/reference-sets",
+                data=json.dumps({"asset_ids": [second_asset_id, first_asset_id]}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        assert created["reference_set"]["version"] == 1
+        assert [member["asset"]["id"] for member in created["reference_set"]["members"]] == [
+            second_asset_id,
+            first_asset_id,
+        ]
+
+        content, _ = request_json(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content")
+        retained = content["content"]["character_reference_review"]["reference_sets"]
+        assert retained[0]["members"][0]["asset"]["content_digest"]
+        assert (
+            "does not yet condition later generation"
+            in (Path(__file__).parents[1] / "src/project_atlas/static/app.js").read_text()
+        )
+        script = (Path(__file__).parents[1] / "src/project_atlas/static/app.js").read_text()
+        assert "referenceSelection.push(assetId)" in script
+        assert "asset_ids: referenceSelection" in script
+    finally:
+        server.server_close()
+
+
+def test_asset_content_endpoint_rejects_unknown_missing_and_unsafe_files(tmp_path: Path) -> None:
+    """Asset content is resolved by Atlas ID and never by an arbitrary filesystem path."""
+
+    storage_root = tmp_path / "assets"
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=FakeImageGenerator(),
+        asset_storage_root=storage_root,
+    )
+    try:
+        asset_spec = server.repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        missing = server.generation_service.generate_asset_spec(asset_spec.id).asset
+        assert missing is not None
+        (storage_root / missing.storage_path).unlink()
+        unsafe = server.repository.create_asset(
+            "asset-unsafe-generated-path-v1",
+            asset_spec.id,
+            2,
+            "../outside.png",
+            "image/png",
+            "generated",
+        )
+        absolute = server.repository.create_asset(
+            "asset-absolute-generated-path-v1",
+            asset_spec.id,
+            3,
+            str((tmp_path / "outside.png").resolve()),
+            "image/png",
+            "generated",
+        )
+        unsupported_media = server.repository.create_asset(
+            "asset-unsupported-media-v1",
+            asset_spec.id,
+            4,
+            "unsupported.txt",
+            "text/plain",
+            "generated",
+        )
+        rejected_asset_ids = [
+            "missing-asset",
+            missing.id,
+            unsafe.id,
+            absolute.id,
+            unsupported_media.id,
+        ]
+        if os.name == "nt":
+            backslash_escape = server.repository.create_asset(
+                "asset-backslash-generated-path-v1",
+                asset_spec.id,
+                5,
+                r"..\outside.png",
+                "image/png",
+                "generated",
+            )
+            rejected_asset_ids.append(backslash_escape.id)
+        for asset_id in rejected_asset_ids:
+            thread = threading.Thread(target=server.handle_request)
+            thread.start()
+            try:
+                urlopen(
+                    f"http://127.0.0.1:{server.server_address[1]}/api/assets/{asset_id}/content"
+                )
+            except HTTPError as error:
+                assert error.code == 404
+            else:
+                raise AssertionError("Unsafe or unknown Asset content was served.")
+            thread.join(timeout=2)
     finally:
         server.server_close()

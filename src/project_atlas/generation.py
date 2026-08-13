@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import tempfile
@@ -556,6 +557,7 @@ class GenerationService:
                 model_key=artifact.model_key,
                 provider_request_id=artifact.provider_request_id,
                 response_metadata=artifact.response_metadata or {},
+                content_digest=hashlib.sha256(artifact.content).hexdigest(),
             )
         except Exception as error:
             try:

@@ -263,6 +263,82 @@ function visualPlan(content) {
   );
 }
 
+var referenceSelection = [];
+
+function referenceAssetCard(asset, selectable) {
+  var execution = asset.generation_execution;
+  var profile = execution.character_profile;
+  var selector = selectable
+    ? '<label class="reference-select"><input type="checkbox" class="reference-candidate" data-asset-id="' +
+      asset.id +
+      '"> Add to reference set</label>'
+    : "";
+  return (
+    '<article class="reference-asset"><img src="/api/assets/' +
+    encodeURIComponent(asset.id) +
+    '/content" alt="Generated SimilarStoic hamster candidate"><div><b>Asset v' +
+    asset.version +
+    "</b><br><small>" +
+    asset.id +
+    "</small><p>Execution: " +
+    execution.id +
+    "<br>Provider/model: " +
+    (execution.provider_key || "unknown") +
+    " / " +
+    (execution.model_key || "unknown") +
+    "<br>Character: " +
+    profile.name +
+    " · v" +
+    profile.version +
+    "</p><small>Digest: " +
+    asset.content_digest +
+    "</small>" +
+    selector +
+    "</div></article>"
+  );
+}
+
+function characterReferenceReview(review) {
+  if (!review || !review.character_profile) {
+    return "";
+  }
+  var candidates = review.eligible_assets.length
+    ? review.eligible_assets.map(function (asset) { return referenceAssetCard(asset, true); }).join("")
+    : "<p>No eligible generated hamster Assets yet. Generate normal scene-derived character Assets first.</p>";
+  var existingSets = review.reference_sets.length
+    ? review.reference_sets
+        .map(function (set) {
+          return (
+            '<div class="reference-set"><b>Reference set v' +
+            set.version +
+            "</b><br><small>" +
+            set.id +
+            '</small><div class="reference-assets">' +
+            set.members
+              .map(function (member) {
+                return '<div><small>Position ' + member.position + "</small>" + referenceAssetCard(member.asset, false) + "</div>";
+              })
+              .join("") +
+            "</div></div>"
+          );
+        })
+        .join("")
+    : "<p>No canonical visual reference set has been created.</p>";
+  return (
+    '<div class="pack"><label>CANONICAL VISUAL REFERENCE BASIS · PERSISTED</label><h3>' +
+    review.character_profile.name +
+    " · v" +
+    review.character_profile.version +
+    '</h3><p>Choose existing eligible, scene-derived hamster Assets in the order they should form one immutable visual reference basis. This does not yet condition later generation or guarantee consistency.</p><div class="reference-assets">' +
+    candidates +
+    '</div><div class="actions"><button class="create-reference-set" data-character-profile-id="' +
+    review.character_profile.id +
+    '">Create immutable reference set</button></div><p><b>Existing reference sets</b></p>' +
+    existingSets +
+    "</div>"
+  );
+}
+
 function bindActions() {
   document.querySelectorAll(".actions button").forEach(function (element) {
     element.onclick = function () {
@@ -310,6 +386,57 @@ function bindGenerationActions() {
   });
 }
 
+function bindReferenceActions() {
+  referenceSelection = [];
+  document.querySelectorAll(".reference-candidate").forEach(function (element) {
+    element.onchange = function () {
+      var assetId = element.dataset.assetId;
+      if (element.checked) {
+        referenceSelection.push(assetId);
+      } else {
+        referenceSelection = referenceSelection.filter(function (item) { return item !== assetId; });
+      }
+    };
+  });
+  document.querySelectorAll(".create-reference-set").forEach(function (element) {
+    element.onclick = function () {
+      if (!referenceSelection.length) {
+        say("Select one or more eligible hamster Assets first.");
+        return;
+      }
+      element.disabled = true;
+      fetch(
+        "/api/character-profiles/" +
+          encodeURIComponent(element.dataset.characterProfileId) +
+          "/reference-sets",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ asset_ids: referenceSelection }),
+        }
+      )
+        .then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) {
+              throw new Error(data.error || "Reference set could not be created.");
+            }
+            return data;
+          });
+        })
+        .then(function (data) {
+          say("Immutable canonical visual reference set v" + data.reference_set.version + " created.");
+          return fetch("/api/demo/content");
+        })
+        .then(function (response) { return response.json(); })
+        .then(function (payload) { pack(payload.content); })
+        .catch(function (error) {
+          say(error.message || "Reference set could not be created.");
+          element.disabled = false;
+        });
+    };
+  });
+}
+
 function pack(content) {
   q("#content-title").textContent = content.title;
   var scenePlanCompatibility = content.scene_plan
@@ -351,6 +478,7 @@ function pack(content) {
     content.script +
     "</p></div>" +
     visualPlan(content) +
+    characterReferenceReview(content.character_reference_review) +
     scenePlanCompatibility +
     '</div><div><div class="pack"><label>CONTENT CONTEXT</label><p><b>Audience</b><br>' +
     content.target_audience +
@@ -363,6 +491,7 @@ function pack(content) {
     '</ul><div class="actions"><button>Approve</button><button>Request changes</button><button>Reject</button></div></div></div></div>';
   bindActions();
   bindGenerationActions();
+  bindReferenceActions();
 }
 
 Promise.all([
