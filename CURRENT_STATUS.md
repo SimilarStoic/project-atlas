@@ -14,14 +14,15 @@
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
-The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement and
-v0.11 Character Continuity Foundation are complete and pushed. V0.10 remains a provisional visual-style
-baseline, not final art direction.
+The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
+Character Continuity Foundation and v0.12 Canonical Character Reference Foundation are complete and
+pushed. V0.10 remains a provisional visual-style baseline, not final art direction.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8 through v0.11 are complete and pushed. Atlas now has an immutable, versioned character-identity
-foundation alongside the approved SimilarStoic Core v2 visual-style baseline.
+Atlas v0.8 through v0.12 are complete and pushed. Atlas now has immutable, versioned character identity
+and canonical visual-reference foundations alongside the approved SimilarStoic Core v2 visual-style
+baseline.
 
 ---
 
@@ -44,7 +45,7 @@ foundation alongside the approved SimilarStoic Core v2 visual-style baseline.
 
 Current commit:
 
-`46ad44da6f04e96f9eeaa3d99135aeb7506c8e22 feat: add character continuity foundation`
+`f1346684945bb9cd99f02c8977710da2ace594fa feat: add canonical character references`
 
 Branch:
 
@@ -56,15 +57,15 @@ Remote:
 
 Working tree:
 
-Clean at the accepted v0.11 checkpoint; local `main` matched `origin/main`.
+Clean at the accepted v0.12 checkpoint; local `main` matched `origin/main`.
 
 Validated state:
 
 - Ruff passed.
 - Black `--check` passed.
-- pytest: **55 passed**.
+- pytest: **64 passed**.
 - `git diff --check` passed.
-- SQLite migrations: **1–9**.
+- SQLite migrations: **1–10**.
 
 ## Atlas v0.2 Checkpoint
 
@@ -222,10 +223,32 @@ visual-style baseline.
 - Atlas-owned prompt composition freezes complete CharacterProfile identity provenance in GenerationInput v3.
   GenerationExecution retains direct restrictive CharacterProfile lineage and an execution-time AssetSpec
   snapshot, so later AssetSpec relationship changes do not alter historical meaning.
-- Atlas still uses prompt-only image generation. No canonical visual-reference Asset relationship,
-  reference-image/image-edit conditioning or guaranteed cross-generation visual consistency exists yet.
+- At the v0.11 checkpoint, Atlas used prompt-only image generation. Canonical visual-reference Asset
+  relationships, reference-image/image-edit conditioning and guaranteed cross-generation visual consistency
+  did not yet exist.
 - Source-attribution/citation work and Script-to-Claim/evidence provenance remain future work, alongside QA,
   workflow, production, publishing and broader automation systems.
+
+## Atlas v0.12 Checkpoint
+
+**Project Atlas v0.12 — Canonical Character Reference Foundation** is complete, accepted, committed and
+pushed.
+
+- CharacterReferenceSet is an immutable, versioned visual-reference selection for one exact
+  CharacterProfile. It has one-or-more ordered immutable Asset members, with no mutable current, best or
+  approved state.
+- Newly generated managed Assets receive immutable SHA-256 byte provenance. Existing historical Assets may
+  retain null digests; reference selection requires an existing supported managed image whose bytes match its
+  stored digest.
+- The founder can review eligible generated hamster Assets by safe Asset-ID image serving and explicitly
+  create immutable canonical reference sets. Historical set versions and their original Asset/execution
+  provenance remain preserved.
+- Canonical-reference selection sits beside the production chain rather than changing it:
+  ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset.
+- Atlas remains prompt-only. It does not send reference images to a provider, use image editing or
+  image-to-image conditioning, consume CharacterReferenceSet in GenerationInput, preserve
+  reference-consumption lineage on GenerationExecution, generate neutral CharacterProfile-owned studies, or
+  guarantee cross-generation hamster consistency.
 
 ---
 
@@ -559,6 +582,7 @@ Completed:
 - Atlas v0.9 Visual Style Control foundation
 - Atlas v0.10 Visual Style Fidelity Refinement
 - Atlas v0.11 Character Continuity Foundation
+- Atlas v0.12 Canonical Character Reference Foundation
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -569,22 +593,25 @@ Remaining before Phase 1 is complete:
 
 # Next Step
 
-Next:
+Next intended work is **read-only design first** for reference-grounded character generation. No
+implementation has started.
 
-> **v0.12 — Canonical Character Reference Foundation** (read-only design first).
+Narrow problem: how Atlas should consume an exact immutable CharacterReferenceSet during character
+generation, pass selected reference image(s) through the provider-neutral generation boundary, and freeze
+exact reference-consumption provenance without coupling the core domain to one provider.
 
-Narrow problem: how Atlas should let the founder visually review immutable hamster candidate Assets and
-deliberately associate one or more exact Assets as canonical visual references for an existing
-CharacterProfile, with durable provenance, without prematurely building a generic AssetLibrary or approval
-system.
+Provider reference-image/edit conditioning remains a later bounded capability. Atlas has not implemented
+reference consumption, image editing, neutral CharacterProfile candidate generation or guaranteed
+cross-generation visual consistency. Generic AssetLibrary, imported/manual reference ingestion, named
+reference roles, similarity scoring, automated character-consistency QA, generic approval/current/best
+state, provider registry, queues/workers/batching, animation/rendering, publishing, analytics, compliance,
+source attribution/citations and exact Script-to-Claim/evidence work remain deferred.
 
-Provider reference-image/edit conditioning remains beyond v0.12 for a later bounded capability. Atlas has
-not implemented reference images, image editing or guaranteed cross-generation visual consistency.
-
-Implemented direction through v0.11: v0.8 adds GenerationExecution provenance between an AssetSpec and any
+Implemented direction through v0.12: v0.8 adds GenerationExecution provenance between an AssetSpec and any
 generated Asset; v0.9 adds immutable VisualStyleProfile provenance and deterministic prompt composition;
-v0.11 adds immutable CharacterProfile identity provenance. Manual and imported Assets remain valid without
-execution provenance.
+v0.11 adds immutable CharacterProfile identity provenance; v0.12 adds immutable, ordered,
+digest-backed CharacterReferenceSet selection. Manual and imported Assets remain valid without execution
+provenance, but cannot be canonical references.
 
 > Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → GenerationExecution → Assets
 

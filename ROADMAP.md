@@ -677,6 +677,9 @@ Commercial relationships must never determine:
 
 ## Current implementation milestones
 
+Verified checkpoint: `f1346684945bb9cd99f02c8977710da2ace594fa` (`feat: add canonical character
+references`). Validation at this checkpoint: 64 passing tests and SQLite migrations 1–10.
+
 ### Atlas v0.1 — MVP Editorial Control Interface
 Status: COMPLETE
 
@@ -746,22 +749,33 @@ Status: COMPLETE
 
 CharacterProfile now provides durable, immutable and versioned recurring-character identity. The seeded
 SimilarStoic Hamster Core v1 profile may be referenced by character AssetSpecs; GenerationInput v3 freezes
-the resolved character identity and GenerationExecution retains direct CharacterProfile lineage. This is
-text-identity provenance only: no canonical visual-reference Asset relationship or provider-level
-reference-image/image-edit conditioning exists, so visual consistency across separate generations is not
-guaranteed.
+the resolved character identity and GenerationExecution retains direct CharacterProfile lineage. At this
+v0.11 checkpoint, this was text-identity provenance only: no canonical visual-reference Asset relationship
+or provider-level reference-image/image-edit conditioning existed, so visual consistency across separate
+generations was not guaranteed.
 
 ### Atlas v0.12 — Canonical Character Reference Foundation
-Status: DESIGN FIRST
+Status: COMPLETE
 
-Allow the founder to visually review immutable hamster candidate Assets and deliberately associate one or
-more exact Assets as canonical visual references for an existing CharacterProfile, with durable provenance,
-without prematurely building a generic AssetLibrary or approval system. Provider reference-image/edit
-conditioning remains beyond v0.12.
+CharacterReferenceSet now provides an immutable, versioned, ordered visual-reference basis for one exact
+CharacterProfile. The founder can review eligible generated hamster Assets as safe managed thumbnails and
+explicitly create a one-or-more Asset set. Newly generated managed Assets carry SHA-256 byte provenance;
+historical set versions preserve the exact selected Assets and original execution provenance without mutable
+current, best or approved state.
 
-Canonical visual-reference relationships, provider conditioning, reusable AssetLibrary, similarity scoring
-or automated character-consistency QA, generic approval/current/best state, animation/rendering, and
-publishing, citations, compliance and other deferred systems remain future work.
+This remains selection-only: the production chain is unchanged, and no canonical reference image is sent to
+a provider. Reference-image/image-edit conditioning, CharacterReferenceSet consumption in GenerationInput,
+GenerationExecution reference-consumption lineage and guaranteed visual consistency remain beyond v0.12.
+
+Next intended work is read-only design first for reference-grounded character generation: how an exact
+immutable CharacterReferenceSet should pass selected reference image(s) through a provider-neutral boundary
+and freeze exact consumption provenance without coupling Atlas core domain semantics to one provider. No
+implementation has started.
+
+Neutral CharacterProfile candidate generation, reusable AssetLibrary, imported/manual reference ingestion,
+named reference roles, similarity scoring or automated character-consistency QA, generic
+approval/current/best state, provider registry, queues/workers/batching, animation/rendering, publishing,
+analytics, compliance, citations/source attribution and exact Script-to-Claim/evidence work remain deferred.
 
 ## Phase 0 — Foundation
 Status: COMPLETE

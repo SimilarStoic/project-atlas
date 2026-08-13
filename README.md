@@ -3,8 +3,8 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements through v0.11, including the
-Character Continuity Foundation. Later workflow, research automation and production
+SQLite foundation for SimilarStoic. It implements through v0.12, including the
+Canonical Character Reference Foundation. Later workflow, research automation and production
 systems remain deferred.
 
 ## Technology baseline
@@ -242,8 +242,7 @@ identity. Further visual art direction remains intentionally deferred; a future 
 may supersede v2, and reference-grounded style fidelity may be considered later if justified. Existing v1
 and v2 GenerationExecutions retain their original frozen style provenance.
 
-Style-reference images, canonical visual-reference continuity, profile editing, QA, workflow and production
-systems remain deferred.
+Provider reference-image conditioning, profile editing, QA, workflow and production systems remain deferred.
 
 ## Character continuity foundation
 
@@ -256,9 +255,32 @@ For character runs, Atlas-owned prompt composition freezes complete identity pro
 `GenerationInput` v3. GenerationExecution retains direct CharacterProfile lineage and an execution-time
 AssetSpec snapshot, so later AssetSpec relationship changes do not change historical meaning.
 
-Generation remains prompt-only. Atlas has no canonical visual-reference Asset relationship, no
-reference-image or image-edit conditioning, and no guarantee that separately generated hamster Assets will
-remain visually consistent. Canonical visual references and provider conditioning remain later bounded work.
+At the v0.11 checkpoint, generation remained prompt-only. Atlas had no canonical visual-reference Asset
+relationship, reference-image or image-edit conditioning, or guarantee that separately generated hamster
+Assets would remain visually consistent. Canonical visual references and provider conditioning were later
+bounded work.
+
+## Canonical character reference foundation
+
+Atlas v0.12 adds an immutable, versioned **CharacterReferenceSet** for one exact CharacterProfile. A set
+contains one-or-more explicitly ordered existing generated character Assets and records the founder's
+canonical visual-reference selection without mutable current, best or approved state. The existing
+SimilarStoic Hamster Core v1 CharacterProfile remains the canonical seeded hamster identity.
+
+New managed generated Assets receive a lowercase SHA-256 digest of their exact persisted bytes. Reference
+selection requires that digest, a successful character GenerationExecution with matching CharacterProfile
+lineage, and a safely resolvable supported managed image. The local UI can display eligible hamster Assets by
+Asset ID and create/view immutable historical reference-set versions with Asset and execution provenance.
+
+Reference selection sits beside, rather than changes, the production chain:
+
+`ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset`
+
+Atlas still does not send reference Assets to an image provider, consume a CharacterReferenceSet in
+GenerationInput, use image-edit/image-to-image conditioning, preserve reference-consumption lineage on
+GenerationExecution, generate neutral CharacterProfile-owned candidate studies, or guarantee
+cross-generation visual consistency. Reference-grounded character generation is the next design-first
+problem; no implementation has started.
 
 ## Status
 
@@ -267,4 +289,6 @@ v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
 Asset persistence, v0.8 Generation Execution, and v0.9 Visual Style Control are complete and
 pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visual-style baseline. v0.11
-Character Continuity Foundation is complete and pushed. Later Atlas systems remain out of scope.
+Character Continuity Foundation and v0.12 Canonical Character Reference Foundation are complete and pushed.
+The verified checkpoint is `f1346684945bb9cd99f02c8977710da2ace594fa` (`feat: add canonical character
+references`), with 64 passing tests and migrations 1–10. Later Atlas systems remain out of scope.
