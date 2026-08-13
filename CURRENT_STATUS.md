@@ -43,7 +43,7 @@ through an immutable SimilarStoic Core v2 profile only.
 
 Current commit:
 
-`873703e5ee578a75ce437a83131cdc3ca7bfc071 feat: add visual style control foundation`
+`41975554d3771c5a86b7ec76559d684d9763c456 feat: refine visual style fidelity`
 
 Branch:
 
@@ -152,8 +152,7 @@ Clean at the v0.9 checkpoint before the local v0.10 refinement; local `main` mat
 
 ## Atlas v0.8 Checkpoint
 
-**Project Atlas v0.8 â€” Generation Execution Foundation** is implemented locally and awaiting review,
-but is now complete and pushed.
+**Project Atlas v0.8 â€” Generation Execution Foundation** is complete and pushed.
 
 - GenerationExecution records one immutable terminal synchronous generator attempt with exactly
   `succeeded` or `failed` outcome, a frozen AssetSpec snapshot, normalized Atlas generation input and
@@ -180,7 +179,7 @@ but is now complete and pushed.
 - New executions retain exact resolved style provenance in GenerationInput v2 and a restrictive direct
   GenerationExecution-to-VisualStyleProfile lineage. Existing v0.8 GenerationInput v1 rows remain readable
   with null profile lineage.
-- `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value uses SimilarStoic Core v1.
+- `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value uses SimilarStoic Core v2.
   Character/StyleBible/reference-image continuity, profile editing, QA, workflow, production and publishing
   remain deferred.
 
