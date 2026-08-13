@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-12 August 2026
+13 August 2026
 
 ## Current Phase
 
@@ -14,13 +14,14 @@
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
-The bounded Atlas v0.9 Visual Style Control Foundation and v0.10 Visual Style Fidelity Refinement are
-complete and pushed. V0.10 is a provisional visual-style baseline, not final art direction.
+The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement and
+v0.11 Character Continuity Foundation are complete and pushed. V0.10 remains a provisional visual-style
+baseline, not final art direction.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8, v0.9 and v0.10 are complete and pushed. Atlas v0.10 evolves the approved style-control layer
-through an immutable SimilarStoic Core v2 profile only.
+Atlas v0.8 through v0.11 are complete and pushed. Atlas now has an immutable, versioned character-identity
+foundation alongside the approved SimilarStoic Core v2 visual-style baseline.
 
 ---
 
@@ -43,7 +44,7 @@ through an immutable SimilarStoic Core v2 profile only.
 
 Current commit:
 
-`41975554d3771c5a86b7ec76559d684d9763c456 feat: refine visual style fidelity`
+`46ad44da6f04e96f9eeaa3d99135aeb7506c8e22 feat: add character continuity foundation`
 
 Branch:
 
@@ -55,7 +56,15 @@ Remote:
 
 Working tree:
 
-Clean at the v0.9 checkpoint before the local v0.10 refinement; local `main` matched `origin/main`.
+Clean at the accepted v0.11 checkpoint; local `main` matched `origin/main`.
+
+Validated state:
+
+- Ruff passed.
+- Black `--check` passed.
+- pytest: **55 passed**.
+- `git diff --check` passed.
+- SQLite migrations: **1–9**.
 
 ## Atlas v0.2 Checkpoint
 
@@ -180,8 +189,8 @@ Clean at the v0.9 checkpoint before the local v0.10 refinement; local `main` mat
   GenerationExecution-to-VisualStyleProfile lineage. Existing v0.8 GenerationInput v1 rows remain readable
   with null profile lineage.
 - `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value uses SimilarStoic Core v2.
-  Character/StyleBible/reference-image continuity, profile editing, QA, workflow, production and publishing
-  remain deferred.
+  CharacterProfile identity, canonical visual references, StyleBible/reference-image continuity, profile
+  editing, QA, workflow, production and publishing remain deferred at this checkpoint.
 
 ## Atlas v0.10 Checkpoint
 
@@ -199,8 +208,24 @@ visual-style baseline.
 - V2 is the current text-guided production baseline, not the final SimilarStoic visual identity. Further
   art-direction refinement remains intentionally deferred; a future immutable profile version may
   supersede v2, and reference-grounded style fidelity may be explored later if justified.
-- Style-reference images, character identity/continuity, profile editing, QA, workflow, production,
+- Style-reference images, canonical visual-reference continuity, profile editing, QA, workflow, production,
   publishing and other future style architecture remain deferred.
+
+## Atlas v0.11 Checkpoint
+
+**Project Atlas v0.11 — Character Continuity Foundation** is complete, accepted, committed and pushed.
+
+- CharacterProfile is an immutable, versioned canonical identity boundary. SimilarStoic Hamster Core v1 is
+  seeded as the approved recurring hamster identity, separate from VisualStyleProfile visual-language rules.
+- Character AssetSpecs may reference a CharacterProfile; the two canonical seeded hamster AssetSpecs do so.
+  `continuity_key` remains non-authoritative grouping metadata, not a canonical identity mechanism.
+- Atlas-owned prompt composition freezes complete CharacterProfile identity provenance in GenerationInput v3.
+  GenerationExecution retains direct restrictive CharacterProfile lineage and an execution-time AssetSpec
+  snapshot, so later AssetSpec relationship changes do not alter historical meaning.
+- Atlas still uses prompt-only image generation. No canonical visual-reference Asset relationship,
+  reference-image/image-edit conditioning or guaranteed cross-generation visual consistency exists yet.
+- Source-attribution/citation work and Script-to-Claim/evidence provenance remain future work, alongside QA,
+  workflow, production, publishing and broader automation systems.
 
 ---
 
@@ -532,6 +557,8 @@ Completed:
 - Atlas v0.7 Asset Specification + Asset persistence foundation
 - Atlas v0.8 Generation Execution foundation
 - Atlas v0.9 Visual Style Control foundation
+- Atlas v0.10 Visual Style Fidelity Refinement
+- Atlas v0.11 Character Continuity Foundation
 
 Remaining before Phase 1 is complete:
 - Final production-ready brand identity
@@ -544,13 +571,20 @@ Remaining before Phase 1 is complete:
 
 Next:
 
-> **Continue with the next bounded Atlas milestone only after explicit design approval.**
+> **v0.12 — Canonical Character Reference Foundation** (read-only design first).
 
-Implemented direction through v0.9:
+Narrow problem: how Atlas should let the founder visually review immutable hamster candidate Assets and
+deliberately associate one or more exact Assets as canonical visual references for an existing
+CharacterProfile, with durable provenance, without prematurely building a generic AssetLibrary or approval
+system.
 
-v0.8 adds GenerationExecution provenance between an AssetSpec and any generated Asset; v0.9 adds
-immutable VisualStyleProfile provenance and deterministic prompt composition. Manual and imported Assets
-remain valid without execution provenance.
+Provider reference-image/edit conditioning remains beyond v0.12 for a later bounded capability. Atlas has
+not implemented reference images, image editing or guaranteed cross-generation visual consistency.
+
+Implemented direction through v0.11: v0.8 adds GenerationExecution provenance between an AssetSpec and any
+generated Asset; v0.9 adds immutable VisualStyleProfile provenance and deterministic prompt composition;
+v0.11 adds immutable CharacterProfile identity provenance. Manual and imported Assets remain valid without
+execution provenance.
 
 > Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → GenerationExecution → Assets
 

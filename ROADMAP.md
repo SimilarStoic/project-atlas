@@ -728,7 +728,7 @@ VisualStyleProfile now provides immutable, versioned SimilarStoic visual directi
 provider-neutral GenerationInput. Atlas deterministically composes global and matching asset-type rules with
 the concrete AssetSpec requirement, freezes the resolved style in GenerationInput v2, and records direct
 GenerationExecution-to-profile lineage. Style selection is configuration-only; Character/StyleBible/reference
-continuity, profile editing, QA, workflow, production and publishing remain deferred.
+continuity, profile editing, QA, workflow, production and publishing remained deferred at this checkpoint.
 
 ### Atlas v0.10 — Visual Style Fidelity Refinement
 Status: COMPLETE
@@ -739,7 +739,29 @@ colour, while preserving v0.9's sparse, light, asset-decomposed composition. V1 
 `ATLAS_VISUAL_STYLE_PROFILE_ID`; v2 is the deterministic default. No migration or new style layer
 was required. V2 is the current text-guided production baseline, not the final SimilarStoic visual identity:
 future immutable profile versions may supersede it, and reference-grounded style fidelity may be explored
-later if justified. Style-reference images and character identity/continuity remain deferred.
+later if justified. Style-reference images and canonical visual-reference continuity remain deferred.
+
+### Atlas v0.11 — Character Continuity Foundation
+Status: COMPLETE
+
+CharacterProfile now provides durable, immutable and versioned recurring-character identity. The seeded
+SimilarStoic Hamster Core v1 profile may be referenced by character AssetSpecs; GenerationInput v3 freezes
+the resolved character identity and GenerationExecution retains direct CharacterProfile lineage. This is
+text-identity provenance only: no canonical visual-reference Asset relationship or provider-level
+reference-image/image-edit conditioning exists, so visual consistency across separate generations is not
+guaranteed.
+
+### Atlas v0.12 — Canonical Character Reference Foundation
+Status: DESIGN FIRST
+
+Allow the founder to visually review immutable hamster candidate Assets and deliberately associate one or
+more exact Assets as canonical visual references for an existing CharacterProfile, with durable provenance,
+without prematurely building a generic AssetLibrary or approval system. Provider reference-image/edit
+conditioning remains beyond v0.12.
+
+Canonical visual-reference relationships, provider conditioning, reusable AssetLibrary, similarity scoring
+or automated character-consistency QA, generic approval/current/best state, animation/rendering, and
+publishing, citations, compliance and other deferred systems remain future work.
 
 ## Phase 0 — Foundation
 Status: COMPLETE

@@ -3,9 +3,9 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements the v0.1-v0.10 scope;
-later workflow,
-research automation and production systems remain deferred.
+SQLite foundation for SimilarStoic. It implements through v0.11, including the
+Character Continuity Foundation. Later workflow, research automation and production
+systems remain deferred.
 
 ## Technology baseline
 
@@ -242,8 +242,23 @@ identity. Further visual art direction remains intentionally deferred; a future 
 may supersede v2, and reference-grounded style fidelity may be considered later if justified. Existing v1
 and v2 GenerationExecutions retain their original frozen style provenance.
 
-Style-reference images, Character entities and continuity, profile editing, QA, workflow and production
+Style-reference images, canonical visual-reference continuity, profile editing, QA, workflow and production
 systems remain deferred.
+
+## Character continuity foundation
+
+Atlas v0.11 adds an immutable, versioned **CharacterProfile** boundary for recurring-character identity.
+The seeded `SimilarStoic Hamster Core` v1 profile is separate from VisualStyleProfile visual-language
+guidance. Character AssetSpecs may reference a CharacterProfile; the two canonical seeded hamster
+AssetSpecs do so, while `continuity_key` remains non-authoritative grouping metadata.
+
+For character runs, Atlas-owned prompt composition freezes complete identity provenance in
+`GenerationInput` v3. GenerationExecution retains direct CharacterProfile lineage and an execution-time
+AssetSpec snapshot, so later AssetSpec relationship changes do not change historical meaning.
+
+Generation remains prompt-only. Atlas has no canonical visual-reference Asset relationship, no
+reference-image or image-edit conditioning, and no guarantee that separately generated hamster Assets will
+remain visually consistent. Canonical visual references and provider conditioning remain later bounded work.
 
 ## Status
 
@@ -251,5 +266,5 @@ v0.1 UI shell, v0.2 persistent discovery, v0.3 Research & Evidence persistence,
 v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
 Asset persistence, v0.8 Generation Execution, and v0.9 Visual Style Control are complete and
-pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visual-style baseline. Later
-Atlas systems remain out of scope.
+pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visual-style baseline. v0.11
+Character Continuity Foundation is complete and pushed. Later Atlas systems remain out of scope.
