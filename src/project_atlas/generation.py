@@ -18,6 +18,7 @@ from project_atlas.persistence import (
     Asset,
     AssetSpec,
     AtlasRepository,
+    CharacterProfile,
     GenerationExecution,
     VisualStyleProfile,
 )
@@ -34,10 +35,11 @@ class GenerationInput:
     continuity_key: str | None
     parameters: dict[str, Any]
     style: dict[str, Any] | None = None
+    character: dict[str, Any] | None = None
 
     def payload(self) -> dict[str, Any]:
         payload = {
-            "schema_version": 2 if self.style is not None else 1,
+            "schema_version": 3 if self.style is not None else 1,
             "asset_type": self.asset_type,
             "prompt": self.prompt,
             "continuity_key": self.continuity_key,
@@ -45,6 +47,8 @@ class GenerationInput:
         }
         if self.style is not None:
             payload["style"] = self.style
+        if self.character is not None:
+            payload["character"] = self.character
         return payload
 
 
@@ -130,12 +134,13 @@ def asset_spec_snapshot(asset_spec: AssetSpec) -> dict[str, Any]:
         "description": asset_spec.description,
         "generation_prompt": asset_spec.generation_prompt,
         "continuity_key": asset_spec.continuity_key,
+        "character_profile_id": asset_spec.character_profile_id,
         "metadata": asset_spec.metadata,
     }
 
 
 def generation_input_for(asset_spec: AssetSpec) -> GenerationInput:
-    """Build the v1 normalized Atlas generation input from persisted requirement detail."""
+    """Build a legacy v1 input from persisted requirement detail for historical compatibility."""
 
     return GenerationInput(
         asset_type=asset_spec.asset_type,
@@ -171,19 +176,27 @@ class PromptComposer:
         "avoid",
     )
 
-    def compose(self, asset_spec: AssetSpec, profile: VisualStyleProfile) -> GenerationInput:
-        """Return one v2 input with only the style rules relevant to the AssetSpec type."""
+    def compose(
+        self,
+        asset_spec: AssetSpec,
+        profile: VisualStyleProfile,
+        character_profile: CharacterProfile | None = None,
+    ) -> GenerationInput:
+        """Return one v3 input with resolved style and optional character identity provenance."""
 
         global_rules, asset_type_rules = self._resolved_rules(asset_spec, profile)
-        prompt = "\n\n".join(
-            (
-                f"Visual style guidance: {profile.generation_guidance}",
-                "Global visual rules: " + self._render_rules(global_rules, self._GLOBAL_RULE_ORDER),
-                f"{asset_spec.asset_type} visual rules: "
-                + self._render_rules(asset_type_rules, self._ASSET_TYPE_RULE_ORDER),
-                f"AssetSpec requirement: {asset_spec.generation_prompt}",
+        prompt_parts = [
+            f"Visual style guidance: {profile.generation_guidance}",
+            "Global visual rules: " + self._render_rules(global_rules, self._GLOBAL_RULE_ORDER),
+            f"{asset_spec.asset_type} visual rules: "
+            + self._render_rules(asset_type_rules, self._ASSET_TYPE_RULE_ORDER),
+        ]
+        if character_profile is not None:
+            prompt_parts.append(
+                f"Character identity guidance: {character_profile.generation_guidance}"
             )
-        )
+        prompt_parts.append(f"AssetSpec requirement: {asset_spec.generation_prompt}")
+        prompt = "\n\n".join(prompt_parts)
         return GenerationInput(
             asset_type=asset_spec.asset_type,
             prompt=prompt,
@@ -201,6 +214,18 @@ class PromptComposer:
                     "asset_type_rules": asset_type_rules,
                 },
             },
+            character=(
+                {
+                    "profile_id": character_profile.id,
+                    "character_key": character_profile.character_key,
+                    "version": character_profile.version,
+                    "name": character_profile.name,
+                    "identity_description": character_profile.identity_description,
+                    "generation_guidance": character_profile.generation_guidance,
+                }
+                if character_profile is not None
+                else None
+            ),
         )
 
     @staticmethod
@@ -463,8 +488,11 @@ class GenerationService:
                 f"AssetSpec type {asset_spec.asset_type!r} is not executable by this generator."
             )
         profile = self._active_visual_style_profile()
+        character_profile = self._character_profile_for(asset_spec)
         snapshot = asset_spec_snapshot(asset_spec)
-        generation_input_object = self.prompt_composer.compose(asset_spec, profile)
+        generation_input_object = self.prompt_composer.compose(
+            asset_spec, profile, character_profile
+        )
         generation_input = generation_input_object.payload()
         try:
             artifact = self.generator.generate(generation_input_object)
@@ -478,6 +506,7 @@ class GenerationService:
                     generation_input,
                     self.generator.generator_key,
                     visual_style_profile_id=profile.id,
+                    character_profile_id=(character_profile.id if character_profile else None),
                     provider_key=error.provider_key,
                     model_key=error.model_key,
                     provider_request_id=error.provider_request_id,
@@ -501,6 +530,7 @@ class GenerationService:
                     generation_input,
                     self.generator.generator_key,
                     visual_style_profile_id=profile.id,
+                    character_profile_id=(character_profile.id if character_profile else None),
                     provider_key=artifact.provider_key,
                     model_key=artifact.model_key,
                     provider_request_id=artifact.provider_request_id,
@@ -521,6 +551,7 @@ class GenerationService:
                 self.storage.relative_path(stored_path),
                 artifact.media_type,
                 visual_style_profile_id=profile.id,
+                character_profile_id=(character_profile.id if character_profile else None),
                 provider_key=artifact.provider_key,
                 model_key=artifact.model_key,
                 provider_request_id=artifact.provider_request_id,
@@ -543,6 +574,13 @@ class GenerationService:
             raise MissingVisualStyleProfile(
                 f"Configured VisualStyleProfile {self.visual_style_profile_id!r} does not exist."
             ) from error
+
+    def _character_profile_for(self, asset_spec: AssetSpec) -> CharacterProfile | None:
+        """Resolve a character identity only when the AssetSpec explicitly identifies one."""
+
+        if asset_spec.character_profile_id is None:
+            return None
+        return self.repository.get_character_profile(asset_spec.character_profile_id)
 
     @staticmethod
     def _validate_artifact(artifact: GeneratedArtifact) -> None:

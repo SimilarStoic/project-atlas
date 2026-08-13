@@ -15,7 +15,7 @@ from project_atlas.generation import (
     PromptComposer,
     UnsupportedGenerationType,
 )
-from project_atlas.persistence import MIGRATIONS, AtlasRepository
+from project_atlas.persistence import MIGRATIONS, AtlasRepository, CharacterProfile
 
 
 class FakeImageGenerator:
@@ -53,7 +53,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -94,6 +94,9 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
             ("visual-style-profile-similarstoic-core-v1", 1),
             ("visual-style-profile-similarstoic-core-v2", 2),
         ]
+        assert [
+            (profile.id, profile.version) for profile in repository.list_character_profiles()
+        ] == [("character-profile-similarstoic-hamster-core-v1", 1)]
     finally:
         repository.close()
 
@@ -191,7 +194,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -200,6 +203,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
             repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1").version
             == 1
         )
+        assert repository.get_asset_spec("existing-asset-spec").character_profile_id is None
     finally:
         repository.close()
 
@@ -211,7 +215,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                9,
+                10,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -233,7 +237,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 9"
+                "SELECT version FROM schema_migrations WHERE version = 10"
             ).fetchone()
             is None
         )
@@ -1461,7 +1465,8 @@ def test_seeded_scene_one_environment_remains_a_background_layer(tmp_path) -> No
         profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
         generation_input = PromptComposer().compose(environment, profile).payload()
         environment_rules = generation_input["style"]["rules"]["asset_type_rules"]
-        assert generation_input["schema_version"] == 2
+        assert generation_input["schema_version"] == 3
+        assert "character" not in generation_input
         assert environment.generation_prompt in generation_input["prompt"]
         assert environment_rules["role"] == "background setting layer only"
         assert "sibling AssetSpec requirements" in environment_rules["layer_discipline"]
@@ -1521,6 +1526,7 @@ def test_generation_execution_failure_is_immutable_and_validated(tmp_path) -> No
                         snapshot,
                         generation_input,
                         "test-generator",
+                        None,
                         None,
                         invalid_outcome,
                         None,
@@ -1884,7 +1890,7 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
 
 
 def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_path) -> None:
-    """The Atlas composer is deterministic and never leaks other type rules into v2 input."""
+    """The Atlas composer is deterministic and never leaks other type rules into v3 input."""
 
     repository = AtlasRepository(tmp_path / "atlas.db")
     try:
@@ -1907,7 +1913,7 @@ def test_prompt_composer_resolves_only_relevant_deterministic_style_rules(tmp_pa
             first = composer.compose(asset_spec, profile).payload()
             second = composer.compose(asset_spec, profile).payload()
             assert first == second
-            assert first["schema_version"] == 2
+            assert first["schema_version"] == 3
             assert first["style"]["version"] == 2
             assert first["style"]["rules"]["asset_type"] == asset_spec.asset_type
             assert (
@@ -1962,7 +1968,7 @@ def test_generation_service_uses_profile_provenance_and_missing_profile_stops_ea
         result = service.generate_asset_spec(asset_spec.id)
         profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
         assert result.execution.visual_style_profile_id == profile.id
-        assert result.execution.generation_input["schema_version"] == 2
+        assert result.execution.generation_input["schema_version"] == 3
         assert result.execution.generation_input["style"]["profile_id"] == profile.id
         assert result.execution.generation_input["style"]["style_key"] == profile.style_key
         assert result.execution.generation_input["style"]["version"] == profile.version
@@ -2012,5 +2018,395 @@ def test_existing_v1_generation_execution_remains_readable_after_style_migration
             styled.execution.visual_style_profile_id == "visual-style-profile-similarstoic-core-v1"
         )
         assert styled.execution.generation_input["style"]["version"] == 1
+    finally:
+        repository.close()
+
+
+def test_character_profile_seed_is_immutable_and_attached_only_to_hamster_specs(tmp_path) -> None:
+    """The canonical hamster identity is durable, versioned, and not general style state."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
+        assert (profile.character_key, profile.version, profile.name) == (
+            "similarstoic-hamster-core",
+            1,
+            "SimilarStoic Hamster Core",
+        )
+        identity_text = f"{profile.identity_description} {profile.generation_guidance}".lower()
+        assert all(
+            required in identity_text
+            for required in (
+                "recognisable classic hamster",
+                "sling/crossbody bag",
+                "hamster-native behaviour",
+                "money, work, behaviour and life-strategy concepts",
+            )
+        )
+        assert not any(
+            forbidden in identity_text
+            for forbidden in ("cheeky", "relaxed", "finance guru", "corporate mascot", "squishy")
+        )
+        assert not hasattr(repository, "update_character_profile")
+        assert not hasattr(repository, "delete_character_profile")
+
+        hamster_specs = (
+            repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1"),
+            repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1"),
+        )
+        assert all(spec.character_profile_id == profile.id for spec in hamster_specs)
+        assert (
+            repository.get_asset_spec(
+                "asset-spec-isa-scene-01-kitchen-background-v1"
+            ).character_profile_id
+            is None
+        )
+        assert (
+            repository.get_asset_spec(
+                "asset-spec-isa-scene-02-tax-year-calendar-v1"
+            ).character_profile_id
+            is None
+        )
+        try:
+            repository.create_asset_spec(
+                "asset-spec-invalid-character-profile-v1",
+                "scene-isa-deadline-video-v1-01",
+                "graphic",
+                "Test invalid identity ownership.",
+                "A graphic that must not own a character identity.",
+                "Illustrate a graphic without a character.",
+                character_profile_id=profile.id,
+            )
+        except ValueError as error:
+            assert "Only character AssetSpecs" in str(error)
+        else:
+            raise AssertionError("A non-character AssetSpec accepted a CharacterProfile.")
+    finally:
+        repository.close()
+
+
+def test_character_generation_freezes_v3_identity_and_provider_neutral_provenance(tmp_path) -> None:
+    """Character generation freezes resolved identity without crossing the provider boundary."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        style_profile = repository.get_visual_style_profile(
+            "visual-style-profile-similarstoic-core-v2"
+        )
+        character_profile = repository.get_character_profile(asset_spec.character_profile_id)
+        generation_input = (
+            PromptComposer().compose(asset_spec, style_profile, character_profile).payload()
+        )
+        assert generation_input["schema_version"] == 3
+        assert generation_input["character"] == {
+            "profile_id": character_profile.id,
+            "character_key": character_profile.character_key,
+            "version": character_profile.version,
+            "name": character_profile.name,
+            "identity_description": character_profile.identity_description,
+            "generation_guidance": character_profile.generation_guidance,
+        }
+        assert generation_input["prompt"].index("Visual style guidance:") < generation_input[
+            "prompt"
+        ].index("Global visual rules:")
+        assert generation_input["prompt"].index("Global visual rules:") < generation_input[
+            "prompt"
+        ].index("character visual rules:")
+        assert generation_input["prompt"].index("character visual rules:") < generation_input[
+            "prompt"
+        ].index("Character identity guidance:")
+        assert generation_input["prompt"].index("Character identity guidance:") < generation_input[
+            "prompt"
+        ].index("AssetSpec requirement:")
+
+        generator = FakeImageGenerator()
+        result = GenerationService(
+            repository, generator, LocalAssetStorage(tmp_path / "assets")
+        ).generate_asset_spec(asset_spec.id)
+        assert result.execution.character_profile_id == character_profile.id
+        assert result.execution.generation_input["schema_version"] == 3
+        assert result.execution.generation_input["character"] == generation_input["character"]
+        assert result.asset is not None
+        assert isinstance(generator.inputs[0], GenerationInput)
+        assert not isinstance(generator.inputs[0], CharacterProfile)
+        assert generator.inputs[0].character == generation_input["character"]
+        payload = repository.generation_execution_payload(result.execution.id)
+        assert payload["character_profile"] == {
+            "id": character_profile.id,
+            "name": character_profile.name,
+            "version": character_profile.version,
+            "identity_description": character_profile.identity_description,
+        }
+    finally:
+        repository.close()
+
+
+def test_failed_character_generation_retains_identity_lineage_without_an_asset(tmp_path) -> None:
+    """A provider-attempt failure preserves v3 character provenance but creates no Asset."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
+        result = GenerationService(
+            repository,
+            FakeImageGenerator(
+                failure=GenerationFailure("Rejected character request.", error_code="rejected")
+            ),
+            LocalAssetStorage(tmp_path / "assets"),
+        ).generate_asset_spec(asset_spec.id)
+        assert result.asset is None
+        assert result.execution.outcome == "failed"
+        assert result.execution.character_profile_id == asset_spec.character_profile_id
+        assert result.execution.generation_input["schema_version"] == 3
+        assert (
+            result.execution.generation_input["character"]["profile_id"]
+            == asset_spec.character_profile_id
+        )
+        assert repository.get_asset_for_generation_execution(result.execution.id) is None
+    finally:
+        repository.close()
+
+
+def test_existing_v2_generation_input_remains_readable_without_character_lineage(tmp_path) -> None:
+    """Historical styled v2 executions remain valid after v3 character provenance is introduced."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
+        v2_input = PromptComposer().compose(asset_spec, profile).payload()
+        v2_input["schema_version"] = 2
+        execution = repository.create_failed_generation_execution(
+            "generation-execution-v2-history",
+            asset_spec.id,
+            {"schema_version": 1, "asset_spec_id": asset_spec.id},
+            v2_input,
+            "historical-generator",
+            visual_style_profile_id=profile.id,
+        )
+        assert execution.generation_input == v2_input
+        assert execution.character_profile_id is None
+        assert repository.generation_execution_payload(execution.id)["character_profile"] is None
+    finally:
+        repository.close()
+
+
+def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_drift(
+    tmp_path,
+) -> None:
+    """Migration 9 normalizes only the two canonical hamster requirements from v0.10."""
+
+    database = tmp_path / "atlas-v08.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:8]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-12T00:00:00+00:00')",
+                (version,),
+            )
+        old_specs = (
+            (
+                "asset-spec-isa-scene-01-hamster-sorting-v1",
+                "scene-isa-deadline-video-v1-01",
+                "character",
+                "Illustrate the viewer sorting practical ISA options.",
+                "The sling-bag hamster sorts four labelled envelopes at the kitchen table.",
+                (
+                    "Illustrated SimilarStoic hamster with its small everyday sling bag, calmly "
+                    "sorting four labelled envelopes at a kitchen table; retain the canonical "
+                    "relaxed, curious young-adult character identity."
+                ),
+                "similarstoic-hamster-core",
+                "{}",
+                "2026-08-12T00:00:00+00:00",
+                "2026-08-12T00:00:00+00:00",
+            ),
+            (
+                "asset-spec-isa-scene-03-hamster-reaction-v1",
+                "scene-isa-deadline-video-v1-03",
+                "character",
+                "Add a relatable reaction to the completed decision-tree branches.",
+                "The sling-bag hamster reacts to the completed decision-tree branches.",
+                (
+                    "Illustrated SimilarStoic hamster with its small everyday sling bag reacting "
+                    "to a completed decision tree; retain the canonical relaxed, curious "
+                    "young-adult character identity with a lightly cheeky expression."
+                ),
+                "similarstoic-hamster-core",
+                "{}",
+                "2026-08-12T00:00:00+00:00",
+                "2026-08-12T00:00:00+00:00",
+            ),
+        )
+        for asset_spec in old_specs:
+            connection.execute(
+                "INSERT INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", asset_spec
+            )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        assert [
+            row["version"]
+            for row in repository.connection.execute("SELECT version FROM schema_migrations")
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
+        sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
+        assert sorting.character_profile_id == reaction.character_profile_id == profile.id
+        assert sorting.generation_prompt == (
+            "Illustrated hamster calmly sorting four labelled envelopes at a kitchen table."
+        )
+        assert (
+            reaction.generation_prompt
+            == "Illustrated hamster reacting to a completed decision tree."
+        )
+        assert not {"relaxed", "curious", "cheeky"} & set(
+            f"{sorting.generation_prompt} {reaction.generation_prompt}".lower().split()
+        )
+        assert (
+            repository.get_asset_spec(
+                "asset-spec-isa-scene-01-kitchen-background-v1"
+            ).character_profile_id
+            is None
+        )
+        assert (
+            repository.get_asset_spec(
+                "asset-spec-isa-scene-02-tax-year-calendar-v1"
+            ).character_profile_id
+            is None
+        )
+    finally:
+        repository.close()
+
+
+def test_character_profile_seed_preserves_an_existing_accepted_version(tmp_path) -> None:
+    """Idempotent bootstrap must not rewrite an existing immutable profile version."""
+
+    database = tmp_path / "atlas.db"
+    repository = AtlasRepository(database)
+    try:
+        profile_id = "character-profile-similarstoic-hamster-core-v1"
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE character_profiles SET name = ? WHERE id = ?",
+                ("Founder-preserved Hamster Core", profile_id),
+            )
+    finally:
+        repository.close()
+
+    reopened = AtlasRepository(database)
+    try:
+        assert reopened.get_character_profile(profile_id).name == "Founder-preserved Hamster Core"
+        assert len(reopened.list_character_profiles()) == 1
+    finally:
+        reopened.close()
+
+
+def test_referenced_character_profile_uses_restrictive_deletion(tmp_path) -> None:
+    """Character identity provenance cannot be deleted while requirements reference it."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        profile_id = "character-profile-similarstoic-hamster-core-v1"
+        try:
+            with repository.connection:
+                repository.connection.execute(
+                    "DELETE FROM character_profiles WHERE id = ?", (profile_id,)
+                )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("A referenced CharacterProfile was deleted.")
+    finally:
+        repository.close()
+
+
+def test_character_execution_remains_historical_after_asset_spec_identity_changes(tmp_path) -> None:
+    """Execution lineage remains stable when a mutable AssetSpec relationship changes."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        original_profile = repository.get_character_profile(
+            "character-profile-similarstoic-hamster-core-v1"
+        )
+        alternate_profile = repository.create_character_profile(
+            "character-profile-similarstoic-hamster-core-v2",
+            "similarstoic-hamster-core",
+            2,
+            "SimilarStoic Hamster Core",
+            "A second immutable test version of the canonical SimilarStoic hamster identity.",
+            "Depict the second immutable test version of the canonical SimilarStoic hamster.",
+        )
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        result = GenerationService(
+            repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "assets")
+        ).generate_asset_spec(asset_spec.id)
+        repository.update_asset_spec(replace(asset_spec, character_profile_id=alternate_profile.id))
+        execution = repository.get_generation_execution(result.execution.id)
+        assert execution.character_profile_id == original_profile.id
+        assert execution.asset_spec_snapshot["character_profile_id"] == original_profile.id
+        assert execution.generation_input["character"]["profile_id"] == original_profile.id
+        assert repository.get_asset_spec(asset_spec.id).character_profile_id == alternate_profile.id
+        assert repository.generation_execution_payload(execution.id)["character_profile"]["id"] == (
+            original_profile.id
+        )
+    finally:
+        repository.close()
+
+
+def test_v3_character_provenance_requires_complete_frozen_guidance(tmp_path) -> None:
+    """Validation rejects incomplete character lineage while allowing v3 non-characters."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        character_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        profile = repository.get_character_profile(character_spec.character_profile_id)
+        style = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
+        valid_input = PromptComposer().compose(character_spec, style, profile).payload()
+        for field_name in ("identity_description", "generation_guidance"):
+            for case in ("missing", "altered"):
+                malformed = {**valid_input, "character": {**valid_input["character"]}}
+                if case == "missing":
+                    malformed["character"].pop(field_name)
+                else:
+                    malformed["character"][field_name] = "Not the frozen canonical guidance."
+                try:
+                    repository.create_failed_generation_execution(
+                        f"generation-execution-v3-{case}-{field_name}",
+                        character_spec.id,
+                        {"schema_version": 1, "asset_spec_id": character_spec.id},
+                        malformed,
+                        "test-generator",
+                        visual_style_profile_id=style.id,
+                        character_profile_id=profile.id,
+                    )
+                except ValueError as error:
+                    assert "CharacterProfile" in str(error)
+                else:
+                    raise AssertionError(f"A v3 character input accepted {case} {field_name}.")
+
+        environment_spec = repository.get_asset_spec(
+            "asset-spec-isa-scene-01-kitchen-background-v1"
+        )
+        non_character_input = PromptComposer().compose(environment_spec, style).payload()
+        valid = repository.create_failed_generation_execution(
+            "generation-execution-v3-environment",
+            environment_spec.id,
+            {"schema_version": 1, "asset_spec_id": environment_spec.id},
+            non_character_input,
+            "test-generator",
+            visual_style_profile_id=style.id,
+        )
+        assert valid.character_profile_id is None
+        assert "character" not in valid.generation_input
     finally:
         repository.close()

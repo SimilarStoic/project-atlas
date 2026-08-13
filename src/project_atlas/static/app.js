@@ -171,6 +171,15 @@ function visualPlan(content) {
           var continuity = assetSpec.continuity_key
             ? "<p><b>Continuity key</b><br>" + assetSpec.continuity_key + "</p>"
             : "";
+          var characterProfile = assetSpec.character_profile
+            ? "<p><b>Character identity</b><br>" +
+              assetSpec.character_profile.name +
+              " Â· v" +
+              assetSpec.character_profile.version +
+              "<br><small>" +
+              assetSpec.character_profile.identity_description +
+              "</small></p>"
+            : "";
           var registeredAssets = assetSpec.assets.length
             ? "<p><b>Registered assets</b><br>" + assetSpec.assets.length + "</p>"
             : "<p><b>Registered assets</b><br>0</p>";
@@ -183,6 +192,13 @@ function visualPlan(content) {
               latestExecution.generator_key +
               (latestExecution.model_key ? " / " + latestExecution.model_key : "") +
               (latestExecution.error_message ? "<br><small>" + latestExecution.error_message + "</small>" : "") +
+              (latestExecution.character_profile
+                ? "<br><small>Character: " +
+                  latestExecution.character_profile.name +
+                  " Â· v" +
+                  latestExecution.character_profile.version +
+                  "</small>"
+                : "") +
               "</p>"
             : "";
           var generateAction = assetSpec.generation_supported
@@ -199,6 +215,7 @@ function visualPlan(content) {
             assetSpec.generation_prompt +
             "</p>" +
             continuity +
+            characterProfile +
             registeredAssets +
             executionStatus +
             generateAction +

@@ -208,6 +208,7 @@ class AssetSpec:
     description: str
     generation_prompt: str
     continuity_key: str | None
+    character_profile_id: str | None
     metadata: dict[str, Any]
     created_at: str
     updated_at: str
@@ -243,6 +244,20 @@ class VisualStyleProfile:
     created_at: str
 
 
+@dataclass(frozen=True)
+class CharacterProfile:
+    """An immutable, versioned canonical identity for recurring characters."""
+
+    id: str
+    character_key: str
+    version: int
+    name: str
+    identity_description: str
+    generation_guidance: str
+    metadata: dict[str, Any]
+    created_at: str
+
+
 Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
@@ -255,6 +270,7 @@ class GenerationExecution:
     id: str
     asset_spec_id: str
     visual_style_profile_id: str | None
+    character_profile_id: str | None
     asset_spec_snapshot: dict[str, Any]
     generation_input: dict[str, Any]
     generator_key: str
@@ -577,6 +593,42 @@ MIGRATIONS: tuple[Migration, ...] = (
             """
         CREATE INDEX idx_generation_executions_visual_style_profile
           ON generation_executions (visual_style_profile_id)
+        """,
+        ),
+    ),
+    (
+        9,
+        (
+            """
+        CREATE TABLE character_profiles (
+          id TEXT PRIMARY KEY,
+          character_key TEXT NOT NULL,
+          version INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          identity_description TEXT NOT NULL,
+          generation_guidance TEXT NOT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE (character_key, version)
+        )
+        """,
+            """
+        ALTER TABLE asset_specs
+        ADD COLUMN character_profile_id TEXT NULL
+        REFERENCES character_profiles(id) ON DELETE RESTRICT
+        """,
+            """
+        ALTER TABLE generation_executions
+        ADD COLUMN character_profile_id TEXT NULL
+        REFERENCES character_profiles(id) ON DELETE RESTRICT
+        """,
+            """
+        CREATE INDEX idx_asset_specs_character_profile
+          ON asset_specs (character_profile_id)
+        """,
+            """
+        CREATE INDEX idx_generation_executions_character_profile
+          ON generation_executions (character_profile_id)
         """,
         ),
     ),
@@ -1383,6 +1435,61 @@ class AtlasRepository:
         )
         return [self._visual_style_profile(row) for row in rows]
 
+    def create_character_profile(
+        self,
+        profile_id: str,
+        character_key: str,
+        version: int,
+        name: str,
+        identity_description: str,
+        generation_guidance: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> CharacterProfile:
+        """Create one immutable version of an Atlas character identity profile."""
+
+        profile_metadata = {} if metadata is None else metadata
+        self._validate_character_profile(
+            version,
+            character_key,
+            name,
+            identity_description,
+            generation_guidance,
+            profile_metadata,
+        )
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO character_profiles VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    profile_id,
+                    character_key.strip(),
+                    version,
+                    name.strip(),
+                    identity_description.strip(),
+                    generation_guidance.strip(),
+                    json.dumps(profile_metadata, sort_keys=True),
+                    now(),
+                ),
+            )
+        return self.get_character_profile(profile_id)
+
+    def get_character_profile(self, profile_id: str) -> CharacterProfile:
+        """Return one immutable character identity profile."""
+
+        row = self.connection.execute(
+            "SELECT * FROM character_profiles WHERE id = ?", (profile_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(profile_id)
+        return self._character_profile(row)
+
+    def list_character_profiles(self) -> list[CharacterProfile]:
+        """Return immutable character profiles in stable key/version order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM character_profiles ORDER BY character_key, version"
+        )
+        return [self._character_profile(row) for row in rows]
+
     def create_asset_spec(
         self,
         asset_spec_id: str,
@@ -1392,16 +1499,21 @@ class AtlasRepository:
         description: str,
         generation_prompt: str,
         continuity_key: str | None = None,
+        character_profile_id: str | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> AssetSpec:
         """Create a provider-neutral asset requirement for one persisted Scene."""
 
         self.get_scene(scene_id)
         self._validate_asset_spec_text(asset_type, purpose, description, generation_prompt)
+        self._validate_asset_spec_character_profile(asset_type, character_profile_id)
         stamp = now()
         with self.connection:
             self.connection.execute(
-                "INSERT INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO asset_specs "
+                "(id, scene_id, asset_type, purpose, description, generation_prompt, "
+                "continuity_key, metadata_json, created_at, updated_at, character_profile_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     asset_spec_id,
                     scene_id,
@@ -1413,6 +1525,7 @@ class AtlasRepository:
                     json.dumps(metadata or {}),
                     stamp,
                     stamp,
+                    character_profile_id,
                 ),
             )
         return self.get_asset_spec(asset_spec_id)
@@ -1445,10 +1558,14 @@ class AtlasRepository:
             asset_spec.description,
             asset_spec.generation_prompt,
         )
+        self._validate_asset_spec_character_profile(
+            asset_spec.asset_type, asset_spec.character_profile_id
+        )
         with self.connection:
             result = self.connection.execute(
                 "UPDATE asset_specs SET asset_type=?, purpose=?, description=?, "
-                "generation_prompt=?, continuity_key=?, metadata_json=?, updated_at=? WHERE id=?",
+                "generation_prompt=?, continuity_key=?, metadata_json=?, character_profile_id=?, "
+                "updated_at=? WHERE id=?",
                 (
                     asset_spec.asset_type,
                     asset_spec.purpose,
@@ -1456,6 +1573,7 @@ class AtlasRepository:
                     asset_spec.generation_prompt,
                     asset_spec.continuity_key,
                     json.dumps(asset_spec.metadata),
+                    asset_spec.character_profile_id,
                     now(),
                     asset_spec.id,
                 ),
@@ -1505,6 +1623,7 @@ class AtlasRepository:
         generator_key: str,
         *,
         visual_style_profile_id: str | None = None,
+        character_profile_id: str | None = None,
         provider_key: str | None = None,
         model_key: str | None = None,
         provider_request_id: str | None = None,
@@ -1522,6 +1641,7 @@ class AtlasRepository:
                 generation_input,
                 generator_key,
                 visual_style_profile_id,
+                character_profile_id,
                 "failed",
                 provider_key,
                 model_key,
@@ -1544,6 +1664,7 @@ class AtlasRepository:
         media_type: str,
         *,
         visual_style_profile_id: str | None = None,
+        character_profile_id: str | None = None,
         provider_key: str | None = None,
         model_key: str | None = None,
         provider_request_id: str | None = None,
@@ -1559,6 +1680,7 @@ class AtlasRepository:
                 generation_input,
                 generator_key,
                 visual_style_profile_id,
+                character_profile_id,
                 "succeeded",
                 provider_key,
                 model_key,
@@ -1641,6 +1763,7 @@ class AtlasRepository:
             "description": asset_spec.description,
             "generation_prompt": asset_spec.generation_prompt,
             "continuity_key": asset_spec.continuity_key,
+            "character_profile": self.character_profile_summary(asset_spec.character_profile_id),
             "assets": [],
             "generation_executions": [
                 self.generation_execution_payload(execution.id)
@@ -1669,6 +1792,7 @@ class AtlasRepository:
             "id": execution.id,
             "asset_spec_id": execution.asset_spec_id,
             "visual_style_profile_id": execution.visual_style_profile_id,
+            "character_profile": self.character_profile_summary(execution.character_profile_id),
             "generator_key": execution.generator_key,
             "provider_key": execution.provider_key,
             "model_key": execution.model_key,
@@ -1682,6 +1806,19 @@ class AtlasRepository:
                 if asset
                 else None
             ),
+        }
+
+    def character_profile_summary(self, profile_id: str | None) -> dict[str, Any] | None:
+        """Return concise immutable character identity detail for read-only display."""
+
+        if profile_id is None:
+            return None
+        profile = self.get_character_profile(profile_id)
+        return {
+            "id": profile.id,
+            "name": profile.name,
+            "version": profile.version,
+            "identity_description": profile.identity_description,
         }
 
     def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
@@ -1715,6 +1852,7 @@ class AtlasRepository:
         generation_input: dict[str, Any],
         generator_key: str,
         visual_style_profile_id: str | None,
+        character_profile_id: str | None,
         outcome: str,
         provider_key: str | None,
         model_key: str | None,
@@ -1738,13 +1876,15 @@ class AtlasRepository:
         )
         if asset_spec_snapshot.get("asset_spec_id") != asset_spec_id:
             raise ValueError("GenerationExecution snapshot must identify its persisted AssetSpec.")
-        self._validate_generation_execution_style(generation_input, visual_style_profile_id)
+        self._validate_generation_execution_provenance(
+            generation_input, visual_style_profile_id, character_profile_id
+        )
         self.connection.execute(
             "INSERT INTO generation_executions "
             "(id, asset_spec_id, asset_spec_snapshot_json, generation_input_json, generator_key, "
             "provider_key, model_key, provider_request_id, outcome, error_code, error_message, "
-            "response_metadata_json, created_at, visual_style_profile_id) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "response_metadata_json, created_at, visual_style_profile_id, character_profile_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 execution_id,
                 asset_spec_id,
@@ -1760,6 +1900,7 @@ class AtlasRepository:
                 json.dumps(response_metadata, sort_keys=True),
                 now(),
                 visual_style_profile_id,
+                character_profile_id,
             ),
         )
 
@@ -1802,26 +1943,61 @@ class AtlasRepository:
         for value in (provider_key, model_key, provider_request_id, error_code, error_message):
             AtlasRepository._normalized_optional_identifier(value)
 
-    def _validate_generation_execution_style(
-        self, generation_input: dict[str, Any], visual_style_profile_id: str | None
+    def _validate_generation_execution_provenance(
+        self,
+        generation_input: dict[str, Any],
+        visual_style_profile_id: str | None,
+        character_profile_id: str | None,
     ) -> None:
         schema_version = generation_input.get("schema_version")
-        if schema_version != 2:
+        if schema_version not in {2, 3}:
             if visual_style_profile_id is not None:
                 raise ValueError("GenerationInput v1 cannot identify a VisualStyleProfile.")
+            if character_profile_id is not None:
+                raise ValueError("GenerationInput v1 cannot identify a CharacterProfile.")
             return
         if visual_style_profile_id is None:
-            raise ValueError("GenerationInput v2 must identify a VisualStyleProfile.")
+            raise ValueError("Styled GenerationInput must identify a VisualStyleProfile.")
         style = generation_input.get("style")
         if not isinstance(style, dict):
-            raise ValueError("GenerationInput v2 style must be an object.")
+            raise ValueError("Styled GenerationInput style must be an object.")
         profile = self.get_visual_style_profile(visual_style_profile_id)
         if (
             style.get("profile_id") != profile.id
             or style.get("style_key") != profile.style_key
             or style.get("version") != profile.version
         ):
-            raise ValueError("GenerationInput v2 style must match its VisualStyleProfile.")
+            raise ValueError("Styled GenerationInput style must match its VisualStyleProfile.")
+        if schema_version == 2:
+            if character_profile_id is not None:
+                raise ValueError("GenerationInput v2 cannot identify a CharacterProfile.")
+            return
+        character = generation_input.get("character")
+        if character_profile_id is None:
+            if character is not None:
+                raise ValueError("GenerationInput v3 character must have CharacterProfile lineage.")
+            return
+        if not isinstance(character, dict):
+            raise ValueError("GenerationInput v3 character must be an object.")
+        character_profile = self.get_character_profile(character_profile_id)
+        if (
+            character.get("profile_id") != character_profile.id
+            or character.get("character_key") != character_profile.character_key
+            or character.get("version") != character_profile.version
+            or character.get("name") != character_profile.name
+            or character.get("identity_description") != character_profile.identity_description
+            or character.get("generation_guidance") != character_profile.generation_guidance
+        ):
+            raise ValueError("GenerationInput v3 character must match its CharacterProfile.")
+
+    def _validate_asset_spec_character_profile(
+        self, asset_type: str, character_profile_id: str | None
+    ) -> None:
+        if character_profile_id is None:
+            return
+        if asset_type != "character":
+            raise ValueError("Only character AssetSpecs can identify a CharacterProfile.")
+        self.get_character_profile(character_profile_id)
 
     @staticmethod
     def _validate_asset_spec_text(*values: str) -> None:
@@ -1851,6 +2027,27 @@ class AtlasRepository:
             raise ValueError("VisualStyleProfile rules must be an object.")
         if not isinstance(metadata, dict):
             raise ValueError("VisualStyleProfile metadata must be an object.")
+
+    @staticmethod
+    def _validate_character_profile(
+        version: int,
+        character_key: str,
+        name: str,
+        identity_description: str,
+        generation_guidance: str,
+        metadata: dict[str, Any],
+    ) -> None:
+        if type(version) is not int or version < 1:
+            raise ValueError("CharacterProfile version must be a positive integer.")
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (character_key, name, identity_description, generation_guidance)
+        ):
+            raise ValueError(
+                "CharacterProfile required text fields must not be empty or whitespace-only."
+            )
+        if not isinstance(metadata, dict):
+            raise ValueError("CharacterProfile metadata must be an object.")
 
     @staticmethod
     def _validate_editorial_angle_takeaways(key_takeaways: list[str]) -> None:
@@ -2194,8 +2391,9 @@ class AtlasRepository:
         self.seed_editorial_angle_data()
         self.seed_content_piece_data()
         self.seed_visual_plan_data()
-        self.seed_asset_spec_data()
         self.seed_visual_style_profile_data()
+        self.seed_character_profile_data()
+        self.seed_asset_spec_data()
 
     def seed_research_data(self) -> None:
         """Seed one read-only demonstration ResearchPack without overwriting local edits."""
@@ -2537,6 +2735,15 @@ class AtlasRepository:
         """Seed the existing ISA Scene requirements without registering generated Assets."""
 
         stamp = now()
+        hamster_profile_id = "character-profile-similarstoic-hamster-core-v1"
+        canonical_hamster_prompts = {
+            "asset-spec-isa-scene-01-hamster-sorting-v1": (
+                "Illustrated hamster calmly sorting four labelled envelopes at a kitchen table."
+            ),
+            "asset-spec-isa-scene-03-hamster-reaction-v1": (
+                "Illustrated hamster reacting to a completed decision tree."
+            ),
+        }
         asset_specs = (
             (
                 "asset-spec-isa-scene-01-kitchen-background-v1",
@@ -2553,6 +2760,7 @@ class AtlasRepository:
                     "and table cues, and generous clear space for later foreground layers."
                 ),
                 "isa-kitchen-environment",
+                None,
                 "{}",
                 stamp,
                 stamp,
@@ -2563,12 +2771,9 @@ class AtlasRepository:
                 "character",
                 "Illustrate the viewer sorting practical ISA options.",
                 "The sling-bag hamster sorts four labelled envelopes at the kitchen table.",
-                (
-                    "Illustrated SimilarStoic hamster with its small everyday sling bag, calmly "
-                    "sorting four labelled envelopes at a kitchen table; retain the canonical "
-                    "relaxed, curious young-adult character identity."
-                ),
+                canonical_hamster_prompts["asset-spec-isa-scene-01-hamster-sorting-v1"],
                 "similarstoic-hamster-core",
+                hamster_profile_id,
                 "{}",
                 stamp,
                 stamp,
@@ -2585,6 +2790,7 @@ class AtlasRepository:
                     "dependent on text for the essential argument."
                 ),
                 None,
+                None,
                 "{}",
                 stamp,
                 stamp,
@@ -2600,6 +2806,7 @@ class AtlasRepository:
                     "clear branches that reinforce rather than replace the audio-first explanation."
                 ),
                 None,
+                None,
                 "{}",
                 stamp,
                 stamp,
@@ -2610,12 +2817,9 @@ class AtlasRepository:
                 "character",
                 "Add a relatable reaction to the completed decision-tree branches.",
                 "The sling-bag hamster reacts to the completed decision-tree branches.",
-                (
-                    "Illustrated SimilarStoic hamster with its small everyday sling bag reacting "
-                    "to a completed decision tree; retain the canonical relaxed, curious "
-                    "young-adult character identity with a lightly cheeky expression."
-                ),
+                canonical_hamster_prompts["asset-spec-isa-scene-03-hamster-reaction-v1"],
                 "similarstoic-hamster-core",
+                hamster_profile_id,
                 "{}",
                 stamp,
                 stamp,
@@ -2624,9 +2828,45 @@ class AtlasRepository:
         with self.connection:
             for asset_spec in asset_specs:
                 self.connection.execute(
-                    "INSERT OR IGNORE INTO asset_specs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT OR IGNORE INTO asset_specs "
+                    "(id, scene_id, asset_type, purpose, description, generation_prompt, "
+                    "continuity_key, character_profile_id, metadata_json, created_at, updated_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     asset_spec,
                 )
+            for asset_spec_id, generation_prompt in canonical_hamster_prompts.items():
+                self.connection.execute(
+                    "UPDATE asset_specs SET generation_prompt = ?, character_profile_id = ? "
+                    "WHERE id = ?",
+                    (generation_prompt, hamster_profile_id, asset_spec_id),
+                )
+
+    def seed_character_profile_data(self) -> None:
+        """Seed the canonical hamster identity without overwriting accepted versions."""
+
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO character_profiles " "VALUES (?, ?, ?, ?, ?, ?, '{}', ?)",
+                (
+                    "character-profile-similarstoic-hamster-core-v1",
+                    "similarstoic-hamster-core",
+                    1,
+                    "SimilarStoic Hamster Core",
+                    (
+                        "A recognisable classic hamster with a recurring consistent identity, "
+                        "young-professional relatability and a small everyday sling/crossbody bag. "
+                        "The hamster uses hamster-native behaviour to embody SimilarStoic money, "
+                        "work, behaviour and life-strategy concepts, and is intended to remain "
+                        "recognisably the same individual across character assets."
+                    ),
+                    (
+                        "Depict the canonical SimilarStoic hamster consistently: a recognisable "
+                        "classic hamster with a small everyday sling/crossbody bag, using "
+                        "hamster-native behaviour to embody the requested concept."
+                    ),
+                    now(),
+                ),
+            )
 
     def seed_visual_style_profile_data(self) -> None:
         """Seed immutable SimilarStoic Core visual-language profile versions once."""
@@ -3022,6 +3262,7 @@ class AtlasRepository:
             row["description"],
             row["generation_prompt"],
             row["continuity_key"],
+            row["character_profile_id"],
             json.loads(row["metadata_json"]),
             row["created_at"],
             row["updated_at"],
@@ -3056,11 +3297,25 @@ class AtlasRepository:
         )
 
     @staticmethod
+    def _character_profile(row: sqlite3.Row) -> CharacterProfile:
+        return CharacterProfile(
+            row["id"],
+            row["character_key"],
+            row["version"],
+            row["name"],
+            row["identity_description"],
+            row["generation_guidance"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
     def _generation_execution(row: sqlite3.Row) -> GenerationExecution:
         return GenerationExecution(
             row["id"],
             row["asset_spec_id"],
             row["visual_style_profile_id"],
+            row["character_profile_id"],
             json.loads(row["asset_spec_snapshot_json"]),
             json.loads(row["generation_input_json"]),
             row["generator_key"],

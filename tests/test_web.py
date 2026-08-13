@@ -164,6 +164,24 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
             "character",
             "graphic",
         }
+        hamster_asset_spec = next(
+            candidate
+            for candidate in persisted_asset_specs
+            if candidate["id"] == "asset-spec-isa-scene-01-hamster-sorting-v1"
+        )
+        assert hamster_asset_spec["character_profile"] == {
+            "id": "character-profile-similarstoic-hamster-core-v1",
+            "name": "SimilarStoic Hamster Core",
+            "version": 1,
+            "identity_description": (
+                "A recognisable classic hamster with a recurring consistent identity, "
+                "young-professional relatability and a small everyday sling/crossbody bag. "
+                "The hamster uses hamster-native behaviour to embody SimilarStoic money, "
+                "work, behaviour and life-strategy concepts, and is intended to remain "
+                "recognisably the same individual across character assets."
+            ),
+        }
+        assert persisted_asset_spec["character_profile"] is None
         assert all(
             candidate["generation_supported"]
             for candidate in persisted_asset_specs
