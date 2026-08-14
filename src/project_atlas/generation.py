@@ -118,6 +118,10 @@ class MissingProviderConfiguration(ValueError):
     """Raised before a provider attempt cannot be made from local configuration."""
 
 
+class InvalidCharacterReferenceBootstrap(ValueError):
+    """Raised before attempting an ineligible first-reference character generation."""
+
+
 class AssetStorageFailure(Exception):
     """Raised when Atlas cannot safely create a locally managed asset file."""
 
@@ -590,6 +594,70 @@ class GenerationService:
             reference_images,
         )
         generation_input = generation_input_object.payload()
+        return self._execute_generation(
+            asset_spec,
+            profile,
+            character_profile,
+            reference_set_id,
+            snapshot,
+            generation_input_object,
+            generation_input,
+        )
+
+    def bootstrap_character_reference_asset(self, asset_spec_id: str) -> GenerationResult:
+        """Generate one explicit first-reference candidate for an unreferenced character."""
+
+        asset_spec = self.repository.get_asset_spec(asset_spec_id)
+        if asset_spec.asset_type != "character":
+            raise InvalidCharacterReferenceBootstrap(
+                "Character reference bootstrap requires a character AssetSpec."
+            )
+        if asset_spec.character_profile_id is None:
+            raise InvalidCharacterReferenceBootstrap(
+                "Character reference bootstrap requires an AssetSpec CharacterProfile."
+            )
+        self.repository.get_scene(asset_spec.scene_id)
+        if not self.generator.supports(asset_spec.asset_type):
+            raise UnsupportedGenerationType(
+                f"AssetSpec type {asset_spec.asset_type!r} is not executable by this generator."
+            )
+        profile = self._active_visual_style_profile()
+        character_profile = self.repository.get_character_profile(asset_spec.character_profile_id)
+        if self.repository.get_latest_character_reference_set(character_profile.id) is not None:
+            raise InvalidCharacterReferenceBootstrap(
+                "Character reference bootstrap is unavailable after a CharacterReferenceSet exists "
+                "for this CharacterProfile."
+            )
+        self._validate_provider_configuration()
+        snapshot = asset_spec_snapshot(asset_spec)
+        generation_input_object = self.prompt_composer.compose(
+            asset_spec,
+            profile,
+            character_profile,
+        )
+        generation_input = generation_input_object.payload()
+        return self._execute_generation(
+            asset_spec,
+            profile,
+            character_profile,
+            None,
+            snapshot,
+            generation_input_object,
+            generation_input,
+        )
+
+    def _execute_generation(
+        self,
+        asset_spec: AssetSpec,
+        profile: VisualStyleProfile,
+        character_profile: CharacterProfile | None,
+        reference_set_id: str | None,
+        snapshot: dict[str, Any],
+        generation_input_object: GenerationInput,
+        generation_input: dict[str, Any],
+    ) -> GenerationResult:
+        """Persist one provider attempt after its exact Atlas input is frozen."""
+
         try:
             artifact = self.generator.generate(generation_input_object)
             self._validate_artifact(artifact)

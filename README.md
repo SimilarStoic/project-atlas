@@ -3,9 +3,9 @@
 > Working title — a scalable Python application platform.
 
 Project Atlas is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. It implements through v0.12, including the
-Canonical Character Reference Foundation. Later workflow, research automation and production
-systems remain deferred.
+SQLite foundation for SimilarStoic. It implements through v0.14, including reference-grounded
+character generation and an explicit first-reference bootstrap operation. Later workflow, research
+automation and production systems remain deferred.
 
 ## Technology baseline
 
@@ -276,11 +276,28 @@ Reference selection sits beside, rather than changes, the production chain:
 
 `ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset`
 
-Atlas still does not send reference Assets to an image provider, consume a CharacterReferenceSet in
-GenerationInput, use image-edit/image-to-image conditioning, preserve reference-consumption lineage on
-GenerationExecution, generate neutral CharacterProfile-owned candidate studies, or guarantee
-cross-generation visual consistency. Reference-grounded character generation is the next design-first
-problem; no implementation has started.
+At the v0.12 checkpoint, reference selection did not yet condition provider requests. That limitation was
+addressed by v0.13; the immutable ordered-set model remains unchanged.
+
+## Reference-grounded character generation
+
+Atlas v0.13 resolves the highest CharacterReferenceSet version for the exact CharacterProfile at input
+construction time. It freezes that set's ordered Asset IDs, SHA-256 digests, media types and positions in
+GenerationInput v4, reloads and verifies the exact managed bytes at provider time, and records direct
+GenerationExecution-to-CharacterReferenceSet lineage. Prompt-only requests use OpenAI image generation;
+grounded character requests use ordered multipart image edits. Reference bytes remain runtime-only.
+
+Normal character generation remains reference-grounded: a missing exact-profile CharacterReferenceSet is a
+pre-provider failure that creates neither GenerationExecution nor Asset.
+
+## Explicit character reference bootstrap
+
+Atlas v0.14 adds a separate, human-initiated bootstrap operation for the first eligible character Assets on
+an exact CharacterProfile with no CharacterReferenceSet. Bootstrap only accepts an existing Scene-owned
+character AssetSpec with CharacterProfile provenance and uses GenerationInput v3 with the existing
+non-reference provider path. It creates ordinary generated Assets and executions, never a reference set or
+mutable candidate state. Once any exact-profile CharacterReferenceSet exists, bootstrap is rejected before
+provider invocation; ordinary generation continues to require grounded references.
 
 ## Status
 
@@ -289,6 +306,8 @@ v0.4 Editorial Angle persistence, v0.5 Content Piece + Script persistence, and
 v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specification +
 Asset persistence, v0.8 Generation Execution, and v0.9 Visual Style Control are complete and
 pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visual-style baseline. v0.11
-Character Continuity Foundation and v0.12 Canonical Character Reference Foundation are complete and pushed.
-The verified checkpoint is `f1346684945bb9cd99f02c8977710da2ace594fa` (`feat: add canonical character
-references`), with 64 passing tests and migrations 1–10. Later Atlas systems remain out of scope.
+Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, and v0.13
+Reference-Grounded Character Generation are complete and pushed. The verified checkpoint is
+`6d9bb0bef12d53bb5e05a689fba3a45faa93360b` (`feat: add reference-grounded character generation`), with
+69 passing tests and migrations 1–11. v0.14 Explicit Character Reference Bootstrap is implemented locally
+and awaiting final acceptance. Later Atlas systems remain out of scope.

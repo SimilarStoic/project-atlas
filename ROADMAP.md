@@ -677,8 +677,8 @@ Commercial relationships must never determine:
 
 ## Current implementation milestones
 
-Verified checkpoint: `f1346684945bb9cd99f02c8977710da2ace594fa` (`feat: add canonical character
-references`). Validation at this checkpoint: 64 passing tests and SQLite migrations 1–10.
+Verified checkpoint: `6d9bb0bef12d53bb5e05a689fba3a45faa93360b` (`feat: add reference-grounded
+character generation`). Validation at this checkpoint: 69 passing tests and SQLite migrations 1–11.
 
 ### Atlas v0.1 — MVP Editorial Control Interface
 Status: COMPLETE
@@ -763,14 +763,24 @@ explicitly create a one-or-more Asset set. Newly generated managed Assets carry 
 historical set versions preserve the exact selected Assets and original execution provenance without mutable
 current, best or approved state.
 
-This remains selection-only: the production chain is unchanged, and no canonical reference image is sent to
-a provider. Reference-image/image-edit conditioning, CharacterReferenceSet consumption in GenerationInput,
-GenerationExecution reference-consumption lineage and guaranteed visual consistency remain beyond v0.12.
+At the v0.12 checkpoint this remained selection-only. Reference-image conditioning, GenerationInput
+consumption, and execution lineage were introduced by v0.13.
 
-Next intended work is read-only design first for reference-grounded character generation: how an exact
-immutable CharacterReferenceSet should pass selected reference image(s) through a provider-neutral boundary
-and freeze exact consumption provenance without coupling Atlas core domain semantics to one provider. No
-implementation has started.
+### Atlas v0.13 — Reference-Grounded Character Generation
+Status: COMPLETE
+
+Character generation now resolves the highest exact-profile CharacterReferenceSet, freezes its ordered
+Asset/digest/media/position provenance in GenerationInput v4, verifies the managed bytes at provider time,
+and records direct GenerationExecution reference-set lineage. Grounded character requests use the OpenAI
+image-edit transport; missing references remain pre-provider failures.
+
+### Atlas v0.14 — Explicit Character Reference Bootstrap
+Status: IMPLEMENTED LOCALLY, AWAITING ACCEPTANCE
+
+An explicit bootstrap operation generates the first eligible Scene-owned character Asset only while an exact
+CharacterProfile has no CharacterReferenceSet. It reuses GenerationInput v3 and the non-reference provider
+path, never creates a set automatically, and is rejected once any exact-profile set exists. Ordinary
+character generation remains reference-grounded.
 
 Neutral CharacterProfile candidate generation, reusable AssetLibrary, imported/manual reference ingestion,
 named reference roles, similarity scoring or automated character-consistency QA, generic

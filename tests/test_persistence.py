@@ -13,6 +13,7 @@ from project_atlas.generation import (
     GenerationFailure,
     GenerationInput,
     GenerationService,
+    InvalidCharacterReferenceBootstrap,
     LocalAssetStorage,
     MissingCharacterReferenceSet,
     MissingProviderConfiguration,
@@ -2899,6 +2900,220 @@ def test_reference_grounded_generation_requires_exact_reference_set_before_attem
         assert repository.list_generation_executions_for_asset_spec(asset_spec_id) == []
         assert repository.list_assets_for_asset_spec(asset_spec_id) == []
         assert generator.inputs == []
+    finally:
+        repository.close()
+
+
+def test_character_reference_bootstrap_generates_v3_candidate_without_a_reference_set(
+    tmp_path,
+) -> None:
+    """An explicit bootstrap creates eligible pre-reference character evidence only."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        normal_generator = FakeImageGenerator()
+        normal_service = GenerationService(
+            repository, normal_generator, LocalAssetStorage(storage_root)
+        )
+        try:
+            normal_service.generate_asset_spec(asset_spec.id)
+        except MissingCharacterReferenceSet:
+            pass
+        else:
+            raise AssertionError("Ordinary character generation silently used bootstrap behavior.")
+        assert normal_generator.inputs == []
+
+        generator = FakeImageGenerator()
+        result = GenerationService(
+            repository, generator, LocalAssetStorage(storage_root)
+        ).bootstrap_character_reference_asset(asset_spec.id)
+
+        assert result.asset is not None
+        assert len(generator.inputs) == 1
+        assert result.execution.outcome == "succeeded"
+        assert result.execution.character_profile_id == asset_spec.character_profile_id
+        assert result.execution.character_reference_set_id is None
+        assert result.execution.generation_input["schema_version"] == 3
+        assert "character_references" not in result.execution.generation_input
+        assert generator.inputs[0].reference_images == ()
+        assert (
+            repository.get_latest_character_reference_set(asset_spec.character_profile_id) is None
+        )
+        assert result.asset.id in {
+            asset.id
+            for asset in repository.list_eligible_character_reference_assets(
+                asset_spec.character_profile_id
+            )
+        }
+    finally:
+        repository.close()
+
+
+def test_character_reference_bootstrap_records_provider_failure_without_an_asset(tmp_path) -> None:
+    """A failed bootstrap remains one v3 terminal execution without an Asset."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        asset_spec = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
+        generator = FakeImageGenerator(
+            failure=GenerationFailure("Bootstrap rejected.", error_code="rejected")
+        )
+        result = GenerationService(
+            repository, generator, LocalAssetStorage(storage_root)
+        ).bootstrap_character_reference_asset(asset_spec.id)
+
+        assert len(generator.inputs) == 1
+        assert result.asset is None
+        assert result.execution.outcome == "failed"
+        assert result.execution.character_profile_id == asset_spec.character_profile_id
+        assert result.execution.character_reference_set_id is None
+        assert result.execution.generation_input["schema_version"] == 3
+        assert "character_references" not in result.execution.generation_input
+    finally:
+        repository.close()
+
+
+def test_character_reference_bootstrap_uses_the_non_reference_openai_request(tmp_path) -> None:
+    """Bootstrap uses the ordinary image-generation transport with a truthful v3 input."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    captured = {}
+
+    class Response:
+        headers = {"x-request-id": "bootstrap-openai-request"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        @staticmethod
+        def read() -> bytes:
+            return b'{"created": 1, "data": [{"b64_json": "b3V0cHV0"}]}'
+
+    def opener(request, timeout):
+        captured["request"] = request
+        captured["timeout"] = timeout
+        return Response()
+
+    try:
+        result = GenerationService(
+            repository,
+            OpenAIImageGenerator(api_key="test-key", opener=opener),
+            LocalAssetStorage(storage_root),
+        ).bootstrap_character_reference_asset("asset-spec-isa-scene-01-hamster-sorting-v1")
+
+        request = captured["request"]
+        assert request.full_url == "https://api.openai.com/v1/images/generations"
+        assert request.headers["Content-type"] == "application/json"
+        assert json.loads(request.data) == {
+            "model": "gpt-image-2",
+            "prompt": result.execution.generation_input["prompt"],
+            "n": 1,
+            "output_format": "png",
+        }
+        assert result.execution.generation_input["schema_version"] == 3
+        assert "character_references" not in result.execution.generation_input
+        assert result.execution.character_reference_set_id is None
+    finally:
+        repository.close()
+
+
+def test_character_reference_bootstrap_rejects_ineligible_specs_and_existing_sets(tmp_path) -> None:
+    """Bootstrap is pre-provider-only for an unreferenced Scene-owned character AssetSpec."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        generator = FakeImageGenerator()
+        service = GenerationService(repository, generator, LocalAssetStorage(storage_root))
+        executions_before = repository.connection.execute(
+            "SELECT COUNT(*) FROM generation_executions"
+        ).fetchone()[0]
+        for asset_spec_id in (
+            "asset-spec-isa-scene-01-kitchen-background-v1",
+            "asset-spec-isa-scene-02-tax-year-calendar-v1",
+        ):
+            try:
+                service.bootstrap_character_reference_asset(asset_spec_id)
+            except InvalidCharacterReferenceBootstrap:
+                pass
+            else:
+                raise AssertionError("Bootstrap accepted a non-character AssetSpec.")
+
+        character_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        repository.update_asset_spec(replace(character_spec, character_profile_id=None))
+        try:
+            service.bootstrap_character_reference_asset(character_spec.id)
+        except InvalidCharacterReferenceBootstrap:
+            pass
+        else:
+            raise AssertionError(
+                "Bootstrap accepted a character AssetSpec without identity lineage."
+            )
+        repository.update_asset_spec(character_spec)
+
+        ensure_character_reference_set(
+            repository, storage_root, character_spec.character_profile_id
+        )
+        try:
+            service.bootstrap_character_reference_asset(character_spec.id)
+        except InvalidCharacterReferenceBootstrap:
+            pass
+        else:
+            raise AssertionError("Bootstrap continued after a CharacterReferenceSet existed.")
+        assert generator.inputs == []
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM generation_executions").fetchone()[
+                0
+            ]
+            == executions_before + 1
+        )
+    finally:
+        repository.close()
+
+
+def test_character_reference_bootstrap_isolated_to_the_exact_character_profile(tmp_path) -> None:
+    """A reference set for profile A cannot block explicit bootstrap for profile B."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        first_profile_id = "character-profile-similarstoic-hamster-core-v1"
+        ensure_character_reference_set(repository, storage_root, first_profile_id)
+        second_profile = repository.create_character_profile(
+            "character-profile-bootstrap-isolation-v1",
+            "bootstrap-isolation",
+            1,
+            "Bootstrap isolation hamster",
+            "A distinct test CharacterProfile for bootstrap isolation.",
+            "Depict the distinct test hamster consistently.",
+        )
+        asset_spec = repository.create_asset_spec(
+            "asset-spec-bootstrap-isolation-v1",
+            "scene-isa-deadline-video-v1-01",
+            "character",
+            "Bootstrap a distinct profile's first legitimate reference candidate.",
+            "A distinct hamster performs a meaningful Scene-owned action.",
+            "Illustrate the distinct test hamster carrying out the Scene action.",
+            character_profile_id=second_profile.id,
+        )
+        generator = FakeImageGenerator()
+        result = GenerationService(
+            repository, generator, LocalAssetStorage(storage_root)
+        ).bootstrap_character_reference_asset(asset_spec.id)
+
+        assert result.asset is not None
+        assert len(generator.inputs) == 1
+        assert result.execution.character_profile_id == second_profile.id
+        assert result.execution.character_reference_set_id is None
+        assert result.execution.generation_input["schema_version"] == 3
+        assert repository.get_latest_character_reference_set(second_profile.id) is None
     finally:
         repository.close()
 

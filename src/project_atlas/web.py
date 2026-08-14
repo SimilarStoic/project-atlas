@@ -15,7 +15,10 @@ from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload
 from project_atlas.generation import (
     AssetGenerator,
     GenerationService,
+    InvalidCharacterReferenceBootstrap,
     LocalAssetStorage,
+    MissingCharacterReferenceSet,
+    MissingProviderConfiguration,
     MissingVisualStyleProfile,
     OpenAIImageGenerator,
     UnsupportedGenerationType,
@@ -88,6 +91,21 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                                         self.server.generation_service.generator.supports(
                                             asset_spec["asset_type"]
                                         )
+                                    )
+                                    character_profile = asset_spec["character_profile"]
+                                    bootstrap_available = False
+                                    if (
+                                        asset_spec["asset_type"] == "character"
+                                        and character_profile is not None
+                                    ):
+                                        bootstrap_available = (
+                                            self.server.repository.get_latest_character_reference_set(
+                                                character_profile["id"]
+                                            )
+                                            is None
+                                        )
+                                    asset_spec["bootstrap_reference_generation_available"] = (
+                                        bootstrap_available
                                     )
                             content["scene_plan"] = " ".join(
                                 scene["visual_intent"] for scene in visual_plan["scenes"]
@@ -179,23 +197,37 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             )
             return
         prefix = "/api/asset-specs/"
-        suffix = "/generate"
-        if not (path.startswith(prefix) and path.endswith(suffix)):
+        bootstrap_suffix = "/bootstrap-character-reference"
+        generate_suffix = "/generate"
+        if not path.startswith(prefix):
             self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
-        asset_spec_id = unquote(path[len(prefix) : -len(suffix)]).strip("/")
+        if path.endswith(bootstrap_suffix):
+            asset_spec_id = unquote(path[len(prefix) : -len(bootstrap_suffix)]).strip("/")
+            operation = self.server.generation_service.bootstrap_character_reference_asset
+            kind = "character_reference_bootstrap"
+        elif path.endswith(generate_suffix):
+            asset_spec_id = unquote(path[len(prefix) : -len(generate_suffix)]).strip("/")
+            operation = self.server.generation_service.generate_asset_spec
+            kind = "generation"
+        else:
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+            return
         if not asset_spec_id:
             self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
         try:
-            result = self.server.generation_service.generate_asset_spec(asset_spec_id)
+            result = operation(asset_spec_id)
         except KeyError:
             self._send_json({"error": "AssetSpec not found."}, HTTPStatus.NOT_FOUND)
             return
-        except UnsupportedGenerationType as error:
-            self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
-            return
-        except MissingVisualStyleProfile as error:
+        except (
+            InvalidCharacterReferenceBootstrap,
+            MissingCharacterReferenceSet,
+            MissingProviderConfiguration,
+            MissingVisualStyleProfile,
+            UnsupportedGenerationType,
+        ) as error:
             self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
             return
         except Exception:
@@ -206,7 +238,7 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             return
         self._send_json(
             {
-                "kind": "generation",
+                "kind": kind,
                 "execution": self.server.repository.generation_execution_payload(
                     result.execution.id
                 ),

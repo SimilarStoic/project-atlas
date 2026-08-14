@@ -417,6 +417,96 @@ def test_generation_endpoint_represents_provider_failure_without_asset(tmp_path:
         server.server_close()
 
 
+def test_bootstrap_reference_endpoint_is_explicit_and_stops_after_first_set(tmp_path: Path) -> None:
+    """The local UI API exposes first-reference generation without changing normal generation."""
+
+    storage_root = tmp_path / "assets"
+    generator = FakeImageGenerator()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=generator,
+        asset_storage_root=storage_root,
+    )
+    try:
+        asset_spec_id = "asset-spec-isa-scene-01-hamster-sorting-v1"
+
+        def request_json(request: Request | str) -> tuple[dict, int]:
+            thread = threading.Thread(target=server.handle_request)
+            thread.start()
+            with urlopen(request) as response:
+                payload = json.load(response)
+                status = response.status
+            thread.join(timeout=2)
+            return payload, status
+
+        content, _ = request_json(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content")
+        character_spec = next(
+            candidate
+            for scene in content["content"]["visual_plan"]["scenes"]
+            for candidate in scene["asset_specs"]
+            if candidate["id"] == asset_spec_id
+        )
+        assert character_spec["bootstrap_reference_generation_available"] is True
+
+        bootstrapped, status = request_json(
+            Request(
+                "http://127.0.0.1:"
+                f"{server.server_address[1]}/api/asset-specs/{asset_spec_id}/"
+                "bootstrap-character-reference",
+                method="POST",
+            )
+        )
+        assert status == 200
+        assert bootstrapped["kind"] == "character_reference_bootstrap"
+        assert bootstrapped["execution"]["character_reference_set_id"] is None
+        assert bootstrapped["asset"] is not None
+        assert len(generator.inputs) == 1
+        assert generator.inputs[0].payload()["schema_version"] == 3
+
+        profile_id = "character-profile-similarstoic-hamster-core-v1"
+        reference_set, status = request_json(
+            Request(
+                "http://127.0.0.1:"
+                f"{server.server_address[1]}/api/character-profiles/{profile_id}/reference-sets",
+                data=json.dumps({"asset_ids": [bootstrapped["asset"]["id"]]}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        assert reference_set["reference_set"]["version"] == 1
+
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        blocked_request = Request(
+            "http://127.0.0.1:"
+            f"{server.server_address[1]}/api/asset-specs/{asset_spec_id}/"
+            "bootstrap-character-reference",
+            method="POST",
+        )
+        try:
+            urlopen(blocked_request)
+        except HTTPError as error:
+            assert error.code == 400
+            assert "unavailable after a CharacterReferenceSet exists" in error.read().decode()
+        else:
+            raise AssertionError("Bootstrap API accepted a profile with a reference set.")
+        thread.join(timeout=2)
+        assert len(generator.inputs) == 1
+
+        refreshed, _ = request_json(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content")
+        refreshed_spec = next(
+            candidate
+            for scene in refreshed["content"]["visual_plan"]["scenes"]
+            for candidate in scene["asset_specs"]
+            if candidate["id"] == asset_spec_id
+        )
+        assert refreshed_spec["bootstrap_reference_generation_available"] is False
+    finally:
+        server.server_close()
+
+
 def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_path: Path) -> None:
     """The local UI API exposes only eligible generated hamster evidence for selection."""
 

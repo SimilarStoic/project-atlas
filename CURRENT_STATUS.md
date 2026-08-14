@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-13 August 2026
+14 August 2026
 
 ## Current Phase
 
@@ -15,14 +15,16 @@
 The technical foundation is complete and the repository is safely stored on GitHub.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
-Character Continuity Foundation and v0.12 Canonical Character Reference Foundation are complete and
-pushed. V0.10 remains a provisional visual-style baseline, not final art direction.
+Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, and v0.13
+Reference-Grounded Character Generation are complete and pushed. V0.10 remains a provisional visual-style
+baseline, not final art direction.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8 through v0.12 are complete and pushed. Atlas now has immutable, versioned character identity
-and canonical visual-reference foundations alongside the approved SimilarStoic Core v2 visual-style
-baseline.
+Atlas v0.8 through v0.13 are complete and pushed. Atlas now has immutable, versioned character identity,
+canonical visual-reference foundations, and reference-grounded character generation alongside the approved
+SimilarStoic Core v2 visual-style baseline. v0.14 Explicit Character Reference Bootstrap is implemented
+locally and awaiting final acceptance.
 
 ---
 
@@ -45,7 +47,7 @@ baseline.
 
 Current commit:
 
-`f1346684945bb9cd99f02c8977710da2ace594fa feat: add canonical character references`
+`6d9bb0bef12d53bb5e05a689fba3a45faa93360b feat: add reference-grounded character generation`
 
 Branch:
 
@@ -57,15 +59,15 @@ Remote:
 
 Working tree:
 
-Clean at the accepted v0.12 checkpoint; local `main` matched `origin/main`.
+Clean at the accepted v0.13 checkpoint; local `main` matched `origin/main` before v0.14 local work.
 
 Validated state:
 
 - Ruff passed.
 - Black `--check` passed.
-- pytest: **64 passed**.
+- pytest: **69 passed** at the accepted v0.13 checkpoint.
 - `git diff --check` passed.
-- SQLite migrations: **1–10**.
+- SQLite migrations: **1–11**.
 
 ## Atlas v0.2 Checkpoint
 
@@ -245,10 +247,34 @@ pushed.
   provenance remain preserved.
 - Canonical-reference selection sits beside the production chain rather than changing it:
   ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset.
-- Atlas remains prompt-only. It does not send reference images to a provider, use image editing or
-  image-to-image conditioning, consume CharacterReferenceSet in GenerationInput, preserve
-  reference-consumption lineage on GenerationExecution, generate neutral CharacterProfile-owned studies, or
-  guarantee cross-generation hamster consistency.
+- At the v0.12 checkpoint, Atlas remained prompt-only. Reference consumption and execution lineage were
+  introduced by v0.13; neutral CharacterProfile-owned studies and guaranteed cross-generation consistency
+  remain deferred.
+
+## Atlas v0.13 Checkpoint
+
+**Project Atlas v0.13 — Reference-Grounded Character Generation** is complete, accepted, committed and
+pushed.
+
+- Normal character generation resolves the highest CharacterReferenceSet version for the exact
+  CharacterProfile, freezes its ordered Asset/digest/media/position provenance in GenerationInput v4, and
+  verifies managed reference bytes before the provider request.
+- Grounded character requests use the adapter's ordered multipart image-edit path; prompt-only requests
+  retain the ordinary image-generation path. Reference bytes remain runtime-only.
+- GenerationExecution retains direct CharacterReferenceSet lineage. Missing sets, invalid references, and
+  missing provider configuration remain pre-provider failures with no execution or Asset.
+
+## Atlas v0.14 Local Implementation
+
+**Project Atlas v0.14 — Explicit Character Reference Bootstrap** is implemented locally and awaiting final
+acceptance.
+
+- A separate explicit operation can generate the first eligible Scene-owned character Asset for an exact
+  CharacterProfile only while that profile has no CharacterReferenceSet.
+- Bootstrap uses the existing non-reference GenerationInput v3 representation and provider path. It creates
+  no reference set or mutable candidate state.
+- Once any exact-profile CharacterReferenceSet exists, bootstrap is rejected before provider invocation;
+  ordinary character generation continues to require grounded references.
 
 ---
 
@@ -593,25 +619,22 @@ Remaining before Phase 1 is complete:
 
 # Next Step
 
-Next intended work is **read-only design first** for reference-grounded character generation. No
-implementation has started.
+Reference-grounded generation is complete in v0.13. The bounded v0.14 local implementation adds explicit
+first-reference bootstrap generation for an unreferenced exact CharacterProfile and is awaiting final
+acceptance. Normal generation still requires references; bootstrap never creates them automatically.
 
-Narrow problem: how Atlas should consume an exact immutable CharacterReferenceSet during character
-generation, pass selected reference image(s) through the provider-neutral generation boundary, and freeze
-exact reference-consumption provenance without coupling the core domain to one provider.
+Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
+imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency
+QA, generic approval/current/best state, provider registry, queues/workers/batching, animation/rendering,
+publishing, analytics, compliance, source attribution/citations and exact Script-to-Claim/evidence work remain
+deferred.
 
-Provider reference-image/edit conditioning remains a later bounded capability. Atlas has not implemented
-reference consumption, image editing, neutral CharacterProfile candidate generation or guaranteed
-cross-generation visual consistency. Generic AssetLibrary, imported/manual reference ingestion, named
-reference roles, similarity scoring, automated character-consistency QA, generic approval/current/best
-state, provider registry, queues/workers/batching, animation/rendering, publishing, analytics, compliance,
-source attribution/citations and exact Script-to-Claim/evidence work remain deferred.
-
-Implemented direction through v0.12: v0.8 adds GenerationExecution provenance between an AssetSpec and any
+Implemented direction through v0.14: v0.8 adds GenerationExecution provenance between an AssetSpec and any
 generated Asset; v0.9 adds immutable VisualStyleProfile provenance and deterministic prompt composition;
 v0.11 adds immutable CharacterProfile identity provenance; v0.12 adds immutable, ordered,
-digest-backed CharacterReferenceSet selection. Manual and imported Assets remain valid without execution
-provenance, but cannot be canonical references.
+digest-backed CharacterReferenceSet selection; v0.13 consumes verified references; v0.14 adds explicit
+first-reference bootstrap without changing normal grounded-generation semantics. Manual and imported Assets
+remain valid without execution provenance, but cannot be canonical references.
 
 > Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → Editorial Angle → ContentPiece → Script → VisualPlan → Scenes → AssetSpecs → GenerationExecution → Assets
 

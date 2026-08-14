@@ -202,7 +202,12 @@ function visualPlan(content) {
               "</p>"
             : "";
           var generateAction = assetSpec.generation_supported
-            ? '<button class="generate-asset" data-asset-spec-id="' + assetSpec.id + '">Generate</button>'
+            ? '<button class="generate-asset" data-asset-spec-id="' + assetSpec.id + '">' +
+              (assetSpec.character_profile ? "Generate grounded" : "Generate") +
+              "</button>"
+            : "";
+          var bootstrapAction = assetSpec.bootstrap_reference_generation_available
+            ? '<button class="bootstrap-reference-asset" data-asset-spec-id="' + assetSpec.id + '">Bootstrap reference candidate</button>'
             : "";
           return (
             '<li><b>' +
@@ -219,6 +224,7 @@ function visualPlan(content) {
             registeredAssets +
             executionStatus +
             generateAction +
+            bootstrapAction +
             "</li>"
           );
         })
@@ -304,7 +310,7 @@ function characterReferenceReview(review) {
   }
   var candidates = review.eligible_assets.length
     ? review.eligible_assets.map(function (asset) { return referenceAssetCard(asset, true); }).join("")
-    : "<p>No eligible generated hamster Assets yet. Generate normal scene-derived character Assets first.</p>";
+    : "<p>No eligible generated hamster Assets yet. Before the first reference set, explicitly bootstrap a scene-derived character reference candidate.</p>";
   var existingSets = review.reference_sets.length
     ? review.reference_sets
         .map(function (set) {
@@ -380,6 +386,41 @@ function bindGenerationActions() {
         })
         .catch(function (error) {
           say(error.message || "Generation could not be completed.");
+          element.disabled = false;
+        });
+    };
+  });
+}
+
+function bindBootstrapReferenceActions() {
+  document.querySelectorAll(".bootstrap-reference-asset").forEach(function (element) {
+    element.onclick = function () {
+      element.disabled = true;
+      fetch(
+        "/api/asset-specs/" +
+          encodeURIComponent(element.dataset.assetSpecId) +
+          "/bootstrap-character-reference",
+        { method: "POST" }
+      )
+        .then(function (response) {
+          return response.json().then(function (data) {
+            if (!response.ok) {
+              throw new Error(data.error || "Bootstrap generation could not start.");
+            }
+            return data;
+          });
+        })
+        .then(function (data) {
+          var message = data.execution.outcome === "succeeded"
+            ? "Bootstrap reference candidate Asset v" + data.asset.version + " is registered."
+            : data.execution.error_message || "Bootstrap generation failed and was recorded.";
+          say(message);
+          return fetch("/api/demo/content");
+        })
+        .then(function (response) { return response.json(); })
+        .then(function (payload) { pack(payload.content); })
+        .catch(function (error) {
+          say(error.message || "Bootstrap generation could not be completed.");
           element.disabled = false;
         });
     };
@@ -491,6 +532,7 @@ function pack(content) {
     '</ul><div class="actions"><button>Approve</button><button>Request changes</button><button>Reject</button></div></div></div></div>';
   bindActions();
   bindGenerationActions();
+  bindBootstrapReferenceActions();
   bindReferenceActions();
 }
 
