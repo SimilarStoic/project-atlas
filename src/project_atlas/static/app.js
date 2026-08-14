@@ -329,7 +329,7 @@ function characterReferenceReview(review) {
     review.character_profile.name +
     " · v" +
     review.character_profile.version +
-    '</h3><p>Choose existing eligible, scene-derived hamster Assets in the order they should form one immutable visual reference basis. This does not yet condition later generation or guarantee consistency.</p><div class="reference-assets">' +
+    '</h3><p>Choose existing eligible, scene-derived hamster Assets in the order they should form one immutable visual reference basis. At character-generation time, Atlas resolves the highest version for this CharacterProfile; it does not guarantee consistency.</p><div class="reference-assets">' +
     candidates +
     '</div><div class="actions"><button class="create-reference-set" data-character-profile-id="' +
     review.character_profile.id +

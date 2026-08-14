@@ -28,6 +28,16 @@ DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v2"
 
 
 @dataclass(frozen=True)
+class ReferenceImage:
+    """One verified runtime-only reference image supplied to a generator."""
+
+    asset_id: str
+    media_type: str
+    content: bytes
+    position: int
+
+
+@dataclass(frozen=True)
 class GenerationInput:
     """The deliberately small Atlas-owned input supplied to a generator."""
 
@@ -37,10 +47,14 @@ class GenerationInput:
     parameters: dict[str, Any]
     style: dict[str, Any] | None = None
     character: dict[str, Any] | None = None
+    character_references: dict[str, Any] | None = None
+    reference_images: tuple[ReferenceImage, ...] = ()
 
     def payload(self) -> dict[str, Any]:
         payload = {
-            "schema_version": 3 if self.style is not None else 1,
+            "schema_version": (
+                4 if self.character_references is not None else 3 if self.style is not None else 1
+            ),
             "asset_type": self.asset_type,
             "prompt": self.prompt,
             "continuity_key": self.continuity_key,
@@ -50,6 +64,8 @@ class GenerationInput:
             payload["style"] = self.style
         if self.character is not None:
             payload["character"] = self.character
+        if self.character_references is not None:
+            payload["character_references"] = self.character_references
         return payload
 
 
@@ -92,6 +108,14 @@ class UnsupportedGenerationType(ValueError):
 
 class MissingVisualStyleProfile(ValueError):
     """Raised before generator invocation when configured style provenance is unavailable."""
+
+
+class MissingCharacterReferenceSet(ValueError):
+    """Raised before generator invocation when grounded character references are unavailable."""
+
+
+class MissingProviderConfiguration(ValueError):
+    """Raised before a provider attempt cannot be made from local configuration."""
 
 
 class AssetStorageFailure(Exception):
@@ -182,6 +206,8 @@ class PromptComposer:
         asset_spec: AssetSpec,
         profile: VisualStyleProfile,
         character_profile: CharacterProfile | None = None,
+        character_references: dict[str, Any] | None = None,
+        reference_images: tuple[ReferenceImage, ...] = (),
     ) -> GenerationInput:
         """Return one v3 input with resolved style and optional character identity provenance."""
 
@@ -227,6 +253,8 @@ class PromptComposer:
                 if character_profile is not None
                 else None
             ),
+            character_references=character_references,
+            reference_images=reference_images,
         )
 
     @staticmethod
@@ -362,23 +390,36 @@ class OpenAIImageGenerator:
     def supports(self, asset_type: str) -> bool:
         return asset_type in self.supported_asset_types
 
-    def generate(self, generation_input: GenerationInput) -> GeneratedArtifact:
+    def validate_configuration(self) -> None:
+        """Reject a missing API credential before crossing the provider-attempt boundary."""
+
         if not self.api_key:
-            raise GenerationFailure(
-                "OPENAI_API_KEY is not configured for OpenAI image generation.",
-                error_code="missing_api_key",
-                provider_key="openai",
-                model_key=self.model,
+            raise MissingProviderConfiguration(
+                "OPENAI_API_KEY is not configured for OpenAI image generation."
             )
-        payload = json.dumps(
-            {"model": self.model, "prompt": generation_input.prompt, "n": 1, "output_format": "png"}
-        ).encode("utf-8")
+
+    def generate(self, generation_input: GenerationInput) -> GeneratedArtifact:
+        self.validate_configuration()
+        if generation_input.reference_images:
+            endpoint = "https://api.openai.com/v1/images/edits"
+            payload, content_type = self._reference_edit_payload(generation_input)
+        else:
+            endpoint = "https://api.openai.com/v1/images/generations"
+            payload = json.dumps(
+                {
+                    "model": self.model,
+                    "prompt": generation_input.prompt,
+                    "n": 1,
+                    "output_format": "png",
+                }
+            ).encode("utf-8")
+            content_type = "application/json"
         request = Request(
-            "https://api.openai.com/v1/images/generations",
+            endpoint,
             data=payload,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
+                "Content-Type": content_type,
             },
             method="POST",
         )
@@ -431,6 +472,47 @@ class OpenAIImageGenerator:
                 key: response_payload[key] for key in ("created",) if key in response_payload
             },
         )
+
+    def _reference_edit_payload(self, generation_input: GenerationInput) -> tuple[bytes, str]:
+        """Encode already verified reference bytes for OpenAI's image-edit transport."""
+
+        boundary = f"----AtlasReference{uuid.uuid4().hex}"
+        chunks: list[bytes] = []
+
+        def add_text(name: str, value: str) -> None:
+            chunks.extend(
+                (
+                    f"--{boundary}\r\n".encode(),
+                    f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode(),
+                    value.encode("utf-8"),
+                    b"\r\n",
+                )
+            )
+
+        add_text("model", self.model)
+        add_text("prompt", generation_input.prompt)
+        add_text("n", "1")
+        add_text("output_format", "png")
+        for reference in generation_input.reference_images:
+            extension = LocalAssetStorage._EXTENSIONS.get(reference.media_type)
+            if extension is None:
+                raise ValueError(
+                    "Reference image media type is not supported by OpenAI image edits."
+                )
+            chunks.extend(
+                (
+                    f"--{boundary}\r\n".encode(),
+                    (
+                        'Content-Disposition: form-data; name="image[]"; '
+                        f'filename="reference-{reference.position}{extension}"\r\n'
+                    ).encode(),
+                    f"Content-Type: {reference.media_type}\r\n\r\n".encode(),
+                    reference.content,
+                    b"\r\n",
+                )
+            )
+        chunks.append(f"--{boundary}--\r\n".encode())
+        return b"".join(chunks), f"multipart/form-data; boundary={boundary}"
 
     @staticmethod
     def _json_object(body: bytes) -> dict[str, Any]:
@@ -490,9 +572,22 @@ class GenerationService:
             )
         profile = self._active_visual_style_profile()
         character_profile = self._character_profile_for(asset_spec)
+        self._validate_provider_configuration()
+        reference_set_id: str | None = None
+        character_references: dict[str, Any] | None = None
+        reference_images: tuple[ReferenceImage, ...] = ()
+        if character_profile is not None:
+            reference_set, character_references, reference_images = self._character_references_for(
+                character_profile
+            )
+            reference_set_id = reference_set.id
         snapshot = asset_spec_snapshot(asset_spec)
         generation_input_object = self.prompt_composer.compose(
-            asset_spec, profile, character_profile
+            asset_spec,
+            profile,
+            character_profile,
+            character_references,
+            reference_images,
         )
         generation_input = generation_input_object.payload()
         try:
@@ -508,6 +603,7 @@ class GenerationService:
                     self.generator.generator_key,
                     visual_style_profile_id=profile.id,
                     character_profile_id=(character_profile.id if character_profile else None),
+                    character_reference_set_id=reference_set_id,
                     provider_key=error.provider_key,
                     model_key=error.model_key,
                     provider_request_id=error.provider_request_id,
@@ -532,6 +628,7 @@ class GenerationService:
                     self.generator.generator_key,
                     visual_style_profile_id=profile.id,
                     character_profile_id=(character_profile.id if character_profile else None),
+                    character_reference_set_id=reference_set_id,
                     provider_key=artifact.provider_key,
                     model_key=artifact.model_key,
                     provider_request_id=artifact.provider_request_id,
@@ -553,6 +650,7 @@ class GenerationService:
                 artifact.media_type,
                 visual_style_profile_id=profile.id,
                 character_profile_id=(character_profile.id if character_profile else None),
+                character_reference_set_id=reference_set_id,
                 provider_key=artifact.provider_key,
                 model_key=artifact.model_key,
                 provider_request_id=artifact.provider_request_id,
@@ -583,6 +681,59 @@ class GenerationService:
         if asset_spec.character_profile_id is None:
             return None
         return self.repository.get_character_profile(asset_spec.character_profile_id)
+
+    def _validate_provider_configuration(self) -> None:
+        """Run an adapter's optional preflight before an execution may be recorded."""
+
+        validator = getattr(self.generator, "validate_configuration", None)
+        if validator is not None:
+            validator()
+
+    def _character_references_for(
+        self, character_profile: CharacterProfile
+    ) -> tuple[Any, dict[str, Any], tuple[ReferenceImage, ...]]:
+        """Resolve, freeze, and verify the highest exact-profile reference set."""
+
+        reference_set = self.repository.get_latest_character_reference_set(character_profile.id)
+        if reference_set is None:
+            raise MissingCharacterReferenceSet(
+                f"CharacterProfile {character_profile.id!r} has no canonical CharacterReferenceSet."
+            )
+        members = self.repository.list_character_reference_set_members(reference_set.id)
+        frozen_members = []
+        reference_images = []
+        for member in members:
+            asset, content = self.repository.load_verified_character_reference_asset(
+                member.asset_id, character_profile.id
+            )
+            if asset.content_digest is None:
+                raise ValueError("Verified character reference Assets require a content digest.")
+            frozen_members.append(
+                {
+                    "asset_id": asset.id,
+                    "content_digest": asset.content_digest,
+                    "media_type": asset.media_type,
+                    "position": member.position,
+                }
+            )
+            reference_images.append(
+                ReferenceImage(asset.id, asset.media_type, content, member.position)
+            )
+        return (
+            reference_set,
+            {
+                "intent": "character_identity_grounding",
+                "reference_set_id": reference_set.id,
+                "reference_set_version": reference_set.version,
+                "character_profile": {
+                    "profile_id": character_profile.id,
+                    "character_key": character_profile.character_key,
+                    "version": character_profile.version,
+                },
+                "members": frozen_members,
+            },
+            tuple(reference_images),
+        )
 
     @staticmethod
     def _validate_artifact(artifact: GeneratedArtifact) -> None:

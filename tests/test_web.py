@@ -4,12 +4,19 @@ import json
 import os
 import threading
 from dataclasses import replace
+from hashlib import sha256
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from project_atlas.demo_data import chat_reply, content_payload, opportunity_payload
-from project_atlas.generation import GeneratedArtifact, GenerationFailure
+from project_atlas.generation import (
+    GeneratedArtifact,
+    GenerationFailure,
+    LocalAssetStorage,
+    PromptComposer,
+    asset_spec_snapshot,
+)
 from project_atlas.web import create_server
 
 
@@ -36,6 +43,46 @@ class FakeImageGenerator:
             model_key="fake-http-model",
             provider_request_id="fake-http-request",
         )
+
+
+def ensure_character_reference_set(server, storage_root: Path) -> str:
+    """Seed historical v0.12 character evidence before exercising v0.13 HTTP generation."""
+
+    repository = server.repository
+    profile_id = "character-profile-similarstoic-hamster-core-v1"
+    existing = repository.get_latest_character_reference_set(profile_id)
+    if existing is not None:
+        return existing.id
+    profile = repository.get_character_profile(profile_id)
+    asset_spec = repository.create_asset_spec(
+        "asset-spec-http-reference-basis-v1",
+        "scene-isa-deadline-video-v1-01",
+        "character",
+        "Historical HTTP character-reference basis.",
+        "A historical character reference for HTTP tests.",
+        "Illustrate the canonical hamster reference basis.",
+        character_profile_id=profile.id,
+    )
+    storage = LocalAssetStorage(storage_root)
+    content = b"http historical reference png bytes"
+    stored = storage.write(asset_spec.id, "asset-http-reference-basis-v1", content, "image/png")
+    style = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
+    repository.record_successful_generation(
+        "generation-execution-http-reference-basis-v1",
+        "asset-http-reference-basis-v1",
+        asset_spec.id,
+        asset_spec_snapshot(asset_spec),
+        PromptComposer().compose(asset_spec, style, profile).payload(),
+        "historical-http-generator",
+        storage.relative_path(stored),
+        "image/png",
+        visual_style_profile_id=style.id,
+        character_profile_id=profile.id,
+        content_digest=sha256(content).hexdigest(),
+    )
+    return repository.create_character_reference_set(
+        "character-reference-set-http-basis-v1", profile.id, ["asset-http-reference-basis-v1"]
+    ).id
 
 
 def test_demo_data_represents_future_content_concepts() -> None:
@@ -381,6 +428,7 @@ def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_pa
         asset_storage_root=storage_root,
     )
     profile_id = "character-profile-similarstoic-hamster-core-v1"
+    ensure_character_reference_set(server, storage_root)
 
     def request_json(request: Request | str) -> tuple[dict, int]:
         thread = threading.Thread(target=server.handle_request)
@@ -423,9 +471,8 @@ def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_pa
         content, _ = request_json(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content")
         review = content["content"]["character_reference_review"]
         assert review["character_profile"]["id"] == profile_id
-        assert {candidate["id"] for candidate in review["eligible_assets"]} == {
-            first_asset_id,
-            second_asset_id,
+        assert {first_asset_id, second_asset_id} <= {
+            candidate["id"] for candidate in review["eligible_assets"]
         }
         assert review["eligible_assets"][0]["content_digest"]
         assert (
@@ -443,7 +490,7 @@ def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_pa
             )
         )
         assert status == 201
-        assert created["reference_set"]["version"] == 1
+        assert created["reference_set"]["version"] == 2
         assert [member["asset"]["id"] for member in created["reference_set"]["members"]] == [
             second_asset_id,
             first_asset_id,
@@ -451,9 +498,9 @@ def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_pa
 
         content, _ = request_json(f"http://127.0.0.1:{server.server_address[1]}/api/demo/content")
         retained = content["content"]["character_reference_review"]["reference_sets"]
-        assert retained[0]["members"][0]["asset"]["content_digest"]
+        assert retained[-1]["members"][0]["asset"]["content_digest"]
         assert (
-            "does not yet condition later generation"
+            "At character-generation time, Atlas resolves the highest version"
             in (Path(__file__).parents[1] / "src/project_atlas/static/app.js").read_text()
         )
         script = (Path(__file__).parents[1] / "src/project_atlas/static/app.js").read_text()
@@ -475,6 +522,7 @@ def test_asset_content_endpoint_rejects_unknown_missing_and_unsafe_files(tmp_pat
     )
     try:
         asset_spec = server.repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        ensure_character_reference_set(server, storage_root)
         missing = server.generation_service.generate_asset_spec(asset_spec.id).asset
         assert missing is not None
         (storage_root / missing.storage_path).unlink()

@@ -1,8 +1,11 @@
 """Tests for Atlas persistence through the v0.7 asset-spec and asset foundation."""
 
+import json
 import sqlite3
 from dataclasses import replace
 from hashlib import sha256
+from io import BytesIO
+from urllib.error import HTTPError, URLError
 
 from project_atlas.generation import (
     AssetStorageFailure,
@@ -11,10 +14,14 @@ from project_atlas.generation import (
     GenerationInput,
     GenerationService,
     LocalAssetStorage,
+    MissingCharacterReferenceSet,
+    MissingProviderConfiguration,
     MissingVisualStyleProfile,
     OpenAIImageGenerator,
     PromptComposer,
+    ReferenceImage,
     UnsupportedGenerationType,
+    asset_spec_snapshot,
 )
 from project_atlas.persistence import MIGRATIONS, AtlasRepository, CharacterProfile
 
@@ -46,13 +53,65 @@ class FakeImageGenerator:
 
 
 def generate_character_asset(repository: AtlasRepository, storage_root, asset_spec_id: str):
-    """Generate one deterministic character Asset through the unchanged production path."""
+    """Generate one deterministic character Asset through the grounded production path."""
+
+    asset_spec = repository.get_asset_spec(asset_spec_id)
+    ensure_character_reference_set(repository, storage_root, asset_spec.character_profile_id)
 
     result = GenerationService(
         repository, FakeImageGenerator(), LocalAssetStorage(storage_root)
     ).generate_asset_spec(asset_spec_id)
     assert result.asset is not None
     return result
+
+
+def ensure_character_reference_set(
+    repository: AtlasRepository,
+    storage_root,
+    profile_id: str = "character-profile-similarstoic-hamster-core-v1",
+) -> str:
+    """Create v0.12-style historical character evidence for focused v0.13 tests."""
+
+    existing = repository.get_latest_character_reference_set(profile_id)
+    if existing is not None:
+        return existing.id
+    profile = repository.get_character_profile(profile_id)
+    spec_id = f"asset-spec-test-reference-basis-{profile.id}"
+    try:
+        asset_spec = repository.get_asset_spec(spec_id)
+    except KeyError:
+        asset_spec = repository.create_asset_spec(
+            spec_id,
+            "scene-isa-deadline-video-v1-01",
+            "character",
+            "Historical canonical character-reference basis.",
+            "A historical generated character reference used by v0.13 tests.",
+            "Illustrate the canonical hamster reference basis.",
+            character_profile_id=profile.id,
+        )
+    storage = LocalAssetStorage(storage_root)
+    asset_id = f"asset-test-reference-basis-{profile.id}"
+    stored = storage.write(asset_spec.id, asset_id, b"historical reference png bytes", "image/png")
+    style = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
+    input_payload = PromptComposer().compose(asset_spec, style, profile).payload()
+    repository.record_successful_generation(
+        f"generation-execution-test-reference-basis-{profile.id}",
+        asset_id,
+        asset_spec.id,
+        asset_spec_snapshot(asset_spec),
+        input_payload,
+        "historical-test-generator",
+        storage.relative_path(stored),
+        "image/png",
+        visual_style_profile_id=style.id,
+        character_profile_id=profile.id,
+        provider_key="historical-test-provider",
+        model_key="historical-test-model",
+        content_digest=sha256(b"historical reference png bytes").hexdigest(),
+    )
+    return repository.create_character_reference_set(
+        f"character-reference-set-test-basis-{profile.id}", profile.id, [asset_id]
+    ).id
 
 
 def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_path) -> None:
@@ -64,7 +123,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -138,18 +197,18 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         reopened.close()
 
 
-def test_migration_10_adds_reference_tables_without_backfilling_historical_asset_digest(
+def test_migration_11_adds_reference_lineage_without_backfilling_history(
     tmp_path,
 ) -> None:
-    """Migration 10 preserves migration-9 Assets while adding canonical-reference tables."""
+    """Migration 11 preserves prior executions while adding nullable reference lineage."""
 
-    database = tmp_path / "atlas-v09.db"
+    database = tmp_path / "atlas-v010.db"
     connection = sqlite3.connect(database)
     try:
         connection.execute(
             "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
         )
-        for version, statements in MIGRATIONS[:9]:
+        for version, statements in MIGRATIONS[:10]:
             for statement in statements:
                 connection.execute(statement)
             connection.execute(
@@ -165,7 +224,7 @@ def test_migration_10_adds_reference_tables_without_backfilling_historical_asset
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -182,6 +241,12 @@ def test_migration_10_adds_reference_tables_without_backfilling_historical_asset
         assert (
             repository.connection.execute("PRAGMA table_info(assets)").fetchall()[-1]["name"]
             == "content_digest"
+        )
+        assert (
+            repository.connection.execute("PRAGMA table_info(generation_executions)").fetchall()[
+                -1
+            ]["name"]
+            == "character_reference_set_id"
         )
     finally:
         repository.close()
@@ -229,7 +294,7 @@ def test_character_reference_sets_are_ordered_immutable_versions(tmp_path) -> No
         reference_set = repository.create_character_reference_set(
             "character-reference-set-test-v1", profile_id, [second.id, first.id]
         )
-        assert reference_set.version == 1
+        assert reference_set.version == 2
         assert [
             (member.position, member.asset_id)
             for member in repository.list_character_reference_set_members(reference_set.id)
@@ -237,7 +302,7 @@ def test_character_reference_sets_are_ordered_immutable_versions(tmp_path) -> No
         replacement = repository.create_character_reference_set(
             "character-reference-set-test-v2", profile_id, [first.id]
         )
-        assert replacement.version == 2
+        assert replacement.version == 3
         assert [
             member.asset_id
             for member in repository.list_character_reference_set_members(reference_set.id)
@@ -300,7 +365,7 @@ def test_character_reference_set_rejects_invalid_or_partial_selection(tmp_path) 
                 assert expected in str(error)
             else:
                 raise AssertionError("Invalid character reference selection was accepted.")
-        assert repository.list_character_reference_sets(profile_id) == []
+        assert len(repository.list_character_reference_sets(profile_id)) == 1
 
         manual = repository.create_asset(
             "manual-character-reference-test-v1",
@@ -402,7 +467,7 @@ def test_character_reference_set_rejects_invalid_or_partial_selection(tmp_path) 
             assert "digest" in str(error)
         else:
             raise AssertionError("A digest-less generated Asset was accepted as a reference.")
-        assert repository.list_character_reference_sets(profile_id) == []
+        assert len(repository.list_character_reference_sets(profile_id)) == 1
     finally:
         repository.close()
 
@@ -428,12 +493,12 @@ def test_character_reference_eligibility_uses_frozen_execution_asset_spec_type(t
         eligible_asset_ids = [
             asset.id for asset in repository.list_eligible_character_reference_assets(profile_id)
         ]
-        assert eligible_asset_ids == [character.id]
+        assert character.id in eligible_asset_ids
         assert (
             repository.create_character_reference_set(
                 "character-reference-set-snapshot-character-v1", profile_id, [character.id]
             ).version
-            == 1
+            == 2
         )
 
         graphic = (
@@ -580,7 +645,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -602,7 +667,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                11,
+                12,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -624,7 +689,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 11"
+                "SELECT version FROM schema_migrations WHERE version = 12"
             ).fetchone()
             is None
         )
@@ -2006,12 +2071,14 @@ def test_generation_service_persists_one_asset_and_frozen_provenance(tmp_path) -
 def test_seeded_character_asset_spec_generates_with_same_spec_provenance(tmp_path) -> None:
     """The recurring persisted hamster is an executable still-image AssetSpec."""
 
-    repository = AtlasRepository(tmp_path / "atlas.db")
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
     try:
         asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        ensure_character_reference_set(repository, storage_root)
         assert asset_spec.asset_type == "character"
         result = GenerationService(
-            repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "assets")
+            repository, FakeImageGenerator(), LocalAssetStorage(storage_root)
         ).generate_asset_spec(asset_spec.id)
         assert result.execution.outcome == "succeeded"
         assert result.asset is not None
@@ -2139,9 +2206,8 @@ def test_openai_adapter_requires_configured_key_without_network() -> None:
     generator = OpenAIImageGenerator(api_key="")
     try:
         generator.generate(GenerationInput("environment", "Test prompt", None, {}))
-    except GenerationFailure as error:
-        assert error.error_code == "missing_api_key"
-        assert error.provider_key == "openai"
+    except MissingProviderConfiguration as error:
+        assert "OPENAI_API_KEY" in str(error)
     else:
         raise AssertionError("OpenAI image generation ran without a configured API key.")
 
@@ -2472,16 +2538,18 @@ def test_character_profile_seed_is_immutable_and_attached_only_to_hamster_specs(
         repository.close()
 
 
-def test_character_generation_freezes_v3_identity_and_provider_neutral_provenance(tmp_path) -> None:
-    """Character generation freezes resolved identity without crossing the provider boundary."""
+def test_character_generation_freezes_v4_identity_and_reference_provenance(tmp_path) -> None:
+    """Character generation freezes identity and selected reference evidence before the adapter."""
 
-    repository = AtlasRepository(tmp_path / "atlas.db")
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
     try:
         asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         style_profile = repository.get_visual_style_profile(
             "visual-style-profile-similarstoic-core-v2"
         )
         character_profile = repository.get_character_profile(asset_spec.character_profile_id)
+        reference_set_id = ensure_character_reference_set(repository, storage_root)
         generation_input = (
             PromptComposer().compose(asset_spec, style_profile, character_profile).payload()
         )
@@ -2509,11 +2577,16 @@ def test_character_generation_freezes_v3_identity_and_provider_neutral_provenanc
 
         generator = FakeImageGenerator()
         result = GenerationService(
-            repository, generator, LocalAssetStorage(tmp_path / "assets")
+            repository, generator, LocalAssetStorage(storage_root)
         ).generate_asset_spec(asset_spec.id)
         assert result.execution.character_profile_id == character_profile.id
-        assert result.execution.generation_input["schema_version"] == 3
+        assert result.execution.character_reference_set_id == reference_set_id
+        assert result.execution.generation_input["schema_version"] == 4
         assert result.execution.generation_input["character"] == generation_input["character"]
+        assert (
+            result.execution.generation_input["character_references"]["reference_set_id"]
+            == reference_set_id
+        )
         assert result.asset is not None
         assert isinstance(generator.inputs[0], GenerationInput)
         assert not isinstance(generator.inputs[0], CharacterProfile)
@@ -2529,23 +2602,26 @@ def test_character_generation_freezes_v3_identity_and_provider_neutral_provenanc
         repository.close()
 
 
-def test_failed_character_generation_retains_identity_lineage_without_an_asset(tmp_path) -> None:
-    """A provider-attempt failure preserves v3 character provenance but creates no Asset."""
+def test_failed_character_generation_retains_reference_lineage_without_an_asset(tmp_path) -> None:
+    """A failed attempt preserves v4 character/reference provenance without an Asset."""
 
-    repository = AtlasRepository(tmp_path / "atlas.db")
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
     try:
         asset_spec = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
+        reference_set_id = ensure_character_reference_set(repository, storage_root)
         result = GenerationService(
             repository,
             FakeImageGenerator(
                 failure=GenerationFailure("Rejected character request.", error_code="rejected")
             ),
-            LocalAssetStorage(tmp_path / "assets"),
+            LocalAssetStorage(storage_root),
         ).generate_asset_spec(asset_spec.id)
         assert result.asset is None
         assert result.execution.outcome == "failed"
         assert result.execution.character_profile_id == asset_spec.character_profile_id
-        assert result.execution.generation_input["schema_version"] == 3
+        assert result.execution.character_reference_set_id == reference_set_id
+        assert result.execution.generation_input["schema_version"] == 4
         assert (
             result.execution.generation_input["character"]["profile_id"]
             == asset_spec.character_profile_id
@@ -2574,6 +2650,7 @@ def test_existing_v2_generation_input_remains_readable_without_character_lineage
         )
         assert execution.generation_input == v2_input
         assert execution.character_profile_id is None
+        assert execution.character_reference_set_id is None
         assert repository.generation_execution_payload(execution.id)["character_profile"] is None
     finally:
         repository.close()
@@ -2644,7 +2721,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
@@ -2720,7 +2797,8 @@ def test_referenced_character_profile_uses_restrictive_deletion(tmp_path) -> Non
 def test_character_execution_remains_historical_after_asset_spec_identity_changes(tmp_path) -> None:
     """Execution lineage remains stable when a mutable AssetSpec relationship changes."""
 
-    repository = AtlasRepository(tmp_path / "atlas.db")
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
     try:
         original_profile = repository.get_character_profile(
             "character-profile-similarstoic-hamster-core-v1"
@@ -2734,8 +2812,9 @@ def test_character_execution_remains_historical_after_asset_spec_identity_change
             "Depict the second immutable test version of the canonical SimilarStoic hamster.",
         )
         asset_spec = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        ensure_character_reference_set(repository, storage_root)
         result = GenerationService(
-            repository, FakeImageGenerator(), LocalAssetStorage(tmp_path / "assets")
+            repository, FakeImageGenerator(), LocalAssetStorage(storage_root)
         ).generate_asset_spec(asset_spec.id)
         repository.update_asset_spec(replace(asset_spec, character_profile_id=alternate_profile.id))
         execution = repository.get_generation_execution(result.execution.id)
@@ -2795,5 +2874,261 @@ def test_v3_character_provenance_requires_complete_frozen_guidance(tmp_path) -> 
         )
         assert valid.character_profile_id is None
         assert "character" not in valid.generation_input
+    finally:
+        repository.close()
+
+
+def test_reference_grounded_generation_requires_exact_reference_set_before_attempt(
+    tmp_path,
+) -> None:
+    """A character request cannot silently fall back to prompt-only generation."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    generator = FakeImageGenerator()
+    asset_spec_id = "asset-spec-isa-scene-01-hamster-sorting-v1"
+    try:
+        try:
+            GenerationService(
+                repository, generator, LocalAssetStorage(storage_root)
+            ).generate_asset_spec(asset_spec_id)
+        except MissingCharacterReferenceSet:
+            pass
+        else:
+            raise AssertionError("Character generation fell back without a CharacterReferenceSet.")
+        assert repository.list_generation_executions_for_asset_spec(asset_spec_id) == []
+        assert repository.list_assets_for_asset_spec(asset_spec_id) == []
+        assert generator.inputs == []
+    finally:
+        repository.close()
+
+
+def test_v4_freezes_highest_ordered_reference_set_and_execution_lineage(tmp_path) -> None:
+    """Later reference selections cannot rewrite a historical grounded request."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    profile_id = "character-profile-similarstoic-hamster-core-v1"
+    try:
+        first_set_id = ensure_character_reference_set(repository, storage_root, profile_id)
+        first = GenerationService(
+            repository, FakeImageGenerator(), LocalAssetStorage(storage_root)
+        ).generate_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
+        assert first.asset is not None
+        frozen = first.execution.generation_input["character_references"]
+        assert first.execution.character_reference_set_id == first_set_id
+        assert frozen["intent"] == "character_identity_grounding"
+        assert frozen["reference_set_id"] == first_set_id
+        assert frozen["reference_set_version"] == 1
+        assert [member["position"] for member in frozen["members"]] == [1]
+        assert frozen["members"][0]["asset_id"] == "asset-test-reference-basis-" + profile_id
+        assert (
+            frozen["members"][0]["content_digest"]
+            == sha256(b"historical reference png bytes").hexdigest()
+        )
+        assert frozen["members"][0]["media_type"] == "image/png"
+        assert "reference_images" not in first.execution.generation_input
+
+        later_set = repository.create_character_reference_set(
+            "character-reference-set-later-v2",
+            profile_id,
+            [first.asset.id, frozen["members"][0]["asset_id"]],
+        )
+        assert later_set.version == 2
+        second_generator = FakeImageGenerator()
+        second = GenerationService(
+            repository, second_generator, LocalAssetStorage(storage_root)
+        ).generate_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
+        assert second.execution.character_reference_set_id == later_set.id
+        second_references = second.execution.generation_input["character_references"]
+        assert second_references["reference_set_id"] == later_set.id
+        assert [member["position"] for member in second_references["members"]] == [1, 2]
+        runtime_references = second_generator.inputs[0].reference_images
+        assert [image.asset_id for image in runtime_references] == [
+            member["asset_id"] for member in second_references["members"]
+        ]
+        assert [image.position for image in runtime_references] == [1, 2]
+        assert [sha256(image.content).hexdigest() for image in runtime_references] == [
+            member["content_digest"] for member in second_references["members"]
+        ]
+        assert repository.get_generation_execution(first.execution.id).generation_input == (
+            first.execution.generation_input
+        )
+        assert (
+            repository.generation_execution_payload(first.execution.id)[
+                "character_reference_set_id"
+            ]
+            == first_set_id
+        )
+    finally:
+        repository.close()
+
+
+def test_reference_byte_failures_stop_before_provider_attempt(tmp_path) -> None:
+    """Reference file availability, path safety, and byte identity are pre-provider checks."""
+
+    for mutation in ("missing", "unsafe", "digest_mismatch", "unsupported_media"):
+        storage_root = tmp_path / mutation
+        repository = AtlasRepository(tmp_path / f"{mutation}.db", asset_storage_root=storage_root)
+        asset_spec_id = "asset-spec-isa-scene-01-hamster-sorting-v1"
+        try:
+            reference_set_id = ensure_character_reference_set(repository, storage_root)
+            member = repository.list_character_reference_set_members(reference_set_id)[0]
+            asset = repository.get_asset(member.asset_id)
+            path = storage_root / asset.storage_path
+            if mutation == "missing":
+                path.unlink()
+            elif mutation == "unsafe":
+                with repository.connection:
+                    repository.connection.execute(
+                        "UPDATE assets SET storage_path = ? WHERE id = ?",
+                        ("../outside.png", asset.id),
+                    )
+            elif mutation == "digest_mismatch":
+                path.write_bytes(b"altered reference bytes")
+            else:
+                with repository.connection:
+                    repository.connection.execute(
+                        "UPDATE assets SET media_type = ? WHERE id = ?", ("text/plain", asset.id)
+                    )
+            generator = FakeImageGenerator()
+            try:
+                GenerationService(
+                    repository, generator, LocalAssetStorage(storage_root)
+                ).generate_asset_spec(asset_spec_id)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError(f"{mutation} reference bytes reached the provider.")
+            assert repository.list_generation_executions_for_asset_spec(asset_spec_id) == []
+            assert generator.inputs == []
+        finally:
+            repository.close()
+
+
+def test_openai_reference_request_preserves_order_and_keeps_bytes_runtime_only() -> None:
+    """OpenAI receives ordered multipart image references without persistence leakage."""
+
+    captured = {}
+
+    class Response:
+        headers = {"x-request-id": "request-openai-test"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        @staticmethod
+        def read() -> bytes:
+            return b'{"created": 1, "data": [{"b64_json": "b3V0cHV0"}]}'
+
+    def opener(request, timeout):
+        captured["request"] = request
+        captured["timeout"] = timeout
+        return Response()
+
+    references = (
+        ReferenceImage("asset-reference-first", "image/png", b"first-reference", 1),
+        ReferenceImage("asset-reference-second", "image/jpeg", b"second-reference", 2),
+    )
+    generation_input = GenerationInput(
+        "character",
+        "Generate the canonical hamster.",
+        None,
+        {},
+        style={"profile_id": "style"},
+        character={"profile_id": "character"},
+        character_references={
+            "intent": "character_identity_grounding",
+            "reference_set_id": "reference-set",
+            "reference_set_version": 1,
+            "character_profile": {
+                "profile_id": "character",
+                "character_key": "hamster",
+                "version": 1,
+            },
+            "members": [],
+        },
+        reference_images=references,
+    )
+    artifact = OpenAIImageGenerator(api_key="test-key", opener=opener).generate(generation_input)
+    request = captured["request"]
+    body = request.data
+    assert request.full_url == "https://api.openai.com/v1/images/edits"
+    assert request.headers["Content-type"].startswith("multipart/form-data; boundary=")
+    assert body.count(b'name="image[]"') == 2
+    assert body.index(b"first-reference") < body.index(b"second-reference")
+    assert body.index(b"reference-1.png") < body.index(b"reference-2.jpg")
+    assert generation_input.payload()["schema_version"] == 4
+    assert b"first-reference" not in json.dumps(generation_input.payload()).encode()
+    assert artifact.content == b"output"
+
+
+def test_provider_attempt_boundaries_preserve_reference_lineage(tmp_path) -> None:
+    """Configuration failure has no execution; network failure retains frozen reference lineage."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    asset_spec_id = "asset-spec-isa-scene-01-hamster-sorting-v1"
+    try:
+        reference_set_id = ensure_character_reference_set(repository, storage_root)
+        no_key = GenerationService(
+            repository, OpenAIImageGenerator(api_key=""), LocalAssetStorage(storage_root)
+        )
+        try:
+            no_key.generate_asset_spec(asset_spec_id)
+        except MissingProviderConfiguration:
+            pass
+        else:
+            raise AssertionError(
+                "Missing OpenAI configuration reached the provider-attempt history."
+            )
+        assert repository.list_generation_executions_for_asset_spec(asset_spec_id) == []
+
+        def failing_opener(_request, timeout):
+            raise URLError("offline")
+
+        failed = GenerationService(
+            repository,
+            OpenAIImageGenerator(api_key="test-key", opener=failing_opener),
+            LocalAssetStorage(storage_root),
+        ).generate_asset_spec(asset_spec_id)
+        assert failed.asset is None
+        assert failed.execution.outcome == "failed"
+        assert failed.execution.error_code == "network_error"
+        assert failed.execution.character_reference_set_id == reference_set_id
+        assert failed.execution.generation_input["character_references"]["reference_set_id"] == (
+            reference_set_id
+        )
+
+        def failing_http_opener(request, timeout):
+            raise HTTPError(
+                request.full_url,
+                400,
+                "Bad Request",
+                {"x-request-id": "request-http-failure"},
+                BytesIO(b'{"error": {"message": "Rejected", "code": "rejected"}}'),
+            )
+
+        http_failed = GenerationService(
+            repository,
+            OpenAIImageGenerator(api_key="test-key", opener=failing_http_opener),
+            LocalAssetStorage(storage_root),
+        ).generate_asset_spec(asset_spec_id)
+        assert http_failed.asset is None
+        assert http_failed.execution.outcome == "failed"
+        assert http_failed.execution.error_code == "rejected"
+        assert http_failed.execution.character_reference_set_id == reference_set_id
+        try:
+            with repository.connection:
+                repository.connection.execute(
+                    "DELETE FROM character_reference_sets WHERE id = ?", (reference_set_id,)
+                )
+        except sqlite3.IntegrityError:
+            pass
+        else:
+            raise AssertionError("Consumed CharacterReferenceSet provenance was deleted.")
     finally:
         repository.close()

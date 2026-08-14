@@ -293,6 +293,7 @@ class GenerationExecution:
     asset_spec_id: str
     visual_style_profile_id: str | None
     character_profile_id: str | None
+    character_reference_set_id: str | None
     asset_spec_snapshot: dict[str, Any]
     generation_input: dict[str, Any]
     generator_key: str
@@ -691,6 +692,20 @@ MIGRATIONS: tuple[Migration, ...] = (
             """
         CREATE INDEX idx_character_reference_set_members_asset
           ON character_reference_set_members (asset_id)
+        """,
+        ),
+    ),
+    (
+        11,
+        (
+            """
+        ALTER TABLE generation_executions
+        ADD COLUMN character_reference_set_id TEXT NULL
+        REFERENCES character_reference_sets(id) ON DELETE RESTRICT
+        """,
+            """
+        CREATE INDEX idx_generation_executions_character_reference_set
+          ON generation_executions (character_reference_set_id)
         """,
         ),
     ),
@@ -1696,6 +1711,7 @@ class AtlasRepository:
         *,
         visual_style_profile_id: str | None = None,
         character_profile_id: str | None = None,
+        character_reference_set_id: str | None = None,
         provider_key: str | None = None,
         model_key: str | None = None,
         provider_request_id: str | None = None,
@@ -1721,6 +1737,7 @@ class AtlasRepository:
                 error_code,
                 error_message,
                 response_metadata or {},
+                character_reference_set_id,
             )
         return self.get_generation_execution(execution_id)
 
@@ -1737,6 +1754,7 @@ class AtlasRepository:
         *,
         visual_style_profile_id: str | None = None,
         character_profile_id: str | None = None,
+        character_reference_set_id: str | None = None,
         provider_key: str | None = None,
         model_key: str | None = None,
         provider_request_id: str | None = None,
@@ -1764,6 +1782,7 @@ class AtlasRepository:
                 None,
                 None,
                 response_metadata or {},
+                character_reference_set_id,
             )
             version = self.connection.execute(
                 "SELECT COALESCE(MAX(version), 0) + 1 FROM assets WHERE asset_spec_id = ?",
@@ -1903,6 +1922,19 @@ class AtlasRepository:
         )
         return [self._character_reference_set(row) for row in rows]
 
+    def get_latest_character_reference_set(
+        self, character_profile_id: str
+    ) -> CharacterReferenceSet | None:
+        """Return the highest immutable reference-set version for one exact profile."""
+
+        self.get_character_profile(character_profile_id)
+        row = self.connection.execute(
+            "SELECT * FROM character_reference_sets WHERE character_profile_id = ? "
+            "ORDER BY version DESC LIMIT 1",
+            (character_profile_id,),
+        ).fetchone()
+        return self._character_reference_set(row) if row else None
+
     def list_character_reference_set_members(
         self, reference_set_id: str
     ) -> list[CharacterReferenceSetMember]:
@@ -2012,6 +2044,7 @@ class AtlasRepository:
             "asset_spec_id": execution.asset_spec_id,
             "visual_style_profile_id": execution.visual_style_profile_id,
             "character_profile": self.character_profile_summary(execution.character_profile_id),
+            "character_reference_set_id": execution.character_reference_set_id,
             "generator_key": execution.generator_key,
             "provider_key": execution.provider_key,
             "model_key": execution.model_key,
@@ -2089,6 +2122,17 @@ class AtlasRepository:
             raise ValueError("Managed Asset bytes do not match the stored content digest.")
         return asset
 
+    def load_verified_character_reference_asset(
+        self, asset_id: str, character_profile_id: str
+    ) -> tuple[Asset, bytes]:
+        """Safely load exact verified managed bytes for provider-time reference use."""
+
+        asset = self._validate_character_reference_asset(asset_id, character_profile_id)
+        content = self.managed_asset_path(asset.id).read_bytes()
+        if asset.content_digest is None or sha256(content).hexdigest() != asset.content_digest:
+            raise ValueError("Managed Asset bytes do not match the stored content digest.")
+        return asset, content
+
     def _validate_angle_research_pack(self, opportunity_id: str, research_pack_id: str) -> None:
         research_pack = self.get_research_pack(research_pack_id)
         if research_pack.opportunity_id != opportunity_id:
@@ -2128,6 +2172,7 @@ class AtlasRepository:
         error_code: str | None,
         error_message: str | None,
         response_metadata: dict[str, Any],
+        character_reference_set_id: str | None = None,
     ) -> None:
         self.get_asset_spec(asset_spec_id)
         self._validate_generation_execution(
@@ -2145,14 +2190,17 @@ class AtlasRepository:
         if asset_spec_snapshot.get("asset_spec_id") != asset_spec_id:
             raise ValueError("GenerationExecution snapshot must identify its persisted AssetSpec.")
         self._validate_generation_execution_provenance(
-            generation_input, visual_style_profile_id, character_profile_id
+            generation_input,
+            visual_style_profile_id,
+            character_profile_id,
+            character_reference_set_id,
         )
         self.connection.execute(
             "INSERT INTO generation_executions "
             "(id, asset_spec_id, asset_spec_snapshot_json, generation_input_json, generator_key, "
             "provider_key, model_key, provider_request_id, outcome, error_code, error_message, "
-            "response_metadata_json, created_at, visual_style_profile_id, character_profile_id) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "response_metadata_json, created_at, visual_style_profile_id, character_profile_id, "
+            "character_reference_set_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 execution_id,
                 asset_spec_id,
@@ -2169,6 +2217,7 @@ class AtlasRepository:
                 now(),
                 visual_style_profile_id,
                 character_profile_id,
+                character_reference_set_id,
             ),
         )
 
@@ -2227,13 +2276,16 @@ class AtlasRepository:
         generation_input: dict[str, Any],
         visual_style_profile_id: str | None,
         character_profile_id: str | None,
+        character_reference_set_id: str | None = None,
     ) -> None:
         schema_version = generation_input.get("schema_version")
-        if schema_version not in {2, 3}:
+        if schema_version not in {2, 3, 4}:
             if visual_style_profile_id is not None:
                 raise ValueError("GenerationInput v1 cannot identify a VisualStyleProfile.")
             if character_profile_id is not None:
                 raise ValueError("GenerationInput v1 cannot identify a CharacterProfile.")
+            if character_reference_set_id is not None:
+                raise ValueError("GenerationInput v1 cannot identify a CharacterReferenceSet.")
             return
         if visual_style_profile_id is None:
             raise ValueError("Styled GenerationInput must identify a VisualStyleProfile.")
@@ -2250,11 +2302,17 @@ class AtlasRepository:
         if schema_version == 2:
             if character_profile_id is not None:
                 raise ValueError("GenerationInput v2 cannot identify a CharacterProfile.")
+            if character_reference_set_id is not None:
+                raise ValueError("GenerationInput v2 cannot identify a CharacterReferenceSet.")
             return
         character = generation_input.get("character")
         if character_profile_id is None:
             if character is not None:
                 raise ValueError("GenerationInput v3 character must have CharacterProfile lineage.")
+            if schema_version == 4:
+                raise ValueError("GenerationInput v4 requires CharacterProfile lineage.")
+            if character_reference_set_id is not None:
+                raise ValueError("GenerationInput v3 cannot identify a CharacterReferenceSet.")
             return
         if not isinstance(character, dict):
             raise ValueError("GenerationInput v3 character must be an object.")
@@ -2268,6 +2326,50 @@ class AtlasRepository:
             or character.get("generation_guidance") != character_profile.generation_guidance
         ):
             raise ValueError("GenerationInput v3 character must match its CharacterProfile.")
+        if schema_version == 3:
+            if character_reference_set_id is not None:
+                raise ValueError("GenerationInput v3 cannot identify a CharacterReferenceSet.")
+            return
+        if character_reference_set_id is None:
+            raise ValueError("GenerationInput v4 requires CharacterReferenceSet lineage.")
+        references = generation_input.get("character_references")
+        if not isinstance(references, dict):
+            raise ValueError("GenerationInput v4 character references must be an object.")
+        if references.get("intent") != "character_identity_grounding":
+            raise ValueError("GenerationInput v4 character references require identity grounding.")
+        reference_set = self.get_character_reference_set(character_reference_set_id)
+        if (
+            references.get("reference_set_id") != reference_set.id
+            or references.get("reference_set_version") != reference_set.version
+            or reference_set.character_profile_id != character_profile_id
+        ):
+            raise ValueError(
+                "GenerationInput v4 references must match CharacterReferenceSet lineage."
+            )
+        reference_profile = references.get("character_profile")
+        if not isinstance(reference_profile, dict) or (
+            reference_profile.get("profile_id") != character_profile.id
+            or reference_profile.get("character_key") != character_profile.character_key
+            or reference_profile.get("version") != character_profile.version
+        ):
+            raise ValueError("GenerationInput v4 references must match its CharacterProfile.")
+        members = references.get("members")
+        set_members = self.list_character_reference_set_members(reference_set.id)
+        if not isinstance(members, list) or len(members) != len(set_members):
+            raise ValueError("GenerationInput v4 references must freeze every ordered member.")
+        for frozen, member in zip(members, set_members, strict=True):
+            if not isinstance(frozen, dict):
+                raise ValueError("GenerationInput v4 reference members must be objects.")
+            asset = self.get_asset(member.asset_id)
+            if (
+                frozen.get("asset_id") != asset.id
+                or frozen.get("content_digest") != asset.content_digest
+                or frozen.get("media_type") != asset.media_type
+                or frozen.get("position") != member.position
+            ):
+                raise ValueError(
+                    "GenerationInput v4 reference members must match frozen set Assets."
+                )
 
     def _validate_asset_spec_character_profile(
         self, asset_type: str, character_profile_id: str | None
@@ -3611,6 +3713,7 @@ class AtlasRepository:
             row["asset_spec_id"],
             row["visual_style_profile_id"],
             row["character_profile_id"],
+            row["character_reference_set_id"],
             json.loads(row["asset_spec_snapshot_json"]),
             json.loads(row["generation_input_json"]),
             row["generator_key"],
