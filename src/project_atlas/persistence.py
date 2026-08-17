@@ -3435,6 +3435,38 @@ class AtlasRepository:
                 },
             },
         }
+        v3_rules = json.loads(json.dumps(v2_rules))
+        v3_rules["global"]["rendering_language"] = (
+            "visibly hand-drawn black or dark line illustration with natural stroke variation, "
+            "slightly uneven contours and simple readable forms; use a crude amateur human-drawn "
+            "grammar that feels like an average adult drew it from memory, rather than a polished "
+            "professional illustration"
+        )
+        v3_rules["global"]["shapes"] = (
+            "simple deliberately imperfect, blocky cartoon-like geometry; when depicting the "
+            "canonical recurring hamster, use large distinctive hamster-like ears, long whiskers, "
+            "and simple alert eyes"
+        )
+        v3_rules["global"]["colour"] = (
+            "keep general scene colour restrained; for the canonical recurring SimilarStoic "
+            "hamster only, the mostly white/light body may have warm tan/orange inner ears, "
+            "nose and "
+            "paws/hands/feet, and its signature sling/man-bag may use flat green, blue, orange, "
+            "yellow, red and black with a dark-gray strap; this is not permission for arbitrary "
+            "scene elements to become highly multicoloured"
+        )
+        v3_rules["global"]["detail"] = (
+            "minimal environmental detail and only necessary props; the canonical recurring "
+            "hamster uses minimal or no fur-detail rendering, and its signature bag must read "
+            "as genuinely "
+            "crossbody with physically correct strap/body interaction"
+        )
+        v3_rules["global"]["avoid"] = [
+            *v2_rules["global"]["avoid"],
+            "glossy mascot rendering",
+            "highly polished AI-clean finish",
+            "detailed fur rendering on the canonical recurring hamster",
+        ]
         stamp = now()
         with self.connection:
             self.connection.execute(
@@ -3448,6 +3480,29 @@ class AtlasRepository:
                     "The sparse, hand-drawn editorial illustration direction for SimilarStoic.",
                     "Use a simple hand-drawn or line-drawn editorial illustration style.",
                     json.dumps(rules, sort_keys=True),
+                    stamp,
+                ),
+            )
+            self.connection.execute(
+                "INSERT OR IGNORE INTO visual_style_profiles "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                (
+                    "visual-style-profile-similarstoic-core-v3",
+                    "similarstoic-core",
+                    3,
+                    "SimilarStoic Core",
+                    (
+                        "The founder-approved Phase 1 sparse, crude human-drawn visual baseline "
+                        "for SimilarStoic."
+                    ),
+                    (
+                        "Use a crude, visibly human hand-drawn editorial sketch with organic, "
+                        "imperfect dark linework and simple readable forms. For the canonical "
+                        "recurring hamster, preserve the founder-approved warm tan/orange accents "
+                        "and signature flat multi-colour crossbody sling/man-bag within otherwise "
+                        "restrained scene colour."
+                    ),
+                    json.dumps(v3_rules, sort_keys=True),
                     stamp,
                 ),
             )

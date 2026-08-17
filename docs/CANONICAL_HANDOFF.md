@@ -39,10 +39,15 @@ The approved sequence is:
 3. Bootstrap exactly two legitimate hamster reference candidates.
 4. Stop at Human Gate A.
 5. Founder and ChatGPT visually review the candidates.
-6. Select zero, one, or more candidates.
-7. Explicitly create CharacterReferenceSet v1 from any selected eligible Assets.
-8. Generate grounded review evidence after that approval.
-9. Make the Phase 1 visual-acceptance decision.
+6. Founder approved Human Gate A Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` (version 9; SHA-256
+   `eaf0af82fe98120613793465f94029a72ae13a79f8e3e258d265e88fa47c450b`) for the exact
+   `character-profile-similarstoic-hamster-core-v1` CharacterProfile.
+7. Synchronize that founder-approved visual specification through immutable SimilarStoic Core v3 while
+   preserving v2 as immutable historical provenance.
+8. Explicitly create CharacterReferenceSet v1 from the approved eligible Asset only after a separate
+   bounded authorization.
+9. Generate grounded review evidence after that approval.
+10. Make the Phase 1 visual-acceptance decision.
 
 No reference set is created automatically.
 
@@ -104,8 +109,18 @@ historical implementation dates:
 - The narrator explains while the hamster illustrates; content must remain comprehensible from audio alone.
 - Pop culture is light seasoning. Original exaggerated reaction and freeze-frame comedy may use older animated
   timing mechanisms as inspiration, without copying protected characters, artwork, frames, or compositions.
-- SimilarStoic Core v2 remains a provisional visual baseline: sparse, light, hand-drawn visual grammar.
-  Material future style changes require new immutable versions.
+- SimilarStoic Core v2 remains immutable historical visual provenance. SimilarStoic Core v3 is the current
+  founder-approved Phase 1 visual baseline: sparse, light, dark hand-drawn and deliberately imperfect,
+  with no gradients, tonal shading, painterly/textured fill or polished AI-clean finish. The canonical
+  recurring hamster is mostly white/light with warm tan/orange inner ears, nose and paws/hands/feet;
+  it has large distinctive ears, long whiskers, simple alert eyes, minimal/no fur detail, and a crude
+  average-adult-from-memory drawing quality. Its signature genuinely crossbody sling/man-bag may use flat
+  green, blue, orange, yellow, red and black with a dark-gray strap. This narrowly scoped character and
+  accessory exception does not relax restrained general scene colour. Material future style changes require
+  new immutable versions.
+- Phase 1 remains open. No CharacterReferenceSet or grounded generation follows from Human Gate A
+  automatically; explicit reference-set creation is next, followed by separately authorized grounded
+  visual evidence.
 
 ## Deferred scope
 

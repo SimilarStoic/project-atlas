@@ -164,6 +164,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         ] == [
             ("visual-style-profile-similarstoic-core-v1", 1),
             ("visual-style-profile-similarstoic-core-v2", 2),
+            ("visual-style-profile-similarstoic-core-v3", 3),
         ]
         assert [
             (profile.id, profile.version) for profile in repository.list_character_profiles()
@@ -2221,6 +2222,7 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
     try:
         v1 = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v1")
         v2 = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
+        v3 = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v3")
         assert (v1.style_key, v1.version, v1.name) == (
             "similarstoic-core",
             1,
@@ -2229,6 +2231,11 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
         assert (v2.style_key, v2.version, v2.name) == (
             "similarstoic-core",
             2,
+            "SimilarStoic Core",
+        )
+        assert (v3.style_key, v3.version, v3.name) == (
+            "similarstoic-core",
+            3,
             "SimilarStoic Core",
         )
         assert (
@@ -2248,6 +2255,10 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
         assert v2.rules["global"]["background"] == "predominantly white or very light background"
         assert "no colour unless helpful" in v2.rules["global"]["colour"]
         assert v2.rules["global"]["shading"] == "no soft or tonal shading"
+        assert "warm tan/orange" in v3.rules["global"]["colour"]
+        assert "flat green, blue, orange, yellow, red and black" in v3.rules["global"]["colour"]
+        assert "large distinctive hamster-like ears" in v3.rules["global"]["shapes"]
+        assert "long whiskers" in v3.rules["global"]["shapes"]
         assert {
             "soft shaded colour",
             "subtle colour variation",
@@ -2316,6 +2327,10 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
                 "UPDATE visual_style_profiles SET name = ? WHERE id = ?",
                 ("Founder-preserved v2 profile", v2.id),
             )
+            repository.connection.execute(
+                "UPDATE visual_style_profiles SET name = ? WHERE id = ?",
+                ("Founder-preserved v3 profile", v3.id),
+            )
     finally:
         repository.close()
 
@@ -2323,7 +2338,8 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
     try:
         assert reopened.get_visual_style_profile(v1.id).name == "Founder-preserved v1 profile"
         assert reopened.get_visual_style_profile(v2.id).name == "Founder-preserved v2 profile"
-        assert len(reopened.list_visual_style_profiles()) == 2
+        assert reopened.get_visual_style_profile(v3.id).name == "Founder-preserved v3 profile"
+        assert len(reopened.list_visual_style_profiles()) == 3
     finally:
         reopened.close()
 
@@ -2338,7 +2354,8 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
     try:
         assert restored.get_visual_style_profile(v1.id).name == "Founder-preserved v1 profile"
         assert restored.get_visual_style_profile(v2.id).version == 2
-        assert len(restored.list_visual_style_profiles()) == 2
+        assert restored.get_visual_style_profile(v3.id).name == "Founder-preserved v3 profile"
+        assert len(restored.list_visual_style_profiles()) == 3
     finally:
         restored.close()
 
@@ -2417,10 +2434,10 @@ def test_generation_service_uses_profile_provenance_and_missing_profile_stops_ea
         service = GenerationService(repository, generator, LocalAssetStorage(tmp_path / "assets"))
         assert (
             service.visual_style_summary()["profile_id"]
-            == "visual-style-profile-similarstoic-core-v2"
+            == "visual-style-profile-similarstoic-core-v3"
         )
         result = service.generate_asset_spec(asset_spec.id)
-        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v2")
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v3")
         assert result.execution.visual_style_profile_id == profile.id
         assert result.execution.generation_input["schema_version"] == 3
         assert result.execution.generation_input["style"]["profile_id"] == profile.id

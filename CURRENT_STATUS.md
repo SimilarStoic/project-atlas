@@ -16,14 +16,14 @@ The technical foundation is complete and the repository is safely stored on GitH
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded
-Character Generation, and v0.14 Explicit Character Reference Bootstrap are complete and pushed. V0.10 remains
-a provisional visual-style baseline, not final art direction.
+Character Generation, and v0.14 Explicit Character Reference Bootstrap are complete and pushed. The
+founder-approved Phase 1 visual baseline is SimilarStoic Core v3; v2 remains historical and immutable.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
 Atlas v0.8 through v0.14 are complete and pushed. Atlas now has immutable, versioned character identity,
 canonical visual-reference foundations, reference-grounded character generation, and explicit first-reference
-bootstrap alongside the approved SimilarStoic Core v2 visual-style baseline.
+bootstrap alongside the founder-approved SimilarStoic Core v3 visual-style baseline.
 
 ---
 
@@ -190,7 +190,8 @@ Validated state:
 - New executions retain exact resolved style provenance in GenerationInput v2 and a restrictive direct
   GenerationExecution-to-VisualStyleProfile lineage. Existing v0.8 GenerationInput v1 rows remain readable
   with null profile lineage.
-- `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value uses SimilarStoic Core v2.
+- `ATLAS_VISUAL_STYLE_PROFILE_ID` selects an immutable profile ID; an unset value now uses SimilarStoic Core
+  v3. V2 remains selectable and historical.
   CharacterProfile identity, canonical visual references, StyleBible/reference-image continuity, profile
   editing, QA, workflow, production and publishing remain deferred at this checkpoint.
 
@@ -212,6 +213,27 @@ visual-style baseline.
   supersede v2, and reference-grounded style fidelity may be explored later if justified.
 - Style-reference images, canonical visual-reference continuity, profile editing, QA, workflow, production,
   publishing and other future style architecture remain deferred.
+
+## Phase 1 Visual Style Synchronization
+
+Human Gate A approved generated Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` (version 9;
+SHA-256 `eaf0af82fe98120613793465f94029a72ae13a79f8e3e258d265e88fa47c450b`) for the existing
+SimilarStoic Hamster Core v1 CharacterProfile. The approved visual specification is represented by new
+immutable SimilarStoic Core v3; v2 remains unchanged, historical and selectable.
+
+- V3 retains the sparse, mostly light, dark hand-drawn, imperfect, no-gradient/no-tonal-shading language.
+- For the canonical recurring hamster only, it permits warm tan/orange inner ears, nose and
+  paws/hands/feet, while retaining a mostly white/light body, large hamster-like ears, long whiskers,
+  simple alert eyes, minimal fur detail and crude average-adult-from-memory drawing quality.
+- The signature crossbody sling/man-bag alone may use flat green, blue, orange, yellow, red and black with
+  a dark-gray strap. General scene colour remains restrained; the exception does not permit arbitrary
+  highly multicoloured scene elements.
+- The deterministic fallback profile is v3; `ATLAS_VISUAL_STYLE_PROFILE_ID` can explicitly select any
+  immutable seeded version. No schema migration or new domain concept was required.
+
+Phase 1 is not closed. No CharacterReferenceSet has been created and no grounded generation has occurred;
+the next visual-evidence action remains explicit CharacterReferenceSet creation followed by separately
+authorized grounded evidence generation.
 
 ## Atlas v0.11 Checkpoint
 
@@ -618,11 +640,12 @@ Remaining before Phase 1 is complete:
 # Next Step
 
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. The next
-activity is Phase 1 visual-evidence execution in an isolated review environment, not v0.15: bootstrap exactly
-two legitimate candidates, stop at Human Gate A, and let the founder and ChatGPT decide whether to create a
-CharacterReferenceSet v1 before any grounded review evidence. Normal generation still requires references;
-bootstrap never creates them automatically. The roadmap is governed by canonical GitHub documentation and the
-explicit change protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+activity is Phase 1 visual-evidence execution in an isolated review environment, not v0.15. Human Gate A
+approved Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` under the immutable SimilarStoic Core v3 baseline.
+The next action is an explicit CharacterReferenceSet v1 decision and creation before any grounded review
+evidence. Normal generation still requires references; bootstrap never creates them automatically. The
+roadmap is governed by canonical GitHub documentation and the explicit change protocol in
+[docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
 imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency

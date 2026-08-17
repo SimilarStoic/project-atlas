@@ -163,9 +163,9 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
         thread.join(timeout=2)
         content = payload["content"]
         assert content["visual_style"] == {
-            "profile_id": "visual-style-profile-similarstoic-core-v2",
+            "profile_id": "visual-style-profile-similarstoic-core-v3",
             "style_key": "similarstoic-core",
-            "version": 2,
+            "version": 3,
             "name": "SimilarStoic Core",
         }
         assert content["selected_angle"] == "The 15-minute ISA decision tree before the deadline."
@@ -263,7 +263,7 @@ def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scene
 def test_content_endpoint_can_expose_explicitly_configured_v1_style(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """Profile selection remains configuration-only while v2 is the default."""
+    """Profile selection remains configuration-only while v3 is the default."""
 
     monkeypatch.setenv("ATLAS_VISUAL_STYLE_PROFILE_ID", "visual-style-profile-similarstoic-core-v1")
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
@@ -357,7 +357,7 @@ def test_generation_endpoint_uses_persisted_prompt_and_exposes_execution(tmp_pat
         assert payload["execution"]["outcome"] == "succeeded"
         assert (
             payload["execution"]["visual_style_profile_id"]
-            == "visual-style-profile-similarstoic-core-v2"
+            == "visual-style-profile-similarstoic-core-v3"
         )
         assert payload["asset"]["generation_execution_id"] == payload["execution"]["id"]
         assert asset_spec.generation_prompt in generator.inputs[0].prompt

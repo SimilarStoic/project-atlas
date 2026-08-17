@@ -231,19 +231,24 @@ lineage. Existing v0.8 `GenerationInput` v1 history remains readable unchanged.
 Environment AssetSpecs describe only the setting/background layer. Character, prop and
 graphic requirements remain separate production assets for later composition.
 
-Atlas v0.10 adds immutable `SimilarStoic Core` v2 alongside the preserved v1 profile.
-V2 strengthens the hand-drawn rendering language—organic dark linework, simplified forms, mostly
-white/unfilled space, and no colour unless a single restrained flat block accent is helpful—while
-avoiding tonal shading, textured fills and polished digital-illustration finish. It retains v0.9's
-sparse, light, decomposed composition rules. The active immutable
-profile is configured with `ATLAS_VISUAL_STYLE_PROFILE_ID`, falling back deterministically to v2;
-v1 remains selectable. No schema migration was required: both profile versions are idempotent seed
-data, and existing executions retain their frozen v1 lineage unchanged.
+Atlas v0.10 added immutable `SimilarStoic Core` v2 alongside the preserved v1 profile. V2 strengthens the
+hand-drawn rendering language—organic dark linework, simplified forms, mostly white/unfilled space, and no
+colour unless a single restrained flat block accent is helpful—while avoiding tonal shading, textured fills
+and polished digital-illustration finish. It retains v0.9's sparse, light, decomposed composition rules.
 
-SimilarStoic Core v2 is the current text-guided production baseline, not the final SimilarStoic visual
-identity. Further visual art direction remains intentionally deferred; a future immutable profile version
-may supersede v2, and reference-grounded style fidelity may be considered later if justified. Existing v1
-and v2 GenerationExecutions retain their original frozen style provenance.
+Following Human Gate A during Phase 1 visual-evidence execution, immutable `SimilarStoic Core` v3 is the
+founder-approved Phase 1 visual baseline. It preserves v2's sparse, light, deliberately imperfect,
+no-gradient/no-tonal-shading grammar while specifying an amateur human-drawn recurring hamster: large
+hamster-like ears, long whiskers, simple alert eyes, minimal or no fur detail, and a genuinely crossbody
+signature sling/man-bag. The canonical hamster remains mostly white/light, with warm tan/orange inner ears,
+nose and paws/hands/feet. Its bag alone may use flat green, blue, orange, yellow, red and black with a
+dark-gray strap; general scene colour remains restrained. V2 remains immutable, historical and selectable.
+
+The active immutable profile is configured with `ATLAS_VISUAL_STYLE_PROFILE_ID`, falling back
+deterministically to v3; v1 and v2 remain selectable. No schema migration was required: all profile versions
+are idempotent seed data, and existing GenerationExecutions retain their frozen style provenance. Phase 1
+remains open: after an explicit CharacterReferenceSet creation, reference-grounded visual evidence remains
+the next activity.
 
 Provider reference-image conditioning, profile editing, QA, workflow and production systems remain deferred.
 
