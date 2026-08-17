@@ -700,6 +700,21 @@ limits, provider/model spend caps, alerts, escalation, pausing and founder excep
 thresholds, enforcement, kill-switch semantics, escalation rules and profitability-based automation decisions
 remain genuinely unspecified. The current progressive-automation and human-approval principles remain intact.
 
+The approved pre-spend operating principle is that paid external production requires prior human authorization
+of a bounded maximum spend envelope tied to the approved editorial proposition. Actual spend may be lower;
+quality, brand, evidence and risk remain a floor rather than a variable silently reduced to stay cheap. When a
+future proposal compares feasible options, it should explain meaningful quality/capability/risk differences and
+whether additional cost is likely to produce useful value. Revenue or performance upside may inform a higher
+authorization, but must distinguish measured evidence, modelled expectation and speculation and must not
+override editorial or brand strategy.
+
+The future Learning Gate may assess authorized versus actual spend, production choices, quality, performance,
+revenue/economics where available, and whether incremental spend produced useful value. This supports learning
+where premium providers materially help, cheaper alternatives perform equivalently, retries are wasteful, or
+higher quality appears justified. Financial/economic signals inform but do not automatically dominate strategy:
+**required quality / evidence / risk floor → editorial and brand objective → cost efficiency → revenue/profit
+optimization**. No financial schema, accounting rule, forecast formula or automated guardrail is approved.
+
 This cross-cutting boundary preserves **change without rebuild**, provider independence and historical
 provenance: financial records must evolve additively and must not make provider-specific monetary assumptions
 part of core domain semantics. Existing execution/provider provenance is a future attribution anchor, not an
@@ -941,13 +956,38 @@ The recurring target founder gates are:
   package, not an isolated Script: Title, Hook, Angle and Script, with relevant rationale, research/evidence
   summary, material uncertainty, heightened-risk notes and intentional alternatives. The conceptual outcomes
   are Approve, Revise, Reject or Select alternative. Approval permits that specific proposition/version to
-  progress subject to downstream readiness; it is not final technical-video approval.
+  progress subject to downstream readiness; it is not final technical-video approval. Where paid external
+  production is contemplated, the same Editorial Gate also carries the separate linked judgement of the
+  maximum spend Atlas may use to produce that approved proposition; it is not a fourth recurring founder gate.
 - **Learning Gate** — “What should Atlas learn from what happened?” It eventually presents observed
   performance/comparisons, what worked or underperformed, evidence versus hypothesis, available
   cost/revenue/economics context, proposed adaptation, scope and confidence. The founder may Accept learning,
   Reject learning, Limit scope, Request more evidence or Override direction. Approved learning must be
   evidence-backed, scoped, reversible and historically attributable; it must not silently rewrite brand,
   roadmap, audience, risk policy or operating-model governance.
+
+#### Editorial Gate bounded production-spend authorization
+
+No paid external production spend may occur without prior human authorization of a bounded spend envelope tied
+to the approved editorial proposition. The authorization is a **maximum allowed spend**, not a target: Atlas
+should spend less when it can still clear the required quality, brand, evidence and risk thresholds. If the
+required quality would need more than the authorized ceiling, Atlas must stop and escalate; it must neither
+exceed that ceiling nor silently lower the approved quality requirement.
+
+The eventual founder-facing Editorial Gate production/spend proposal should identify the exact editorial
+proposition/lineage being funded and, where meaningful, show estimated total cost, stage/provider breakdown,
+expected quality, cheaper alternatives and their quality/risk trade-offs, rationale for the recommended option,
+any premium spend and its justification, evidence-based or qualified expected commercial/strategic upside, and
+the maximum requested authorization. Economy, recommended and premium are illustrative comparison labels, not
+approved enums or a fixed number of options. Estimated return must distinguish measured historical evidence,
+modelled expectation and speculation; it is never a guaranteed justification for spend.
+
+Atlas should seek the lowest-cost production path that still clears the required quality, brand, evidence and
+risk floor. It must optimize provider, model, attempt count and workflow before lowering that floor; premium
+is not automatically better and cheapest is not automatically preferred. Once relevant later production and
+financial systems exist, Atlas may operate beneath an approved envelope only while sufficient remaining budget
+exists. It must not silently exceed the ceiling or continue open-ended retries because providers are available.
+Exceptional additional spend or material risk requires a new human authorization/exception path.
 
 #### Idea Gate review snapshots and decision history
 
@@ -995,11 +1035,12 @@ requirement, not universal automated fact-checking implementation.
 
 The approved second-half target is:
 
-> EDITORIAL GATE → production planning → production → machine production/brand/risk QA → publication readiness → automatic publishing → analytics/economics collection → machine learning interpretation → LEARNING GATE → approved adaptations inform future content decisions
+> EDITORIAL PACKAGE → EDITORIAL GATE approval + bounded spend authorization → automated production within the authorized envelope → machine production/brand/risk QA → publication readiness → automatic publishing unless an exception occurs → analytics/economics collection → machine learning interpretation → LEARNING GATE → approved adaptations inform future content decisions
 
-In the long-term target, once Editorial Gate is approved, normal production and publishing proceed
-automatically unless machine QA, risk, financial or system-health checks raise an exception. There is no
-routine fourth founder final-video approval gate in that target. The existing initial human pre-publication
+In the long-term target, routine production and publishing proceed automatically only after Editorial approval
+and bounded spend authorization, and only within that envelope, unless machine QA, risk, financial or
+system-health checks raise an exception. An attempted overspend is a financial exception requiring human
+escalation, not a routine fourth founder final-video or budget gate. The existing initial human pre-publication
 approval rule remains in force until relevant reliability is demonstrated.
 
 Production/publication readiness eventually checks editorial fidelity, production quality, brand/continuity and
@@ -1032,11 +1073,19 @@ records to Phase 8, financial-guardrail records to future financial implementati
 automation/orchestration to Phase 9. A later coordinator may orchestrate such objects without becoming the
 source of truth for their domain meaning.
 
+The bounded spend rule governs **paid external spend** only. Whether negligible, internal or pre-authorized
+operating costs later require per-item authorization remains a financial-control design decision. Future
+spend authorization must be attributable to the exact editorial/production lineage it governs, but no
+authorization, proposal, reservation, ledger or enforcement entity is approved here.
+
 The current narrowest approved Phase 2 implementation direction is to persist immutable Idea Gate review
 snapshots and immutable Idea Gate decisions for Opportunities, supporting Proceed / Reject / Steer with
 optional founder direction and complete historical provenance. This is an implementation direction, not a
 named milestone. It is expected to require the next additive migration after migrations 1–11 when a final
 milestone is approved; no migration number, schema or table is allocated here.
+
+The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
+financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
 
 ## Phase 3 — Technical Architecture
 

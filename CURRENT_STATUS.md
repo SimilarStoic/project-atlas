@@ -749,12 +749,21 @@ Reject / intentional alternative selection for a Title/Hook/Angle/Script package
 evidence-backed, scoped, reversible performance/economics adaptations). They are version-specific future
 decision concepts, not database entities or a generic mutable workflow state.
 
+Where paid external production is contemplated, the Editorial Gate also contains the linked founder judgement
+of the maximum spend Atlas may use for that approved proposition. It is a bounded ceiling, not a spend target,
+and does not create a fourth routine founder gate. Atlas should choose the lowest-cost path that still clears
+the approved quality, brand, evidence and risk floor; it must stop and escalate rather than exceed the ceiling
+or silently lower that floor. A future production/spend proposal may explain lineage, estimated cost and
+breakdown, quality/cost/risk trade-offs, alternatives, premium rationale, and qualified commercial/strategic
+upside. Estimates must distinguish evidence, modelling and speculation.
+
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. The target second
-half is Editorial Gate → production/planning → machine production/brand/risk QA → publication readiness →
-automatic publishing → analytics/economics → machine learning interpretation → Learning Gate. Normal future
-work should be exception-driven after Editorial approval; the existing initial human publication approval
-remains until reliability is demonstrated.
+half is Editorial package → Editorial Gate approval + bounded spend authorization → production within the
+authorized envelope → machine production/brand/risk QA → publication readiness → automatic publishing unless
+an exception occurs → analytics/economics → machine learning interpretation → Learning Gate. Overspend is a
+financial exception requiring human escalation, not a routine fourth gate. The existing initial human
+publication approval remains until reliability is demonstrated.
 
 Opportunities remain mutable discovery records. The first approved Idea Gate implementation direction requires
 an immutable review snapshot of exactly the presented Opportunity context and an immutable, additive decision
@@ -769,6 +778,13 @@ guardrail records to future financial implementation, and orchestration to Phase
 generic approval state, Script-to-Claim architecture, queues, production, publishing, analytics, financial
 systems or automation have been created.
 
+The future Cost Ledger, Revenue Ledger and Economics / Control Centre remain the financial-control boundary;
+analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
+totals. Future learning may compare authorized/actual spend, production choices, quality and performance or
+revenue outcomes where available, without allowing profit signals to silently redefine editorial strategy.
+This spend direction concerns paid external spend only; remaining accounting, reservation, thresholds,
+enforcement, proposal schema and negligible/internal-cost treatment remain unspecified.
+
 # Next Step
 
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
@@ -777,6 +793,10 @@ decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable Si
 Phase 2 is now active, but no implementation milestone is yet defined or authorized. No further generation,
 v0.15 or successor milestone exists. The roadmap remains governed by canonical GitHub documentation and the
 explicit change protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+
+The first approved implementation direction remains immutable Idea Gate review snapshots plus immutable Idea
+Gate decisions. Editorial Gate spend authorization is a future production/financial-control direction and is
+not part of that first slice.
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
 imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency

@@ -50,7 +50,8 @@ remove human judgement: routine execution is progressively automated while found
 where practical, at three target operating-model gates. The **Idea Gate** covers review, approval, rejection,
 steering and reprioritisation of explained candidate opportunities. The **Editorial Gate** covers founder
 decisions on the prepared title, hook, angle, script, supporting research/evidence context, risk/uncertainty
-notes, revisions and alternatives. The **Learning Gate** covers performance, evidence-backed hypotheses,
+notes, revisions and alternatives, plus bounded paid-production spend authorization where relevant. The
+**Learning Gate** covers performance, evidence-backed hypotheses,
 proposed adaptations and available economics context. These gates are not approved database or workflow-state
 entities.
 
@@ -89,10 +90,31 @@ The target founder gates are version-specific operating concepts, not approved d
   discovery context, risk/uncertainty and Atlas's recommendation; it is not ResearchPack approval.
 - **Editorial Gate:** Approve, Revise, Reject or intentionally select an alternative editorial package of
   Title, Hook, Angle and Script with relevant evidence/risk context. Approval allows that specific proposition
-  and version to progress subject to later readiness; it is not technical final-video approval.
+  and version to progress subject to later readiness; it is not technical final-video approval. Where paid
+  external production is contemplated, it also authorizes a bounded maximum spend for that proposition; this
+  remains one linked Editorial Gate judgement, not a fourth routine founder gate.
 - **Learning Gate:** accept, reject, limit, seek more evidence for, or override evidence-backed, scoped,
   reversible and historically attributable learning/adaptations. It must not silently alter brand, roadmap,
   audience, risk policy or governance.
+
+No paid external production spend may occur without prior human authorization of a bounded envelope tied to
+the approved editorial proposition. Approval authorizes a maximum, not a target: Atlas should spend less when
+it can still meet the required quality, brand, evidence and risk floor. If meeting that floor would exceed the
+ceiling, Atlas must stop and escalate rather than overspend or silently lower the quality requirement.
+
+The eventual Editorial Gate production/spend proposal should make its exact editorial lineage and maximum
+request understandable, with estimated total and stage/provider cost where available, expected quality,
+meaningful lower-cost alternatives and trade-offs, recommended/premium rationale, and qualified expected
+commercial or strategic upside. It must distinguish measured evidence, modelled expectation and speculation;
+projected return is never guaranteed justification. Illustrative economy/recommended/premium labels are not
+fixed future enums or a required number of choices.
+
+Atlas seeks the lowest-cost feasible path that clears the approved quality, brand, evidence and risk floor.
+Provider, model, attempt count and workflow should be optimized before any quality bar changes; premium is not
+automatically better and cheapest is not automatically preferred. Within a future authorized envelope Atlas
+may spend less, but sufficient remaining budget is required before paid external work begins. It must not
+silently overspend or use open-ended retries. Exceptional extra spend or material risk requires a new human
+authorization/exception path.
 
 Opportunities remain mutable discovery records. Idea Gate authority must therefore apply to an immutable review
 snapshot of exactly what the founder judged, not only to evolving current Opportunity state. The conceptual
@@ -124,12 +146,12 @@ eventually establish research/claim support, uncertainty/freshness treatment, ev
 overpromising editorial content, audio-first meaning preservation, territory/tone, surfaced risk and
 provenance.
 
-The target second half is Editorial Gate → production planning/production → machine production/brand/risk QA
-→ publication readiness → automatic publishing → analytics/economics → machine learning interpretation →
-Learning Gate → approved adaptations. Normal work proceeds automatically after Editorial approval unless a
-QA, risk, financial or system-health exception interrupts it. The existing initial human pre-publication
-approval rule remains until reliability is demonstrated; the long-term target has no routine fourth final-video
-approval gate. Readiness failure is never silently bypassed, including through grounded-to-ungrounded fallback
+The target second half is Editorial package → Editorial Gate approval + bounded spend authorization →
+production within the authorized envelope → machine production/brand/risk QA → publication readiness →
+automatic publishing unless an exception occurs → analytics/economics → machine learning interpretation →
+Learning Gate → approved adaptations. Overspend is a financial exception requiring human escalation, not a
+routine fourth gate. The existing initial human pre-publication approval rule remains until reliability is
+demonstrated. Readiness failure is never silently bypassed, including through grounded-to-ungrounded fallback
 or material output substitution.
 
 Progression derives from existing domain records plus durable, version-specific decision history and readiness
@@ -138,6 +160,19 @@ versions require relevant re-evaluation; history remains additive. Phase 2 later
 decision/readiness/revision provenance. Production/publication readiness records remain for Phases 6/7,
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
+
+Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
+analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
+totals. Learning may eventually compare authorized and actual spend, production choices, quality, performance
+and revenue/economics outcomes where available, including whether incremental spend delivered useful value.
+Financial signals inform but must not automatically dominate the hierarchy of **quality/evidence/risk floor →
+editorial and brand objective → cost efficiency → revenue/profit optimization**. The rule concerns paid
+external spend only; reservation/accounting mechanics, negligible/internal-cost treatment, financial schemas
+and enforcement remain unspecified.
+
+The approved first implementation direction remains immutable Idea Gate review snapshots and immutable Idea
+Gate decisions. Editorial Gate spend authorization is for later Editorial Gate, production and financial-control
+milestones and is not part of that first slice.
 
 ## Roadmap direction and milestone governance
 
@@ -253,6 +288,12 @@ Every future handoff must direct the next chat to repeat this repository-groundi
   architecture; Phase 7 may provide publication/platform data; Phase 8 owns separate performance/commercial
   metrics; Phase 9 may consume limits during automation; and Phase 10 may consume business/economic outcomes.
   No new phase, phase activation or implementation is implied.
+- The future pre-spend rule is prior human authorization of a bounded maximum paid-external-production envelope
+  tied to the exact approved editorial proposition. It is not a target spend or a fourth routine founder gate.
+  Atlas must optimize cost within the required quality, brand, evidence and risk floor, stop/escalate before an
+  overspend, and never silently reduce quality or rely on open-ended retries. A future proposal must make
+  lineage, cost/quality/risk alternatives and qualified—not guaranteed—upside intelligible. No authorization,
+  proposal, ledger, production or enforcement entity is approved by this documentation.
 - Accepted phases, milestones, specifications, profiles and implementation choices remain evolvable through
   additive changes, immutable new versions, explicit future selection and preserved historical provenance;
   accepted historical records are not destructively rewritten merely because the current design evolves.

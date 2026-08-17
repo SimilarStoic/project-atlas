@@ -22,14 +22,19 @@ spend, a durable **Revenue Ledger** for money earned from already contemplated m
 analytics remains separate, though it may inform unit economics. This is conceptual only: no financial schema,
 ledger, integration, formula, threshold, enforcement or automation implementation is present or authorized.
 Future financial records must preserve provenance, provider independence and immutable historical execution
-semantics.
+semantics. Paid external production will eventually require prior founder authorization of a bounded maximum
+spend envelope tied to the approved editorial proposition. Atlas should spend less when it can still clear the
+required quality, brand, evidence and risk floor; it must stop and escalate rather than exceed that ceiling or
+silently lower the floor. This is a future operating principle, not financial or spend-authorization
+implementation.
 
 Atlas's approved end-state is an approximately **95% automated content operating system**, not a human-free
 system. Routine execution should progressively automate around founder judgement at three target gates: Idea
-(opportunity approval/steering), Editorial (title, hook, angle, script, evidence/risk and revision decisions)
-and Learning (performance, hypotheses, adaptations and available economics context). These are operating-model
-direction only, not workflow/database entities. The durable v0.1–v0.14 chain from Opportunity through Asset
-is a foundation; later phases extend it through publication, platform performance, analytics,
+(opportunity approval/steering), Editorial (title, hook, angle, script, evidence/risk and revision decisions
+plus bounded paid-production spend authorization) and Learning (performance, hypotheses, adaptations and
+available economics context). These are operating-model direction only, not workflow/database entities. The
+durable v0.1–v0.14 chain from Opportunity through Asset is a foundation; later phases extend it through
+publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
@@ -41,11 +46,18 @@ rather than normal work, interrupt automation. This is not a generic mutable wor
 schema. Production/publication, Learning, financial-control and orchestration records remain with their later
 phase boundaries.
 
+Future Editorial Gate proposals may compare feasible production options and explain expected quality,
+capability, risk and cost trade-offs, including qualified—not guaranteed—commercial or strategic upside.
+Quality is a floor: Atlas optimizes cost inside it, never by silently degrading it. Authorized ceilings govern
+paid external spend only; an overspend requires human escalation, while the exact financial-control mechanics
+remain deferred.
+
 The first approved implementation direction is immutable Idea Gate review snapshots and immutable Idea Gate
 decisions for mutable Opportunities: Proceed, Reject or Steer with optional founder direction and preserved
 history. A decision applies to the exact snapshot reviewed, has no automatic research/workflow side effect, and
 does not reuse `Opportunity.status` or approval flags. This direction is not a named implementation milestone;
 any future implementation must use additive migration/provenance conventions.
+The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
 
 ## Technology baseline
 
