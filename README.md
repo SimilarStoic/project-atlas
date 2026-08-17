@@ -10,6 +10,12 @@ automation and production systems remain deferred.
 For the canonical repository checkpoint, cross-chat re-grounding procedure, and roadmap-governance protocol,
 see [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
+Atlas is a composable, evolvable system: implementation-specific pipeline components remain replaceable behind
+stable boundaries, while accepted changes preserve historical provenance through additive/versioned evolution.
+Core domain/provenance invariants remain deliberately governed rather than casually replaced. SimilarStoic's
+brand scope extends beyond finance to useful explanatory subjects, and its sparse visual baseline may use
+occasional original contrasting break-frame/still devices as a signature creative mechanism.
+
 ## Technology baseline
 
 - Python 3.12+

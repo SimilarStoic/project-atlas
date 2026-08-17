@@ -341,19 +341,29 @@ Young professionals and beginners alike.
 
 > Understand money. Understand yourself. Build a better life.
 
-Finance remains a major centre of gravity, an important commercial foundation, a core source of high-intent content and central to the SimilarStoic identity. The expanded territory extends the finance-centred strategy; it does not replace finance.
+SimilarStoic is not restricted to finance. Finance remains a major centre of gravity, an important commercial
+foundation, a core source of high-intent content and central to the SimilarStoic identity, but is not required
+for every piece. The expanded territory extends the finance-centred strategy; it does not replace finance.
 
-Relevant territory may include money, wealth and investing; work, careers and income; time; behaviour and psychology; life strategy; status and consumption; relationships and social decisions where relevant; energy and attention; mental models; modern adulthood; financial independence; and broader economic ideas made personally understandable.
+Relevant territory may include finance and economics; work and careers; time, psychology, behaviour and
+incentives; decision-making; society and social behaviour; life strategy; status and consumption; relationships
+and social decisions; energy and attention; mental models; modern adulthood; financial independence; and useful
+explanations of how systems or other parts of the world work. The editorial purpose is to make useful parts of
+the world understandable and entertaining for the target audience.
 
 These are strategic examples, not a final Atlas Pillar taxonomy.
 
 ## Editorial Inclusion Test
 
-> Does understanding this help someone make better decisions about their money, work, time or future?
+> Does understanding this help the audience understand or make better decisions about money, work, behaviour,
+> psychology, incentives, society, time, future, decision-making, or an important system or phenomenon?
 
-If yes, the idea may belong within SimilarStoic. SimilarStoic must not drift into generic self-improvement merely because a subject is popular or clickable.
+If yes, the idea may belong within SimilarStoic. SimilarStoic must not drift into generic motivation or
+self-improvement without substantive explanatory value, miscellaneous trivia without meaningful relevance or
+insight, or random entertainment that does not fit the brand's explanatory purpose.
 
-Life design connected to money, time or work; psychology of consumption/status; careers/income; and financial relationships are potentially strong fits. Generic fitness advice with no meaningful connection is generally outside the intended territory.
+Life design connected to money, time or work; psychology of consumption/status; careers/income; and financial
+relationships are potentially strong fits.
 
 ## Long-Term Transformation
 
@@ -538,6 +548,14 @@ Videos are built from reusable illustrated assets and layered scenes, not single
 
 Narration is the master timeline. Use evolving illustrated scenes: major idea/location/concept changes trigger major scene changes; minor background movement is optional and purposeful. Use simple baseline animation, exaggerated character states and occasional highly detailed hero frames; hero frames are visual peaks, not the default.
 
+Signature original break-frame/still devices may occasionally interrupt the normal sparse visual grammar to
+land a joke, dramatize an event, make an explanatory point or metaphor, convey a feeling, or make a concept
+memorable. They may be unusually detailed, exaggerated, uncanny, absurd, dramatically over-serious, visually
+intense or stylistically contrasting; the contrast may itself be part of the comedy or explanation. They are
+not the default treatment. Classic SpongeBob-era/older animated-comedy timing may inspire the mechanism, but
+no protected characters, artwork, frames, compositions, dialogue, backgrounds or franchise-specific visual
+identity may be copied.
+
 Final production QA includes technical, audio, factual, visual and brand-consistency checks; audio-only comprehension; caption/text accuracy; and chart/data accuracy.
 
 Initially every video requires human approval before publication. Automation may increase only after demonstrated reliability. Preserve research, sources, scripts, assets and version history for published content.
@@ -591,6 +609,12 @@ The interface prioritises decisions and exceptions over unnecessary technical co
 
 The architecture follows a “change without rebuild” principle: data, capabilities, workflows, configuration and interface remain loosely coupled.
 
+Atlas is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
+image/visual providers, production stages, rendering components, publishing integrations, analytics
+integrations and other implementation-specific pipes should be replaceable behind stable boundaries, explicit
+inputs/outputs, loose coupling and preserved provenance. Replacing one pipe must not require reconstructing
+the end-to-end system solely because an underlying implementation changes.
+
 Workflow stages should be independently addable, removable, reorderable and configurable where practical. The fixed MVP workflow must not become a permanent hard-coded constraint.
 
 Short-form, long-form, newsletters and company deep dives should be able to reuse the same underlying knowledge/content system.
@@ -598,6 +622,14 @@ Short-form, long-form, newsletters and company deep dives should be able to reus
 V1 business rules should be configurable without code where practical, including audience, geography, pillars, topic preferences/scoring, duration, editorial direction, source/freshness/risk requirements, approval rules, US-comparison rules, personal-perspective/CTA rules, visual rules, cadence, cost limits and automation level per stage.
 
 Protected safety, security and integrity constraints are not ordinary configuration. Configuration must be versioned and auditable so historical content retains its production context.
+
+Accepted phases, milestones, specifications, profiles and implementation choices remain evolvable after
+acceptance. Prefer additive changes, immutable new versions, explicit future selection and durable provenance
+that preserves which historical outputs used which version; do not destructively rewrite accepted historical
+records merely because the current design evolves. Core domain/provenance invariants remain stable by default:
+ownership/provenance relationships, historical preservation, immutable/versioned reference semantics,
+execution semantics and established domain meaning require explicit founder + ChatGPT architecture/
+specification approval, deliberate canonical synchronization, review, acceptance, commit and push to change.
 
 ## Cost Tracking & Development Stack
 

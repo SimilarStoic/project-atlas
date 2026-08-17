@@ -45,9 +45,15 @@ A useful high-level expression is:
 
 > Understand money. Understand yourself. Build a better life.
 
-Finance remains a major centre of gravity, an important commercial foundation, a core source of high-intent content and central to the SimilarStoic identity. This is an expansion of the finance-centred strategy, not a pivot away from it.
+SimilarStoic is not restricted to finance. Finance remains a major centre of gravity, an important commercial
+foundation, a core source of high-intent content and central to the SimilarStoic identity, but is not required
+for every piece. This is an expansion of the finance-centred strategy, not a pivot away from it.
 
-The broader editorial universe may include money and investing; work, careers and income; time, behaviour and psychology; life strategy; status and consumption; relationships or social decisions where relevant; energy and attention; mental models; modern adulthood; financial independence; and broader economic ideas made personally understandable.
+The broader editorial universe may include finance and economics; work and careers; time, psychology,
+behaviour and incentives; decision-making; society and social behaviour; life strategy; status and consumption;
+relationships or social decisions; energy and attention; mental models; modern adulthood; financial
+independence; and useful explanations of how systems or other parts of the world work. The editorial purpose
+is to make useful parts of the world understandable and entertaining for the target audience.
 
 These are strategic territories, not a final Atlas Pillar taxonomy.
 
@@ -55,11 +61,15 @@ These are strategic territories, not a final Atlas Pillar taxonomy.
 
 Use this strategic filter:
 
-> Does understanding this help someone make better decisions about their money, work, time or future?
+> Does understanding this help the audience understand or make better decisions about money, work, behaviour,
+> psychology, incentives, society, time, future, decision-making, or an important system or phenomenon?
 
 If yes, the idea may belong within SimilarStoic.
 
-SimilarStoic must not drift into generic self-improvement simply because a subject is popular or clickable. Life design connected to money, time or work; the psychology of consumption or status; careers and income; and financial relationships are potentially strong fits. Generic fitness advice with no meaningful connection is generally outside the intended territory.
+SimilarStoic must not drift into generic motivation/self-improvement without substantive explanatory value,
+miscellaneous trivia without meaningful relevance or insight, or random entertainment that does not fit the
+brand's explanatory purpose. Life design connected to money, time or work; the psychology of consumption or
+status; careers and income; and financial relationships are potentially strong fits.
 
 ## Atlas domain distinction
 
@@ -483,6 +493,14 @@ Animation is audio-first and visually enhanced. It should primarily use evolving
 - Hero frames are visual peaks, not the default rendering style.
 - Scene changes should follow changes in ideas, not arbitrary time intervals.
 
+Signature original break-frame/still devices may occasionally interrupt the normal sparse visual grammar to
+land a joke, dramatize an event, make an explanatory point or metaphor, convey a feeling, or make a concept
+memorable. They may be unusually detailed, exaggerated, uncanny, absurd, dramatically over-serious, visually
+intense or stylistically contrasting; the contrast may itself be part of the comedy or explanation. They are
+not the default treatment. Classic SpongeBob-era/older animated-comedy timing may inspire the mechanism, but
+no protected characters, artwork, frames, compositions, dialogue, backgrounds or franchise-specific visual
+identity may be copied.
+
 Numerical charts and data visualisations must be generated programmatically from verified data, rather than created by image generation.
 
 ---
@@ -609,6 +627,12 @@ Automated video production, automated publishing and advanced analytics are late
 
 The architecture follows a **change without rebuild** principle. Data, capabilities, workflows, configuration and interface should remain loosely coupled.
 
+Atlas is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
+image/visual providers, production stages, rendering components, publishing integrations, analytics
+integrations and other implementation-specific pipes should be replaceable behind stable boundaries, explicit
+inputs/outputs, loose coupling and preserved provenance. Replacing one pipe must not require reconstructing
+the end-to-end system solely because an underlying implementation changes.
+
 Workflow stages should be independently addable, removable, reorderable and configurable where practical. The fixed MVP workflow must not become a permanent hard-coded constraint.
 
 New content formats should reuse the same underlying knowledge/content system and eventually support workflows such as short-form, long-form, newsletters and company deep dives.
@@ -627,6 +651,15 @@ Where practical, V1 must externalise the following business rules from core appl
 Deeper workflow and capability configuration should be architecture-ready but does not require a full editor in V1.
 
 Protected safety, security and integrity constraints must not be disableable through ordinary configuration. Configuration must be versioned and auditable so historical content retains its production context.
+
+Accepted phases, milestones, specifications, profiles and implementation choices remain evolvable after
+acceptance. Prefer additive changes, immutable new versions, explicit future selection and durable provenance
+that preserves which historical outputs used which version; do not destructively rewrite accepted historical
+records merely because the current design evolves. This does not make core domain/provenance invariants casually
+replaceable: ownership/provenance relationships, historical preservation, immutable/versioned reference
+semantics, execution semantics and established domain meaning remain stable by default. Changing such an
+invariant requires explicit founder + ChatGPT architecture/specification approval, deliberate canonical
+synchronization, review, acceptance, commit and push.
 
 ## Cost tracking
 

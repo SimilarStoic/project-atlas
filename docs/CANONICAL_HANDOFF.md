@@ -109,6 +109,17 @@ Every future handoff must direct the next chat to repeat this repository-groundi
 - One real provider attempt produces one immutable terminal GenerationExecution. A pre-provider failure
   produces no execution; a failed provider attempt produces a failed execution and no Asset; success produces
   an execution and at most one Asset.
+- Atlas is a composable pipeline: providers, research engines, adapters, narration/audio and image/visual
+  providers, production stages, rendering components, publishing and analytics integrations, and other
+  implementation-specific pipes remain replaceable behind stable boundaries, explicit inputs/outputs,
+  loose coupling and preserved provenance. Replacing one pipe must not require rebuilding the whole loop.
+- Accepted phases, milestones, specifications, profiles and implementation choices remain evolvable through
+  additive changes, immutable new versions, explicit future selection and preserved historical provenance;
+  accepted historical records are not destructively rewritten merely because the current design evolves.
+- Core domain/provenance invariants remain stable by default. Changing ownership/provenance relationships,
+  historical preservation, immutable/versioned reference semantics, execution semantics or established domain
+  meaning requires explicit founder + ChatGPT architecture/specification approval, deliberate canonical
+  synchronization, review, acceptance, commit and push.
 - Atlas remains audio-first. Do not introduce premature agents, cloud infrastructure, queues, publishing, or
   analytics.
 
@@ -122,8 +133,19 @@ historical implementation dates:
 - Scene-level personality may range across curious, thoughtful, relaxed, worried, frustrated, cheeky, cute,
   vulnerable, overwhelmed, triumphant, and absurdly dramatic.
 - The narrator explains while the hamster illustrates; content must remain comprehensible from audio alone.
-- Pop culture is light seasoning. Original exaggerated reaction and freeze-frame comedy may use older animated
-  timing mechanisms as inspiration, without copying protected characters, artwork, frames, or compositions.
+- SimilarStoic is not restricted to finance. It makes useful parts of the world understandable and entertaining
+  for the target audience across finance, economics, work, careers, psychology, behaviour, incentives,
+  decision-making, society, social behaviour, life strategy and useful explanations of systems or phenomena.
+  Finance remains an important commercial/editorial pillar, but is not required for every piece. Generic
+  motivation/self-improvement without explanatory value, miscellaneous trivia without meaningful relevance
+  or insight, and random entertainment outside the explanatory purpose remain excluded.
+- Pop culture is light seasoning. Signature original break-frame/still devices may deliberately interrupt the
+  normal sparse grammar to land a joke, dramatize an event, make an explanatory point or metaphor, convey a
+  feeling, or make a concept memorable. They may be unusually detailed, exaggerated, uncanny, absurd,
+  dramatically over-serious, visually intense or stylistically contrasting; that contrast may itself carry the
+  comedy or explanation. They are not the default treatment. Classic SpongeBob-era/older animated-comedy
+  timing may inspire the mechanism, without copying protected characters, artwork, frames, compositions,
+  dialogue, backgrounds or franchise-specific visual identity.
 - SimilarStoic Core v2 remains immutable historical visual provenance. SimilarStoic Core v3 is the current
   founder-approved Phase 1 visual baseline: sparse, light, dark hand-drawn and deliberately imperfect,
   with no gradients, tonal shading, painterly/textured fill or polished AI-clean finish. The canonical
