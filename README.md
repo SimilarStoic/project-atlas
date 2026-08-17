@@ -246,9 +246,13 @@ dark-gray strap; general scene colour remains restrained. V2 remains immutable, 
 
 The active immutable profile is configured with `ATLAS_VISUAL_STYLE_PROFILE_ID`, falling back
 deterministically to v3; v1 and v2 remain selectable. No schema migration was required: all profile versions
-are idempotent seed data, and existing GenerationExecutions retain their frozen style provenance. Phase 1
-remains open: after an explicit CharacterReferenceSet creation, reference-grounded visual evidence remains
-the next activity.
+are idempotent seed data, and existing GenerationExecutions retain their frozen style provenance. The
+founder-approved Human Gate A Asset is the sole immutable member of CharacterReferenceSet v1. Grounded v4
+review evidence then succeeded for the canonical sorting and reaction Scene AssetSpecs. Phase 1 visual
+acceptance is closed with **PASS WITH DEFERRED VISUAL REFINEMENT**: the only non-blocking deficiency is a
+residual AI-clean/overly competent professional finish. Any future refinement must preserve the approved
+hamster identity, colour assignments, sling-bag language and reference-set continuity; it does not authorize
+a redesign or a further generation. No v0.15 or successor milestone is implied.
 
 Provider reference-image conditioning, profile editing, QA, workflow and production systems remain deferred.
 
@@ -317,6 +321,6 @@ pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visu
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, and v0.13
 Reference-Grounded Character Generation and v0.14 Explicit Character Reference Bootstrap are complete and
 pushed. The verified checkpoint is `516884b8fab0a29e8e82973d684be1ae8a08bff6`
-(`feat: add character reference bootstrap`), with 75 passing tests and migrations 1–11. The next activity is
-Phase 1 visual evidence under the canonical handoff; it is not a v0.15 milestone. Later Atlas systems remain
-out of scope.
+(`feat: add character reference bootstrap`), with 75 passing tests and migrations 1–11. The canonical
+handoff records that Phase 1 visual acceptance is closed with **PASS WITH DEFERRED VISUAL
+REFINEMENT**. No v0.15 or subsequent milestone has been selected; later Atlas systems remain out of scope.

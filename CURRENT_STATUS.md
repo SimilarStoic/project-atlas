@@ -231,9 +231,30 @@ immutable SimilarStoic Core v3; v2 remains unchanged, historical and selectable.
 - The deterministic fallback profile is v3; `ATLAS_VISUAL_STYLE_PROFILE_ID` can explicitly select any
   immutable seeded version. No schema migration or new domain concept was required.
 
-Phase 1 is not closed. No CharacterReferenceSet has been created and no grounded generation has occurred;
-the next visual-evidence action remains explicit CharacterReferenceSet creation followed by separately
-authorized grounded evidence generation.
+Phase 1 visual acceptance is closed with **PASS WITH DEFERRED VISUAL REFINEMENT**. The Human Gate A Asset
+is the sole immutable member of CharacterReferenceSet v1; two reference-grounded review executions then
+succeeded across the approved sorting and reaction Scene AssetSpecs. No further generation is authorized.
+
+The non-blocking deferred refinement is specifically residual AI-clean or overly competent professional
+illustration finish. Future work may increase believable human-drawn imperfection and reduce overly smooth,
+confident contours, but must preserve the approved hamster identity, proportions, large-ear/long-whisker
+cues, warm tan/orange accents, multi-colour sporty sling-bag, dark-gray strap and reference-set continuity.
+It is not permission to redesign the hamster.
+
+Accepted immutable evidence:
+
+- Human Gate A reference Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`, version 9, SHA-256
+  `eaf0af82fe98120613793465f94029a72ae13a79f8e3e258d265e88fa47c450b`.
+- CharacterReferenceSet `character-reference-set-similarstoic-hamster-core-v1`, version 1, contains exactly
+  position 1 → that approved Asset.
+- Grounded sorting evidence: `generation-execution-dd25dc1388b04eef8d4f32ee06ec7807` →
+  `asset-76c02a603d0e4a69955b51633c1e13ce`, version 1, SHA-256
+  `a12735798ad1c294849eaeab3796a080a8a27ec54335917048d1c5132f427577`.
+- Grounded reaction evidence: `generation-execution-f1900a2b32634a36b0b53244474259ce` →
+  `asset-c989501ad83e4c9da668218c3179fb9c`, version 10, SHA-256
+  `ce0438980ae2f9c8015e63046805d70cc58d9789daa29671c28ac5dc1243e95b`.
+
+VisualStyleProfile v3 remains the current accepted baseline. No v0.15 or post-Phase-1 milestone is selected.
 
 ## Atlas v0.11 Checkpoint
 
@@ -629,23 +650,25 @@ Completed:
 - Atlas v0.10 Visual Style Fidelity Refinement
 - Atlas v0.11 Character Continuity Foundation
 - Atlas v0.12 Canonical Character Reference Foundation
+- Atlas v0.13 Reference-Grounded Character Generation
+- Atlas v0.14 Explicit Character Reference Bootstrap
+- Phase 1 visual acceptance: **PASS WITH DEFERRED VISUAL REFINEMENT**
 
-Remaining before Phase 1 is complete:
-- Final production-ready brand identity
-- Final production-ready mascot visual specification
-- Final Phase 1 acceptance review
+Phase 1 visual status:
+
+- Visual evidence review is complete and accepted.
+- Residual AI-clean/professional illustration finish is deferred visual refinement, not a Phase 1 blocker.
+- No subsequent milestone or phase transition is implied or selected.
 
 ---
 
 # Next Step
 
-Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. The next
-activity is Phase 1 visual-evidence execution in an isolated review environment, not v0.15. Human Gate A
-approved Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` under the immutable SimilarStoic Core v3 baseline.
-The next action is an explicit CharacterReferenceSet v1 decision and creation before any grounded review
-evidence. Normal generation still requires references; bootstrap never creates them automatically. The
-roadmap is governed by canonical GitHub documentation and the explicit change protocol in
-[docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1
+visual acceptance is closed with **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic
+Core v3 baseline. No further generation is authorized, no v0.15 exists, and no subsequent milestone has
+been selected. The roadmap remains governed by canonical GitHub documentation and the explicit change
+protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
 imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency

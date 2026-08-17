@@ -27,12 +27,12 @@ existing GitHub roadmap and specification remain authoritative.
 - Acceptance state: migrations 1–11; 75 tests passed; Ruff, Black `--check`, and `git diff --check` passed.
 - At acceptance, local `main == origin/main` and the working tree was clean.
 
-## Current immediate continuation
+## Phase 1 visual acceptance decision
 
-The approved next activity is **Phase 1 visual-evidence execution on accepted v0.14**. This is **not v0.15**
-and does not create a new implementation milestone.
+The completed activity was **Phase 1 visual-evidence execution on accepted v0.14**. This is **not v0.15**
+and did not create a new implementation milestone.
 
-The approved sequence is:
+The completed sequence was:
 
 1. Establish an isolated review environment.
 2. Create a fresh v0.14 review database.
@@ -44,12 +44,27 @@ The approved sequence is:
    `character-profile-similarstoic-hamster-core-v1` CharacterProfile.
 7. Synchronize that founder-approved visual specification through immutable SimilarStoic Core v3 while
    preserving v2 as immutable historical provenance.
-8. Explicitly create CharacterReferenceSet v1 from the approved eligible Asset only after a separate
-   bounded authorization.
-9. Generate grounded review evidence after that approval.
-10. Make the Phase 1 visual-acceptance decision.
+8. Explicitly created CharacterReferenceSet v1 from the approved eligible Asset.
+9. Generated reference-grounded review evidence after that approval.
+10. Founder and ChatGPT accepted the Phase 1 visual-evidence decision: **PASS WITH DEFERRED VISUAL
+    REFINEMENT**.
 
-No reference set is created automatically.
+Phase 1 visual acceptance is closed with **PASS WITH DEFERRED VISUAL REFINEMENT**. The immutable
+`character-reference-set-similarstoic-hamster-core-v1` v1 contains exactly the approved Asset at position 1.
+Grounded evidence succeeded for `asset-spec-isa-scene-01-hamster-sorting-v1`
+(`generation-execution-dd25dc1388b04eef8d4f32ee06ec7807`, Asset
+`asset-76c02a603d0e4a69955b51633c1e13ce`, SHA-256
+`a12735798ad1c294849eaeab3796a080a8a27ec54335917048d1c5132f427577`) and
+`asset-spec-isa-scene-03-hamster-reaction-v1`
+(`generation-execution-f1900a2b32634a36b0b53244474259ce`, Asset
+`asset-c989501ad83e4c9da668218c3179fb9c`, SHA-256
+`ce0438980ae2f9c8015e63046805d70cc58d9789daa29671c28ac5dc1243e95b`).
+
+The non-blocking deferred refinement is specifically residual AI-clean or overly competent professional
+illustration finish. Future refinement must increase believable human-drawn imperfection and reduce overly
+smooth/confident contours while preserving the approved hamster identity, proportions, large-ear/long-whisker
+cues, warm tan/orange accents, multi-colour sling-bag, dark-gray strap, and CharacterReferenceSet continuity.
+No post-Phase-1 milestone or further generation is authorized or implied.
 
 ## Mandatory fresh-chat protocol
 
@@ -118,9 +133,11 @@ historical implementation dates:
   green, blue, orange, yellow, red and black with a dark-gray strap. This narrowly scoped character and
   accessory exception does not relax restrained general scene colour. Material future style changes require
   new immutable versions.
-- Phase 1 remains open. No CharacterReferenceSet or grounded generation follows from Human Gate A
-  automatically; explicit reference-set creation is next, followed by separately authorized grounded
-  visual evidence.
+- Phase 1 visual acceptance is closed with **PASS WITH DEFERRED VISUAL REFINEMENT**. The founder-approved
+  Human Gate A Asset is the sole immutable member of CharacterReferenceSet v1, and grounded evidence across
+  two scenes succeeded. VisualStyleProfile v3 remains the accepted baseline. Residual AI-clean/professional
+  finish is a non-blocking future refinement only; it does not authorize a hamster redesign or further
+  generation. No v0.15 or successor milestone has been selected.
 
 ## Deferred scope
 
