@@ -39,7 +39,9 @@ The accepted implementation checkpoint remains **v0.14**. The canonical GitHub H
 documentation synchronization is committed and pushed; that repository-synchronization change does not create
 or imply a new implementation milestone. SimilarStoic Core v3 remains the current accepted visual baseline,
 and CharacterReferenceSet v1 remains unchanged. No v0.15 or successor phase/milestone is authorized or
-active. A fresh founder + ChatGPT decision is required before any new implementation work is defined.
+active. **Phase 2 — Content Operating Model is the current ACTIVE, NOT YET IMPLEMENTED roadmap phase** under
+founder + ChatGPT design/implementation stewardship. Activation does not authorize all Phase 2 scope, a named
+implementation milestone, or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -68,15 +70,15 @@ This is not proof that the complete operating system is implemented. The approve
 Publication → platform performance → analytics → revenue/economics → learning → future opportunity/content
 decisions, without approving publication, analytics or financial schemas.
 
-The phases retain their existing ordered roles: Phase 1 is complete product/business definition; Phase 2 will
-define the human-led executable content lifecycle and its still-unspecified semantics; Phase 3 provides the
+The phases retain their existing ordered roles: Phase 1 is complete product/business definition; active Phase 2
+defines the human-led executable content lifecycle and its approved direction; Phase 3 provides the
 technical substrate; Phases 4–8 add research, content intelligence, production, distribution and
 analytics/learning capabilities; Phase 9 connects proven components toward the approximately 95% automated
-target; and Phase 10 scales a proven system. This does not activate Phase 2 or any later phase.
+target; and Phase 10 scales a proven system. No later phase is activated.
 
 ## Approved Phase 2 operating-model specification
 
-Phase 2 remains **DEFINED, NOT YET IMPLEMENTED** and unactivated. Atlas uses **sparse human gates and rich
+Phase 2 is **ACTIVE, NOT YET IMPLEMENTED**. Atlas uses **sparse human gates and rich
 machine readiness checks**: human approval concentrates at meaningful judgement boundaries, while intermediate
 stages progress automatically only when explicit quality, evidence and provenance requirements pass. Human
 judgement and machine readiness are distinct; neither may silently substitute for the other.
@@ -91,6 +93,28 @@ The target founder gates are version-specific operating concepts, not approved d
 - **Learning Gate:** accept, reject, limit, seek more evidence for, or override evidence-backed, scoped,
   reversible and historically attributable learning/adaptations. It must not silently alter brand, roadmap,
   audience, risk policy or governance.
+
+Opportunities remain mutable discovery records. Idea Gate authority must therefore apply to an immutable review
+snapshot of exactly what the founder judged, not only to evolving current Opportunity state. The conceptual
+snapshot freezes reviewable Opportunity identity, title, summary, why-now context, relevant Subject context,
+score/ranking if presented, Atlas recommendation/explanation, material risk/uncertainty and review
+timestamp/provenance. This does not make Opportunity a fully versioned aggregate or approve fields/schema.
+
+Idea Gate decisions are durable, immutable/additive and specific to one immutable snapshot. **Proceed**
+authorizes that reviewed proposition into research/editorial development; **Reject** does not authorize it;
+and **Steer** authorizes progression while preserving founder direction/comments for later work. They are
+distinct from machine readiness and `Opportunity.status`. A future Proceed creates no ResearchPack, status
+mutation, research job, queue, automation trigger or current workflow-stage change in its first implementation
+slice. It must not introduce approval booleans, `Opportunity.current_decision`, generic Approval/universal
+Decision entities, generic mutable workflow state, history overwrite or Opportunity mutation for direction.
+
+Human authority applies to the exact immutable review representation judged. A material later Opportunity
+change and re-presentation may create another snapshot and decision; both histories remain additive and
+independently understandable. The current narrowest approved implementation direction is immutable Idea Gate
+review snapshots plus immutable Idea Gate decisions for Opportunities, supporting Proceed / Reject / Steer,
+optional founder direction and complete provenance. It is not a named implementation milestone. When such a
+milestone is separately approved, it is expected to use the next additive migration after migrations 1–11; no
+migration number, schema or table is allocated now.
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is

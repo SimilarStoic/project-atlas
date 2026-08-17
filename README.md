@@ -33,12 +33,19 @@ is a foundation; later phases extend it through publication, platform performanc
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 now has an approved, unimplemented operating-model direction: sparse version-specific founder gates
-(Idea, Editorial and Learning) remain distinct from rich machine readiness evidence. The editorial chain should
+Phase 2 is now the **active, not yet implemented** roadmap phase. Its approved operating-model direction keeps
+sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
+evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
 rather than normal work, interrupt automation. This is not a generic mutable workflow model or an approved
 schema. Production/publication, Learning, financial-control and orchestration records remain with their later
 phase boundaries.
+
+The first approved implementation direction is immutable Idea Gate review snapshots and immutable Idea Gate
+decisions for mutable Opportunities: Proceed, Reject or Steer with optional founder direction and preserved
+history. A decision applies to the exact snapshot reviewed, has no automatic research/workflow side effect, and
+does not reuse `Opportunity.status` or approval flags. This direction is not a named implementation milestone;
+any future implementation must use additive migration/provenance conventions.
 
 ## Technology baseline
 

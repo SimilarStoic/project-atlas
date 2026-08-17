@@ -901,7 +901,7 @@ Closure record:
 
 ## Phase 2 — Content Operating Model
 
-Status: DEFINED, NOT YET IMPLEMENTED
+Status: ACTIVE, NOT YET IMPLEMENTED
 
 Implement:
 - Research
@@ -919,8 +919,9 @@ Implement:
 
 ### Approved Phase 2 operating-model specification
 
-Phase 2 remains **DEFINED, NOT YET IMPLEMENTED**. This specification defines direction only; it does not
-activate Phase 2, create a generic state machine, authorize a v0.15 milestone, or approve database entities.
+Phase 2 is the current **ACTIVE, NOT YET IMPLEMENTED** roadmap phase under founder + ChatGPT
+design/implementation stewardship. Activation does not complete Phase 2, authorize all of its scope at once,
+create a generic state machine, allocate a versioned implementation milestone, or approve database entities.
 
 #### Sparse human gates, rich machine readiness
 
@@ -947,6 +948,31 @@ The recurring target founder gates are:
   Reject learning, Limit scope, Request more evidence or Override direction. Approved learning must be
   evidence-backed, scoped, reversible and historically attributable; it must not silently rewrite brand,
   roadmap, audience, risk policy or operating-model governance.
+
+#### Idea Gate review snapshots and decision history
+
+Opportunities remain mutable discovery records. Founder Idea Gate decisions must not point only to an evolving
+current Opportunity: Atlas should preserve an immutable review snapshot of exactly what was presented for
+founder judgement. The conceptual snapshot freezes enough reviewable context to establish what was seen,
+including Opportunity identity, title, summary, why-now context, relevant Subject context, score/ranking if
+presented, Atlas recommendation/explanation, material risk/uncertainty and review timestamp/provenance. This
+does not convert Opportunity into a fully versioned aggregate or define snapshot fields/schema/table names.
+
+Idea Gate decisions are durable, immutable/additive, historically preserved, specific to one immutable review
+snapshot, distinct from machine readiness and distinct from `Opportunity.status`. Their conceptual meanings
+are: **Proceed** authorizes the reviewed proposition into research/editorial development; **Reject** does not
+authorize that reviewed proposition to progress; and **Steer** authorizes progression while preserving founder
+direction that must influence later work. Founder comments/direction, where provided, remain decision history.
+
+A future Proceed decision has no automatic orchestration side effect in the first implementation slice: it does
+not create a ResearchPack, mutate `Opportunity.status`, start research, enqueue work, trigger automation or
+change a current workflow stage. Later orchestration may consume the durable authority. There is no
+`Opportunity.approved`, `Opportunity.current_decision`, generic Approval, universal generic Decision, generic
+mutable current-step state, history overwrite, or founder-direction mutation of the Opportunity itself.
+
+Human decisions apply to the exact immutable review representation judged, not an evolving domain object
+forever. A material later Opportunity change and re-presentation may create a new immutable snapshot and a
+new Idea Gate decision; both histories remain independently understandable and additive.
 
 #### Lifecycle and readiness direction
 
@@ -1005,6 +1031,12 @@ provenance. It deliberately defers production/publication readiness records to P
 records to Phase 8, financial-guardrail records to future financial implementation, and
 automation/orchestration to Phase 9. A later coordinator may orchestrate such objects without becoming the
 source of truth for their domain meaning.
+
+The current narrowest approved Phase 2 implementation direction is to persist immutable Idea Gate review
+snapshots and immutable Idea Gate decisions for Opportunities, supporting Proceed / Reject / Steer with
+optional founder direction and complete historical provenance. This is an implementation direction, not a
+named milestone. It is expected to require the next additive migration after migrations 1–11 when a final
+milestone is approved; no migration number, schema or table is allocated here.
 
 ## Phase 3 — Technical Architecture
 
@@ -1164,10 +1196,12 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (DEFINED, NOT YET IMPLEMENTED):** will define the human-led executable
+- **Phase 2 — Content Operating Model (ACTIVE, NOT YET IMPLEMENTED):** is the current phase defining the
+  human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
-  title/script approval, revisions, production readiness, quality control and approval boundaries. Exact
-  lifecycle/state/domain semantics remain a founder + ChatGPT design decision; Phase 2 is not activated here.
+  title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
+  Idea Gate snapshot/decision direction still requires a final milestone definition; activation does not pull
+  forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
   cost/control infrastructure—for the operating model.

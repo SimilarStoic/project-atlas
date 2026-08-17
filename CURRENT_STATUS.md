@@ -6,11 +6,12 @@
 
 ## Current Phase
 
-**Phase 1 — Product & Business Definition (COMPLETE)**
+**Phase 2 — Content Operating Model (ACTIVE, NOT YET IMPLEMENTED)**
 
 ## Overall Status
 
-🟢 Phase 1 product and business definition is formally closed. Atlas v0.1 through v0.7 are complete and pushed.
+🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
+design/implementation stewardship; it remains not yet implemented. Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -730,14 +731,15 @@ foundation, not a complete operating system. The approved direction extends it t
 performance → Analytics → Revenue/Economics → Learning → future content decisions. Automation must apply to
 proven workflows only; it must not automate uncertainty merely because automation is technically possible.
 
-Phase 2 remains **DEFINED, NOT YET IMPLEMENTED** and is not activated: it will require a founder + ChatGPT
-design decision on the human-led executable lifecycle and approval semantics over existing records. Later
-phases retain their defined roles for technical architecture, research, content intelligence, production,
-distribution, analytics/learning, automation and scale. No v0.15 or successor milestone is selected.
+Phase 2 is **ACTIVE, NOT YET IMPLEMENTED**: it is the current roadmap phase under founder + ChatGPT
+design/implementation stewardship. Activation does not authorize all Phase 2 scope, a versioned implementation
+milestone, or later-phase engines. Later phases retain their defined roles for technical architecture, research,
+content intelligence, production, distribution, analytics/learning, automation and scale. No v0.15 or successor
+milestone is selected.
 
 # Approved Phase 2 Operating-Model Specification
 
-Phase 2 now has approved specification direction, but remains unactivated and unimplemented. Atlas uses sparse
+Phase 2 now has approved specification direction and is active, but remains unimplemented. Atlas uses sparse
 human gates and rich machine readiness: human judgement is distinct from readiness evidence, neither may
 silently substitute for the other, and intermediate work should progress automatically only when explicit
 quality, evidence and provenance requirements pass.
@@ -754,6 +756,14 @@ automatic publishing → analytics/economics → machine learning interpretation
 work should be exception-driven after Editorial approval; the existing initial human publication approval
 remains until reliability is demonstrated.
 
+Opportunities remain mutable discovery records. The first approved Idea Gate implementation direction requires
+an immutable review snapshot of exactly the presented Opportunity context and an immutable, additive decision
+specific to that snapshot. Proceed / Reject / Steer and optional founder direction are durable history, not
+`Opportunity.status`, approval booleans, generic Decision/Approval state or automatic research/orchestration
+side effects. A material re-presentation creates a new snapshot/decision history. This direction is not yet a
+named implementation milestone; a future approved slice is expected to use the next additive migration after
+migrations 1–11 without allocating schema or a migration number here.
+
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
 generic approval state, Script-to-Claim architecture, queues, production, publishing, analytics, financial
@@ -764,9 +774,9 @@ systems or automation have been created.
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-No further generation is authorized, no v0.15 or successor milestone exists, and a fresh founder + ChatGPT
-decision is required before any next activity is defined. The roadmap remains governed by canonical GitHub
-documentation and the explicit change protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+Phase 2 is now active, but no implementation milestone is yet defined or authorized. No further generation,
+v0.15 or successor milestone exists. The roadmap remains governed by canonical GitHub documentation and the
+explicit change protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
 imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency
