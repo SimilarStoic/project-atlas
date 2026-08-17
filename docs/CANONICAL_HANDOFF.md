@@ -161,6 +161,22 @@ Any future scope beyond v0.15 requires a new explicit founder + ChatGPT decision
 semantics, migration scope, history, API meaning, founder decision meaning or deferred scope must return to
 founder + ChatGPT rather than be inferred.
 
+### Approved post-v0.15 Idea Gate → Research provenance direction
+
+The narrowest approved next **design direction only** is explicit qualifying Idea Gate provenance for
+deliberate ResearchPack initiation. ResearchPacks remain Opportunity-owned; future lifecycle-created packs
+must additionally preserve qualifying Proceed/Steer decision lineage through its immutable review snapshot to
+the same Opportunity. Reject never authorizes research. Founder Steer direction remains authoritative only on
+IdeaGateDecision and is consumed by reference, never copied into mutable ResearchPack state.
+
+An Idea Gate decision remains authorization/provenance, not automatic orchestration: it does not create a
+ResearchPack, start research, enqueue work, invoke a provider, mutate `Opportunity.status`, create readiness
+or workflow state, or trigger automation. One qualifying decision may support multiple ResearchPack versions;
+there is no consumed/current authorization state. Material Opportunity change requires a new snapshot/decision
+before later research is treated as authorized. Historical ResearchPacks receive no fabricated provenance or
+destructive backfill. The exact schema/API/UI and implementation milestone remain undefined; Phase 4 research
+automation and Phase 9 orchestration remain deferred.
+
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is
 a machine boundary for proposed content/material claims, with conceptual Ready / Needs-more-research / Blocked

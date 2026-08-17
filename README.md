@@ -62,6 +62,12 @@ immutable snapshot/decision provenance, a narrow domain-qualified API and minima
 through additive migration 12; v0.14 remains the historical accepted predecessor.
 The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
 
+The approved next Phase 2 **design direction only** is explicit qualifying Idea Gate provenance for deliberate
+ResearchPack initiation: Proceed/Steer may qualify, Reject cannot, and any future pack remains
+Opportunity-owned while preserving same-Opportunity decision/snapshot lineage. Founder Steer direction stays
+canonical on IdeaGateDecision and is consumed by reference. This authorizes no schema/API/UI work, automatic
+research, provider/queue orchestration, historical backfill or successor milestone.
+
 ## Technology baseline
 
 - Python 3.12+

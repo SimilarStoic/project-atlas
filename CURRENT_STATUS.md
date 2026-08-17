@@ -778,6 +778,13 @@ side effects. A material re-presentation creates a new snapshot/decision history
 **v0.15 — Persistent Idea Gate**: the accepted first Phase 2 implementation milestone, using additive
 migration 12.
 
+The approved next Phase 2 **design direction only** is explicit qualifying Idea Gate provenance for deliberate
+ResearchPack initiation. Proceed/Steer may qualify, Reject never does, and any future pack remains
+Opportunity-owned while preserving same-Opportunity decision/snapshot lineage. Founder Steer direction remains
+canonical on IdeaGateDecision and must be consumed by reference rather than copied. This introduces no
+automatic ResearchPack/research/job/queue/provider/readiness/workflow/automation effect, no consumed/current
+authorization state, no historical backfill, no schema/API/UI implementation and no successor milestone.
+
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
 generic approval state, Script-to-Claim architecture, queues, production, publishing, analytics, financial

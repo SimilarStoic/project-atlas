@@ -1108,6 +1108,32 @@ Human decisions apply to the exact immutable review representation judged, not a
 forever. A material later Opportunity change and re-presentation may create a new immutable snapshot and a
 new Idea Gate decision; both histories remain independently understandable and additive.
 
+#### Idea Gate → Research initiation provenance direction
+
+The approved next **design direction only** is explicit qualifying Idea Gate provenance for deliberate
+ResearchPack initiation. A ResearchPack remains owned by its Opportunity; any future Phase 2 lifecycle-created
+ResearchPack additionally preserves lineage equivalent to:
+
+> Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
+
+**Proceed** and **Steer** may authorize subsequent research. **Reject** must never authorize subsequent
+research. A qualifying decision's review snapshot must belong to the same Opportunity as the ResearchPack.
+Founder Steer direction remains canonical only on the immutable IdeaGateDecision and downstream research must
+consume it by reference, not copy it into mutable ResearchPack state.
+
+Creating a Proceed or Steer decision remains authorization/provenance, not an orchestration command: it does
+not automatically create a ResearchPack, start research, enqueue work, invoke a provider, mutate
+`Opportunity.status`, create workflow/readiness state or trigger automation. A later deliberate
+research-initiation action may validate the qualifying decision, same-Opportunity lineage and retrievable
+Steer direction, but its exact schema/API/UI remains undefined.
+
+A single qualifying Proceed or Steer may support multiple ResearchPack versions. No consumed/one-use/current
+authorization state is approved. When an Opportunity changes materially, Atlas must obtain a new Idea Gate
+snapshot and decision before treating later research as authorized for the changed proposition. Historical
+ResearchPacks remain valid without fabricated Idea Gate provenance; future linkage must be additive and needs
+no destructive backfill. This direction does not authorize generic progression/authorization entities,
+`Opportunity.stage`, Phase 4 automated research, Phase 9 orchestration or any implementation milestone.
+
 #### Lifecycle and readiness direction
 
 The approved first-half direction is:
