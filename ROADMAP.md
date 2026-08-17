@@ -935,17 +935,16 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-v0.16 is the latest accepted bounded implementation milestone; v0.15 remains its historical accepted
-predecessor. **v0.17 — Persistent Research Readiness** is the defined and authorized next bounded
-implementation milestone; it is not implemented or accepted. All other remaining Phase 2 scope is
+**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone; v0.16 is its
+historical accepted predecessor. All other remaining Phase 2 scope is
 unimplemented.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.16 is the latest accepted implementation
-milestone; v0.15 remains its historical accepted predecessor. This is the
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.17 is the latest accepted implementation
+milestone; v0.16 and v0.15 remain historical accepted predecessors. This is the
 first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1037,8 +1036,8 @@ than infer it.
 
 ### v0.16 — Authorized Research Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.16 is the latest accepted implementation milestone;
-v0.15 remains its historical accepted predecessor. Migrations are canonical through 13. v0.16 does not
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.17 is the latest accepted implementation
+milestone; v0.16 remains its historical accepted predecessor. Migrations are canonical through 14. v0.16 does not
 complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1149,9 +1148,9 @@ boundary.
 
 ### v0.17 — Persistent Research Readiness
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.16 remains
-the latest accepted implementation milestone and migrations remain canonical through 13 until v0.17 is
-implemented. v0.17 does not complete Phase 2, activate a later phase or select a successor milestone.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.17 is the latest accepted implementation milestone;
+migration 14 is canonical and migrations now extend through 14. v0.16 remains its historical accepted
+predecessor. v0.17 does not complete Phase 2, activate a later phase or select a successor milestone.
 
 Purpose:
 
@@ -1224,7 +1223,7 @@ misrepresenting a manual form as a fourth human gate.
 
 #### Migration 14 and compatibility boundary
 
-Migration 14 is expected and is limited to the one immutable readiness-assessment table, its ResearchPack FK,
+Migration 14 is canonical and is limited to the one immutable readiness-assessment table, its ResearchPack FK,
 versions, frozen evidence JSON, outcome, findings JSON, policy/check version, producer provenance, timestamp
 and an index supporting ResearchPack history. An optional digest may be included only without widening scope.
 It must not alter migrations 1–13, ResearchPack ownership/versioning, Claims, Sources, ClaimEvidence,
@@ -1286,10 +1285,10 @@ workers, provider orchestration, founder approval/override, generic workflow, cu
 EditorialAngle progression, Title/Hook, Editorial Gate, production/rendering, publishing, analytics/Learning,
 financial controls/spend authorization and Phase 9 orchestration.
 
-Once this definition is reviewed, committed and pushed, v0.17 is authorized only for bounded implementation
-within this specification. Material ambiguity about frozen evidence content, producer provenance, outcome
-semantics, immutability, API meaning, substantive readiness rules, EditorialAngle progression or later-phase
-boundaries must return to founder + ChatGPT rather than be inferred.
+The bounded v0.17 implementation is accepted. Material
+ambiguity about frozen evidence content, producer provenance, outcome semantics, immutability, API meaning,
+substantive readiness rules, EditorialAngle progression or later-phase boundaries must return to founder +
+ChatGPT rather than be inferred.
 
 #### Sparse human gates, rich machine readiness
 
@@ -1369,7 +1368,7 @@ new Idea Gate decision; both histories remain independently understandable and a
 
 #### Idea Gate → Research initiation provenance
 
-v0.16 — Authorized Research Initiation is the latest accepted milestone for explicit qualifying Idea Gate
+v0.16 — Authorized Research Initiation is the historical accepted predecessor for explicit qualifying Idea Gate
 provenance and deliberate ResearchPack initiation. A ResearchPack
 remains owned by its Opportunity; lifecycle-created packs additionally preserve lineage equivalent to:
 
@@ -1490,8 +1489,8 @@ authorization, proposal, reservation, ledger or enforcement entity is approved h
 v0.15 — Persistent Idea Gate remains the historical accepted implementation predecessor. **v0.16 — Authorized
 Research Initiation** is the latest accepted implementation milestone. It adds only deliberate qualifying Idea
 Gate provenance to new lifecycle-created ResearchPack versions through migration 13. **v0.17 — Persistent
-Research Readiness** is the defined and authorized next Phase 2 implementation milestone: it is not implemented
-or accepted, migrations remain 1–13 until its bounded implementation, and no successor after v0.17 is selected.
+Research Readiness** is the latest accepted implementation milestone; v0.16 remains its historical accepted
+predecessor, migrations are canonical through 14, and no successor after v0.17 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1654,13 +1653,13 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE; v0.16 ACCEPTED; v0.17 DEFINED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE; v0.17 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
   v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
-  is its latest accepted milestone; v0.17 — Persistent Research Readiness is defined and authorized but not
-  implemented or accepted;
+  is its historical accepted milestone; v0.17 — Persistent Research Readiness is its latest accepted
+  implementation milestone;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

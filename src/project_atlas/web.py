@@ -79,6 +79,49 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                     {"error": "Idea Gate review snapshot not found."}, HTTPStatus.NOT_FOUND
                 )
             return
+        research_readiness_prefix = "/api/research-packs/"
+        research_readiness_suffix = "/readiness-assessments"
+        if parsed.path.startswith(research_readiness_prefix) and parsed.path.endswith(
+            research_readiness_suffix
+        ):
+            research_pack_id = unquote(
+                parsed.path[len(research_readiness_prefix) : -len(research_readiness_suffix)]
+            ).strip("/")
+            if not research_pack_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "research_readiness_assessment_history",
+                        **self.server.repository.research_readiness_history_payload(
+                            research_pack_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json({"error": "ResearchPack not found."}, HTTPStatus.NOT_FOUND)
+            return
+        readiness_assessment_prefix = "/api/research-readiness-assessments/"
+        if parsed.path.startswith(readiness_assessment_prefix):
+            assessment_id = unquote(parsed.path[len(readiness_assessment_prefix) :]).strip("/")
+            if not assessment_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "research_readiness_assessment",
+                        "assessment": self.server.repository.research_readiness_assessment_payload(
+                            assessment_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "Research readiness assessment not found."}, HTTPStatus.NOT_FOUND
+                )
+            return
         if parsed.path == "/api/demo/content":
             content = content_payload().copy()
             content.pop("scene_plan", None)
@@ -276,6 +319,52 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 {
                     "kind": "research_pack",
                     "research_pack": self.server.repository.research_pack_payload(research_pack.id),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        readiness_assessment_prefix = "/api/research-packs/"
+        readiness_assessment_suffix = "/readiness-assessments"
+        if path.startswith(readiness_assessment_prefix) and path.endswith(
+            readiness_assessment_suffix
+        ):
+            research_pack_id = unquote(
+                path[len(readiness_assessment_prefix) : -len(readiness_assessment_suffix)]
+            ).strip("/")
+            if not research_pack_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("Research readiness assessment payload must be an object.")
+                if "frozen_evidence_state" in payload:
+                    raise ValueError(
+                        "Frozen evidence state is built by the server and cannot be supplied."
+                    )
+                assessment = self.server.repository.create_research_readiness_assessment(
+                    payload.get("id"),
+                    research_pack_id,
+                    payload.get("outcome"),
+                    payload.get("findings"),
+                    payload.get("policy_version"),
+                    payload.get("producer_kind"),
+                    payload.get("producer_identifier"),
+                    payload.get("producer_implementation_version"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "ResearchPack not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "research_readiness_assessment",
+                    "assessment": self.server.repository.research_readiness_assessment_payload(
+                        assessment.id
+                    ),
                 },
                 HTTPStatus.CREATED,
             )

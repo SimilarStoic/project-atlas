@@ -38,10 +38,9 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now the **active** roadmap phase. v0.16 Authorized Research Initiation is the latest accepted
-implementation milestone; v0.15 Persistent Idea Gate remains its historical accepted predecessor, and the
-remaining Phase 2 scope is not implemented. **v0.17 — Persistent Research Readiness** is defined and
-authorized for bounded implementation, but is not implemented or accepted. Its approved
+Phase 2 is now the **active** roadmap phase. v0.17 Persistent Research Readiness is the latest accepted
+implementation milestone; v0.16 Authorized Research Initiation is its historical accepted predecessor, and the
+remaining Phase 2 scope is not implemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -64,20 +63,19 @@ immutable snapshot/decision provenance, a narrow domain-qualified API and minima
 through additive migration 12; v0.14 remains the historical accepted predecessor.
 The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
 
-**v0.16 — Authorized Research Initiation** is the latest accepted implementation milestone; v0.15 remains its
-historical accepted predecessor. It provides deliberate creation of Opportunity-owned
+**v0.16 — Authorized Research Initiation** is the historical accepted predecessor to v0.17. It provides deliberate creation of Opportunity-owned
 ResearchPack versions under a nullable direct qualifying IdeaGateDecision reference: Proceed/Steer may qualify,
 Reject cannot, snapshot/pack Opportunity lineage must match, historical packs remain valid with null
 provenance, and Steer direction is consumed by reference. It authorizes no automatic research,
 provider/queue orchestration, historical backfill or later-phase activation.
 
-**v0.17 — Persistent Research Readiness** is the defined and authorized next bounded implementation milestone;
-v0.16 remains latest accepted. It will persist one immutable, additive assessment record per exact
+**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone; v0.16 is its
+historical accepted predecessor. It persists one immutable, additive assessment record per exact
 server-built, deterministically ordered, schema-versioned frozen ResearchPack evidence state. The controlled
 API supplies only outcome, findings, policy/check version and producer provenance; it exposes create/list/get
 history but has no UI or evaluator. Ready, NeedsMoreResearch and Blocked are the only outcomes. No mutable
 current/latest readiness, backfill, ResearchPack status, EditorialAngle linkage/progression, automation or
-successor milestone is authorized; migration 14 does not exist until implementation.
+successor milestone is authorized; migration 14 is canonical and migrations extend through 14.
 
 ## Technology baseline
 
@@ -396,6 +394,6 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.16 — Authorized Research Initiation is the latest accepted implementation checkpoint; v0.15 remains its
-historical accepted predecessor. Migrations are canonical through 13. Later Atlas
+v0.17 — Persistent Research Readiness is the latest accepted implementation checkpoint; v0.16 is its
+historical accepted predecessor. Migrations are canonical through 14. Later Atlas
 systems remain out of scope.

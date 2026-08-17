@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -142,9 +142,19 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
             "idx_idea_gate_review_snapshots_opportunity_created",
             "idx_idea_gate_decisions_snapshot_created",
         }
+        readiness_table_sql = repository.connection.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' "
+            "AND name='research_readiness_assessments'"
+        ).fetchone()["sql"]
+        assert "NeedsMoreResearch" in readiness_table_sql
+        assert repository.connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' "
+            "AND name='idx_research_readiness_assessments_pack_created'"
+        ).fetchone()
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
+        assert repository.list_research_readiness_assessments("research-pack-isa-deadline-v1") == []
         payload = repository.latest_research_pack_payload("uk-isa-rules")
         assert payload is not None
         assert len(payload["claims"]) == 3
@@ -216,6 +226,232 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         reopened.close()
 
 
+def test_research_readiness_assessments_freeze_exact_evidence_and_preserve_history(
+    tmp_path,
+) -> None:
+    """Readiness records snapshot only their pack's linked evidence and never mutate."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        repository.create_opportunity(
+            "readiness-opportunity",
+            "Readiness opportunity",
+            "A readiness test opportunity.",
+            "It supports a frozen evidence test.",
+            1,
+            "proposed",
+        )
+        pack = repository.create_research_pack(
+            "research-pack-readiness-v1",
+            "readiness-opportunity",
+            1,
+            "A ResearchPack whose evidence state is frozen for readiness.",
+            "2026-08-17",
+        )
+        claim_z = repository.create_claim(
+            "claim-z-readiness",
+            pack.id,
+            "The later identifier must not control snapshot ordering.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "Initially reviewed.",
+        )
+        claim_a = repository.create_claim(
+            "claim-a-readiness",
+            pack.id,
+            "The earlier identifier must appear first in a readiness snapshot.",
+            "fact",
+            "medium",
+            "current",
+            "reviewed",
+            "Initially reviewed.",
+            "2026-08-17T00:00:00+00:00",
+        )
+        linked_source_z = repository.create_source(
+            "source-z-readiness",
+            "report",
+            "Linked source Z",
+            "Atlas test publisher",
+            "https://example.test/readiness/z",
+            "2026-08-17T00:00:00+00:00",
+        )
+        linked_source_a = repository.create_source(
+            "source-a-readiness",
+            "report",
+            "Linked source A",
+            "Atlas test publisher",
+            "https://example.test/readiness/a",
+            "2026-08-17T00:00:00+00:00",
+            publication_date="2026-08-01",
+            jurisdiction="GB",
+        )
+        unrelated_source = repository.create_source(
+            "source-unrelated-readiness",
+            "report",
+            "Unrelated source",
+            "Atlas test publisher",
+            "https://example.test/readiness/unrelated",
+            "2026-08-17T00:00:00+00:00",
+        )
+        repository.create_opportunity(
+            "unrelated-readiness-opportunity",
+            "Unrelated readiness opportunity",
+            "This must not enter another pack's snapshot.",
+            "Isolation test.",
+            1,
+            "proposed",
+        )
+        unrelated_pack = repository.create_research_pack(
+            "research-pack-unrelated-readiness-v1",
+            "unrelated-readiness-opportunity",
+            1,
+            "An unrelated ResearchPack.",
+        )
+        unrelated_claim = repository.create_claim(
+            "claim-unrelated-readiness",
+            unrelated_pack.id,
+            "This Claim must not enter the assessed pack.",
+            "fact",
+            "low",
+            "current",
+            "unreviewed",
+            "Unrelated.",
+        )
+        repository.link_claim_evidence(claim_z.id, linked_source_z.id, "supports", "p. 8")
+        repository.link_claim_evidence(claim_a.id, linked_source_a.id, "supports", "p. 2")
+
+        assert repository.list_research_readiness_assessments(pack.id) == []
+        frozen_before = repository.build_research_readiness_evidence_state(pack.id)
+        assert [claim["id"] for claim in frozen_before["claims"]] == [claim_a.id, claim_z.id]
+        assert unrelated_claim.id not in {claim["id"] for claim in frozen_before["claims"]}
+        assert [source["id"] for source in frozen_before["sources"]] == [
+            linked_source_a.id,
+            linked_source_z.id,
+        ]
+        assert unrelated_source.id not in {source["id"] for source in frozen_before["sources"]}
+        assert [
+            (link["claim_id"], link["source_id"]) for link in frozen_before["claim_evidence"]
+        ] == [(claim_a.id, linked_source_a.id), (claim_z.id, linked_source_z.id)]
+        assert frozen_before == repository.build_research_readiness_evidence_state(pack.id)
+
+        first = repository.create_research_readiness_assessment(
+            "readiness-assessment-a",
+            pack.id,
+            "NeedsMoreResearch",
+            {"summary": "One source needs corroboration.", "material_findings": [claim_a.id]},
+            "readiness-policy-v1",
+            "test",
+            "persistence-test",
+            "v1",
+        )
+        assert first.schema_version == 1
+        assert first.frozen_evidence_state == frozen_before
+        assert first.findings["material_findings"] == [claim_a.id]
+
+        repository.update_claim(
+            replace(claim_a, text="A later live Claim edit must not rewrite Assessment A.")
+        )
+        repository.link_claim_evidence(claim_z.id, linked_source_a.id, "context", "p. 10")
+        late_source = repository.create_source(
+            "source-late-readiness",
+            "report",
+            "A source added after Assessment A",
+            "Atlas test publisher",
+            "https://example.test/readiness/late",
+            "2026-08-17T00:00:00+00:00",
+        )
+        repository.link_claim_evidence(claim_z.id, late_source.id, "supports", "p. 11")
+        second = repository.create_research_readiness_assessment(
+            "readiness-assessment-b",
+            pack.id,
+            "Ready",
+            {"summary": "The current evidence is sufficient.", "material_findings": []},
+            "readiness-policy-v1",
+            "manual",
+            "founder-review-fixture",
+            "v1",
+        )
+        assert (
+            repository.get_research_readiness_assessment(first.id).frozen_evidence_state
+            == frozen_before
+        )
+        assert second.frozen_evidence_state["claims"][0]["text"] == (
+            "A later live Claim edit must not rewrite Assessment A."
+        )
+        assert second.frozen_evidence_state != first.frozen_evidence_state
+        assert late_source.id in {
+            source["id"] for source in second.frozen_evidence_state["sources"]
+        }
+        assert [
+            assessment.id for assessment in repository.list_research_readiness_assessments(pack.id)
+        ] == [
+            first.id,
+            second.id,
+        ]
+
+        with pytest.raises(ValueError, match="outcome"):
+            repository.create_research_readiness_assessment(
+                "readiness-assessment-invalid",
+                pack.id,
+                "ready",
+                {"summary": "No."},
+                "v1",
+                "test",
+                "x",
+                "v1",
+            )
+        with pytest.raises(ValueError, match="findings"):
+            repository.create_research_readiness_assessment(
+                "readiness-assessment-empty-findings",
+                pack.id,
+                "Blocked",
+                {},
+                "v1",
+                "test",
+                "x",
+                "v1",
+            )
+        with pytest.raises(ValueError, match="meaningful"):
+            repository.create_research_readiness_assessment(
+                "readiness-assessment-null-findings",
+                pack.id,
+                "Blocked",
+                {"summary": None},
+                "v1",
+                "test",
+                "x",
+                "v1",
+            )
+        with pytest.raises(ValueError, match="already exists"):
+            repository.create_research_readiness_assessment(
+                first.id, pack.id, "Blocked", {"summary": "No."}, "v1", "test", "x", "v1"
+            )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute(
+                "INSERT INTO research_readiness_assessments "
+                "(id, research_pack_id, assessment_schema_version, frozen_evidence_state_json, "
+                "outcome, findings_json, policy_version, producer_kind, producer_identifier, "
+                "producer_implementation_version, created_at) "
+                "VALUES (?, ?, 1, '{}', ?, '{}', ?, ?, ?, ?, ?)",
+                (
+                    "readiness-assessment-db-invalid",
+                    pack.id,
+                    "Other",
+                    "v1",
+                    "test",
+                    "x",
+                    "v1",
+                    "now",
+                ),
+            )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute("DELETE FROM research_packs WHERE id = ?", (pack.id,))
+    finally:
+        repository.close()
+
+
 def test_migration_11_adds_reference_lineage_without_backfilling_history(
     tmp_path,
 ) -> None:
@@ -243,7 +479,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -664,7 +900,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -858,7 +1094,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -1003,7 +1239,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                14,
+                15,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -1025,7 +1261,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 14"
+                "SELECT version FROM schema_migrations WHERE version = 15"
             ).fetchone()
             is None
         )
@@ -3073,7 +3309,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

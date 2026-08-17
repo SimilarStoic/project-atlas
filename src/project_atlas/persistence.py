@@ -91,6 +91,23 @@ class ResearchPack:
 
 
 @dataclass(frozen=True)
+class ResearchReadinessAssessment:
+    """An immutable readiness record over one exact frozen ResearchPack evidence state."""
+
+    id: str
+    research_pack_id: str
+    schema_version: int
+    frozen_evidence_state: dict[str, Any]
+    outcome: str
+    findings: dict[str, Any]
+    policy_version: str
+    producer_kind: str
+    producer_identifier: str
+    producer_implementation_version: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class Claim:
     """A version-specific editorial or research statement."""
 
@@ -309,6 +326,7 @@ Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
+RESEARCH_READINESS_OUTCOMES = frozenset({"Ready", "NeedsMoreResearch", "Blocked"})
 
 
 @dataclass(frozen=True)
@@ -785,6 +803,31 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
         ),
     ),
+    (
+        14,
+        (
+            """
+        CREATE TABLE research_readiness_assessments (
+          id TEXT PRIMARY KEY,
+          research_pack_id TEXT NOT NULL,
+          assessment_schema_version INTEGER NOT NULL CHECK (assessment_schema_version >= 1),
+          frozen_evidence_state_json TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('Ready', 'NeedsMoreResearch', 'Blocked')),
+          findings_json TEXT NOT NULL,
+          policy_version TEXT NOT NULL,
+          producer_kind TEXT NOT NULL,
+          producer_identifier TEXT NOT NULL,
+          producer_implementation_version TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (research_pack_id) REFERENCES research_packs(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE INDEX idx_research_readiness_assessments_pack_created
+          ON research_readiness_assessments (research_pack_id, created_at, id)
+        """,
+        ),
+    ),
 )
 
 
@@ -1183,6 +1226,157 @@ class AtlasRepository:
             (opportunity_id,),
         ).fetchone()
         return self._research_pack(row) if row else None
+
+    def build_research_readiness_evidence_state(self, research_pack_id: str) -> dict[str, Any]:
+        """Freeze the canonical current evidence graph for one ResearchPack.
+
+        Claims are scoped to the pack. Sources are scoped only through ClaimEvidence
+        attached to those Claims, so global Sources with no relevant evidence link are
+        intentionally excluded.
+        """
+
+        pack = self.get_research_pack(research_pack_id)
+        claims = sorted(self.list_claims(pack.id), key=lambda claim: claim.id)
+        evidence_links: list[ClaimEvidence] = []
+        sources: dict[str, Source] = {}
+        for claim in claims:
+            for relationship, source in self.evidence_for_claim(claim.id):
+                evidence_links.append(relationship)
+                sources[source.id] = source
+        return {
+            "schema_version": 1,
+            "research_pack": {
+                "id": pack.id,
+                "version": pack.version,
+                "summary": pack.summary,
+                "as_of_date": pack.as_of_date,
+            },
+            "claims": [
+                {
+                    "id": claim.id,
+                    "text": claim.text,
+                    "claim_type": claim.claim_type,
+                    "risk_level": claim.risk_level,
+                    "freshness_type": claim.freshness_type,
+                    "verification_status": claim.verification_status,
+                    "verification_notes": claim.verification_notes,
+                    "reviewed_at": claim.reviewed_at,
+                }
+                for claim in claims
+            ],
+            "sources": [
+                {
+                    "id": source.id,
+                    "source_type": source.source_type,
+                    "title": source.title,
+                    "publisher": source.publisher,
+                    "url": source.url,
+                    "publication_date": source.publication_date,
+                    "accessed_at": source.accessed_at,
+                    "jurisdiction": source.jurisdiction,
+                }
+                for source in sorted(sources.values(), key=lambda source: source.id)
+            ],
+            "claim_evidence": [
+                {
+                    "claim_id": relationship.claim_id,
+                    "source_id": relationship.source_id,
+                    "stance": relationship.stance,
+                    "reference": relationship.reference,
+                    "notes": relationship.notes,
+                }
+                for relationship in sorted(
+                    evidence_links,
+                    key=lambda relationship: (relationship.claim_id, relationship.source_id),
+                )
+            ],
+        }
+
+    def create_research_readiness_assessment(
+        self,
+        assessment_id: str,
+        research_pack_id: str,
+        outcome: str,
+        findings: dict[str, Any],
+        policy_version: str,
+        producer_kind: str,
+        producer_identifier: str,
+        producer_implementation_version: str,
+    ) -> ResearchReadinessAssessment:
+        """Append one immutable, server-frozen readiness assessment."""
+
+        if not isinstance(assessment_id, str) or not assessment_id.strip():
+            raise ValueError("Research readiness assessment ID must be non-empty text.")
+        self.get_research_pack(research_pack_id)
+        if self.connection.execute(
+            "SELECT 1 FROM research_readiness_assessments WHERE id = ?", (assessment_id.strip(),)
+        ).fetchone():
+            raise ValueError("Research readiness assessment ID already exists.")
+        self._validate_research_readiness_assessment(
+            outcome,
+            findings,
+            policy_version,
+            producer_kind,
+            producer_identifier,
+            producer_implementation_version,
+        )
+        frozen_evidence_state = self.build_research_readiness_evidence_state(research_pack_id)
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO research_readiness_assessments "
+                "(id, research_pack_id, assessment_schema_version, frozen_evidence_state_json, "
+                "outcome, findings_json, policy_version, producer_kind, producer_identifier, "
+                "producer_implementation_version, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    assessment_id.strip(),
+                    research_pack_id,
+                    1,
+                    json.dumps(frozen_evidence_state, sort_keys=True, separators=(",", ":")),
+                    outcome,
+                    json.dumps(findings, sort_keys=True, separators=(",", ":")),
+                    policy_version.strip(),
+                    producer_kind.strip(),
+                    producer_identifier.strip(),
+                    producer_implementation_version.strip(),
+                    now(),
+                ),
+            )
+        return self.get_research_readiness_assessment(assessment_id.strip())
+
+    def get_research_readiness_assessment(self, assessment_id: str) -> ResearchReadinessAssessment:
+        row = self.connection.execute(
+            "SELECT * FROM research_readiness_assessments WHERE id = ?", (assessment_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(assessment_id)
+        return self._research_readiness_assessment(row)
+
+    def list_research_readiness_assessments(
+        self, research_pack_id: str
+    ) -> list[ResearchReadinessAssessment]:
+        """Return append-only readiness history in deterministic creation order."""
+
+        self.get_research_pack(research_pack_id)
+        rows = self.connection.execute(
+            "SELECT * FROM research_readiness_assessments WHERE research_pack_id = ? "
+            "ORDER BY created_at, id",
+            (research_pack_id,),
+        )
+        return [self._research_readiness_assessment(row) for row in rows]
+
+    def research_readiness_assessment_payload(self, assessment_id: str) -> dict[str, Any]:
+        assessment = self.get_research_readiness_assessment(assessment_id)
+        return self._research_readiness_assessment_payload(assessment)
+
+    def research_readiness_history_payload(self, research_pack_id: str) -> dict[str, Any]:
+        return {
+            "research_pack_id": research_pack_id,
+            "assessments": [
+                self._research_readiness_assessment_payload(assessment)
+                for assessment in self.list_research_readiness_assessments(research_pack_id)
+            ],
+        }
 
     def create_editorial_angle(
         self,
@@ -3857,6 +4051,40 @@ class AtlasRepository:
         return normalized or None
 
     @staticmethod
+    def _validate_research_readiness_assessment(
+        outcome: str,
+        findings: dict[str, Any],
+        policy_version: str,
+        producer_kind: str,
+        producer_identifier: str,
+        producer_implementation_version: str,
+    ) -> None:
+        if not isinstance(outcome, str) or outcome not in RESEARCH_READINESS_OUTCOMES:
+            raise ValueError(
+                "Research readiness outcome must be Ready, NeedsMoreResearch or Blocked."
+            )
+        if not isinstance(findings, dict) or not findings:
+            raise ValueError("Research readiness findings must be a non-empty JSON object.")
+        if not any(
+            (isinstance(value, str) and value.strip())
+            or (isinstance(value, (list, dict)) and bool(value))
+            for value in findings.values()
+        ):
+            raise ValueError("Research readiness findings must contain a meaningful reason.")
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (
+                policy_version,
+                producer_kind,
+                producer_identifier,
+                producer_implementation_version,
+            )
+        ):
+            raise ValueError(
+                "Research readiness policy version and producer provenance must be non-empty text."
+            )
+
+    @staticmethod
     def _validate_idea_gate_decision(
         outcome: str,
         founder_actor: str,
@@ -3925,6 +4153,40 @@ class AtlasRepository:
             row["created_at"],
             row["updated_at"],
         )
+
+    @staticmethod
+    def _research_readiness_assessment(row: sqlite3.Row) -> ResearchReadinessAssessment:
+        return ResearchReadinessAssessment(
+            row["id"],
+            row["research_pack_id"],
+            row["assessment_schema_version"],
+            json.loads(row["frozen_evidence_state_json"]),
+            row["outcome"],
+            json.loads(row["findings_json"]),
+            row["policy_version"],
+            row["producer_kind"],
+            row["producer_identifier"],
+            row["producer_implementation_version"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _research_readiness_assessment_payload(
+        assessment: ResearchReadinessAssessment,
+    ) -> dict[str, Any]:
+        return {
+            "id": assessment.id,
+            "research_pack_id": assessment.research_pack_id,
+            "schema_version": assessment.schema_version,
+            "frozen_evidence_state": assessment.frozen_evidence_state,
+            "outcome": assessment.outcome,
+            "findings": assessment.findings,
+            "policy_version": assessment.policy_version,
+            "producer_kind": assessment.producer_kind,
+            "producer_identifier": assessment.producer_identifier,
+            "producer_implementation_version": assessment.producer_implementation_version,
+            "created_at": assessment.created_at,
+        }
 
     @staticmethod
     def _claim(row: sqlite3.Row) -> Claim:

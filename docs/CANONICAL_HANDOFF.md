@@ -36,10 +36,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.16 — Authorized Research Initiation** is the latest accepted implementation milestone; v0.15
-remains its historical accepted predecessor. **Phase 2 — Content Operating Model is the current ACTIVE roadmap
-phase, with accepted v0.15 and v0.16 implementations and defined/authorized v0.17 — Persistent Research
-Readiness**, under founder + ChatGPT design/implementation stewardship. v0.17 is not implemented or accepted;
+unchanged. **v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone; v0.16
+is its historical accepted predecessor. **Phase 2 — Content Operating Model is the current ACTIVE roadmap
+phase, with accepted v0.15, v0.16 and v0.17 implementations**, under founder + ChatGPT design/implementation
+stewardship.
 this does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
@@ -156,14 +156,14 @@ historical snapshots, readable frozen Subject context, each outcome, required St
 review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
 migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
 
-Any scope beyond the accepted v0.16 and defined v0.17 boundaries requires a new explicit founder + ChatGPT
+Any scope beyond the accepted v0.17 boundary requires a new explicit founder + ChatGPT
 decision. Material ambiguity about semantics, migration scope, history, API meaning, founder decision meaning
 or deferred scope must return to founder + ChatGPT rather than be inferred.
 
 ### v0.16 — Authorized Research Initiation
 
-v0.16 is the latest accepted implementation milestone; v0.15 remains its historical accepted predecessor.
-Migration 13 is canonical for the bounded implementation, and migrations now extend through 13.
+v0.16 is the historical accepted implementation predecessor to v0.17; v0.15 remains an earlier historical
+accepted predecessor. Migration 13 remains canonical for its bounded implementation, and migrations now extend through 14.
 Its purpose is deliberate creation of Opportunity-owned ResearchPack versions under explicit qualifying Idea
 Gate provenance, preserving Proceed/Steer founder authority and reference-only Steer direction without
 research automation or workflow state. ResearchPacks retain Opportunity ownership and gain only an immutable,
@@ -204,18 +204,17 @@ The exact outcomes are **Ready**, **NeedsMoreResearch** and **Blocked**. Each as
 findings/reasons, assessment schema version, policy/check version, timestamp and producer/implementation
 provenance. Multiple assessments may coexist for one ResearchPack; evidence changes require a new assessment,
 and earlier history remains immutable. No mutable current/latest/superseded readiness pointer or
-`ResearchPack` readiness field is approved. No readiness schema, API, UI, assessment producer, provider call,
-research automation or founder approval/override has been implemented. v0.17 authorizes only its bounded future
-persistence/API contract, not a UI, evaluator, provider call, automation or founder override. A Ready assessment must
-not automatically create an EditorialAngle, ContentPiece or Script; the separate question of how readiness
+`ResearchPack` readiness field is approved. v0.17 now implements its bounded readiness schema and controlled API;
+it adds no UI, evaluator, provider call, research automation or founder
+approval/override. A Ready assessment must not automatically create an EditorialAngle, ContentPiece or Script; the separate question of how readiness
 could authorize EditorialAngle progression remains undefined. The final Script-to-Claim architecture and
 Editorial QA implementation remain deferred.
 
 ### v0.17 — Persistent Research Readiness
 
-v0.17 is the defined and authorized next Phase 2 implementation milestone; it is not implemented or accepted,
-v0.16 remains latest accepted, migrations remain 1–13, and no successor after v0.17 is selected. It introduces
-only one immutable ResearchReadinessAssessment table under a future migration 14. The assessment belongs to one
+v0.17 is the latest accepted implementation milestone. v0.16 is its historical accepted predecessor,
+migration 14 is canonical, migrations extend through 14, and no successor after v0.17 is selected. It introduces only one immutable
+ResearchReadinessAssessment table. The assessment belongs to one
 ResearchPack and carries its own server/repository-built, deterministic, schema-versioned frozen evidence JSON;
 no normalized snapshot aggregate, findings rows, generic readiness/workflow/approval entity or current/latest
 state is authorized.
@@ -251,9 +250,9 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The narrowest approved next Phase 2 implementation direction is **v0.17 — Persistent Research Readiness**. It
-is defined and authorized for the bounded persistence/API contract above, but has not begun implementation or
-selected any successor milestone; material detail beyond the contract returns to founder + ChatGPT.
+The latest accepted Phase 2 implementation is **v0.17 — Persistent Research Readiness**. Its bounded
+persistence/API contract is accepted; it has selected no successor milestone, and material detail beyond the
+contract returns to founder + ChatGPT.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate

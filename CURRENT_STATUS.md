@@ -11,9 +11,8 @@
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
-design/implementation stewardship; v0.16 is the latest accepted implementation milestone and v0.15 is its
-historical accepted predecessor. v0.17 — Persistent Research Readiness is defined and authorized for bounded
-implementation, but is not implemented or accepted. Remaining Phase 2 scope is not implemented. Atlas v0.1
+design/implementation stewardship; v0.17 is the latest accepted implementation milestone and v0.16 is its
+historical accepted predecessor. Remaining Phase 2 scope is not implemented. Atlas v0.1
 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
@@ -778,30 +777,30 @@ side effects. A material re-presentation creates a new snapshot/decision history
 **v0.15 — Persistent Idea Gate**: the accepted first Phase 2 implementation milestone, using additive
 migration 12.
 
-**v0.16 — Authorized Research Initiation** is now the latest accepted implementation milestone. It provides
+**v0.16 — Authorized Research Initiation** is now the historical accepted predecessor to v0.17. It provides
 deliberate creation of Opportunity-owned
 ResearchPack versions under an immutable, nullable direct IdeaGateDecision provenance reference: Proceed and
 Steer qualify, Reject never does, and snapshot/pack Opportunity lineage must match exactly. Historical packs
 remain valid without fabricated provenance; Steer direction remains canonical on IdeaGateDecision and is
 consumed by reference. The separate initiation action has no automatic research/job/queue/provider/readiness/
 workflow/automation effect, no consumed/current authorization state and no `Opportunity.status` mutation.
-Migration 13, repository/API/UI implementation and tests are canonical; migrations are now 1–13. v0.15 remains
-the historical accepted predecessor. v0.16 itself implies no scope beyond its accepted boundary.
+Migration 13, repository/API/UI implementation and tests are canonical; v0.16 remains the historical accepted
+predecessor. v0.16 itself implies no scope beyond its accepted boundary.
 
-**Research Readiness semantics are approved design direction only.** They define additive, immutable,
+**Research Readiness semantics are canonically accepted.** They define additive, immutable,
 versioned assessments of an exact frozen ResearchPack Claim/Source/ClaimEvidence state, not mutable workflow
 state and not a founder gate. Every assessment must preserve the assessed evidence snapshot, Ready /
 NeedsMoreResearch / Blocked outcome, findings/reasons, assessment schema and policy/check versions, timestamp
 and producer/implementation provenance. ResearchPack ID/version alone is insufficient because Claims,
 Sources and ClaimEvidence may change later. Multiple assessments remain additive with no persisted
-current/latest/superseded pointer; later evidence requires a new assessment. No readiness entity, migration,
-API, UI, producer, research automation or EditorialAngle progression rule is implemented. A Ready assessment
+current/latest/superseded pointer; later evidence requires a new assessment. Migration 14 and the controlled
+API are canonical; no UI, evaluator/producer, research automation or EditorialAngle progression rule is implemented. A Ready assessment
 does not automatically create editorial records; how readiness may later authorize EditorialAngle progression
 remains a separate design decision.
 
-**v0.17 — Persistent Research Readiness** is the defined and authorized next Phase 2 implementation milestone.
-It is not implemented or accepted; v0.16 remains latest accepted and migrations remain 1–13 until bounded
-implementation. v0.17 is limited to one immutable ResearchReadinessAssessment table with a server-built,
+**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone. v0.16 is its
+historical accepted predecessor and migrations are canonical through 14. v0.17 is limited to one immutable
+ResearchReadinessAssessment table with a server-built,
 deterministically ordered, schema-versioned frozen ResearchPack/Claim/Source/ClaimEvidence payload; exact
 Ready / NeedsMoreResearch / Blocked outcomes; structured findings; policy/check, schema and producer
 provenance; additive history; and controlled create/list/get API reads. It has no UI, evaluator, mutable
@@ -825,10 +824,8 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 is now active. v0.16 — Authorized Research Initiation is the latest accepted implementation milestone;
-v0.15 remains its historical accepted predecessor.
-v0.17 — Persistent Research Readiness is the defined and authorized bounded implementation milestone, not yet
-implemented or accepted. It does not select a successor milestone.
+Phase 2 is now active. v0.17 — Persistent Research Readiness is the latest accepted implementation milestone;
+v0.16 is its historical accepted predecessor. It does not select a successor milestone.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

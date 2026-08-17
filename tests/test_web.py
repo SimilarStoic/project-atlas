@@ -1012,3 +1012,170 @@ def test_asset_content_endpoint_rejects_unknown_missing_and_unsafe_files(tmp_pat
             thread.join(timeout=2)
     finally:
         server.server_close()
+
+
+def test_research_readiness_assessment_api_is_server_frozen_and_history_only(
+    tmp_path: Path,
+) -> None:
+    """The v0.17 API persists additive assessment history without a UI or evaluator."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request | str) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid readiness request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    try:
+        pack_id = "research-pack-isa-deadline-v1"
+        history, status = request_json(
+            f"{base_url}/api/research-packs/{pack_id}/readiness-assessments"
+        )
+        assert status == 200
+        assert history["kind"] == "research_readiness_assessment_history"
+        assert history["assessments"] == []
+
+        endpoint = f"{base_url}/api/research-packs/{pack_id}/readiness-assessments"
+        base_payload = {
+            "id": "http-readiness-assessment-a",
+            "outcome": "Ready",
+            "findings": {"summary": "The stored evidence is ready for this test."},
+            "policy_version": "readiness-policy-v1",
+            "producer_kind": "test",
+            "producer_identifier": "http-test",
+            "producer_implementation_version": "v1",
+        }
+        created, status = request_json(
+            Request(
+                endpoint,
+                data=json.dumps(base_payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        assessment = created["assessment"]
+        assert assessment["outcome"] == "Ready"
+        assert assessment["frozen_evidence_state"]["research_pack"]["id"] == pack_id
+        assert assessment["frozen_evidence_state"]["schema_version"] == 1
+
+        fetched, status = request_json(
+            f"{base_url}/api/research-readiness-assessments/{assessment['id']}"
+        )
+        assert status == 200
+        assert fetched["assessment"] == assessment
+
+        second_payload = base_payload | {
+            "id": "http-readiness-assessment-b",
+            "outcome": "Blocked",
+            "findings": {"summary": "The required source is unavailable."},
+        }
+        created_second, status = request_json(
+            Request(
+                endpoint,
+                data=json.dumps(second_payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        history, status = request_json(endpoint)
+        assert status == 200
+        assert [item["id"] for item in history["assessments"]] == [
+            assessment["id"],
+            created_second["assessment"]["id"],
+        ]
+
+        invalid, status = request_error(
+            Request(
+                endpoint,
+                data=json.dumps(base_payload | {"id": "http-invalid", "outcome": "ready"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "outcome" in invalid["error"]
+        for key in (
+            "findings",
+            "policy_version",
+            "producer_kind",
+            "producer_identifier",
+            "producer_implementation_version",
+        ):
+            incomplete, status = request_error(
+                Request(
+                    endpoint,
+                    data=json.dumps(
+                        {
+                            item_key: value
+                            for item_key, value in (base_payload | {"id": f"http-{key}"}).items()
+                            if item_key != key
+                        }
+                    ).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert incomplete["error"]
+        duplicate, status = request_error(
+            Request(
+                endpoint,
+                data=json.dumps(base_payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "already exists" in duplicate["error"]
+        rejected_snapshot, status = request_error(
+            Request(
+                endpoint,
+                data=json.dumps(
+                    base_payload | {"id": "http-snapshot", "frozen_evidence_state": {}}
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "built by the server" in rejected_snapshot["error"]
+        missing, status = request_error(
+            Request(
+                f"{base_url}/api/research-packs/missing/readiness-assessments",
+                data=json.dumps(base_payload | {"id": "http-missing"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "ResearchPack" in missing["error"]
+        missing_get, status = request_error(
+            Request(
+                f"{base_url}/api/research-readiness-assessments/missing",
+                method="GET",
+            )
+        )
+        assert status == 404
+        assert "not found" in missing_get["error"]
+    finally:
+        server.server_close()
