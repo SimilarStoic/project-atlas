@@ -787,6 +787,17 @@ workflow/automation effect, no consumed/current authorization state and no `Oppo
 Migration 13, repository/API/UI implementation and tests are canonical; migrations are now 1–13. v0.15 remains
 the historical accepted predecessor. No successor milestone is selected.
 
+**Research Readiness semantics are approved design direction only.** They define additive, immutable,
+versioned assessments of an exact frozen ResearchPack Claim/Source/ClaimEvidence state, not mutable workflow
+state and not a founder gate. Every assessment must preserve the assessed evidence snapshot, Ready /
+NeedsMoreResearch / Blocked outcome, findings/reasons, assessment schema and policy/check versions, timestamp
+and producer/implementation provenance. ResearchPack ID/version alone is insufficient because Claims,
+Sources and ClaimEvidence may change later. Multiple assessments remain additive with no persisted
+current/latest/superseded pointer; later evidence requires a new assessment. No readiness entity, migration,
+API, UI, producer, research automation or EditorialAngle progression rule is implemented. A Ready assessment
+does not automatically create editorial records; how readiness may later authorize EditorialAngle progression
+remains a separate design decision.
+
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
 generic approval state, Script-to-Claim architecture, queues, production, publishing, analytics, financial
@@ -806,6 +817,8 @@ formally closed: the final production-ready SimilarStoic brand identity is **APP
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 is now active. v0.16 — Authorized Research Initiation is the latest accepted implementation milestone;
 v0.15 remains its historical accepted predecessor.
+The approved next design direction is durable, machine-bound Research Readiness assessment semantics only; it
+does not name or authorize a successor implementation milestone.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

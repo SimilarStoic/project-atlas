@@ -1253,11 +1253,39 @@ The approved first-half direction is:
 > Opportunity → IDEA GATE → Research → machine research-readiness → Editorial Angle → ContentPiece → Title/Hook/Script development → machine editorial QA → EDITORIAL GATE
 
 Research readiness is a machine boundary, not a founder gate. It applies to the proposed content and material
-claims rather than an abstract assertion that a topic is fully researched. Its conceptual outcomes are Ready,
-Needs more research or Blocked; concrete enums/schema remain undefined. Structured Research Packs precede
-scripting; source quality, proportional corroboration, freshness, fact/interpretation/opinion/forecast/
-illustration distinctions and non-silent blocking of unsupported material claims remain required. The final
-evidence schema and Script-to-Claim architecture remain deferred.
+claims rather than an abstract assertion that a topic is fully researched. Idea Gate authorization has already
+occurred upstream; recording readiness requires no founder approval and creates no fourth recurring human gate.
+Its exact immutable assessment outcomes are **Ready**, **NeedsMoreResearch** and **Blocked**: Ready satisfies
+the applicable requirements for editorial development; NeedsMoreResearch identifies remediable evidence
+deficiencies; Blocked prevents progression under the applicable assessment because of a material unresolved
+issue that must not be silently bypassed. These are not `ResearchPack.status` values or mutable workflow state.
+
+The approved Phase 2 design direction is additive, immutable, versioned research-readiness assessments of an
+exact frozen ResearchPack evidence state (conceptually `ResearchReadinessAssessment`; final class/table naming
+awaits a bounded implementation definition). A ResearchPack ID/version alone is not historically sufficient:
+Claims may be added or updated after pack creation, Sources may be added later, and ClaimEvidence relationships
+may change. Each assessment must therefore retain a schema-versioned frozen evidence-state payload that can
+reconstruct the ResearchPack ID/version, relevant Claims and readiness-relevant attributes, relied-upon Sources
+and ClaimEvidence relationships, relevant freshness/as-of context, and stable live-record IDs. This is an
+immutable assessment input snapshot, not a replacement research database or a second mutable source of truth.
+
+Each assessment must preserve its policy/check version, assessment schema version, immutable outcome,
+findings/reasons, timestamp and assessment producer/implementation provenance. Findings may be structured,
+may identify material deficiencies and may refer to Claim IDs plus frozen Claim representations; a permanent
+universal reason-code taxonomy and one-assessment-per-Claim model are not approved. Source quality,
+proportional corroboration, freshness, material-claim support, fact/interpretation/opinion/forecast/
+illustration distinctions, uncertainty and known limitations remain applicable; no universal automated score or
+final fact-checking-engine behaviour is defined.
+
+Multiple immutable assessments may exist for one ResearchPack. Later research/evidence changes require a new
+assessment; earlier Ready, NeedsMoreResearch and Blocked history remains truthful and preserved. No mutable
+current/latest/superseded pointer, `ResearchPack.readiness_status`, `ResearchPack.ready`, generic workflow
+stage or assessment-selection state is approved; a later read may derive a latest view without persisting it.
+Research readiness records evidence only: they must not automatically create an EditorialAngle, ContentPiece or
+Script, mutate editorial records, enqueue work or trigger Phase 5 automation. How a Ready assessment might
+authorize EditorialAngle progression, including any direct reference, consumption or separate progression
+record, remains deliberately undefined for a separate design boundary. Structured Research Packs precede
+scripting; the final Script-to-Claim architecture remains deferred.
 
 Before Editorial Gate, future editorial QA should establish sufficient intended-content research, support for
 material factual claims, appropriate uncertainty/freshness treatment, research-supported angle, non-
@@ -1295,8 +1323,9 @@ Progression is authorized by durable domain-specific decisions and readiness evi
 `WorkflowItem(status, approved, current_step)` equivalent. Human decisions and readiness evidence apply to
 specific reviewed/generated versions or lineages; substantive changes require relevant re-evaluation, and
 revision history remains additive. Future decision history must preserve what was reviewed, gate/outcome,
-founder direction, time and actor/provenance. Future readiness evidence must preserve what/version was checked,
-result/reasons, evidence/provenance, relevant policy/check version and time.
+founder direction, time and actor/provenance. Research-readiness assessments now have the approved frozen
+evidence-state, outcome, finding, policy/schema, timestamp and producer-provenance semantics above; no schema,
+API, UI or producer is yet implemented.
 
 Phase 2 eventually needs only the persistence semantics relevant to the existing editorial chain: Idea Gate and
 Editorial Gate decision history, domain-specific research/editorial readiness evidence, and revision/progression
@@ -1312,7 +1341,9 @@ authorization, proposal, reservation, ledger or enforcement entity is approved h
 
 v0.15 — Persistent Idea Gate remains the historical accepted implementation predecessor. **v0.16 — Authorized
 Research Initiation** is the latest accepted implementation milestone. It adds only deliberate qualifying Idea
-Gate provenance to new lifecycle-created ResearchPack versions through migration 13.
+Gate provenance to new lifecycle-created ResearchPack versions through migration 13. The narrowest approved
+next Phase 2 design direction is durable Research Readiness assessment semantics; it is design direction only,
+not a named successor milestone, migration or implementation authorization.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.

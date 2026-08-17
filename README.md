@@ -70,6 +70,15 @@ Reject cannot, snapshot/pack Opportunity lineage must match, historical packs re
 provenance, and Steer direction is consumed by reference. It authorizes no automatic research,
 provider/queue orchestration, historical backfill or later-phase activation.
 
+The approved next **design direction only** is durable Research Readiness assessment semantics. Assessments are
+additive, immutable and versioned against an exact schema-versioned frozen ResearchPack evidence state, because
+Claims, Sources and ClaimEvidence may change after a pack is created. They preserve Ready, NeedsMoreResearch or
+Blocked; findings/reasons; policy/check and schema versions; time; and producer provenance. Readiness is a
+machine boundary, not founder approval or mutable workflow state: it has no persisted current/latest pointer,
+does not automatically create an EditorialAngle, and does not yet define how editorial progression is
+authorized. No readiness schema, API, UI, assessment producer, research automation or successor milestone is
+implemented.
+
 ## Technology baseline
 
 - Python 3.12+

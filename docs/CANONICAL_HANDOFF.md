@@ -192,11 +192,22 @@ ambiguity-return rule are canonical in
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is
-a machine boundary for proposed content/material claims, with conceptual Ready / Needs-more-research / Blocked
-meanings only; the final evidence schema and Script-to-Claim architecture remain deferred. Editorial QA must
-eventually establish research/claim support, uncertainty/freshness treatment, evidence-supported non-
-overpromising editorial content, audio-first meaning preservation, territory/tone, surfaced risk and
-provenance.
+a machine boundary for proposed content/material claims, not a founder gate or a claim that a topic is fully
+researched. Its approved design direction is additive, immutable, versioned assessments of an exact frozen
+ResearchPack evidence state. A ResearchPack ID/version alone is insufficient because Claims, Sources and
+ClaimEvidence may change after pack creation. Each assessment must retain a schema-versioned frozen snapshot of
+the relevant ResearchPack, Claims, Sources, evidence relationships and freshness/as-of context; stable record
+IDs preserve live-record provenance without creating a second mutable research source of truth.
+
+The exact outcomes are **Ready**, **NeedsMoreResearch** and **Blocked**. Each assessment preserves its outcome,
+findings/reasons, assessment schema version, policy/check version, timestamp and producer/implementation
+provenance. Multiple assessments may coexist for one ResearchPack; evidence changes require a new assessment,
+and earlier history remains immutable. No mutable current/latest/superseded readiness pointer or
+`ResearchPack` readiness field is approved. No readiness schema, API, UI, assessment producer, provider call,
+research automation or founder approval/override has been implemented or authorized. A Ready assessment must
+not automatically create an EditorialAngle, ContentPiece or Script; the separate question of how readiness
+could authorize EditorialAngle progression remains undefined. The final Script-to-Claim architecture and
+Editorial QA implementation remain deferred.
 
 The target second half is Editorial package → Editorial Gate approval + bounded spend authorization →
 production within the authorized envelope → machine production/brand/risk QA → publication readiness →
@@ -212,6 +223,10 @@ versions require relevant re-evaluation; history remains additive. Phase 2 later
 decision/readiness/revision provenance. Production/publication readiness records remain for Phases 6/7,
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
+
+The narrowest approved next Phase 2 design direction is durable Research Readiness assessment semantics. It is
+not a named successor milestone or implementation authorization; material detail beyond this contract returns
+to founder + ChatGPT.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
