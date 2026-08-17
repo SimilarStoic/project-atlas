@@ -36,10 +36,11 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone; v0.16
-is its historical accepted predecessor. **Phase 2 — Content Operating Model is the current ACTIVE roadmap
-phase, with accepted v0.15, v0.16 and v0.17 implementations**, under founder + ChatGPT design/implementation
-stewardship.
+unchanged. **v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone; v0.16
+is its historical accepted predecessor. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and
+authorized for bounded implementation, but is not implemented or accepted. **Phase 2 — Content Operating Model is
+the current ACTIVE roadmap phase, with accepted v0.15, v0.16 and v0.17 implementations**, under founder + ChatGPT
+design/implementation stewardship.
 this does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
@@ -156,7 +157,7 @@ historical snapshots, readable frozen Subject context, each outcome, required St
 review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
 migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
 
-Any scope beyond the accepted v0.17 boundary requires a new explicit founder + ChatGPT
+Any scope beyond the accepted v0.18 boundary requires a new explicit founder + ChatGPT
 decision. Material ambiguity about semantics, migration scope, history, API meaning, founder decision meaning
 or deferred scope must return to founder + ChatGPT rather than be inferred.
 
@@ -207,14 +208,16 @@ and earlier history remains immutable. No mutable current/latest/superseded read
 `ResearchPack` readiness field is approved. v0.17 now implements its bounded readiness schema and controlled API;
 it adds no UI, evaluator, provider call, research automation or founder
 approval/override. A Ready assessment must not automatically create an EditorialAngle, ContentPiece or Script.
-The approved design direction is explicit lifecycle creation of an EditorialAngle under an exact supplied Ready
-assessment with direct immutable initiation provenance; implementation remains deferred. The final
-Script-to-Claim architecture and Editorial QA implementation remain deferred.
+The approved lifecycle direction is explicit creation of an EditorialAngle under an exact supplied Ready assessment
+with direct immutable initiation provenance. It is now canonically defined as v0.18 and authorized for bounded
+implementation; it is not implemented or accepted. The final Script-to-Claim architecture and Editorial QA
+implementation remain deferred.
 
 ### v0.17 — Persistent Research Readiness
 
 v0.17 is the latest accepted implementation milestone. v0.16 is its historical accepted predecessor,
-migration 14 is canonical, migrations extend through 14, and no successor after v0.17 is selected. It introduces only one immutable
+migration 14 is canonical, migrations extend through 14, and v0.18 is the defined and authorized next milestone
+(not implemented or accepted). v0.17 introduces only one immutable
 ResearchReadinessAssessment table. The assessment belongs to one
 ResearchPack and carries its own server/repository-built, deterministic, schema-versioned frozen evidence JSON;
 no normalized snapshot aggregate, findings rows, generic readiness/workflow/approval entity or current/latest
@@ -234,28 +237,52 @@ no UI, founder approval, evaluator, provider, job, queue or automation. It does 
 EditorialAngle, ContentPiece, Script, Title/Hook, Editorial Gate, progression authority, production,
 publication, analytics/Learning, financial controls, Phase 4 research automation or Phase 9 orchestration.
 
-### Approved readiness → EditorialAngle initiation-provenance direction
+### v0.18 — Readiness-Authorized Editorial Angle Initiation
 
-This is **approved design direction only**: no migration 15, EditorialAngle schema/API/UI/lifecycle
-implementation or successor milestone is authorized. A dedicated future lifecycle path may create an
-EditorialAngle only under an explicitly supplied immutable ResearchReadinessAssessment with exact outcome
-`Ready`. The intended durable fact is direct immutable Angle → assessment initiation provenance, conceptually
-`research_readiness_assessment_id`; when implemented it is a direct FK, nullable for historical/legacy/demo
-Angles and required only for the lifecycle path. It means only: **this Angle was initiated under this exact Ready
-assessment**—not that the mutable Angle remains perpetually validated.
+**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.18 belongs to
+Phase 2. It is the next implementation milestone; v0.17 remains latest accepted, migrations remain 1–14, and no
+milestone after v0.18 is selected.
 
-The explicit assessment must exist, be `Ready`, match the requested ResearchPack, and that pack must match the
-requested Opportunity. No latest/any-Ready inference, current state, selection, consumption, one-use rule or
-cross-pack/cross-Opportunity provenance is allowed. One Ready may support multiple Angles; later assessments do
-not rewrite prior Angle provenance, and later Blocked/NeedsMoreResearch does not automatically invalidate an
-earlier Angle. Claim-level frozen-snapshot matching is outside this boundary; same ResearchPack is sufficient.
+Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
+`Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
+provenance, conceptually `research_readiness_assessment_id`: **this Angle was initiated under this exact Ready
+assessment**, not that a mutable Angle remains perpetually validated. The reference is nullable for
+historical/legacy/demo Angles, required only on the new lifecycle path, and receives no backfill.
 
-Legacy low-level Angle creation remains compatible; historical Angles get no backfill. The intended future
-operation is conceptually `create_editorial_angle_under_research_readiness(...)`, and the preferred API is
-`POST /api/opportunities/{opportunity_id}/editorial-angles` with explicit ResearchPack and assessment IDs. No
-separate progression record is justified: the immutable Ready assessment plus direct Angle provenance are the
-two durable facts. No UI is required. Phase 5 generation/selection, Phase 9 orchestration, Title/Hook, Script,
-Editorial Gate, financial work and any revalidation/versioning design remain deferred.
+The dedicated operation is conceptually `create_editorial_angle_under_research_readiness(...)`: it takes the Angle,
+Opportunity, ResearchPack and exact assessment IDs plus ordinary Angle fields. It validates the Opportunity,
+ResearchPack, Pack → Opportunity lineage, assessment, exact `Ready` outcome and assessment → same-Pack lineage,
+then creates one normal Angle and persists the exact reference. `NeedsMoreResearch`, `Blocked`, missing resources,
+assessment/Pack mismatch and Pack/Opportunity mismatch fail. It must not infer latest/any Ready, consume/select or
+mutate readiness, change `Opportunity.status`, generate/rank an Angle, invoke a provider, create ContentPiece or
+Script, enqueue work, or create workflow state.
+
+Existing low-level `create_editorial_angle(...)` remains compatible for legacy/seed/test use, including positional
+callers; lifecycle readiness is not globally required. Normal editable Angle fields and Claim roles remain editable,
+but the readiness reference cannot change through Angle edits and edits trigger no revalidation. One Ready may
+support multiple Angles; later Ready, NeedsMoreResearch or Blocked assessments never rewrite or automatically
+invalidate earlier provenance. Existing same-ResearchPack Claim-link validation remains; no frozen Claim matching,
+Claim-role snapshotting or Script-to-Claim behavior is included.
+
+The v0.18 vertical API is `POST /api/opportunities/{opportunity_id}/editorial-angles`, with explicit
+`research_pack_id`, `research_readiness_assessment_id` and normal Angle fields. Its response exposes the direct
+Angle/Opportunity/Pack/assessment provenance without duplicating frozen readiness evidence. Missing resources are
+404-style; malformed or invalid lifecycle requests are 400-style under existing conventions. No UI is required or
+authorized: this is not a founder gate and persistence/API proves the boundary without a premature manual workflow.
+
+Migration 15 is expected only when implementation begins and is limited to the nullable direct reference on
+`editorial_angles`, a restrictive FK and a lineage index. It must not change Angle versioning, ResearchPack,
+ReadinessAssessment, Claim links, ContentPiece, Script, Title/Hook or Editorial Gate. The full v0.18 acceptance
+criteria are canonical in [ROADMAP.md](../ROADMAP.md), including legacy compatibility, exact-Ready validation,
+immutability, no-consumption/no-current state, multiple-Angle history, unchanged Claim boundary, no automatic
+side effects, API proof and v0.1–v0.17 compatibility.
+
+v0.18 excludes EditorialAngle versioning, frozen Angle snapshots, Claim-level revalidation, candidate generation or
+ranking, LLM/provider calls, Phase 5 content intelligence, ContentPiece/Script/Title/Hook work, editorial QA/Gate,
+jobs/queues/workers, Phase 9 orchestration, production, publishing, analytics/Learning and financial controls.
+Phase 5 may later automate Angle generation and Phase 9 may later orchestrate progression; neither is included.
+Material ambiguity about provenance meaning, lifecycle-only enforcement, legacy compatibility, exact qualification,
+lineage validation, update immutability, Claim boundaries, API semantics or later phases returns to founder + ChatGPT.
 
 The target second half is Editorial package → Editorial Gate approval + bounded spend authorization →
 production within the authorized envelope → machine production/brand/risk QA → publication readiness →
@@ -273,9 +300,9 @@ Learning records for Phase 8, financial guardrails for future financial implemen
 Phase 9. No placeholder entities are approved.
 
 The latest accepted Phase 2 implementation is **v0.17 — Persistent Research Readiness**. Its bounded
-persistence/API contract is accepted. The above Readiness → EditorialAngle initiation-provenance boundary is
-approved design direction only; it selects no successor milestone, and material detail beyond it returns to
-founder + ChatGPT.
+persistence/API contract is accepted. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and
+authorized, but not implemented or accepted; it selects no milestone after v0.18. Material detail beyond its
+approved boundary returns to founder + ChatGPT.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate

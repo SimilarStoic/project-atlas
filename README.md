@@ -38,9 +38,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now the **active** roadmap phase. v0.17 Persistent Research Readiness is the latest accepted
-implementation milestone; v0.16 Authorized Research Initiation is its historical accepted predecessor, and the
-remaining Phase 2 scope is not implemented. Its approved
+Phase 2 is now the **active** roadmap phase. v0.17 Persistent Research Readiness remains the latest accepted
+implementation milestone; v0.16 Authorized Research Initiation is its historical accepted predecessor. v0.18
+Readiness-Authorized Editorial Angle Initiation is the defined and authorized next milestone, but is not
+implemented or accepted, and the remaining Phase 2 scope is not implemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -69,16 +70,22 @@ Reject cannot, snapshot/pack Opportunity lineage must match, historical packs re
 provenance, and Steer direction is consumed by reference. It authorizes no automatic research,
 provider/queue orchestration, historical backfill or later-phase activation.
 
-**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone; v0.16 is its
+**v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone; v0.16 is its
 historical accepted predecessor. It persists one immutable, additive assessment record per exact
 server-built, deterministically ordered, schema-versioned frozen ResearchPack evidence state. The controlled
 API supplies only outcome, findings, policy/check version and producer provenance; it exposes create/list/get
 history but has no UI or evaluator. Ready, NeedsMoreResearch and Blocked are the only outcomes. No mutable
 current/latest readiness, backfill, ResearchPack status or automation is authorized; migration 14 is canonical
-and migrations extend through 14. The approved next Phase 2 design direction, not implementation or a successor
-milestone, is explicit lifecycle creation of an EditorialAngle under an exact Ready assessment using direct
-initiation provenance, same ResearchPack/Opportunity validation and legacy-null compatibility. It creates no
-progression record, UI, evaluator, angle generation or workflow state.
+and migrations extend through 14.
+
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and authorized for bounded implementation,
+not implemented or accepted. It is the deliberate creation of an Opportunity-owned EditorialAngle under one exact
+supplied immutable `Ready` assessment, preserving a direct immutable initiation-provenance reference. The reference
+is nullable for historical/demo/legacy Angles and required only by the new lifecycle path; no backfill, latest/current
+selection, readiness consumption, frozen Claim matching, workflow record, UI, provider call, Phase 5 generation,
+ContentPiece or Script behavior is included. Migration 15 is expected only during implementation and only for the
+nullable restrictive FK and assessment-lineage index. v0.17 remains the latest accepted milestone; no milestone
+after v0.18 is selected.
 
 ## Technology baseline
 
@@ -397,6 +404,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.17 — Persistent Research Readiness is the latest accepted implementation checkpoint; v0.16 is its
-historical accepted predecessor. Migrations are canonical through 14. Later Atlas
+v0.17 — Persistent Research Readiness remains the latest accepted implementation checkpoint; v0.16 is its
+historical accepted predecessor. v0.18 — Readiness-Authorized Editorial Angle Initiation is defined and authorized
+but not implemented or accepted. Migrations are canonical through 14. Later Atlas
 systems remain out of scope.

@@ -6,13 +6,14 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE; v0.16 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE; v0.17 ACCEPTED; v0.18 DEFINED)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
 design/implementation stewardship; v0.17 is the latest accepted implementation milestone and v0.16 is its
-historical accepted predecessor. Remaining Phase 2 scope is not implemented. Atlas v0.1
+historical accepted predecessor. v0.18 — Readiness-Authorized Editorial Angle Initiation is the defined and
+authorized next implementation milestone, but is not implemented or accepted. Remaining Phase 2 scope is not implemented. Atlas v0.1
 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
@@ -795,20 +796,28 @@ and producer/implementation provenance. ResearchPack ID/version alone is insuffi
 Sources and ClaimEvidence may change later. Multiple assessments remain additive with no persisted
 current/latest/superseded pointer; later evidence requires a new assessment. Migration 14 and the controlled
 API are canonical; no UI, evaluator/producer, research automation or EditorialAngle progression implementation
-exists. A Ready assessment does not automatically create editorial records. The approved design direction is a
-future explicit lifecycle path that creates an Angle under an exact supplied Ready assessment through direct,
-immutable initiation provenance; it is not implemented and does not select a successor milestone.
+exists. A Ready assessment does not automatically create editorial records.
 
-**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone. v0.16 is its
+**v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone. v0.16 is its
 historical accepted predecessor and migrations are canonical through 14. v0.17 is limited to one immutable
 ResearchReadinessAssessment table with a server-built,
 deterministically ordered, schema-versioned frozen ResearchPack/Claim/Source/ClaimEvidence payload; exact
 Ready / NeedsMoreResearch / Blocked outcomes; structured findings; policy/check, schema and producer
 provenance; additive history; and controlled create/list/get API reads. It has no UI, evaluator, mutable
-current/latest state, backfill, automation or later-phase behavior. Readiness → EditorialAngle initiation
-provenance is approved design direction only: explicit Ready ID, same ResearchPack/Opportunity validation,
-legacy-null compatibility, no consumption/current state and no separate progression record. No successor after
-v0.17 is selected.
+current/latest state, backfill, automation or later-phase behavior.
+
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is now defined and authorized for bounded
+implementation, but is not implemented or accepted. It is the next Phase 2 milestone: deliberate creation of an
+Opportunity-owned EditorialAngle under one exact supplied immutable `Ready` ResearchReadinessAssessment, using a
+direct immutable `research_readiness_assessment_id` reference. The reference is nullable for historical/demo/legacy
+Angles, required only on the dedicated lifecycle path, and means only that the Angle was initiated under that exact
+Ready assessment—not that mutable Angle content remains perpetually validated. Existing low-level Angle creation
+remains compatible, with no backfill or global readiness requirement. The lifecycle validates Opportunity →
+ResearchPack and assessment → same ResearchPack lineage; it rejects missing, cross-lineage, NeedsMoreResearch and
+Blocked input. No latest/current selection, consumption, readiness mutation, frozen Claim matching, ContentPiece,
+Script, `Opportunity.status` mutation, workflow entity, provider call, UI or Phase 5 automation is authorized.
+Migration 15 is expected only when implementation begins, limited to the nullable restrictive FK and lineage index.
+Migrations remain 1–14. No milestone after v0.18 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -827,8 +836,9 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 is now active. v0.17 — Persistent Research Readiness is the latest accepted implementation milestone;
-v0.16 is its historical accepted predecessor. It does not select a successor milestone.
+Phase 2 is now active. v0.17 — Persistent Research Readiness remains the latest accepted implementation milestone;
+v0.16 is its historical accepted predecessor. v0.18 — Readiness-Authorized Editorial Angle Initiation is defined
+and authorized for bounded implementation, but is not implemented or accepted; it selects no milestone after v0.18.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
