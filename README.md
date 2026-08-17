@@ -7,6 +7,9 @@ SQLite foundation for SimilarStoic. It implements through v0.14, including refer
 character generation and an explicit first-reference bootstrap operation. Later workflow, research
 automation and production systems remain deferred.
 
+For the canonical repository checkpoint, cross-chat re-grounding procedure, and roadmap-governance protocol,
+see [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+
 ## Technology baseline
 
 - Python 3.12+
@@ -307,7 +310,8 @@ v0.6 Visual Plan + Scene persistence are complete and pushed. v0.7 Asset Specifi
 Asset persistence, v0.8 Generation Execution, and v0.9 Visual Style Control are complete and
 pushed. v0.10 Visual Style Fidelity is complete and pushed as a provisional visual-style baseline. v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, and v0.13
-Reference-Grounded Character Generation are complete and pushed. The verified checkpoint is
-`6d9bb0bef12d53bb5e05a689fba3a45faa93360b` (`feat: add reference-grounded character generation`), with
-69 passing tests and migrations 1–11. v0.14 Explicit Character Reference Bootstrap is implemented locally
-and awaiting final acceptance. Later Atlas systems remain out of scope.
+Reference-Grounded Character Generation and v0.14 Explicit Character Reference Bootstrap are complete and
+pushed. The verified checkpoint is `516884b8fab0a29e8e82973d684be1ae8a08bff6`
+(`feat: add character reference bootstrap`), with 75 passing tests and migrations 1–11. The next activity is
+Phase 1 visual evidence under the canonical handoff; it is not a v0.15 milestone. Later Atlas systems remain
+out of scope.

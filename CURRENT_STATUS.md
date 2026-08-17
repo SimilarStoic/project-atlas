@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-14 August 2026
+17 August 2026
 
 ## Current Phase
 
@@ -15,16 +15,15 @@
 The technical foundation is complete and the repository is safely stored on GitHub.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
-Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, and v0.13
-Reference-Grounded Character Generation are complete and pushed. V0.10 remains a provisional visual-style
-baseline, not final art direction.
+Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded
+Character Generation, and v0.14 Explicit Character Reference Bootstrap are complete and pushed. V0.10 remains
+a provisional visual-style baseline, not final art direction.
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8 through v0.13 are complete and pushed. Atlas now has immutable, versioned character identity,
-canonical visual-reference foundations, and reference-grounded character generation alongside the approved
-SimilarStoic Core v2 visual-style baseline. v0.14 Explicit Character Reference Bootstrap is implemented
-locally and awaiting final acceptance.
+Atlas v0.8 through v0.14 are complete and pushed. Atlas now has immutable, versioned character identity,
+canonical visual-reference foundations, reference-grounded character generation, and explicit first-reference
+bootstrap alongside the approved SimilarStoic Core v2 visual-style baseline.
 
 ---
 
@@ -47,7 +46,7 @@ locally and awaiting final acceptance.
 
 Current commit:
 
-`6d9bb0bef12d53bb5e05a689fba3a45faa93360b feat: add reference-grounded character generation`
+`516884b8fab0a29e8e82973d684be1ae8a08bff6 feat: add character reference bootstrap`
 
 Branch:
 
@@ -59,13 +58,13 @@ Remote:
 
 Working tree:
 
-Clean at the accepted v0.13 checkpoint; local `main` matched `origin/main` before v0.14 local work.
+Clean at the accepted v0.14 checkpoint; local `main` matched `origin/main` at acceptance.
 
 Validated state:
 
 - Ruff passed.
 - Black `--check` passed.
-- pytest: **69 passed** at the accepted v0.13 checkpoint.
+- pytest: **75 passed** at the accepted v0.14 checkpoint.
 - `git diff --check` passed.
 - SQLite migrations: **1–11**.
 
@@ -264,10 +263,9 @@ pushed.
 - GenerationExecution retains direct CharacterReferenceSet lineage. Missing sets, invalid references, and
   missing provider configuration remain pre-provider failures with no execution or Asset.
 
-## Atlas v0.14 Local Implementation
+## Atlas v0.14 Checkpoint
 
-**Project Atlas v0.14 — Explicit Character Reference Bootstrap** is implemented locally and awaiting final
-acceptance.
+**Project Atlas v0.14 — Explicit Character Reference Bootstrap** is complete, accepted, committed and pushed.
 
 - A separate explicit operation can generate the first eligible Scene-owned character Asset for an exact
   CharacterProfile only while that profile has no CharacterReferenceSet.
@@ -619,9 +617,12 @@ Remaining before Phase 1 is complete:
 
 # Next Step
 
-Reference-grounded generation is complete in v0.13. The bounded v0.14 local implementation adds explicit
-first-reference bootstrap generation for an unreferenced exact CharacterProfile and is awaiting final
-acceptance. Normal generation still requires references; bootstrap never creates them automatically.
+Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. The next
+activity is Phase 1 visual-evidence execution in an isolated review environment, not v0.15: bootstrap exactly
+two legitimate candidates, stop at Human Gate A, and let the founder and ChatGPT decide whether to create a
+CharacterReferenceSet v1 before any grounded review evidence. Normal generation still requires references;
+bootstrap never creates them automatically. The roadmap is governed by canonical GitHub documentation and the
+explicit change protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
 imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency

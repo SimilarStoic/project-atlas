@@ -677,8 +677,10 @@ Commercial relationships must never determine:
 
 ## Current implementation milestones
 
-Verified checkpoint: `6d9bb0bef12d53bb5e05a689fba3a45faa93360b` (`feat: add reference-grounded
-character generation`). Validation at this checkpoint: 69 passing tests and SQLite migrations 1–11.
+Verified checkpoint: `516884b8fab0a29e8e82973d684be1ae8a08bff6` (`feat: add character reference bootstrap`).
+Validation at this checkpoint: 75 passing tests and SQLite migrations 1–11. Roadmap governance and fresh-chat
+re-grounding are defined in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md); roadmap changes require
+explicit founder-approved canonical updates.
 
 ### Atlas v0.1 — MVP Editorial Control Interface
 Status: COMPLETE
@@ -775,7 +777,7 @@ and records direct GenerationExecution reference-set lineage. Grounded character
 image-edit transport; missing references remain pre-provider failures.
 
 ### Atlas v0.14 — Explicit Character Reference Bootstrap
-Status: IMPLEMENTED LOCALLY, AWAITING ACCEPTANCE
+Status: COMPLETE
 
 An explicit bootstrap operation generates the first eligible Scene-owned character Asset only while an exact
 CharacterProfile has no CharacterReferenceSet. It reuses GenerationInput v3 and the non-reference provider
