@@ -637,6 +637,25 @@ Cost tracking is a first-class requirement. The planned system links AI/API oper
 
 Configurable monthly and per-content budget targets and alerts are required.
 
+### Approved future financial-control conceptual boundary
+
+Future financial control distinguishes a durable **Cost Ledger** for actual operating spend, a durable
+**Revenue Ledger** for money earned from already contemplated monetisation sources, and an **Economics /
+Control Centre** that may derive profitability, unit economics, revenue-versus-production-cost, budgets,
+alerts, trends, efficiency and financial guardrails. Cost and revenue records may attribute through existing
+content/pipeline provenance where appropriate; mutable aggregate totals must not be embedded in immutable
+GenerationExecution history.
+
+Audience/content analytics remains separate: views, retention, engagement and follower/subscriber growth may
+inform unit economics, but analytics is not the Revenue Ledger. Detailed ledger schema, revenue ingestion and
+attribution rules, metric formulas, thresholds, enforcement, kill switches, escalation and founder-exception
+semantics remain unspecified. Financial-control implementation remains deferred; no financial entities,
+tables, integrations or automation guardrails have been created.
+
+Phase 3 will own future cost/budget/control architecture; Phase 7 may provide publication/platform data,
+Phase 8 owns separate performance/commercial metrics, Phase 9 may later consume financial limits, and Phase
+10 may consume business/economic outcomes. No new phase or activation is implied.
+
 GPT + Codex are the current primary AI/development stack. Claude or another coding agent is not a dependency or requirement. This is a tooling choice, not an architectural lock-in; provider abstraction remains possible where practical.
 
 ---

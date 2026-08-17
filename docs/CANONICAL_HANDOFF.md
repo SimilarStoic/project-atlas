@@ -127,6 +127,20 @@ Every future handoff must direct the next chat to repeat this repository-groundi
   providers, production stages, rendering components, publishing and analytics integrations, and other
   implementation-specific pipes remain replaceable behind stable boundaries, explicit inputs/outputs,
   loose coupling and preserved provenance. Replacing one pipe must not require rebuilding the whole loop.
+- Future financial control distinguishes a durable Cost Ledger for actual operating spend, a durable Revenue
+  Ledger for money earned from already contemplated monetisation sources, and an Economics / Control Centre
+  that may derive financial views and guardrails from them. Analytics remains separate: performance metrics
+  may inform unit economics, but analytics is not the Revenue Ledger. This is a conceptual boundary only;
+  ledger schema, ingestion/attribution rules, metric formulas, thresholds, enforcement, kill-switch,
+  escalation and founder-exception semantics remain unspecified. Financial records must preserve historical
+  provenance through additive evolution, retain provider independence, and must not mutate immutable
+  GenerationExecution records with later-changing aggregate totals. Existing execution/provider provenance is
+  a future attribution anchor, not an approved financial record.
+- Future financial guardrails may constrain automated spend through budget limits, provider/model caps,
+  alerts, escalation, pausing and founder exception approval. Phase 3 owns future cost/budget/control
+  architecture; Phase 7 may provide publication/platform data; Phase 8 owns separate performance/commercial
+  metrics; Phase 9 may consume limits during automation; and Phase 10 may consume business/economic outcomes.
+  No new phase, phase activation or implementation is implied.
 - Accepted phases, milestones, specifications, profiles and implementation choices remain evolvable through
   additive changes, immutable new versions, explicit future selection and preserved historical provenance;
   accepted historical records are not destructively rewritten merely because the current design evolves.
@@ -179,5 +193,5 @@ historical implementation dates:
 
 Do not infer approval for neutral CharacterProfile-owned candidate studies, automatic reference selection,
 similarity scoring, visual QA automation, style-reference grounding, generic approval/lifecycle models,
-queues, retries, batch semantics, cost tracking, rendering, animation, audio production, publishing,
-analytics, cloud systems, or agents.
+queues, retries, batch semantics, financial-control implementation (including Cost/Revenue Ledger schema or
+integrations), rendering, animation, audio production, publishing, analytics, cloud systems, or agents.

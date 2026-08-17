@@ -677,6 +677,40 @@ Track AI/API operations and associate costs with individual content pieces where
 
 The system should support configurable monthly and per-content budget targets and alerts.
 
+### Approved future financial-control boundary
+
+Future financial control is a conceptual boundary only; it does not authorize a schema, entities, formulas,
+integrations or implementation work.
+
+- A durable **Cost Ledger** should record actual operating spend and, where appropriate, attribute it through
+  existing content and pipeline provenance. It must not embed mutable aggregate totals in immutable historical
+  GenerationExecution records.
+- A durable **Revenue Ledger** should record money earned from the already contemplated monetisation sources
+  and may attribute it, where available, to ContentPieces/videos, platforms/channels, periods and commercial
+  sources. Detailed ingestion and attribution rules remain unspecified.
+- A future **Economics / Control Centre** may derive spend, revenue, profitability, unit economics,
+  revenue-versus-production-cost, budget status, alerts, trends, efficiency and financial guardrails from the
+  two ledgers. Illustrative measures such as gross profit, contribution margin, break-even views and return
+  on content spend do not define formulas or implementation requirements.
+- Audience/content **Analytics** remains separate from the financial ledgers. Views, retention, engagement
+  and follower/subscriber growth may inform unit economics, but analytics is not the Revenue Ledger.
+
+Future financial controls should be capable of constraining automated spend through concepts such as budget
+limits, provider/model spend caps, alerts, escalation, pausing and founder exception approval. Exact
+thresholds, enforcement, kill-switch semantics, escalation rules and profitability-based automation decisions
+remain genuinely unspecified. The current progressive-automation and human-approval principles remain intact.
+
+This cross-cutting boundary preserves **change without rebuild**, provider independence and historical
+provenance: financial records must evolve additively and must not make provider-specific monetary assumptions
+part of core domain semantics. Existing execution/provider provenance is a future attribution anchor, not an
+approved financial record.
+
+Roadmap ownership remains distributed: Phase 3 owns future cost-tracking architecture, budget/control
+infrastructure and technical guardrails; Phase 7 may later provide publication/platform data for revenue
+attribution; Phase 8 owns performance/commercial metrics separately from durable ledgers; Phase 9 may consume
+financial limits when automation is introduced; and Phase 10 may consume business/economic outcomes. No new
+phase, phase activation or sequencing change is implied.
+
 ## Development stack
 
 GPT and Codex are the current primary AI/development stack. Claude or another coding agent is not a dependency or requirement.

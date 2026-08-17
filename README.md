@@ -16,6 +16,14 @@ Core domain/provenance invariants remain deliberately governed rather than casua
 brand scope extends beyond finance to useful explanatory subjects, and its sparse visual baseline may use
 occasional original contrasting break-frame/still devices as a signature creative mechanism.
 
+The canonical future financial-control boundary distinguishes a durable **Cost Ledger** for actual operating
+spend, a durable **Revenue Ledger** for money earned from already contemplated monetisation sources, and an
+**Economics / Control Centre** that may derive financial views and guardrails from them. Audience/content
+analytics remains separate, though it may inform unit economics. This is conceptual only: no financial schema,
+ledger, integration, formula, threshold, enforcement or automation implementation is present or authorized.
+Future financial records must preserve provenance, provider independence and immutable historical execution
+semantics.
+
 ## Technology baseline
 
 - Python 3.12+
