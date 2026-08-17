@@ -935,9 +935,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-Its first bounded implementation, v0.15, is accepted; all remaining Phase 2 scope is unimplemented.
+Its first bounded implementation, v0.15, is accepted. v0.16 is the defined and authorized next bounded
+implementation milestone, but is not implemented or accepted; all other remaining Phase 2 scope is unimplemented.
 Activation does not complete Phase 2, authorize all of its scope at once,
-create a generic state machine, or approve database entities beyond the separately defined v0.15 boundary.
+create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
@@ -1032,6 +1033,118 @@ within this specification. Codex must return material ambiguity about domain sem
 historical behavior, API meaning, founder decision semantics or deferred scope to founder + ChatGPT rather
 than infer it.
 
+### v0.16 — Authorized Research Initiation
+
+**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT YET IMPLEMENTED OR ACCEPTED.** v0.15
+remains the latest accepted implementation milestone; v0.16 is the next Phase 2 implementation milestone and
+does not complete Phase 2 or activate a later phase.
+
+Purpose:
+
+> Implement deliberate creation of Opportunity-owned ResearchPack versions under explicit qualifying Idea Gate
+> provenance, preserving Proceed/Steer founder authority and Steer direction by reference without triggering
+> research automation or workflow state.
+
+#### Approved provenance and compatibility boundary
+
+The durable lineage is:
+
+> Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
+
+ResearchPack remains owned by its Opportunity. v0.16 adds an optional, immutable direct
+`idea_gate_decision_id` provenance reference to its version record; it is a foreign key to
+IdeaGateDecision, not a transfer of ResearchPack ownership or a generic authorization/progression/workflow
+relationship. The reference is nullable for historical/pre-v0.16 packs and required only through the new
+explicit Phase 2 lifecycle-creation path. Historical/demo rows remain valid, readable and unmodified with
+null provenance. Existing low-level seed/test/backward-compatible ResearchPack creation may remain available;
+it is not globally reinterpreted as requiring Idea Gate authorization.
+
+The lifecycle path accepts only an existing **Proceed** or **Steer** decision. **Reject** must fail. Its
+decision's immutable review snapshot must exist and belong to exactly the same Opportunity as the created
+ResearchPack; authorization must never be inferred from `Opportunity.status`, a latest decision, or a current
+authorization pointer. Founder Steer direction remains canonical only on IdeaGateDecision and is retrieved by
+lineage, never copied into ResearchPack summary, metadata, a mutable research-direction field or initiation
+state.
+
+Each lifecycle-created ResearchPack version independently stores its qualifying decision reference. One
+qualifying decision may support multiple versions; a later version may use a later qualifying decision. There
+is no consumed, one-use, current or mutable authorization state. Existing `(opportunity_id, version)`
+uniqueness remains authoritative, and callers continue to provide versions under the existing ResearchPack
+model.
+
+#### Approved repository, API and founder/operator interaction
+
+v0.16 adds a dedicated domain-specific operation equivalent to
+`create_research_pack_under_idea_gate_authorization(...)`. It requires the explicit decision ID, validates its
+outcome and same-Opportunity snapshot lineage, reuses the existing ResearchPack ID/version/summary/optional
+as-of-date/metadata inputs, creates one normal Opportunity-owned ResearchPack, and persists the decision
+reference. Required reads preserve ResearchPack get/list behavior and expose its linked decision, linked
+snapshot, complete provenance lineage and, where relevant, the Steer direction by reference. No derived
+current state is persisted.
+
+The narrow HTTP vertical slice is equivalent to:
+
+- `POST /api/opportunities/{opportunity_id}/research-packs`
+
+Its request explicitly supplies `idea_gate_decision_id` and the existing ResearchPack creation inputs. It
+rejects missing, invalid, Reject and cross-Opportunity decisions; creates only the ResearchPack; and returns
+enough provenance to prove the link. It is explicitly Opportunity/ResearchPack scoped, not a generic
+authorization, progression or workflow endpoint.
+
+The existing Discover/Idea Gate context provides a minimal founder/operator **Initiate Research** action after
+a qualifying Proceed or Steer decision. It identifies the Opportunity, collects only the minimum existing
+ResearchPack inputs, deliberately creates the pack, then displays its ID/version and Idea Gate provenance;
+Steer direction is visible by reference where applicable. This is not a research workspace, source/Claim
+editor, queue, agent control, readiness control or workflow board.
+
+Creating Proceed or Steer remains authorization only. It creates no ResearchPack until the separate deliberate
+initiation action occurs, and that action does not perform research, gather Sources, generate Claims, invoke a
+provider, enqueue work, create readiness evidence, mutate `Opportunity.status`, create workflow state or
+trigger automation.
+
+#### Migration 13 and acceptance requirements
+
+Migration 13 is limited to the nullable ResearchPack `idea_gate_decision_id`, its foreign key to
+IdeaGateDecision with `ON DELETE RESTRICT` or repository-consistent historical protection, and an index for
+decision-to-ResearchPack lineage reads. It must not change ResearchPack ownership, existing version
+uniqueness, Claims, Sources, ClaimEvidence, Opportunities, Idea Gate semantics, or workflow/readiness schema.
+
+v0.16 is accepted only when all of the following are demonstrated:
+
+1. A Proceed decision can authorize deliberate ResearchPack creation.
+2. A Steer decision can authorize deliberate ResearchPack creation.
+3. A Reject decision cannot authorize ResearchPack creation.
+4. Cross-Opportunity decision/ResearchPack combinations are rejected.
+5. The new ResearchPack persists the exact qualifying IdeaGateDecision ID.
+6. The full `ResearchPack → IdeaGateDecision → IdeaGateReviewSnapshot` lineage is readable.
+7. Steer direction remains retrievable by reference and is not copied into ResearchPack state.
+8. ResearchPack remains owned by Opportunity.
+9. Multiple ResearchPack versions may reference the same qualifying decision.
+10. A later ResearchPack version may reference a later qualifying decision.
+11. Existing `(opportunity_id, version)` uniqueness remains authoritative.
+12. Historical ResearchPacks with null Idea Gate provenance remain valid and readable.
+13. Existing low-level/demo/seed ResearchPack creation remains compatible where required.
+14. Creating Proceed or Steer alone still creates no ResearchPack.
+15. Deliberate creation performs no provider/job/queue/readiness/workflow/automation side effect.
+16. `Opportunity.status` remains unchanged.
+17. No generic authorization/progression/workflow entity is introduced.
+18. Repository/API can read exact provenance and Steer direction by reference.
+19. Minimal UI can deliberately initiate research from a qualifying decision and show the created
+    ResearchPack/provenance.
+20. Existing v0.1–v0.15 behavior remains compatible.
+21. Migration, repository, API, UI and quality tests pass.
+
+Explicit exclusions are automated research; source retrieval; Claim/evidence generation or fact checking;
+research readiness/QA; queues, workers, jobs, providers or research agents; generic progression/authorization
+state; EditorialAngle, ContentPiece or Script automation; Editorial Gate; production, rendering, publishing,
+analytics/Learning; financial controls, spend authorization and cost/revenue implementation; and Phase 4
+Research Engine or Phase 9 orchestration behavior.
+
+Once this definition is reviewed, committed and pushed, v0.16 is authorized only for bounded implementation
+within this specification. Material ambiguity about ResearchPack ownership, decision qualification,
+same-Opportunity validation, Steer semantics, historical compatibility, schema scope, API meaning or
+later-phase boundaries must return to founder + ChatGPT rather than be inferred.
+
 #### Sparse human gates, rich machine readiness
 
 Atlas uses **sparse human gates and rich machine readiness checks**. Human approval is concentrated at
@@ -1108,11 +1221,11 @@ Human decisions apply to the exact immutable review representation judged, not a
 forever. A material later Opportunity change and re-presentation may create a new immutable snapshot and a
 new Idea Gate decision; both histories remain independently understandable and additive.
 
-#### Idea Gate → Research initiation provenance direction
+#### Idea Gate → Research initiation provenance
 
-The approved next **design direction only** is explicit qualifying Idea Gate provenance for deliberate
-ResearchPack initiation. A ResearchPack remains owned by its Opportunity; any future Phase 2 lifecycle-created
-ResearchPack additionally preserves lineage equivalent to:
+v0.16 — Authorized Research Initiation is the defined and authorized, but unimplemented, next Phase 2
+milestone for explicit qualifying Idea Gate provenance and deliberate ResearchPack initiation. A ResearchPack
+remains owned by its Opportunity; lifecycle-created packs additionally preserve lineage equivalent to:
 
 > Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
 
@@ -1123,16 +1236,16 @@ consume it by reference, not copy it into mutable ResearchPack state.
 
 Creating a Proceed or Steer decision remains authorization/provenance, not an orchestration command: it does
 not automatically create a ResearchPack, start research, enqueue work, invoke a provider, mutate
-`Opportunity.status`, create workflow/readiness state or trigger automation. A later deliberate
-research-initiation action may validate the qualifying decision, same-Opportunity lineage and retrievable
-Steer direction, but its exact schema/API/UI remains undefined.
+`Opportunity.status`, create workflow/readiness state or trigger automation. A separate deliberate
+research-initiation action validates the qualifying decision, same-Opportunity lineage and retrievable Steer
+direction as specified by v0.16.
 
 A single qualifying Proceed or Steer may support multiple ResearchPack versions. No consumed/one-use/current
 authorization state is approved. When an Opportunity changes materially, Atlas must obtain a new Idea Gate
 snapshot and decision before treating later research as authorized for the changed proposition. Historical
-ResearchPacks remain valid without fabricated Idea Gate provenance; future linkage must be additive and needs
-no destructive backfill. This direction does not authorize generic progression/authorization entities,
-`Opportunity.stage`, Phase 4 automated research, Phase 9 orchestration or any implementation milestone.
+ResearchPacks remain valid without fabricated Idea Gate provenance; future linkage is additive and needs no
+destructive backfill. v0.16 does not authorize generic progression/authorization entities, `Opportunity.stage`,
+Phase 4 automated research or Phase 9 orchestration.
 
 #### Lifecycle and readiness direction
 
@@ -1198,10 +1311,10 @@ operating costs later require per-item authorization remains a financial-control
 spend authorization must be attributable to the exact editorial/production lineage it governs, but no
 authorization, proposal, reservation, ledger or enforcement entity is approved here.
 
-The current narrowest approved Phase 2 implementation direction is **v0.15 — Persistent Idea Gate**:
-immutable Idea Gate review snapshots and immutable Idea Gate decisions for Opportunities, supporting Proceed /
-Reject / Steer with optional founder direction and complete historical provenance. It is accepted as the latest
-implementation milestone; migrations now extend through 12, while v0.14 remains the historical prior checkpoint.
+v0.15 — Persistent Idea Gate remains the latest accepted implementation milestone. **v0.16 — Authorized
+Research Initiation** is the defined and authorized next Phase 2 milestone, but is not implemented or
+accepted. It adds only deliberate qualifying Idea Gate provenance to new lifecycle-created ResearchPack
+versions; migrations remain through 12 until its bounded implementation introduces migration 13.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1364,11 +1477,12 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED; v0.16 DEFINED/AUTHORIZED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
-  first milestone is v0.15 — Persistent Idea Gate, accepted;
+  first milestone is v0.15 — Persistent Idea Gate, accepted; its next defined/authorized milestone is
+  v0.16 — Authorized Research Initiation, not yet implemented or accepted;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

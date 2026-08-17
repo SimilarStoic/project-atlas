@@ -6,13 +6,14 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED; v0.16 DEFINED/AUTHORIZED)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
-design/implementation stewardship; v0.15 is the latest accepted implementation milestone, while the remaining
-Phase 2 scope is not implemented. Atlas v0.1 through v0.7 are complete and pushed.
+design/implementation stewardship; v0.15 is the latest accepted implementation milestone, and v0.16 is the
+defined and authorized next milestone but is not implemented or accepted. Remaining Phase 2 scope is not
+implemented. Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -736,10 +737,9 @@ proven workflows only; it must not automate uncertainty merely because automatio
 Phase 2 is **ACTIVE**: it is the current roadmap phase under founder + ChatGPT design/implementation
 stewardship. Activation does not authorize all Phase 2 scope or later-phase engines. **v0.15 — Persistent
 Idea Gate** is the latest accepted implementation milestone; v0.14 remains its historical accepted predecessor.
-Later phases retain
-their defined roles for technical architecture, research,
-content intelligence, production, distribution, analytics/learning, automation and scale. No v0.15 or successor
-milestone beyond the defined v0.15 boundary is selected.
+**v0.16 — Authorized Research Initiation** is the defined and authorized next milestone, but is not implemented
+or accepted. Later phases retain their defined roles for technical architecture, research, content intelligence,
+production, distribution, analytics/learning, automation and scale; no later milestone or phase is activated.
 
 # Approved Phase 2 Operating-Model Specification
 
@@ -778,12 +778,14 @@ side effects. A material re-presentation creates a new snapshot/decision history
 **v0.15 — Persistent Idea Gate**: the accepted first Phase 2 implementation milestone, using additive
 migration 12.
 
-The approved next Phase 2 **design direction only** is explicit qualifying Idea Gate provenance for deliberate
-ResearchPack initiation. Proceed/Steer may qualify, Reject never does, and any future pack remains
-Opportunity-owned while preserving same-Opportunity decision/snapshot lineage. Founder Steer direction remains
-canonical on IdeaGateDecision and must be consumed by reference rather than copied. This introduces no
-automatic ResearchPack/research/job/queue/provider/readiness/workflow/automation effect, no consumed/current
-authorization state, no historical backfill, no schema/API/UI implementation and no successor milestone.
+**v0.16 — Authorized Research Initiation** is now the defined and authorized next Phase 2 implementation
+milestone, but is not implemented or accepted. It specifies deliberate creation of Opportunity-owned
+ResearchPack versions under an immutable, nullable direct IdeaGateDecision provenance reference: Proceed and
+Steer qualify, Reject never does, and snapshot/pack Opportunity lineage must match exactly. Historical packs
+remain valid without fabricated provenance; Steer direction remains canonical on IdeaGateDecision and is
+consumed by reference. The separate initiation action has no automatic research/job/queue/provider/readiness/
+workflow/automation effect, no consumed/current authorization state and no `Opportunity.status` mutation.
+Migration 13, repository/API/UI implementation and tests remain future v0.16 work; migrations remain 1–12.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -803,7 +805,8 @@ Reference-grounded generation and explicit first-reference bootstrap are complet
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 is now active. v0.15 — Persistent Idea Gate is the latest accepted implementation milestone; v0.14
-remains the historical accepted predecessor. No successor milestone exists.
+remains the historical accepted predecessor. v0.16 — Authorized Research Initiation is defined/authorized but
+not implemented or accepted.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

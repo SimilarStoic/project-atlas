@@ -38,10 +38,9 @@ continuity.
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
 unchanged. **v0.15 — Persistent Idea Gate** is the
 latest accepted implementation milestone; v0.14 remains its historical accepted predecessor. **Phase 2 —
-Content Operating Model is the current ACTIVE roadmap phase, with only accepted v0.15 implementation**, under
-founder + ChatGPT
-design/implementation stewardship. This authorizes only v0.15's bounded specification, not all Phase 2 scope
-or later-phase engines; no successor milestone is selected.
+Content Operating Model is the current ACTIVE roadmap phase, with accepted v0.15 implementation and
+defined/authorized but unimplemented v0.16**, under founder + ChatGPT design/implementation stewardship.
+This authorizes only those bounded specifications, not all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -157,25 +156,40 @@ historical snapshots, readable frozen Subject context, each outcome, required St
 review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
 migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
 
-Any future scope beyond v0.15 requires a new explicit founder + ChatGPT decision. Material ambiguity about
-semantics, migration scope, history, API meaning, founder decision meaning or deferred scope must return to
-founder + ChatGPT rather than be inferred.
+Any scope beyond the accepted v0.15 and now-defined v0.16 boundaries requires a new explicit founder + ChatGPT
+decision. Material ambiguity about semantics, migration scope, history, API meaning, founder decision meaning
+or deferred scope must return to founder + ChatGPT rather than be inferred.
 
-### Approved post-v0.15 Idea Gate → Research provenance direction
+### v0.16 — Authorized Research Initiation
 
-The narrowest approved next **design direction only** is explicit qualifying Idea Gate provenance for
-deliberate ResearchPack initiation. ResearchPacks remain Opportunity-owned; future lifecycle-created packs
-must additionally preserve qualifying Proceed/Steer decision lineage through its immutable review snapshot to
-the same Opportunity. Reject never authorizes research. Founder Steer direction remains authoritative only on
-IdeaGateDecision and is consumed by reference, never copied into mutable ResearchPack state.
+v0.16 is the defined and authorized next Phase 2 implementation milestone, but is not implemented or
+accepted; v0.15 remains the latest accepted milestone and migrations remain 1–12 until implementation.
+Its purpose is deliberate creation of Opportunity-owned ResearchPack versions under explicit qualifying Idea
+Gate provenance, preserving Proceed/Steer founder authority and reference-only Steer direction without
+research automation or workflow state. ResearchPacks retain Opportunity ownership and gain only an immutable,
+nullable direct IdeaGateDecision provenance reference for the explicit lifecycle path. Historical/demo packs
+remain valid, readable and unmodified with null provenance; no generic authorization/progression/workflow
+model or fabricated backfill is authorized.
+
+Only Proceed and Steer qualify; Reject must fail. The decision and its immutable review snapshot must exist,
+and the snapshot must belong to the same Opportunity as the created pack. Founder Steer direction remains
+authoritative only on IdeaGateDecision and is consumed by reference, never copied into ResearchPack state.
 
 An Idea Gate decision remains authorization/provenance, not automatic orchestration: it does not create a
 ResearchPack, start research, enqueue work, invoke a provider, mutate `Opportunity.status`, create readiness
 or workflow state, or trigger automation. One qualifying decision may support multiple ResearchPack versions;
 there is no consumed/current authorization state. Material Opportunity change requires a new snapshot/decision
-before later research is treated as authorized. Historical ResearchPacks receive no fabricated provenance or
-destructive backfill. The exact schema/API/UI and implementation milestone remain undefined; Phase 4 research
-automation and Phase 9 orchestration remain deferred.
+before later research is treated as authorized. The v0.16 vertical slice is a dedicated qualifying repository
+operation, a narrow Opportunity/ResearchPack-scoped POST endpoint, and a minimal Discover **Initiate Research**
+interaction that collects existing pack inputs and displays the created pack/provenance. It excludes source or
+Claim generation, research readiness/QA, queues/workers/providers, Editorial Gate, production, publication,
+analytics/Learning, financial controls, Phase 4 research automation and Phase 9 orchestration.
+
+Migration 13 is limited to the nullable direct provenance foreign key and its historical-protection/indexing
+needs; it does not alter ResearchPack ownership/version uniqueness or other existing domain records. The full
+acceptance requirements, implementation boundary and ambiguity-return rule are canonical in
+[ROADMAP.md](../ROADMAP.md) under **v0.16 — Authorized Research Initiation**. Once this definition is
+reviewed, committed and pushed, Codex is authorized to implement only that bounded specification.
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is
