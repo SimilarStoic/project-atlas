@@ -74,8 +74,11 @@ historical accepted predecessor. It persists one immutable, additive assessment 
 server-built, deterministically ordered, schema-versioned frozen ResearchPack evidence state. The controlled
 API supplies only outcome, findings, policy/check version and producer provenance; it exposes create/list/get
 history but has no UI or evaluator. Ready, NeedsMoreResearch and Blocked are the only outcomes. No mutable
-current/latest readiness, backfill, ResearchPack status, EditorialAngle linkage/progression, automation or
-successor milestone is authorized; migration 14 is canonical and migrations extend through 14.
+current/latest readiness, backfill, ResearchPack status or automation is authorized; migration 14 is canonical
+and migrations extend through 14. The approved next Phase 2 design direction, not implementation or a successor
+milestone, is explicit lifecycle creation of an EditorialAngle under an exact Ready assessment using direct
+initiation provenance, same ResearchPack/Opportunity validation and legacy-null compatibility. It creates no
+progression record, UI, evaluator, angle generation or workflow state.
 
 ## Technology baseline
 

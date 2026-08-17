@@ -794,9 +794,10 @@ NeedsMoreResearch / Blocked outcome, findings/reasons, assessment schema and pol
 and producer/implementation provenance. ResearchPack ID/version alone is insufficient because Claims,
 Sources and ClaimEvidence may change later. Multiple assessments remain additive with no persisted
 current/latest/superseded pointer; later evidence requires a new assessment. Migration 14 and the controlled
-API are canonical; no UI, evaluator/producer, research automation or EditorialAngle progression rule is implemented. A Ready assessment
-does not automatically create editorial records; how readiness may later authorize EditorialAngle progression
-remains a separate design decision.
+API are canonical; no UI, evaluator/producer, research automation or EditorialAngle progression implementation
+exists. A Ready assessment does not automatically create editorial records. The approved design direction is a
+future explicit lifecycle path that creates an Angle under an exact supplied Ready assessment through direct,
+immutable initiation provenance; it is not implemented and does not select a successor milestone.
 
 **v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone. v0.16 is its
 historical accepted predecessor and migrations are canonical through 14. v0.17 is limited to one immutable
@@ -804,8 +805,10 @@ ResearchReadinessAssessment table with a server-built,
 deterministically ordered, schema-versioned frozen ResearchPack/Claim/Source/ClaimEvidence payload; exact
 Ready / NeedsMoreResearch / Blocked outcomes; structured findings; policy/check, schema and producer
 provenance; additive history; and controlled create/list/get API reads. It has no UI, evaluator, mutable
-current/latest state, backfill, EditorialAngle linkage/progression, automation or later-phase behavior. No
-successor after v0.17 is selected.
+current/latest state, backfill, automation or later-phase behavior. Readiness → EditorialAngle initiation
+provenance is approved design direction only: explicit Ready ID, same ResearchPack/Opportunity validation,
+legacy-null compatibility, no consumption/current state and no separate progression record. No successor after
+v0.17 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,

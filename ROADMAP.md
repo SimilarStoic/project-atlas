@@ -1285,10 +1285,68 @@ workers, provider orchestration, founder approval/override, generic workflow, cu
 EditorialAngle progression, Title/Hook, Editorial Gate, production/rendering, publishing, analytics/Learning,
 financial controls/spend authorization and Phase 9 orchestration.
 
-The bounded v0.17 implementation is accepted. Material
-ambiguity about frozen evidence content, producer provenance, outcome semantics, immutability, API meaning,
-substantive readiness rules, EditorialAngle progression or later-phase boundaries must return to founder +
-ChatGPT rather than be inferred.
+The bounded v0.17 implementation is accepted. Material ambiguity about frozen evidence content, producer
+provenance, outcome semantics, immutability, API meaning, substantive readiness rules or later-phase boundaries
+must return to founder + ChatGPT rather than be inferred.
+
+#### Approved next Phase 2 design direction: readiness → EditorialAngle initiation provenance
+
+**Status: APPROVED DESIGN DIRECTION ONLY.** This does not define a successor milestone, create migration 15,
+or authorize implementation. The narrow next Phase 2 design direction is deliberate lifecycle creation of an
+EditorialAngle under an explicitly supplied immutable `ResearchReadinessAssessment` whose exact outcome is
+`Ready`.
+
+The intended relationship is a direct, immutable EditorialAngle → ResearchReadinessAssessment creation-
+provenance reference, conceptually `research_readiness_assessment_id`. When implemented, it is a direct FK,
+nullable for historical/legacy/demo Angles and required only through a new explicit Phase 2 lifecycle-creation
+path. It is not metadata-only primary provenance, a separate EditorialProgressionAuthorization record, a
+generic progression/workflow entity, readiness consumption, current/latest state or founder approval.
+
+Its exact meaning is: **this EditorialAngle was initiated under this exact Ready
+ResearchReadinessAssessment.** It does not mean a mutable EditorialAngle remains perpetually validated by that
+assessment. Current editorial fields and Claim roles remain mutable; enduring editorial validity, immutable
+Angle versions and revalidation require separate founder + ChatGPT design.
+
+Existing/historical/demo Angles remain valid with null readiness provenance and receive no backfill. Existing
+low-level `create_editorial_angle` behavior may remain available for legacy, seed, test and backward-compatible
+uses. Only the dedicated lifecycle path receives the readiness requirement, following the accepted v0.16
+compatibility pattern.
+
+The lifecycle path must receive the exact assessment ID explicitly; it must not derive latest Ready, choose any
+Ready automatically, search live history for a hidden selection, or persist a qualifying/current readiness
+pointer. It validates that the assessment exists, has exact outcome `Ready`, belongs to the requested
+ResearchPack, and that ResearchPack belongs to the requested Opportunity. `NeedsMoreResearch`, `Blocked`,
+missing/invalid assessment, cross-ResearchPack and cross-Opportunity input fail. The intended lineage is:
+
+> Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
+> → ResearchReadinessAssessment (Ready) → EditorialAngle
+
+One Ready assessment may initiate multiple Angles; a later Ready may initiate a later Angle. Assessments are
+never consumed, selected, invalidated or mutated. Later `Blocked` or `NeedsMoreResearch` assessments do not
+rewrite, invalidate, delete, stale-mark or otherwise mutate earlier Angle provenance. No invalidation or
+replacement workflow is approved.
+
+For this boundary, the only Claim-level condition is exact ResearchPack equality between Angle and assessment.
+It does not require future Angle-linked Claims to be in the frozen readiness payload, text to match frozen Claim
+content, Claim roles to be frozen, or Script-to-Claim validation.
+
+The intended future repository operation is conceptually
+`create_editorial_angle_under_research_readiness(...)`: explicit Opportunity ID, ResearchPack ID, Ready
+assessment ID and existing Angle fields; exact provenance validation; creation of one normal Angle; persistence
+of the direct reference. It must not generate/select angles, call a provider, create ContentPiece/Script, mutate
+readiness or `Opportunity.status`, enqueue work, create workflow state or start Phase 5 automation.
+
+The preferred future API is Opportunity-scoped:
+`POST /api/opportunities/{opportunity_id}/editorial-angles`, with explicit `research_pack_id`,
+`research_readiness_assessment_id` and existing Angle fields. Generic progression, authorization, workflow or
+readiness-transition routes are not approved. No UI is required for the first slice: this is not a founder gate,
+no Phase 5 generator exists, and persistence/API proves provenance without creating a premature manual workflow.
+
+If that approved direction is later implemented, the expected narrow migration pressure is only nullable
+`research_readiness_assessment_id` on `editorial_angles`, a repository-consistent restrictive FK and an index for
+assessment → Angle lineage. It excludes Angle-versioning overhaul, current readiness fields, progression tables,
+ContentPiece, Script, Title/Hook, Editorial Gate, Phase 5 automation, Phase 9 orchestration and financial work.
+Missing implementation detail returns to founder + ChatGPT.
 
 #### Sparse human gates, rich machine readiness
 
@@ -1429,10 +1487,10 @@ assessment; earlier Ready, NeedsMoreResearch and Blocked history remains truthfu
 current/latest/superseded pointer, `ResearchPack.readiness_status`, `ResearchPack.ready`, generic workflow
 stage or assessment-selection state is approved; a later read may derive a latest view without persisting it.
 Research readiness records evidence only: they must not automatically create an EditorialAngle, ContentPiece or
-Script, mutate editorial records, enqueue work or trigger Phase 5 automation. How a Ready assessment might
-authorize EditorialAngle progression, including any direct reference, consumption or separate progression
-record, remains deliberately undefined for a separate design boundary. Structured Research Packs precede
-scripting; the final Script-to-Claim architecture remains deferred.
+Script, mutate editorial records, enqueue work or trigger Phase 5 automation. The separately approved design
+direction is explicit Ready-assessment → EditorialAngle initiation provenance under the narrow conditions above;
+it does not authorize implementation, consumption, automatic progression or a separate progression record.
+Structured Research Packs precede scripting; the final Script-to-Claim architecture remains deferred.
 
 Before Editorial Gate, future editorial QA should establish sufficient intended-content research, support for
 material factual claims, appropriate uncertainty/freshness treatment, research-supported angle, non-
@@ -1486,11 +1544,10 @@ operating costs later require per-item authorization remains a financial-control
 spend authorization must be attributable to the exact editorial/production lineage it governs, but no
 authorization, proposal, reservation, ledger or enforcement entity is approved here.
 
-v0.15 — Persistent Idea Gate remains the historical accepted implementation predecessor. **v0.16 — Authorized
-Research Initiation** is the latest accepted implementation milestone. It adds only deliberate qualifying Idea
-Gate provenance to new lifecycle-created ResearchPack versions through migration 13. **v0.17 — Persistent
-Research Readiness** is the latest accepted implementation milestone; v0.16 remains its historical accepted
-predecessor, migrations are canonical through 14, and no successor after v0.17 is selected.
+v0.15 — Persistent Idea Gate and v0.16 — Authorized Research Initiation are historical accepted implementation
+predecessors. **v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone;
+migrations are canonical through 14, the above readiness → EditorialAngle initiation-provenance direction is
+design only, and no successor after v0.17 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
