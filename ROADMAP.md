@@ -934,14 +934,15 @@ Implement:
 
 ### Approved Phase 2 operating-model specification
 
-Phase 2 is the current **ACTIVE, NOT YET IMPLEMENTED** roadmap phase under founder + ChatGPT
-design/implementation stewardship. Activation does not complete Phase 2, authorize all of its scope at once,
+Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
+Its first bounded implementation, v0.15, is accepted; all remaining Phase 2 scope is unimplemented.
+Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond the separately defined v0.15 boundary.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.14 remains
-the latest accepted implementation checkpoint until v0.15 is implemented, reviewed and accepted. This is the
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.15 is the latest accepted implementation milestone;
+v0.14 remains its historical accepted predecessor. This is the
 first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -969,7 +970,7 @@ Purpose:
   active-approval/revocation state. Exactly one decision may exist per snapshot; a new judgement requires a
   new snapshot. Any latest view is derived from history.
 
-The expected next additive migration after migrations 1–11 contains only snapshot persistence, decision
+Migration 12 contains only snapshot persistence, decision
 persistence, Opportunity and snapshot-decision foreign-key lineage, one-decision-per-snapshot uniqueness,
 outcome constraint and historical-read indexes. It must not change Opportunity or `Opportunity.status`, add
 approval flags, generic workflow/Approval/Decision tables, Subject redesign, ResearchPack/readiness/Editorial
@@ -1173,8 +1174,8 @@ authorization, proposal, reservation, ledger or enforcement entity is approved h
 
 The current narrowest approved Phase 2 implementation direction is **v0.15 — Persistent Idea Gate**:
 immutable Idea Gate review snapshots and immutable Idea Gate decisions for Opportunities, supporting Proceed /
-Reject / Steer with optional founder direction and complete historical provenance. It is defined and authorized
-for bounded implementation, but is not implemented or accepted; migrations remain 1–11 until that work begins.
+Reject / Steer with optional founder direction and complete historical provenance. It is accepted as the latest
+implementation milestone; migrations now extend through 12, while v0.14 remains the historical prior checkpoint.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1337,11 +1338,11 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE, NOT YET IMPLEMENTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
-  first milestone is v0.15 — Persistent Idea Gate, defined and authorized but not implemented or accepted;
+  first milestone is v0.15 — Persistent Idea Gate, accepted;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

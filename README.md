@@ -38,8 +38,9 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now the **active, not yet implemented** roadmap phase. Its approved operating-model direction keeps
-sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
+Phase 2 is now the **active** roadmap phase. Its v0.15 Persistent Idea Gate implementation is accepted;
+the remaining Phase 2 scope is not implemented. Its approved
+operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
 rather than normal work, interrupt automation. This is not a generic mutable workflow model or an approved
@@ -56,9 +57,9 @@ The first approved implementation direction is immutable Idea Gate review snapsh
 decisions for mutable Opportunities: Proceed, Reject or Steer with optional founder direction and preserved
 history. A decision applies to the exact snapshot reviewed, has no automatic research/workflow side effect, and
 does not reuse `Opportunity.status` or approval flags. This direction is now defined as
-**v0.15 — Persistent Idea Gate**, the authorized but unimplemented first Phase 2 implementation milestone.
-It will add only immutable snapshot/decision provenance, a narrow domain-qualified API and minimal Discover
-interaction through an additive migration; v0.14 remains the latest accepted implementation checkpoint.
+**v0.15 — Persistent Idea Gate**, the latest accepted Phase 2 implementation milestone. It adds only
+immutable snapshot/decision provenance, a narrow domain-qualified API and minimal Discover interaction
+through additive migration 12; v0.14 remains the historical accepted predecessor.
 The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
 
 ## Technology baseline
@@ -378,6 +379,6 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.14 remains the accepted implementation checkpoint. v0.15 — Persistent Idea Gate is defined and authorized
-for bounded implementation but has not begun or been accepted; no successor milestone is selected. Later Atlas
+v0.15 — Persistent Idea Gate is the latest accepted implementation checkpoint; v0.14 remains its historical
+accepted predecessor. No successor milestone is selected. Later Atlas
 systems remain out of scope.

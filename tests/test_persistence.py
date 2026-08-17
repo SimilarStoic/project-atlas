@@ -7,6 +7,8 @@ from hashlib import sha256
 from io import BytesIO
 from urllib.error import HTTPError, URLError
 
+import pytest
+
 from project_atlas.generation import (
     AssetStorageFailure,
     GeneratedArtifact,
@@ -124,7 +126,22 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        decision_table_sql = repository.connection.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
+        ).fetchone()["sql"]
+        assert "UNIQUE" in decision_table_sql
+        assert "Proceed', 'Reject', 'Steer" in decision_table_sql
+        assert {
+            row["name"]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='index' "
+                "AND name LIKE 'idx_idea_gate_%'"
+            )
+        } == {
+            "idx_idea_gate_review_snapshots_opportunity_created",
+            "idx_idea_gate_decisions_snapshot_created",
+        }
         assert len(repository.discover_payload()) == 6
         assert repository.get_subject("subject-isa").name == "ISA"
         assert len(repository.list_research_packs("uk-isa-rules")) == 1
@@ -226,7 +243,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -647,7 +664,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -662,6 +679,131 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         repository.close()
 
 
+def test_idea_gate_snapshots_and_decisions_preserve_additive_history(tmp_path) -> None:
+    """Idea Gate freezes the displayed Opportunity and records one decision per cycle."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity = repository.get_opportunity("uk-isa-rules")
+        initial_research_count = repository.connection.execute(
+            "SELECT COUNT(*) FROM research_packs"
+        ).fetchone()[0]
+
+        first_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-isa-v1", opportunity.id
+        )
+        assert first_snapshot.payload_schema_version == 1
+        assert first_snapshot.review_payload["opportunity"]["title"] == opportunity.title
+        assert first_snapshot.review_payload["subjects"] == [
+            {
+                "id": "subject-isa",
+                "slug": "isa",
+                "name": "ISA",
+                "relationship_role": "primary",
+            }
+        ]
+
+        rejected_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-isa-reject", opportunity.id
+        )
+        assert rejected_snapshot.review_payload == first_snapshot.review_payload
+        rejected_decision = repository.record_idea_gate_decision(
+            "idea-gate-decision-isa-reject",
+            rejected_snapshot.id,
+            "Reject",
+            founder_comment="The audience benefit is not strong enough yet.",
+        )
+        assert rejected_decision.founder_comment == "The audience benefit is not strong enough yet."
+
+        first_decision = repository.record_idea_gate_decision(
+            "idea-gate-decision-isa-v1",
+            first_snapshot.id,
+            "Steer",
+            founder_comment="Make the opening more practical.",
+            founder_direction="Focus on the deadline decision for first-time ISA savers.",
+        )
+        assert first_decision.outcome == "Steer"
+        assert first_decision.founder_direction == (
+            "Focus on the deadline decision for first-time ISA savers."
+        )
+        with pytest.raises(ValueError, match="only one decision"):
+            repository.record_idea_gate_decision(
+                "idea-gate-decision-isa-duplicate",
+                first_snapshot.id,
+                "Proceed",
+            )
+        validation_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-isa-invalid", opportunity.id
+        )
+        with pytest.raises(ValueError, match="requires non-empty"):
+            repository.record_idea_gate_decision(
+                "idea-gate-decision-isa-invalid-steer",
+                validation_snapshot.id,
+                "Steer",
+            )
+
+        repository.create_subject(
+            "subject-isa-deadline", "isa-deadline", "ISA deadline", "A date-sensitive ISA topic."
+        )
+        repository.associate_subject(opportunity.id, "subject-isa-deadline", "supporting")
+        repository.update_opportunity(
+            replace(
+                opportunity,
+                title="Updated mutable ISA opportunity",
+                summary="Updated mutable summary.",
+            )
+        )
+        assert (
+            repository.get_idea_gate_review_snapshot(first_snapshot.id).review_payload[
+                "opportunity"
+            ]["title"]
+            == opportunity.title
+        )
+        assert repository.get_idea_gate_review_snapshot(first_snapshot.id).review_payload[
+            "subjects"
+        ] == [
+            {
+                "id": "subject-isa",
+                "slug": "isa",
+                "name": "ISA",
+                "relationship_role": "primary",
+            }
+        ]
+
+        second_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-isa-v2", opportunity.id
+        )
+        repository.record_idea_gate_decision(
+            "idea-gate-decision-isa-v2", second_snapshot.id, "Proceed"
+        )
+        history = repository.idea_gate_history_payload(opportunity.id)
+        assert {item["snapshot"]["id"] for item in history["history"]} == {
+            first_snapshot.id,
+            rejected_snapshot.id,
+            "idea-gate-review-snapshot-isa-invalid",
+            second_snapshot.id,
+        }
+        assert [item["snapshot"]["created_at"] for item in history["history"]] == sorted(
+            item["snapshot"]["created_at"] for item in history["history"]
+        )
+        assert {
+            item["snapshot"]["id"]: item["decision"] and item["decision"]["outcome"]
+            for item in history["history"]
+        } == {
+            first_snapshot.id: "Steer",
+            rejected_snapshot.id: "Reject",
+            "idea-gate-review-snapshot-isa-invalid": None,
+            second_snapshot.id: "Proceed",
+        }
+        assert repository.get_opportunity(opportunity.id).status == opportunity.status
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM research_packs").fetchone()[0]
+            == initial_research_count
+        )
+    finally:
+        repository.close()
+
+
 def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     """A broken later statement rolls back the entire migration transaction."""
 
@@ -669,7 +811,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                12,
+                13,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -691,7 +833,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 12"
+                "SELECT version FROM schema_migrations WHERE version = 13"
             ).fetchone()
             is None
         )
@@ -2739,7 +2881,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

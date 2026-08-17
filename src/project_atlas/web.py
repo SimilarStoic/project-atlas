@@ -42,6 +42,42 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 {"kind": "demo", "opportunities": self.server.repository.discover_payload()}
             )
             return
+        idea_gate_history_prefix = "/api/opportunities/"
+        idea_gate_history_suffix = "/idea-gate-history"
+        if parsed.path.startswith(idea_gate_history_prefix) and parsed.path.endswith(
+            idea_gate_history_suffix
+        ):
+            opportunity_id = unquote(
+                parsed.path[len(idea_gate_history_prefix) : -len(idea_gate_history_suffix)]
+            ).strip("/")
+            if not opportunity_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(self.server.repository.idea_gate_history_payload(opportunity_id))
+            except KeyError:
+                self._send_json({"error": "Opportunity not found."}, HTTPStatus.NOT_FOUND)
+            return
+        idea_gate_snapshot_prefix = "/api/idea-gate-review-snapshots/"
+        if parsed.path.startswith(idea_gate_snapshot_prefix):
+            snapshot_id = unquote(parsed.path[len(idea_gate_snapshot_prefix) :]).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "idea_gate_review_snapshot",
+                        "snapshot": self.server.repository.idea_gate_review_snapshot_payload(
+                            snapshot_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "Idea Gate review snapshot not found."}, HTTPStatus.NOT_FOUND
+                )
+            return
         if parsed.path == "/api/demo/content":
             content = content_payload().copy()
             content.pop("scene_plan", None)
@@ -158,6 +194,70 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        opportunity_prefix = "/api/opportunities/"
+        snapshot_suffix = "/idea-gate-review-snapshots"
+        if path.startswith(opportunity_prefix) and path.endswith(snapshot_suffix):
+            opportunity_id = unquote(path[len(opportunity_prefix) : -len(snapshot_suffix)]).strip(
+                "/"
+            )
+            if not opportunity_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                snapshot = self.server.repository.create_idea_gate_review_snapshot(
+                    f"idea-gate-review-snapshot-{uuid.uuid4().hex}", opportunity_id
+                )
+            except KeyError:
+                self._send_json({"error": "Opportunity not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "idea_gate_review_snapshot",
+                    "snapshot": self.server.repository.idea_gate_review_snapshot_payload(
+                        snapshot.id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        idea_gate_snapshot_prefix = "/api/idea-gate-review-snapshots/"
+        decision_suffix = "/decisions"
+        if path.startswith(idea_gate_snapshot_prefix) and path.endswith(decision_suffix):
+            snapshot_id = unquote(
+                path[len(idea_gate_snapshot_prefix) : -len(decision_suffix)]
+            ).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("Idea Gate decision payload must be an object.")
+                decision = self.server.repository.record_idea_gate_decision(
+                    f"idea-gate-decision-{uuid.uuid4().hex}",
+                    snapshot_id,
+                    payload.get("outcome"),
+                    payload.get("founder_actor", "founder"),
+                    payload.get("founder_comment"),
+                    payload.get("founder_direction"),
+                )
+            except (json.JSONDecodeError, ValueError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "Idea Gate review snapshot not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "idea_gate_decision",
+                    "decision": self.server.repository.idea_gate_decision_payload(decision.id),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         reference_prefix = "/api/character-profiles/"
         reference_suffix = "/reference-sets"
         if path.startswith(reference_prefix) and path.endswith(reference_suffix):

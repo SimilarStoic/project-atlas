@@ -6,12 +6,13 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE, NOT YET IMPLEMENTED)**
+**Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
-design/implementation stewardship; it remains not yet implemented. Atlas v0.1 through v0.7 are complete and pushed.
+design/implementation stewardship; v0.15 is the latest accepted implementation milestone, while the remaining
+Phase 2 scope is not implemented. Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -732,18 +733,19 @@ foundation, not a complete operating system. The approved direction extends it t
 performance → Analytics → Revenue/Economics → Learning → future content decisions. Automation must apply to
 proven workflows only; it must not automate uncertainty merely because automation is technically possible.
 
-Phase 2 is **ACTIVE, NOT YET IMPLEMENTED**: it is the current roadmap phase under founder + ChatGPT
-design/implementation stewardship. Activation does not authorize all Phase 2 scope or later-phase engines.
-**v0.15 — Persistent Idea Gate** is the defined and authorized first Phase 2 implementation milestone, but is
-not implemented or accepted; v0.14 remains the latest accepted implementation checkpoint. Later phases retain
+Phase 2 is **ACTIVE**: it is the current roadmap phase under founder + ChatGPT design/implementation
+stewardship. Activation does not authorize all Phase 2 scope or later-phase engines. **v0.15 — Persistent
+Idea Gate** is the latest accepted implementation milestone; v0.14 remains its historical accepted predecessor.
+Later phases retain
 their defined roles for technical architecture, research,
 content intelligence, production, distribution, analytics/learning, automation and scale. No v0.15 or successor
 milestone beyond the defined v0.15 boundary is selected.
 
 # Approved Phase 2 Operating-Model Specification
 
-Phase 2 now has approved specification direction and is active, but remains unimplemented. Atlas uses sparse
-human gates and rich machine readiness: human judgement is distinct from readiness evidence, neither may
+Phase 2 now has approved specification direction and is active. Its narrow v0.15 implementation is accepted;
+remaining scope is unimplemented. Atlas uses sparse human gates and rich machine readiness:
+human judgement is distinct from readiness evidence, neither may
 silently substitute for the other, and intermediate work should progress automatically only when explicit
 quality, evidence and provenance requirements pass.
 
@@ -773,8 +775,8 @@ an immutable review snapshot of exactly the presented Opportunity context and an
 specific to that snapshot. Proceed / Reject / Steer and optional founder direction are durable history, not
 `Opportunity.status`, approval booleans, generic Decision/Approval state or automatic research/orchestration
 side effects. A material re-presentation creates a new snapshot/decision history. This is now defined as
-**v0.15 — Persistent Idea Gate**: a bounded, authorized but unimplemented/unaccepted slice expected to use
-the next additive migration after migrations 1–11, with no migration created yet.
+**v0.15 — Persistent Idea Gate**: the accepted first Phase 2 implementation milestone, using additive
+migration 12.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -793,14 +795,14 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 is now active. v0.15 — Persistent Idea Gate is the defined and authorized next implementation
-milestone, but no implementation has begun and v0.14 remains latest accepted. No successor milestone exists.
+Phase 2 is now active. v0.15 — Persistent Idea Gate is the latest accepted implementation milestone; v0.14
+remains the historical accepted predecessor. No successor milestone exists.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 The first approved implementation direction remains immutable Idea Gate review snapshots plus immutable Idea
-Gate decisions. The v0.15 specification fixes its narrow persistence, API and minimal Discover interaction
-boundary without creating any source/schema change. Editorial Gate spend authorization is a future
+Gate decisions. The accepted v0.15 implementation adds its narrow persistence, API and minimal Discover
+interaction through migration 12, without changing deferred scope. Editorial Gate spend authorization is a future
 production/financial-control direction and is not part of that first slice.
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,

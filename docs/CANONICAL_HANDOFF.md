@@ -35,10 +35,11 @@ DEFERRED VISUAL REFINEMENT**: residual AI-clean/overly professional finish is no
 alter the approved hamster identity, colours, sling-bag treatment, proportions or CharacterReferenceSet
 continuity.
 
-The accepted implementation checkpoint remains **v0.14**. SimilarStoic Core v3 remains the current accepted
-visual baseline, and CharacterReferenceSet v1 remains unchanged. **v0.15 — Persistent Idea Gate** is the
-defined and authorized next implementation milestone, but is not implemented or accepted. **Phase 2 — Content
-Operating Model is the current ACTIVE, NOT YET IMPLEMENTED roadmap phase** under founder + ChatGPT
+SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
+unchanged. **v0.15 — Persistent Idea Gate** is the
+latest accepted implementation milestone; v0.14 remains its historical accepted predecessor. **Phase 2 —
+Content Operating Model is the current ACTIVE roadmap phase, with only accepted v0.15 implementation**, under
+founder + ChatGPT
 design/implementation stewardship. This authorizes only v0.15's bounded specification, not all Phase 2 scope
 or later-phase engines; no successor milestone is selected.
 
@@ -78,7 +79,8 @@ target; and Phase 10 scales a proven system. No later phase is activated.
 
 ## Approved Phase 2 operating-model specification
 
-Phase 2 is **ACTIVE, NOT YET IMPLEMENTED**. Atlas uses **sparse human gates and rich
+Phase 2 is **ACTIVE**. Its bounded v0.15 implementation is accepted; all remaining Phase 2 scope remains
+unimplemented. Atlas uses **sparse human gates and rich
 machine readiness checks**: human approval concentrates at meaningful judgement boundaries, while intermediate
 stages progress automatically only when explicit quality, evidence and provenance requirements pass. Human
 judgement and machine readiness are distinct; neither may silently substitute for the other.
@@ -135,7 +137,7 @@ independently understandable.
 
 ### v0.15 — Persistent Idea Gate
 
-v0.15 is the defined and authorized, but unimplemented/unaccepted, first Phase 2 milestone. It persists only
+v0.15 is the accepted first Phase 2 implementation milestone. It persists only
 **IdeaGateReviewSnapshot** and **IdeaGateDecision**: explicit stable identity/provenance plus a schema-versioned
 frozen payload of actually displayed Opportunity review context, and an immutable snapshot-specific founder
 decision. Opportunity remains mutable. Visible Subject identity/slug/name/role freezes in the payload; no full
@@ -143,7 +145,7 @@ metadata dump, Opportunity versioning or normalized snapshot-Subject tables are 
 Steer are the only outcomes; Steer requires non-empty preserved direction; one decision per snapshot is
 enforced; and a later judgment uses a new snapshot.
 
-The next additive migration after migrations 1–11 is limited to those records, foreign keys, uniqueness,
+Migration 12 is limited to those records, foreign keys, uniqueness,
 outcome constraint and historical-read indexes. v0.15 provides create/get/list/history repository behavior,
 separate snapshot then decision writes, domain-qualified API routes, and a minimal Discover/Command Centre
 interaction that displays frozen material, persists the three outcomes and shows history. It has no public
@@ -155,9 +157,9 @@ historical snapshots, readable frozen Subject context, each outcome, required St
 review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
 migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
 
-Once this definition is reviewed, committed and pushed, Codex is authorized to implement only this exact
-bounded milestone. Material ambiguity about semantics, migration scope, history, API meaning, founder decision
-meaning or deferred scope must return to founder + ChatGPT rather than be inferred.
+Any future scope beyond v0.15 requires a new explicit founder + ChatGPT decision. Material ambiguity about
+semantics, migration scope, history, API meaning, founder decision meaning or deferred scope must return to
+founder + ChatGPT rather than be inferred.
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is

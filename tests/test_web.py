@@ -330,6 +330,138 @@ def test_demo_endpoints_keep_discover_and_chat_compatible(tmp_path: Path) -> Non
         server.server_close()
 
 
+def test_discover_ui_exposes_minimal_persistent_idea_gate_controls() -> None:
+    """Discover offers only snapshot review and immutable founder outcomes."""
+
+    static_root = Path(__file__).parents[1] / "src/project_atlas/static"
+    index = (static_root / "index.html").read_text(encoding="utf-8")
+    script = (static_root / "app.js").read_text(encoding="utf-8")
+    assert "idea-gate-review" in index
+    assert "idea-gate-history" in index
+    assert "open-idea-gate" in script
+    assert 'data-outcome="Proceed"' in script
+    assert 'data-outcome="Reject"' in script
+    assert 'data-outcome="Steer"' in script
+    assert "Steer requires founder direction." in script
+    assert "/idea-gate-review-snapshots" in script
+    assert "/idea-gate-history" in script
+
+
+def test_idea_gate_endpoints_freeze_reviews_and_persist_one_decision(tmp_path: Path) -> None:
+    """The narrow Idea Gate API stores additive snapshots without downstream effects."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request | str) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    try:
+        opportunity_id = "uk-isa-rules"
+        original = server.repository.get_opportunity(opportunity_id)
+        research_count = server.repository.connection.execute(
+            "SELECT COUNT(*) FROM research_packs"
+        ).fetchone()[0]
+        snapshot_response, status = request_json(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/idea-gate-review-snapshots",
+                method="POST",
+            )
+        )
+        assert status == 201
+        snapshot = snapshot_response["snapshot"]
+        assert snapshot_response["kind"] == "idea_gate_review_snapshot"
+        assert snapshot["payload_schema_version"] == 1
+        assert snapshot["review_payload"]["opportunity"]["title"] == original.title
+        assert snapshot["review_payload"]["subjects"][0]["id"] == "subject-isa"
+
+        fetched, status = request_json(
+            f"{base_url}/api/idea-gate-review-snapshots/{snapshot['id']}"
+        )
+        assert status == 200
+        assert fetched["snapshot"] == snapshot
+
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        invalid_steer = Request(
+            f"{base_url}/api/idea-gate-review-snapshots/{snapshot['id']}/decisions",
+            data=json.dumps({"outcome": "Steer", "founder_direction": "   "}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urlopen(invalid_steer)
+        except HTTPError as error:
+            assert error.code == 400
+            assert "requires non-empty" in error.read().decode()
+        else:
+            raise AssertionError("Idea Gate accepted an empty Steer direction.")
+        thread.join(timeout=2)
+
+        decision_response, status = request_json(
+            Request(
+                f"{base_url}/api/idea-gate-review-snapshots/{snapshot['id']}/decisions",
+                data=json.dumps(
+                    {
+                        "outcome": "Steer",
+                        "founder_direction": "Lead with the practical deadline choice.",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        assert decision_response["decision"]["outcome"] == "Steer"
+        assert decision_response["decision"]["founder_direction"] == (
+            "Lead with the practical deadline choice."
+        )
+
+        server.repository.update_opportunity(
+            replace(original, title="A later mutable Opportunity presentation")
+        )
+        history, status = request_json(
+            f"{base_url}/api/opportunities/{opportunity_id}/idea-gate-history"
+        )
+        assert status == 200
+        assert history["history"][0]["snapshot"]["review_payload"]["opportunity"]["title"] == (
+            original.title
+        )
+        assert history["history"][0]["decision"]["id"] == decision_response["decision"]["id"]
+        assert server.repository.get_opportunity(opportunity_id).status == original.status
+        assert (
+            server.repository.connection.execute("SELECT COUNT(*) FROM research_packs").fetchone()[
+                0
+            ]
+            == research_count
+        )
+
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        duplicate = Request(
+            f"{base_url}/api/idea-gate-review-snapshots/{snapshot['id']}/decisions",
+            data=json.dumps({"outcome": "Proceed"}).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            urlopen(duplicate)
+        except HTTPError as error:
+            assert error.code == 400
+            assert "only one decision" in error.read().decode()
+        else:
+            raise AssertionError("Idea Gate accepted a second decision for one snapshot.")
+        thread.join(timeout=2)
+    finally:
+        server.server_close()
+
+
 def test_generation_endpoint_uses_persisted_prompt_and_exposes_execution(tmp_path: Path) -> None:
     """POST generation ignores caller prompt text and returns durable provenance."""
 

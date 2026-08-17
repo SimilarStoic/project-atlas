@@ -52,6 +52,30 @@ class Opportunity:
 
 
 @dataclass(frozen=True)
+class IdeaGateReviewSnapshot:
+    """An immutable human-visible Opportunity representation prepared for Idea Gate review."""
+
+    id: str
+    opportunity_id: str
+    payload_schema_version: int
+    review_payload: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class IdeaGateDecision:
+    """An immutable founder decision about one exact Idea Gate review snapshot."""
+
+    id: str
+    review_snapshot_id: str
+    outcome: str
+    founder_actor: str
+    founder_comment: str | None
+    founder_direction: str | None
+    created_at: str
+
+
+@dataclass(frozen=True)
 class ResearchPack:
     """A versioned research snapshot owned by one Opportunity."""
 
@@ -283,6 +307,7 @@ class CharacterReferenceSetMember:
 Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
+IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
 
 
 @dataclass(frozen=True)
@@ -709,6 +734,42 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
         ),
     ),
+    (
+        12,
+        (
+            """
+        CREATE TABLE idea_gate_review_snapshots (
+          id TEXT PRIMARY KEY,
+          opportunity_id TEXT NOT NULL,
+          payload_schema_version INTEGER NOT NULL CHECK (payload_schema_version >= 1),
+          review_payload_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (opportunity_id) REFERENCES opportunities(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE idea_gate_decisions (
+          id TEXT PRIMARY KEY,
+          review_snapshot_id TEXT NOT NULL UNIQUE,
+          outcome TEXT NOT NULL CHECK (outcome IN ('Proceed', 'Reject', 'Steer')),
+          founder_actor TEXT NOT NULL,
+          founder_comment TEXT NULL,
+          founder_direction TEXT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (review_snapshot_id) REFERENCES idea_gate_review_snapshots(id)
+            ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE INDEX idx_idea_gate_review_snapshots_opportunity_created
+          ON idea_gate_review_snapshots (opportunity_id, created_at, id)
+        """,
+            """
+        CREATE INDEX idx_idea_gate_decisions_snapshot_created
+          ON idea_gate_decisions (review_snapshot_id, created_at, id)
+        """,
+        ),
+    ),
 )
 
 
@@ -879,9 +940,149 @@ class AtlasRepository:
                 "portfolio_relevance": item.metadata["portfolio_relevance"],
                 "visual_potential": item.metadata["visual_potential"],
                 "pillar": item.metadata.get("legacy_display_pillar", "Not yet classified"),
+                "subjects": [
+                    {
+                        "id": subject.id,
+                        "slug": subject.slug,
+                        "name": subject.name,
+                        "relationship_role": relationship_type,
+                    }
+                    for subject, relationship_type in self.opportunity_subjects(item.id)
+                ],
             }
             for item in self.list_opportunities()
         ]
+
+    def create_idea_gate_review_snapshot(
+        self, snapshot_id: str, opportunity_id: str
+    ) -> IdeaGateReviewSnapshot:
+        """Freeze exactly the current Discover review material for one mutable Opportunity."""
+
+        if not isinstance(snapshot_id, str) or not snapshot_id.strip():
+            raise ValueError("Idea Gate review snapshot ID must be non-empty text.")
+        opportunity = self.get_opportunity(opportunity_id)
+        review_payload = self._idea_gate_review_payload(opportunity)
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO idea_gate_review_snapshots "
+                "(id, opportunity_id, payload_schema_version, review_payload_json, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    snapshot_id.strip(),
+                    opportunity.id,
+                    1,
+                    json.dumps(review_payload, sort_keys=True),
+                    now(),
+                ),
+            )
+        return self.get_idea_gate_review_snapshot(snapshot_id.strip())
+
+    def get_idea_gate_review_snapshot(self, snapshot_id: str) -> IdeaGateReviewSnapshot:
+        row = self.connection.execute(
+            "SELECT * FROM idea_gate_review_snapshots WHERE id = ?", (snapshot_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(snapshot_id)
+        return self._idea_gate_review_snapshot(row)
+
+    def list_idea_gate_review_snapshots(self, opportunity_id: str) -> list[IdeaGateReviewSnapshot]:
+        """Return immutable review cycles in chronological creation order."""
+
+        self.get_opportunity(opportunity_id)
+        rows = self.connection.execute(
+            "SELECT * FROM idea_gate_review_snapshots WHERE opportunity_id = ? "
+            "ORDER BY created_at, id",
+            (opportunity_id,),
+        )
+        return [self._idea_gate_review_snapshot(row) for row in rows]
+
+    def record_idea_gate_decision(
+        self,
+        decision_id: str,
+        review_snapshot_id: str,
+        outcome: str,
+        founder_actor: str = "founder",
+        founder_comment: str | None = None,
+        founder_direction: str | None = None,
+    ) -> IdeaGateDecision:
+        """Append one founder decision to one immutable Idea Gate review snapshot."""
+
+        if not isinstance(decision_id, str) or not decision_id.strip():
+            raise ValueError("Idea Gate decision ID must be non-empty text.")
+        self.get_idea_gate_review_snapshot(review_snapshot_id)
+        if self.get_idea_gate_decision_for_snapshot(review_snapshot_id) is not None:
+            raise ValueError("An Idea Gate review snapshot may have only one decision.")
+        self._validate_idea_gate_decision(
+            outcome, founder_actor, founder_comment, founder_direction
+        )
+        try:
+            with self.connection:
+                self.connection.execute(
+                    "INSERT INTO idea_gate_decisions "
+                    "(id, review_snapshot_id, outcome, founder_actor, founder_comment, "
+                    "founder_direction, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        decision_id.strip(),
+                        review_snapshot_id,
+                        outcome,
+                        founder_actor.strip(),
+                        self._normalized_optional_text(founder_comment),
+                        self._normalized_optional_text(founder_direction),
+                        now(),
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            raise ValueError("An Idea Gate review snapshot may have only one decision.") from error
+        return self.get_idea_gate_decision(decision_id.strip())
+
+    def get_idea_gate_decision(self, decision_id: str) -> IdeaGateDecision:
+        row = self.connection.execute(
+            "SELECT * FROM idea_gate_decisions WHERE id = ?", (decision_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(decision_id)
+        return self._idea_gate_decision(row)
+
+    def get_idea_gate_decision_for_snapshot(
+        self, review_snapshot_id: str
+    ) -> IdeaGateDecision | None:
+        row = self.connection.execute(
+            "SELECT * FROM idea_gate_decisions WHERE review_snapshot_id = ?", (review_snapshot_id,)
+        ).fetchone()
+        return self._idea_gate_decision(row) if row else None
+
+    def idea_gate_review_snapshot_payload(self, snapshot_id: str) -> dict[str, Any]:
+        snapshot = self.get_idea_gate_review_snapshot(snapshot_id)
+        return {
+            "id": snapshot.id,
+            "opportunity_id": snapshot.opportunity_id,
+            "payload_schema_version": snapshot.payload_schema_version,
+            "review_payload": snapshot.review_payload,
+            "created_at": snapshot.created_at,
+        }
+
+    def idea_gate_decision_payload(self, decision_id: str) -> dict[str, Any]:
+        decision = self.get_idea_gate_decision(decision_id)
+        return self._idea_gate_decision_payload(decision)
+
+    def idea_gate_history_payload(self, opportunity_id: str) -> dict[str, Any]:
+        """Return complete additive review history without persisting a current decision."""
+
+        snapshots = self.list_idea_gate_review_snapshots(opportunity_id)
+        return {
+            "opportunity_id": opportunity_id,
+            "history": [
+                {
+                    "snapshot": self.idea_gate_review_snapshot_payload(snapshot.id),
+                    "decision": (
+                        self._idea_gate_decision_payload(decision)
+                        if (decision := self.get_idea_gate_decision_for_snapshot(snapshot.id))
+                        else None
+                    ),
+                }
+                for snapshot in snapshots
+            ],
+        }
 
     def create_research_pack(
         self,
@@ -3553,6 +3754,103 @@ class AtlasRepository:
             row["created_at"],
             row["updated_at"],
         )
+
+    def _idea_gate_review_payload(self, opportunity: Opportunity) -> dict[str, Any]:
+        """Build the exact, intentionally limited Discover material shown at Idea Gate."""
+
+        subjects = [
+            {
+                "id": subject.id,
+                "slug": subject.slug,
+                "name": subject.name,
+                "relationship_role": relationship_type,
+            }
+            for subject, relationship_type in self.opportunity_subjects(opportunity.id)
+        ]
+        metadata = opportunity.metadata
+        return {
+            "opportunity": {
+                "id": opportunity.id,
+                "title": opportunity.title,
+                "summary": opportunity.summary,
+                "why_now": opportunity.why_now,
+                "score": opportunity.score,
+            },
+            "subjects": subjects,
+            "review_context": {
+                "atlas_recommendation": metadata["suggested_angle"],
+                "evidence_quality": metadata["evidence_quality"],
+                "material_risk": metadata["risk"],
+                "portfolio_relevance": metadata["portfolio_relevance"],
+                "visual_potential": metadata["visual_potential"],
+                "display_pillar": metadata.get("legacy_display_pillar", "Not yet classified"),
+            },
+        }
+
+    @staticmethod
+    def _normalized_optional_text(value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            raise ValueError("Idea Gate optional text must be text or null.")
+        normalized = value.strip()
+        return normalized or None
+
+    @staticmethod
+    def _validate_idea_gate_decision(
+        outcome: str,
+        founder_actor: str,
+        founder_comment: str | None,
+        founder_direction: str | None,
+    ) -> None:
+        if outcome not in IDEA_GATE_DECISION_OUTCOMES:
+            raise ValueError("Idea Gate outcome must be Proceed, Reject or Steer.")
+        if not isinstance(founder_actor, str) or not founder_actor.strip():
+            raise ValueError("Idea Gate founder actor must be non-empty text.")
+        normalized_comment = AtlasRepository._normalized_optional_text(founder_comment)
+        normalized_direction = AtlasRepository._normalized_optional_text(founder_direction)
+        if outcome == "Steer" and normalized_direction is None:
+            raise ValueError("Steer requires non-empty founder direction.")
+        if outcome != "Steer" and normalized_direction is not None:
+            raise ValueError("Founder direction is only valid for Steer.")
+        if normalized_comment is not None and len(normalized_comment) > 10_000:
+            raise ValueError("Idea Gate founder comment is too long.")
+        if normalized_direction is not None and len(normalized_direction) > 10_000:
+            raise ValueError("Idea Gate founder direction is too long.")
+
+    @staticmethod
+    def _idea_gate_review_snapshot(row: sqlite3.Row) -> IdeaGateReviewSnapshot:
+        return IdeaGateReviewSnapshot(
+            row["id"],
+            row["opportunity_id"],
+            row["payload_schema_version"],
+            json.loads(row["review_payload_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _idea_gate_decision(row: sqlite3.Row) -> IdeaGateDecision:
+        return IdeaGateDecision(
+            row["id"],
+            row["review_snapshot_id"],
+            row["outcome"],
+            row["founder_actor"],
+            row["founder_comment"],
+            row["founder_direction"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _idea_gate_decision_payload(decision: IdeaGateDecision) -> dict[str, Any]:
+        return {
+            "id": decision.id,
+            "review_snapshot_id": decision.review_snapshot_id,
+            "outcome": decision.outcome,
+            "founder_actor": decision.founder_actor,
+            "founder_comment": decision.founder_comment,
+            "founder_direction": decision.founder_direction,
+            "created_at": decision.created_at,
+        }
 
     @staticmethod
     def _research_pack(row: sqlite3.Row) -> ResearchPack:

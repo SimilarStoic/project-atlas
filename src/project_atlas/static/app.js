@@ -32,6 +32,11 @@ function say(text) {
 }
 
 function opportunity(item) {
+  var subjects = item.subjects
+    .map(function (subject) {
+      return subject.name + " · " + subject.relationship_role;
+    })
+    .join(" · ");
   return (
     '<article class="opportunity"><span class="score">' +
     item.score +
@@ -53,8 +58,179 @@ function opportunity(item) {
     item.viewer_benefit +
     "</p><p><b>Portfolio:</b> " +
     item.portfolio_relevance +
-    '</p></div><div class="actions"><button>Approve</button><button>Modify</button><button>Reject</button><button>Ask Atlas</button></div></article>'
+    '</p><p><b>Subjects:</b> ' +
+    subjects +
+    '</p></div><div class="actions"><button class="open-idea-gate" data-opportunity-id="' +
+    item.id +
+    '">Review at Idea Gate</button></div></article>'
   );
+}
+
+function snapshotReview(snapshot) {
+  var review = snapshot.review_payload;
+  var opportunity = review.opportunity;
+  var subjects = review.subjects
+    .map(function (subject) {
+      return (
+        "<li>" +
+        subject.name +
+        " · " +
+        subject.slug +
+        " · " +
+        subject.relationship_role +
+        "<br><small>" +
+        subject.id +
+        "</small></li>"
+      );
+    })
+    .join("");
+  var context = review.review_context;
+  return (
+    '<article class="pack idea-gate-review" data-opportunity-id="' +
+    snapshot.opportunity_id +
+    '"><label>IDEA GATE · FROZEN REVIEW SNAPSHOT</label><h3>' +
+    opportunity.title +
+    "</h3><p>" +
+    opportunity.summary +
+    "</p><p><b>Why now</b><br>" +
+    opportunity.why_now +
+    "</p><p><b>Score</b><br>" +
+    opportunity.score +
+    "</p><p><b>Atlas recommendation</b><br>" +
+    context.atlas_recommendation +
+    "</p><p><b>Risk</b><br>" +
+    context.material_risk +
+    "</p><p><b>Evidence quality</b><br>" +
+    context.evidence_quality +
+    "</p><p><b>Portfolio relevance</b><br>" +
+    context.portfolio_relevance +
+    "</p><p><b>Visual potential</b><br>" +
+    context.visual_potential +
+    "</p><p><b>Display pillar</b><br>" +
+    context.display_pillar +
+    '</p><p><b>Subjects</b></p><ul class="qa">' +
+    subjects +
+    '</ul><p><small>Snapshot ' +
+    snapshot.id +
+    " · " +
+    snapshot.created_at +
+    '</small></p><label>FOUNDER COMMENT / STEER DIRECTION</label><textarea id="idea-gate-comment" placeholder="Optional for Proceed or Reject; required for Steer."></textarea><div class="actions"><button class="record-idea-gate-decision" data-snapshot-id="' +
+    snapshot.id +
+    '" data-outcome="Proceed">Proceed</button><button class="record-idea-gate-decision subtle" data-snapshot-id="' +
+    snapshot.id +
+    '" data-outcome="Reject">Reject</button><button class="record-idea-gate-decision" data-snapshot-id="' +
+    snapshot.id +
+    '" data-outcome="Steer">Steer</button></div></article>'
+  );
+}
+
+function historyView(payload) {
+  if (!payload.history.length) {
+    return "";
+  }
+  return (
+    '<div class="pack idea-gate-history"><label>IDEA GATE HISTORY · PERSISTED</label><ul class="qa">' +
+    payload.history
+      .map(function (item) {
+        var decision = item.decision;
+        var decisionText = decision
+          ? decision.outcome +
+            (decision.founder_direction ? " · " + decision.founder_direction : "") +
+            (decision.founder_comment ? " · " + decision.founder_comment : "")
+          : "Awaiting founder decision";
+        return (
+          "<li><b>" +
+          item.snapshot.review_payload.opportunity.title +
+          "</b><br><small>" +
+          item.snapshot.id +
+          " · " +
+          decisionText +
+          "</small></li>"
+        );
+      })
+      .join("") +
+    "</ul></div>"
+  );
+}
+
+function requestJson(url, options) {
+  return fetch(url, options).then(function (response) {
+    return response.json().then(function (payload) {
+      if (!response.ok) {
+        throw new Error(payload.error || "Atlas could not complete the Idea Gate action.");
+      }
+      return payload;
+    });
+  });
+}
+
+function refreshIdeaGateHistory(opportunityId) {
+  return requestJson(
+    "/api/opportunities/" + encodeURIComponent(opportunityId) + "/idea-gate-history"
+  ).then(function (payload) {
+    q("#idea-gate-history").innerHTML = historyView(payload);
+  });
+}
+
+function bindIdeaGateActions() {
+  document.querySelectorAll(".open-idea-gate").forEach(function (element) {
+    element.onclick = function () {
+      element.disabled = true;
+      requestJson(
+        "/api/opportunities/" +
+          encodeURIComponent(element.dataset.opportunityId) +
+          "/idea-gate-review-snapshots",
+        { method: "POST" }
+      )
+        .then(function (payload) {
+          q("#idea-gate-review").innerHTML = snapshotReview(payload.snapshot);
+          return refreshIdeaGateHistory(payload.snapshot.opportunity_id).then(function () {
+            bindIdeaGateActions();
+            say("Frozen Idea Gate review snapshot created.");
+          });
+        })
+        .catch(function (error) {
+          say(error.message);
+          element.disabled = false;
+        });
+    };
+  });
+  document.querySelectorAll(".record-idea-gate-decision").forEach(function (element) {
+    element.onclick = function () {
+      var text = q("#idea-gate-comment").value;
+      var outcome = element.dataset.outcome;
+      if (outcome === "Steer" && !text.trim()) {
+        say("Steer requires founder direction.");
+        return;
+      }
+      element.disabled = true;
+      requestJson(
+        "/api/idea-gate-review-snapshots/" +
+          encodeURIComponent(element.dataset.snapshotId) +
+          "/decisions",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            outcome: outcome,
+            founder_comment: outcome === "Steer" ? null : text || null,
+            founder_direction: outcome === "Steer" ? text : null,
+          }),
+        }
+      )
+        .then(function (payload) {
+          var review = q("#idea-gate-review article");
+          var opportunityId = review.dataset.opportunityId;
+          q("#idea-gate-review").innerHTML = "";
+          say("Idea Gate " + payload.decision.outcome + " decision persisted.");
+          return refreshIdeaGateHistory(opportunityId);
+        })
+        .catch(function (error) {
+          say(error.message);
+          element.disabled = false;
+        });
+    };
+  });
 }
 
 function researchEvidence(research) {
@@ -556,6 +732,7 @@ Promise.all([
     }
     pack(data[1].content);
     bindActions();
+    bindIdeaGateActions();
   })
   .catch(function () {
     say("Demo data could not be loaded.");
