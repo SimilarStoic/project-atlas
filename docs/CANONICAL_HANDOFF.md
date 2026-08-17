@@ -41,6 +41,48 @@ or imply a new implementation milestone. SimilarStoic Core v3 remains the curren
 and CharacterReferenceSet v1 remains unchanged. No v0.15 or successor phase/milestone is authorized or
 active. A fresh founder + ChatGPT decision is required before any new implementation work is defined.
 
+## Accepted end-to-end target operating model
+
+Atlas is intended to become an approximately **95% automated content operating system**. The target is not to
+remove human judgement: routine execution is progressively automated while founder interaction concentrates,
+where practical, at three target operating-model gates. The **Idea Gate** covers review, approval, rejection,
+steering and reprioritisation of explained candidate opportunities. The **Editorial Gate** covers founder
+decisions on the prepared title, hook, angle, script, supporting research/evidence context, risk/uncertainty
+notes, revisions and alternatives. The **Learning Gate** covers performance, evidence-backed hypotheses,
+proposed adaptations and available economics context. These gates are not approved database or workflow-state
+entities.
+
+Automation may eventually operate between and around those gates across discovery, research, verification,
+editorial work, visual planning, generation, narration/audio, rendering, quality control, publishing,
+analytics, learning, scheduling, cost/revenue tracking, economics/control reporting and financial guardrails.
+It must increase only after quality, provenance and operating behaviour are demonstrated: **automate proven
+workflows; do not automate uncertainty merely because automation is technically possible.** Human review may
+remain mandatory for high-risk claims, material factual uncertainty, sensitive/regulated subject matter,
+exceptional spend, system-health/quality exceptions and other later-defined areas.
+
+The existing durable foundation chain is:
+
+> Opportunity → Research Pack / Claims / Sources / Evidence → Editorial Angle → ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset
+
+This is not proof that the complete operating system is implemented. The approved direction extends toward
+Publication → platform performance → analytics → revenue/economics → learning → future opportunity/content
+decisions, without approving publication, analytics or financial schemas.
+
+The phases retain their existing ordered roles: Phase 1 is complete product/business definition; Phase 2 will
+define the human-led executable content lifecycle and its still-unspecified semantics; Phase 3 provides the
+technical substrate; Phases 4–8 add research, content intelligence, production, distribution and
+analytics/learning capabilities; Phase 9 connects proven components toward the approximately 95% automated
+target; and Phase 10 scales a proven system. This does not activate Phase 2 or any later phase.
+
+## Roadmap direction and milestone governance
+
+> Canonical GitHub roadmap → approved end-to-end operating vision → phase objectives/design boundaries → implementation milestones → bounded Codex implementation tasks
+
+Roadmap phases define the approved product direction. Versioned implementation milestones are bounded delivery
+increments within that direction and must not independently redefine product direction, phase ownership,
+roadmap sequencing, domain semantics or deferred scope. Any such change requires explicit founder + ChatGPT
+approval, canonical documentation synchronization, review, acceptance, commit and push.
+
 ## Phase 1 visual acceptance decision
 
 The completed activity was **Phase 1 visual-evidence execution on accepted v0.14**. This is **not v0.15**
@@ -100,6 +142,11 @@ A new Codex conversation must perform fresh repository grounding from the latest
 this document before any architecture or milestone task. It must preserve the authority boundaries above,
 inspect only the scope ChatGPT/founder provides, and report any conflict or missing decision rather than
 inventing one.
+
+A newly started ChatGPT or Codex session must treat the canonical roadmap and approved end-to-end target
+operating model as authoritative current intent. It must not replace, reorder or reinterpret them merely
+because detailed future-phase implementation remains unspecified. Missing detail requires a founder + ChatGPT
+design decision, not invention by a fresh chat or Codex.
 
 ## Required operating method
 

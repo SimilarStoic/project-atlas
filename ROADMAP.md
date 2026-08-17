@@ -1035,6 +1035,81 @@ Potentially expand:
 - Revenue
 - Automation
 
+## Canonical end-to-end target operating model
+
+Project Atlas is intended to become an approximately **95% automated content operating system**. This target
+automates routine execution; it does not remove human judgement. Automation must increase only after relevant
+quality, provenance and operating behaviour are demonstrated: **automate proven workflows; do not automate
+uncertainty merely because automation is technically possible.** High-risk claims, material factual
+uncertainty, sensitive/regulated subject matter, exceptional spend, system-health/quality exceptions and
+other later-defined areas may require human review.
+
+The intended recurring founder interaction is concentrated, where practical, at three target operating-model
+gates. These are not approved database or workflow-state entities:
+
+- **Idea Gate** — Atlas generates, ranks and explains candidate opportunities; the founder approves, rejects,
+  steers or reprioritises them.
+- **Editorial Gate** — Atlas prepares title, hook, angle, script, supporting research/evidence context and
+  relevant risk/uncertainty notes; the founder approves, rejects, requests revision or selects alternatives.
+- **Learning Gate** — Atlas presents performance, learning, evidence-backed hypotheses and proposed changes
+  to future ideas, titles, hooks, scripts, visuals, formats, timing or distribution, with economics context
+  where available; the founder steers and accepts or rejects strategic adaptations.
+
+Between and around these gates, future proven automation may cover discovery, opportunity generation,
+research/evidence/verification support, editorial and script work, visual and scene planning, AssetSpec and
+generation orchestration, narration/audio, assembly/rendering, quality checks, publishing, analytics,
+learning, scheduling, cost/revenue tracking, economics/control reporting and financial guardrails. This
+direction does not authorize deferred phases early.
+
+Atlas already has durable foundations for:
+
+> Opportunity → Research Pack / Claims / Sources / Evidence → Editorial Angle → ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset
+
+Those foundations are not proof that the complete operating system exists. Later phases extend the direction
+toward:
+
+> Publication → platform performance → analytics → revenue/economics → learning → future opportunity/content decisions
+
+### Phase contributions to the target
+
+- **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
+  territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
+  not reopened by this target direction.
+- **Phase 2 — Content Operating Model (DEFINED, NOT YET IMPLEMENTED):** will define the human-led executable
+  lifecycle over existing records, including idea review, research readiness, editorial progression,
+  title/script approval, revisions, production readiness, quality control and approval boundaries. Exact
+  lifecycle/state/domain semantics remain a founder + ChatGPT design decision; Phase 2 is not activated here.
+- **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
+  substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
+  cost/control infrastructure—for the operating model.
+- **Phase 4 — Research Engine:** automates approved-policy discovery inputs, source gathering, structured
+  research, evidence support, verification and freshness/uncertainty handling; it is not collapsed into Phase 2.
+- **Phase 5 — Content Intelligence Engine:** automates opportunity evaluation, angles, titles/hooks, scripts,
+  revision proposals, editorial QA and learning-informed content decisions. Final Pillar taxonomy and scoring
+  remain unsettled unless separately approved.
+- **Phase 6 — Video Production Engine:** turns approved editorial material into production-ready video assets
+  through replaceable narration, visual-generation, assembly, captions, animation/motion, rendering and media
+  QA components, reusing existing visual-generation foundations.
+- **Phase 7 — Distribution Engine:** handles future platform publishing, scheduling, publication records and
+  distribution integrations; it may provide platform data relevant to revenue attribution.
+- **Phase 8 — Analytics & Learning:** closes the performance feedback loop with collection, comparison,
+  pattern/hypothesis development, learning-informed decisions, commercial/performance metrics where
+  appropriate and the founder-facing Learning Gate. Analytics remains separate from financial ledgers.
+- **Phase 9 — Automation:** connects proven components into increasingly autonomous recurring operation toward
+  the approximately 95% target while respecting approval gates, quality controls, provenance, financial limits
+  and system-health controls; it does not authorize early automation of immature workflows.
+- **Phase 10 — Scale:** expands a proven operating system through the already listed output, channels, topics,
+  brands, products, revenue and automation directions without adding commitments here.
+
+### Roadmap governance hierarchy
+
+> Canonical GitHub roadmap → approved end-to-end operating vision → phase objectives/design boundaries → implementation milestones → bounded Codex implementation tasks
+
+Roadmap phases define approved product direction. Versioned implementation milestones are bounded delivery
+increments within that direction and must not independently redefine product direction, phase ownership,
+roadmap sequencing, domain semantics or deferred scope. Such a change requires explicit founder + ChatGPT
+approval and canonical synchronization.
+
 ---
 
 # Development Principles

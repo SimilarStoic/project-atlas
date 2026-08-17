@@ -716,6 +716,25 @@ Phase 1 closure status:
 
 ---
 
+# Canonical End-to-End Target Operating Model
+
+Atlas is intended to become an approximately **95% automated content operating system**: routine execution is
+progressively automated, while founder interaction concentrates where practical at an **Idea Gate**
+(opportunity approval/steering), an **Editorial Gate** (title, hook, angle, script, evidence/risk review and
+revision decisions) and a **Learning Gate** (performance, hypotheses, proposed adaptations and available
+economics context). These are target operating-model gates, not approved workflow/database entities.
+
+The established v0.1–v0.14 chain—Opportunity → Research Pack / Claims / Sources / Evidence → Editorial Angle
+→ ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset—is durable
+foundation, not a complete operating system. The approved direction extends it toward Publication → platform
+performance → Analytics → Revenue/Economics → Learning → future content decisions. Automation must apply to
+proven workflows only; it must not automate uncertainty merely because automation is technically possible.
+
+Phase 2 remains **DEFINED, NOT YET IMPLEMENTED** and is not activated: it will require a founder + ChatGPT
+design decision on the human-led executable lifecycle and approval semantics over existing records. Later
+phases retain their defined roles for technical architecture, research, content intelligence, production,
+distribution, analytics/learning, automation and scale. No v0.15 or successor milestone is selected.
+
 # Next Step
 
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is

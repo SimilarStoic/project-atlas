@@ -24,6 +24,15 @@ ledger, integration, formula, threshold, enforcement or automation implementatio
 Future financial records must preserve provenance, provider independence and immutable historical execution
 semantics.
 
+Atlas's approved end-state is an approximately **95% automated content operating system**, not a human-free
+system. Routine execution should progressively automate around founder judgement at three target gates: Idea
+(opportunity approval/steering), Editorial (title, hook, angle, script, evidence/risk and revision decisions)
+and Learning (performance, hypotheses, adaptations and available economics context). These are operating-model
+direction only, not workflow/database entities. The durable v0.1–v0.14 chain from Opportunity through Asset
+is a foundation; later phases extend it through publication, platform performance, analytics,
+revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
+canonical roadmap and must not redefine it.
+
 ## Technology baseline
 
 - Python 3.12+
