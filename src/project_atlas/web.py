@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import sqlite3
 import uuid
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -216,6 +217,65 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                     "snapshot": self.server.repository.idea_gate_review_snapshot_payload(
                         snapshot.id
                     ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        research_pack_suffix = "/research-packs"
+        if path.startswith(opportunity_prefix) and path.endswith(research_pack_suffix):
+            opportunity_id = unquote(
+                path[len(opportunity_prefix) : -len(research_pack_suffix)]
+            ).strip("/")
+            if not opportunity_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("ResearchPack initiation payload must be an object.")
+                research_pack_id = payload.get("id")
+                decision_id = payload.get("idea_gate_decision_id")
+                version = payload.get("version")
+                summary = payload.get("summary")
+                as_of_date = payload.get("as_of_date")
+                metadata = payload.get("metadata")
+                if not isinstance(research_pack_id, str) or not research_pack_id.strip():
+                    raise ValueError("ResearchPack ID must be non-empty text.")
+                if not isinstance(decision_id, str) or not decision_id.strip():
+                    raise ValueError("Idea Gate decision ID must be non-empty text.")
+                if not isinstance(version, int) or isinstance(version, bool):
+                    raise ValueError("ResearchPack version must be an integer.")
+                if not isinstance(summary, str) or not summary.strip():
+                    raise ValueError("ResearchPack summary must be non-empty text.")
+                if as_of_date is not None and not isinstance(as_of_date, str):
+                    raise ValueError("ResearchPack as_of_date must be text or null.")
+                if metadata is not None and not isinstance(metadata, dict):
+                    raise ValueError("ResearchPack metadata must be an object or null.")
+                research_pack = (
+                    self.server.repository.create_research_pack_under_idea_gate_authorization(
+                        research_pack_id.strip(),
+                        opportunity_id,
+                        version,
+                        summary,
+                        decision_id.strip(),
+                        as_of_date,
+                        metadata,
+                    )
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "Opportunity or Idea Gate decision not found."},
+                    HTTPStatus.NOT_FOUND,
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "research_pack",
+                    "research_pack": self.server.repository.research_pack_payload(research_pack.id),
                 },
                 HTTPStatus.CREATED,
             )

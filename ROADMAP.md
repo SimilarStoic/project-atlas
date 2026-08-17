@@ -935,15 +935,15 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-Its first bounded implementation, v0.15, is accepted. v0.16 is the defined and authorized next bounded
-implementation milestone, but is not implemented or accepted; all other remaining Phase 2 scope is unimplemented.
+v0.16 is the latest accepted bounded implementation milestone; v0.15 remains its historical accepted
+predecessor. All other remaining Phase 2 scope is unimplemented.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.15 is the latest accepted implementation milestone;
-v0.14 remains its historical accepted predecessor. This is the
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.16 is the latest accepted implementation
+milestone; v0.15 remains its historical accepted predecessor. This is the
 first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1035,9 +1035,9 @@ than infer it.
 
 ### v0.16 — Authorized Research Initiation
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT YET IMPLEMENTED OR ACCEPTED.** v0.15
-remains the latest accepted implementation milestone; v0.16 is the next Phase 2 implementation milestone and
-does not complete Phase 2 or activate a later phase.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.16 is the latest accepted implementation milestone;
+v0.15 remains its historical accepted predecessor. Migrations are canonical through 13. v0.16 does not
+complete Phase 2 or activate a later phase.
 
 Purpose:
 
@@ -1104,9 +1104,9 @@ trigger automation.
 
 #### Migration 13 and acceptance requirements
 
-Migration 13 is limited to the nullable ResearchPack `idea_gate_decision_id`, its foreign key to
-IdeaGateDecision with `ON DELETE RESTRICT` or repository-consistent historical protection, and an index for
-decision-to-ResearchPack lineage reads. It must not change ResearchPack ownership, existing version
+Migration 13 now provides only the nullable ResearchPack `idea_gate_decision_id`, its foreign key to
+IdeaGateDecision with `ON DELETE RESTRICT`, and an index for decision-to-ResearchPack lineage reads. It does
+not change ResearchPack ownership, existing version
 uniqueness, Claims, Sources, ClaimEvidence, Opportunities, Idea Gate semantics, or workflow/readiness schema.
 
 v0.16 is accepted only when all of the following are demonstrated:
@@ -1140,10 +1140,9 @@ state; EditorialAngle, ContentPiece or Script automation; Editorial Gate; produc
 analytics/Learning; financial controls, spend authorization and cost/revenue implementation; and Phase 4
 Research Engine or Phase 9 orchestration behavior.
 
-Once this definition is reviewed, committed and pushed, v0.16 is authorized only for bounded implementation
-within this specification. Material ambiguity about ResearchPack ownership, decision qualification,
-same-Opportunity validation, Steer semantics, historical compatibility, schema scope, API meaning or
-later-phase boundaries must return to founder + ChatGPT rather than be inferred.
+v0.16 is accepted. Material ambiguity about ResearchPack ownership, decision qualification, same-Opportunity
+validation, Steer semantics, historical compatibility, schema scope, API meaning or later-phase boundaries must
+return to founder + ChatGPT rather than be inferred. No successor milestone is selected.
 
 #### Sparse human gates, rich machine readiness
 
@@ -1223,8 +1222,8 @@ new Idea Gate decision; both histories remain independently understandable and a
 
 #### Idea Gate → Research initiation provenance
 
-v0.16 — Authorized Research Initiation is the defined and authorized, but unimplemented, next Phase 2
-milestone for explicit qualifying Idea Gate provenance and deliberate ResearchPack initiation. A ResearchPack
+v0.16 — Authorized Research Initiation is the latest accepted milestone for explicit qualifying Idea Gate
+provenance and deliberate ResearchPack initiation. A ResearchPack
 remains owned by its Opportunity; lifecycle-created packs additionally preserve lineage equivalent to:
 
 > Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
@@ -1311,10 +1310,9 @@ operating costs later require per-item authorization remains a financial-control
 spend authorization must be attributable to the exact editorial/production lineage it governs, but no
 authorization, proposal, reservation, ledger or enforcement entity is approved here.
 
-v0.15 — Persistent Idea Gate remains the latest accepted implementation milestone. **v0.16 — Authorized
-Research Initiation** is the defined and authorized next Phase 2 milestone, but is not implemented or
-accepted. It adds only deliberate qualifying Idea Gate provenance to new lifecycle-created ResearchPack
-versions; migrations remain through 12 until its bounded implementation introduces migration 13.
+v0.15 — Persistent Idea Gate remains the historical accepted implementation predecessor. **v0.16 — Authorized
+Research Initiation** is the latest accepted implementation milestone. It adds only deliberate qualifying Idea
+Gate provenance to new lifecycle-created ResearchPack versions through migration 13.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1477,12 +1475,12 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE; v0.15 ACCEPTED; v0.16 DEFINED/AUTHORIZED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE; v0.16 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
-  first milestone is v0.15 — Persistent Idea Gate, accepted; its next defined/authorized milestone is
-  v0.16 — Authorized Research Initiation, not yet implemented or accepted;
+  v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
+  is its latest accepted milestone;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

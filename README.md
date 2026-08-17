@@ -38,8 +38,8 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now the **active** roadmap phase. Its v0.15 Persistent Idea Gate implementation is accepted;
-v0.16 Authorized Research Initiation is defined and authorized but not implemented or accepted, and the
+Phase 2 is now the **active** roadmap phase. v0.16 Authorized Research Initiation is the latest accepted
+implementation milestone; v0.15 Persistent Idea Gate remains its historical accepted predecessor, and the
 remaining Phase 2 scope is not implemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
@@ -63,8 +63,8 @@ immutable snapshot/decision provenance, a narrow domain-qualified API and minima
 through additive migration 12; v0.14 remains the historical accepted predecessor.
 The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
 
-**v0.16 — Authorized Research Initiation** is the defined and authorized next Phase 2 implementation
-milestone, but is not implemented or accepted. It specifies deliberate creation of Opportunity-owned
+**v0.16 — Authorized Research Initiation** is the latest accepted implementation milestone; v0.15 remains its
+historical accepted predecessor. It provides deliberate creation of Opportunity-owned
 ResearchPack versions under a nullable direct qualifying IdeaGateDecision reference: Proceed/Steer may qualify,
 Reject cannot, snapshot/pack Opportunity lineage must match, historical packs remain valid with null
 provenance, and Steer direction is consumed by reference. It authorizes no automatic research,
@@ -387,7 +387,6 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.15 — Persistent Idea Gate is the latest accepted implementation checkpoint; v0.14 remains its historical
-accepted predecessor. v0.16 — Authorized Research Initiation is defined/authorized but not implemented or
-accepted. Later Atlas
+v0.16 — Authorized Research Initiation is the latest accepted implementation checkpoint; v0.15 remains its
+historical accepted predecessor. Migrations are canonical through 13. Later Atlas
 systems remain out of scope.

@@ -81,6 +81,7 @@ class ResearchPack:
 
     id: str
     opportunity_id: str
+    idea_gate_decision_id: str | None
     version: int
     summary: str
     as_of_date: str | None
@@ -770,6 +771,20 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
         ),
     ),
+    (
+        13,
+        (
+            """
+        ALTER TABLE research_packs
+        ADD COLUMN idea_gate_decision_id TEXT NULL
+        REFERENCES idea_gate_decisions(id) ON DELETE RESTRICT
+        """,
+            """
+        CREATE INDEX idx_research_packs_idea_gate_decision
+          ON research_packs (idea_gate_decision_id, opportunity_id, version)
+        """,
+        ),
+    ),
 )
 
 
@@ -1092,13 +1107,16 @@ class AtlasRepository:
         summary: str,
         as_of_date: str | None = None,
         metadata: dict[str, Any] | None = None,
+        idea_gate_decision_id: str | None = None,
     ) -> ResearchPack:
-        """Create an immutable, versioned research snapshot for an Opportunity."""
+        """Create an immutable, versioned ResearchPack with optional Idea Gate provenance."""
 
         stamp = now()
         with self.connection:
             self.connection.execute(
-                "INSERT INTO research_packs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO research_packs "
+                "(id, opportunity_id, version, summary, as_of_date, metadata_json, created_at, "
+                "updated_at, idea_gate_decision_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     research_pack_id,
                     opportunity_id,
@@ -1108,9 +1126,40 @@ class AtlasRepository:
                     json.dumps(metadata or {}),
                     stamp,
                     stamp,
+                    idea_gate_decision_id,
                 ),
             )
         return self.get_research_pack(research_pack_id)
+
+    def create_research_pack_under_idea_gate_authorization(
+        self,
+        research_pack_id: str,
+        opportunity_id: str,
+        version: int,
+        summary: str,
+        idea_gate_decision_id: str,
+        as_of_date: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ResearchPack:
+        """Deliberately create one ResearchPack under explicit qualifying Idea Gate authority."""
+
+        decision = self.get_idea_gate_decision(idea_gate_decision_id)
+        snapshot = self.get_idea_gate_review_snapshot(decision.review_snapshot_id)
+        if decision.outcome not in {"Proceed", "Steer"}:
+            raise ValueError("Only Proceed or Steer may authorize ResearchPack creation.")
+        if snapshot.opportunity_id != opportunity_id:
+            raise ValueError(
+                "The Idea Gate decision snapshot must belong to the ResearchPack Opportunity."
+            )
+        return self.create_research_pack(
+            research_pack_id,
+            opportunity_id,
+            version,
+            summary,
+            as_of_date,
+            metadata,
+            idea_gate_decision_id=decision.id,
+        )
 
     def get_research_pack(self, research_pack_id: str) -> ResearchPack:
         row = self.connection.execute(
@@ -2840,6 +2889,13 @@ class AtlasRepository:
         """Load a complete ResearchPack for the read-only Content Workspace API."""
 
         pack = self.get_research_pack(research_pack_id)
+        provenance = None
+        if pack.idea_gate_decision_id is not None:
+            decision = self.get_idea_gate_decision(pack.idea_gate_decision_id)
+            provenance = {
+                "decision": self._idea_gate_decision_payload(decision),
+                "snapshot": self.idea_gate_review_snapshot_payload(decision.review_snapshot_id),
+            }
         claims = []
         for claim in self.list_claims(pack.id):
             evidence = []
@@ -2878,6 +2934,8 @@ class AtlasRepository:
             "version": pack.version,
             "summary": pack.summary,
             "as_of_date": pack.as_of_date,
+            "idea_gate_decision_id": pack.idea_gate_decision_id,
+            "idea_gate_provenance": provenance,
             "claims": claims,
             "source_count": len(
                 {item["source"]["id"] for claim in claims for item in claim["evidence"]}
@@ -3107,7 +3165,9 @@ class AtlasRepository:
         )
         with self.connection:
             self.connection.execute(
-                "INSERT OR IGNORE INTO research_packs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO research_packs "
+                "(id, opportunity_id, version, summary, as_of_date, metadata_json, created_at, "
+                "updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 research_pack,
             )
             for claim in claims:
@@ -3857,6 +3917,7 @@ class AtlasRepository:
         return ResearchPack(
             row["id"],
             row["opportunity_id"],
+            row["idea_gate_decision_id"],
             row["version"],
             row["summary"],
             row["as_of_date"],

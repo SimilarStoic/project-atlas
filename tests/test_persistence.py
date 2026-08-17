@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -243,7 +243,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -664,7 +664,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -804,6 +804,198 @@ def test_idea_gate_snapshots_and_decisions_preserve_additive_history(tmp_path) -
         repository.close()
 
 
+def test_migration_13_preserves_historical_research_packs_with_null_provenance(tmp_path) -> None:
+    """The additive provenance migration leaves pre-v0.16 ResearchPacks untouched."""
+
+    database = tmp_path / "atlas-v015.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:12]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-17T00:00:00+00:00')",
+                (version,),
+            )
+        connection.execute(
+            "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "legacy-opportunity",
+                "Legacy opportunity",
+                "Legacy summary",
+                "Legacy why now",
+                50,
+                "proposed",
+                "{}",
+                "2026-08-17T00:00:00+00:00",
+                "2026-08-17T00:00:00+00:00",
+            ),
+        )
+        connection.execute(
+            "INSERT INTO research_packs VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "research-pack-legacy-v1",
+                "legacy-opportunity",
+                1,
+                "A historical ResearchPack.",
+                None,
+                "{}",
+                "2026-08-17T00:00:00+00:00",
+                "2026-08-17T00:00:00+00:00",
+            ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        legacy = repository.get_research_pack("research-pack-legacy-v1")
+        assert legacy.idea_gate_decision_id is None
+        assert [
+            row["version"]
+            for row in repository.connection.execute("SELECT version FROM schema_migrations")
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        assert repository.connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'index' "
+            "AND name = 'idx_research_packs_idea_gate_decision'"
+        ).fetchone()
+    finally:
+        repository.close()
+
+
+def test_authorized_research_pack_creation_preserves_idea_gate_provenance(tmp_path) -> None:
+    """Only qualifying same-Opportunity decisions deliberately create provenance-linked packs."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity = repository.get_opportunity("uk-isa-rules")
+        original_status = opportunity.status
+        initial_count = repository.connection.execute(
+            "SELECT COUNT(*) FROM research_packs"
+        ).fetchone()[0]
+        assert (
+            repository.get_research_pack("research-pack-isa-deadline-v1").idea_gate_decision_id
+            is None
+        )
+
+        proceed_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-authorized-proceed", opportunity.id
+        )
+        proceed = repository.record_idea_gate_decision(
+            "idea-gate-decision-authorized-proceed", proceed_snapshot.id, "Proceed"
+        )
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM research_packs").fetchone()[0]
+            == initial_count
+        )
+        first_pack = repository.create_research_pack_under_idea_gate_authorization(
+            "research-pack-isa-authorized-v2",
+            opportunity.id,
+            2,
+            "A deliberately initiated Proceed ResearchPack.",
+            proceed.id,
+            metadata={"scope": "initial"},
+        )
+        second_pack = repository.create_research_pack_under_idea_gate_authorization(
+            "research-pack-isa-authorized-v3",
+            opportunity.id,
+            3,
+            "A later ResearchPack under the same Proceed decision.",
+            proceed.id,
+        )
+        assert first_pack.opportunity_id == opportunity.id
+        assert first_pack.idea_gate_decision_id == proceed.id
+        assert second_pack.idea_gate_decision_id == proceed.id
+        assert first_pack.metadata == {"scope": "initial"}
+        assert "founder_direction" not in first_pack.metadata
+        provenance = repository.research_pack_payload(first_pack.id)["idea_gate_provenance"]
+        assert provenance["decision"]["id"] == proceed.id
+        assert provenance["decision"]["outcome"] == "Proceed"
+        assert provenance["snapshot"]["id"] == proceed_snapshot.id
+
+        steer_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-authorized-steer", opportunity.id
+        )
+        steer = repository.record_idea_gate_decision(
+            "idea-gate-decision-authorized-steer",
+            steer_snapshot.id,
+            "Steer",
+            founder_direction="Prioritize the practical deadline choice.",
+        )
+        steer_pack = repository.create_research_pack_under_idea_gate_authorization(
+            "research-pack-isa-authorized-v4",
+            opportunity.id,
+            4,
+            "A deliberately initiated Steer ResearchPack.",
+            steer.id,
+        )
+        steer_provenance = repository.research_pack_payload(steer_pack.id)["idea_gate_provenance"]
+        assert steer_provenance["decision"]["founder_direction"] == (
+            "Prioritize the practical deadline choice."
+        )
+        assert steer_pack.metadata == {}
+
+        reject_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-authorized-reject", opportunity.id
+        )
+        reject = repository.record_idea_gate_decision(
+            "idea-gate-decision-authorized-reject", reject_snapshot.id, "Reject"
+        )
+        with pytest.raises(ValueError, match="Only Proceed or Steer"):
+            repository.create_research_pack_under_idea_gate_authorization(
+                "research-pack-isa-rejected-v5",
+                opportunity.id,
+                5,
+                "This must not be created.",
+                reject.id,
+            )
+        other_snapshot = repository.create_idea_gate_review_snapshot(
+            "idea-gate-review-snapshot-authorized-other", "credit-utilisation"
+        )
+        other_decision = repository.record_idea_gate_decision(
+            "idea-gate-decision-authorized-other", other_snapshot.id, "Proceed"
+        )
+        with pytest.raises(ValueError, match="must belong"):
+            repository.create_research_pack_under_idea_gate_authorization(
+                "research-pack-isa-mismatch-v5",
+                opportunity.id,
+                5,
+                "This must not be created.",
+                other_decision.id,
+            )
+        with pytest.raises(KeyError):
+            repository.create_research_pack_under_idea_gate_authorization(
+                "research-pack-isa-missing-decision-v5",
+                opportunity.id,
+                5,
+                "This must not be created.",
+                "missing-decision",
+            )
+        with pytest.raises(sqlite3.IntegrityError):
+            repository.create_research_pack_under_idea_gate_authorization(
+                "research-pack-isa-duplicate-v2",
+                opportunity.id,
+                2,
+                "Duplicate versions remain invalid.",
+                proceed.id,
+            )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute(
+                "DELETE FROM idea_gate_decisions WHERE id = ?", (proceed.id,)
+            )
+        assert repository.get_opportunity(opportunity.id).status == original_status
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM research_packs").fetchone()[0]
+            == initial_count + 3
+        )
+    finally:
+        repository.close()
+
+
 def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     """A broken later statement rolls back the entire migration transaction."""
 
@@ -811,7 +1003,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                13,
+                14,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -833,7 +1025,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 13"
+                "SELECT version FROM schema_migrations WHERE version = 14"
             ).fetchone()
             is None
         )
@@ -2881,7 +3073,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

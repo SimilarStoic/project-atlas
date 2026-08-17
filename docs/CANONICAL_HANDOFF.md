@@ -36,11 +36,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.15 — Persistent Idea Gate** is the
-latest accepted implementation milestone; v0.14 remains its historical accepted predecessor. **Phase 2 —
-Content Operating Model is the current ACTIVE roadmap phase, with accepted v0.15 implementation and
-defined/authorized but unimplemented v0.16**, under founder + ChatGPT design/implementation stewardship.
-This authorizes only those bounded specifications, not all Phase 2 scope or later-phase engines.
+unchanged. **v0.16 — Authorized Research Initiation** is the latest accepted implementation milestone; v0.15
+remains its historical accepted predecessor. **Phase 2 — Content Operating Model is the current ACTIVE roadmap
+phase, with accepted v0.15 and v0.16 implementations**, under founder + ChatGPT design/implementation
+stewardship. This does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -156,14 +155,14 @@ historical snapshots, readable frozen Subject context, each outcome, required St
 review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
 migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
 
-Any scope beyond the accepted v0.15 and now-defined v0.16 boundaries requires a new explicit founder + ChatGPT
+Any scope beyond the accepted v0.16 boundary requires a new explicit founder + ChatGPT
 decision. Material ambiguity about semantics, migration scope, history, API meaning, founder decision meaning
 or deferred scope must return to founder + ChatGPT rather than be inferred.
 
 ### v0.16 — Authorized Research Initiation
 
-v0.16 is the defined and authorized next Phase 2 implementation milestone, but is not implemented or
-accepted; v0.15 remains the latest accepted milestone and migrations remain 1–12 until implementation.
+v0.16 is the latest accepted implementation milestone; v0.15 remains its historical accepted predecessor.
+Migration 13 is canonical for the bounded implementation, and migrations now extend through 13.
 Its purpose is deliberate creation of Opportunity-owned ResearchPack versions under explicit qualifying Idea
 Gate provenance, preserving Proceed/Steer founder authority and reference-only Steer direction without
 research automation or workflow state. ResearchPacks retain Opportunity ownership and gain only an immutable,
@@ -186,10 +185,10 @@ Claim generation, research readiness/QA, queues/workers/providers, Editorial Gat
 analytics/Learning, financial controls, Phase 4 research automation and Phase 9 orchestration.
 
 Migration 13 is limited to the nullable direct provenance foreign key and its historical-protection/indexing
-needs; it does not alter ResearchPack ownership/version uniqueness or other existing domain records. The full
-acceptance requirements, implementation boundary and ambiguity-return rule are canonical in
-[ROADMAP.md](../ROADMAP.md) under **v0.16 — Authorized Research Initiation**. Once this definition is
-reviewed, committed and pushed, Codex is authorized to implement only that bounded specification.
+needs; it does not alter ResearchPack ownership/version uniqueness or other existing domain records. v0.16 is
+accepted; no successor milestone is selected. The full acceptance requirements, implementation boundary and
+ambiguity-return rule are canonical in
+[ROADMAP.md](../ROADMAP.md) under **v0.16 — Authorized Research Initiation**.
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is

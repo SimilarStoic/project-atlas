@@ -345,6 +345,10 @@ def test_discover_ui_exposes_minimal_persistent_idea_gate_controls() -> None:
     assert "Steer requires founder direction." in script
     assert "/idea-gate-review-snapshots" in script
     assert "/idea-gate-history" in script
+    assert "initiate-research" in script
+    assert "data-decision-id" in script
+    assert '"/research-packs"' in script
+    assert "ResearchPack initiated with Idea Gate provenance." in script
 
 
 def test_idea_gate_endpoints_freeze_reviews_and_persist_one_decision(tmp_path: Path) -> None:
@@ -458,6 +462,211 @@ def test_idea_gate_endpoints_freeze_reviews_and_persist_one_decision(tmp_path: P
         else:
             raise AssertionError("Idea Gate accepted a second decision for one snapshot.")
         thread.join(timeout=2)
+    finally:
+        server.server_close()
+
+
+def test_research_pack_initiation_endpoint_preserves_idea_gate_provenance(tmp_path: Path) -> None:
+    """The narrow API deliberately creates only qualifying provenance-linked ResearchPacks."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid research-initiation request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    def initiate(opportunity_id: str, payload: dict) -> tuple[dict, int]:
+        return request_json(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/research-packs",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+
+    try:
+        repository = server.repository
+        opportunity_id = "uk-isa-rules"
+        original_status = repository.get_opportunity(opportunity_id).status
+        initial_count = repository.connection.execute(
+            "SELECT COUNT(*) FROM research_packs"
+        ).fetchone()[0]
+
+        proceed_snapshot = repository.create_idea_gate_review_snapshot(
+            "http-initiation-proceed-snapshot", opportunity_id
+        )
+        proceed = repository.record_idea_gate_decision(
+            "http-initiation-proceed-decision", proceed_snapshot.id, "Proceed"
+        )
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM research_packs").fetchone()[0]
+            == initial_count
+        )
+        created, status = initiate(
+            opportunity_id,
+            {
+                "id": "research-pack-http-proceed-v2",
+                "version": 2,
+                "summary": "A deliberately initiated Proceed ResearchPack.",
+                "idea_gate_decision_id": proceed.id,
+            },
+        )
+        assert status == 201
+        assert created["kind"] == "research_pack"
+        research_pack = created["research_pack"]
+        assert research_pack["id"] == "research-pack-http-proceed-v2"
+        assert research_pack["opportunity_id"] == opportunity_id
+        assert research_pack["idea_gate_decision_id"] == proceed.id
+        assert research_pack["idea_gate_provenance"]["decision"]["outcome"] == "Proceed"
+        assert research_pack["idea_gate_provenance"]["snapshot"]["id"] == proceed_snapshot.id
+
+        steer_snapshot = repository.create_idea_gate_review_snapshot(
+            "http-initiation-steer-snapshot", opportunity_id
+        )
+        steer = repository.record_idea_gate_decision(
+            "http-initiation-steer-decision",
+            steer_snapshot.id,
+            "Steer",
+            founder_direction="Lead with the practical deadline choice.",
+        )
+        created, status = initiate(
+            opportunity_id,
+            {
+                "id": "research-pack-http-steer-v3",
+                "version": 3,
+                "summary": "A deliberately initiated Steer ResearchPack.",
+                "idea_gate_decision_id": steer.id,
+                "metadata": {"review": "manual"},
+            },
+        )
+        assert status == 201
+        assert (
+            created["research_pack"]["idea_gate_provenance"]["decision"]["founder_direction"]
+            == "Lead with the practical deadline choice."
+        )
+        assert repository.get_research_pack("research-pack-http-steer-v3").metadata == {
+            "review": "manual"
+        }
+
+        reject_snapshot = repository.create_idea_gate_review_snapshot(
+            "http-initiation-reject-snapshot", opportunity_id
+        )
+        reject = repository.record_idea_gate_decision(
+            "http-initiation-reject-decision", reject_snapshot.id, "Reject"
+        )
+        payload, status = request_error(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/research-packs",
+                data=json.dumps(
+                    {
+                        "id": "research-pack-http-reject-v4",
+                        "version": 4,
+                        "summary": "This must not be created.",
+                        "idea_gate_decision_id": reject.id,
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "Proceed or Steer" in payload["error"]
+
+        payload, status = request_error(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/research-packs",
+                data=json.dumps(
+                    {
+                        "id": "research-pack-http-missing-v4",
+                        "version": 4,
+                        "summary": "This must not be created.",
+                        "idea_gate_decision_id": "missing-decision",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "not found" in payload["error"]
+
+        other_snapshot = repository.create_idea_gate_review_snapshot(
+            "http-initiation-other-snapshot", "credit-utilisation"
+        )
+        other_decision = repository.record_idea_gate_decision(
+            "http-initiation-other-decision", other_snapshot.id, "Proceed"
+        )
+        payload, status = request_error(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/research-packs",
+                data=json.dumps(
+                    {
+                        "id": "research-pack-http-mismatch-v4",
+                        "version": 4,
+                        "summary": "This must not be created.",
+                        "idea_gate_decision_id": other_decision.id,
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "must belong" in payload["error"]
+
+        payload, status = request_error(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/research-packs",
+                data=json.dumps(
+                    {
+                        "id": "research-pack-http-duplicate-v2",
+                        "version": 2,
+                        "summary": "Duplicate version.",
+                        "idea_gate_decision_id": proceed.id,
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "UNIQUE constraint failed" in payload["error"]
+
+        payload, status = request_error(
+            Request(
+                f"{base_url}/api/opportunities/{opportunity_id}/research-packs",
+                data=b"[]",
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "must be an object" in payload["error"]
+        assert repository.get_opportunity(opportunity_id).status == original_status
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM research_packs").fetchone()[0]
+            == initial_count + 2
+        )
     finally:
         server.server_close()
 

@@ -124,6 +124,28 @@ function snapshotReview(snapshot) {
   );
 }
 
+function researchInitiation(snapshot, decision) {
+  if (!decision || (decision.outcome !== "Proceed" && decision.outcome !== "Steer")) {
+    return "";
+  }
+  var steerDirection = decision.founder_direction
+    ? '<p><b>Steer direction</b><br>' + decision.founder_direction + "</p>"
+    : "";
+  return (
+    '<div class="research-initiation" data-opportunity-id="' +
+    snapshot.opportunity_id +
+    '" data-decision-id="' +
+    decision.id +
+    '"><label>AUTHORIZED RESEARCH INITIATION</label><p>Deliberately create one ResearchPack under ' +
+    decision.outcome +
+    " decision " +
+    decision.id +
+    ".</p>" +
+    steerDirection +
+    '<label>RESEARCH PACK ID</label><input class="research-pack-id" placeholder="e.g. research-pack-isa-v2"><label>VERSION</label><input class="research-pack-version" type="number" min="1" value="1"><label>SUMMARY</label><textarea class="research-pack-summary" placeholder="Initial ResearchPack summary"></textarea><div class="actions"><button class="initiate-research">Initiate Research</button></div><p class="research-initiation-result"></p></div>'
+  );
+}
+
 function historyView(payload) {
   if (!payload.history.length) {
     return "";
@@ -138,6 +160,7 @@ function historyView(payload) {
             (decision.founder_direction ? " · " + decision.founder_direction : "") +
             (decision.founder_comment ? " · " + decision.founder_comment : "")
           : "Awaiting founder decision";
+        var initiation = researchInitiation(item.snapshot, decision);
         return (
           "<li><b>" +
           item.snapshot.review_payload.opportunity.title +
@@ -145,7 +168,9 @@ function historyView(payload) {
           item.snapshot.id +
           " · " +
           decisionText +
-          "</small></li>"
+          "</small>" +
+          initiation +
+          "</li>"
         );
       })
       .join("") +
@@ -223,7 +248,53 @@ function bindIdeaGateActions() {
           var opportunityId = review.dataset.opportunityId;
           q("#idea-gate-review").innerHTML = "";
           say("Idea Gate " + payload.decision.outcome + " decision persisted.");
-          return refreshIdeaGateHistory(opportunityId);
+          return refreshIdeaGateHistory(opportunityId).then(function () {
+            bindIdeaGateActions();
+          });
+        })
+        .catch(function (error) {
+          say(error.message);
+          element.disabled = false;
+      });
+    };
+  });
+  document.querySelectorAll(".initiate-research").forEach(function (element) {
+    element.onclick = function () {
+      var initiation = element.closest(".research-initiation");
+      var researchPackId = initiation.querySelector(".research-pack-id").value.trim();
+      var version = Number(initiation.querySelector(".research-pack-version").value);
+      var summary = initiation.querySelector(".research-pack-summary").value.trim();
+      if (!researchPackId || !Number.isInteger(version) || !summary) {
+        say("ResearchPack ID, integer version and summary are required.");
+        return;
+      }
+      element.disabled = true;
+      requestJson(
+        "/api/opportunities/" +
+          encodeURIComponent(initiation.dataset.opportunityId) +
+          "/research-packs",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: researchPackId,
+            version: version,
+            summary: summary,
+            idea_gate_decision_id: initiation.dataset.decisionId,
+          }),
+        }
+      )
+        .then(function (payload) {
+          var researchPack = payload.research_pack;
+          initiation.querySelector(".research-initiation-result").textContent =
+            "ResearchPack " +
+            researchPack.id +
+            " v" +
+            researchPack.version +
+            " created under decision " +
+            researchPack.idea_gate_decision_id +
+            ".";
+          say("ResearchPack initiated with Idea Gate provenance.");
         })
         .catch(function (error) {
           say(error.message);
