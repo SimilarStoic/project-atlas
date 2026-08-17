@@ -255,7 +255,8 @@ Accepted immutable evidence:
   `asset-c989501ad83e4c9da668218c3179fb9c`, version 10, SHA-256
   `ce0438980ae2f9c8015e63046805d70cc58d9789daa29671c28ac5dc1243e95b`.
 
-VisualStyleProfile v3 remains the current accepted baseline. No v0.15 or post-Phase-1 milestone is selected.
+VisualStyleProfile v3 remains the current accepted baseline. At this Phase 1 visual-acceptance checkpoint, no
+v0.15 or post-Phase-1 milestone had been selected.
 
 ## Atlas v0.11 Checkpoint
 
@@ -732,10 +733,12 @@ performance → Analytics → Revenue/Economics → Learning → future content 
 proven workflows only; it must not automate uncertainty merely because automation is technically possible.
 
 Phase 2 is **ACTIVE, NOT YET IMPLEMENTED**: it is the current roadmap phase under founder + ChatGPT
-design/implementation stewardship. Activation does not authorize all Phase 2 scope, a versioned implementation
-milestone, or later-phase engines. Later phases retain their defined roles for technical architecture, research,
+design/implementation stewardship. Activation does not authorize all Phase 2 scope or later-phase engines.
+**v0.15 — Persistent Idea Gate** is the defined and authorized first Phase 2 implementation milestone, but is
+not implemented or accepted; v0.14 remains the latest accepted implementation checkpoint. Later phases retain
+their defined roles for technical architecture, research,
 content intelligence, production, distribution, analytics/learning, automation and scale. No v0.15 or successor
-milestone is selected.
+milestone beyond the defined v0.15 boundary is selected.
 
 # Approved Phase 2 Operating-Model Specification
 
@@ -769,9 +772,9 @@ Opportunities remain mutable discovery records. The first approved Idea Gate imp
 an immutable review snapshot of exactly the presented Opportunity context and an immutable, additive decision
 specific to that snapshot. Proceed / Reject / Steer and optional founder direction are durable history, not
 `Opportunity.status`, approval booleans, generic Decision/Approval state or automatic research/orchestration
-side effects. A material re-presentation creates a new snapshot/decision history. This direction is not yet a
-named implementation milestone; a future approved slice is expected to use the next additive migration after
-migrations 1–11 without allocating schema or a migration number here.
+side effects. A material re-presentation creates a new snapshot/decision history. This is now defined as
+**v0.15 — Persistent Idea Gate**: a bounded, authorized but unimplemented/unaccepted slice expected to use
+the next additive migration after migrations 1–11, with no migration created yet.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -790,13 +793,15 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 is now active, but no implementation milestone is yet defined or authorized. No further generation,
-v0.15 or successor milestone exists. The roadmap remains governed by canonical GitHub documentation and the
-explicit change protocol in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+Phase 2 is now active. v0.15 — Persistent Idea Gate is the defined and authorized next implementation
+milestone, but no implementation has begun and v0.14 remains latest accepted. No successor milestone exists.
+The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
+[docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 The first approved implementation direction remains immutable Idea Gate review snapshots plus immutable Idea
-Gate decisions. Editorial Gate spend authorization is a future production/financial-control direction and is
-not part of that first slice.
+Gate decisions. The v0.15 specification fixes its narrow persistence, API and minimal Discover interaction
+boundary without creating any source/schema change. Editorial Gate spend authorization is a future
+production/financial-control direction and is not part of that first slice.
 
 Neutral CharacterProfile candidate generation, guaranteed cross-generation consistency, Generic AssetLibrary,
 imported/manual reference ingestion, named reference roles, similarity scoring, automated character-consistency

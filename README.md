@@ -55,8 +55,10 @@ remain deferred.
 The first approved implementation direction is immutable Idea Gate review snapshots and immutable Idea Gate
 decisions for mutable Opportunities: Proceed, Reject or Steer with optional founder direction and preserved
 history. A decision applies to the exact snapshot reviewed, has no automatic research/workflow side effect, and
-does not reuse `Opportunity.status` or approval flags. This direction is not a named implementation milestone;
-any future implementation must use additive migration/provenance conventions.
+does not reuse `Opportunity.status` or approval flags. This direction is now defined as
+**v0.15 — Persistent Idea Gate**, the authorized but unimplemented first Phase 2 implementation milestone.
+It will add only immutable snapshot/decision provenance, a narrow domain-qualified API and minimal Discover
+interaction through an additive migration; v0.14 remains the latest accepted implementation checkpoint.
 The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
 
 ## Technology baseline
@@ -301,7 +303,8 @@ review evidence then succeeded for the canonical sorting and reaction Scene Asse
 acceptance is closed with **PASS WITH DEFERRED VISUAL REFINEMENT**: the only non-blocking deficiency is a
 residual AI-clean/overly competent professional finish. Any future refinement must preserve the approved
 hamster identity, colour assignments, sling-bag language and reference-set continuity; it does not authorize
-a redesign or a further generation. No v0.15 or successor milestone is implied.
+a redesign or a further generation. At that Phase 1 acceptance point, no v0.15 or successor milestone was
+implied.
 
 Provider reference-image conditioning, profile editing, QA, workflow and production systems remain deferred.
 
@@ -375,6 +378,6 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.14 remains the accepted implementation checkpoint; no v0.15 or successor phase/milestone is active, and
-a fresh founder + ChatGPT decision is required before new implementation work. Later Atlas systems remain out
-of scope.
+v0.14 remains the accepted implementation checkpoint. v0.15 — Persistent Idea Gate is defined and authorized
+for bounded implementation but has not begun or been accepted; no successor milestone is selected. Later Atlas
+systems remain out of scope.

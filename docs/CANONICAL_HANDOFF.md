@@ -35,13 +35,12 @@ DEFERRED VISUAL REFINEMENT**: residual AI-clean/overly professional finish is no
 alter the approved hamster identity, colours, sling-bag treatment, proportions or CharacterReferenceSet
 continuity.
 
-The accepted implementation checkpoint remains **v0.14**. The canonical GitHub HEAD will advance when this
-documentation synchronization is committed and pushed; that repository-synchronization change does not create
-or imply a new implementation milestone. SimilarStoic Core v3 remains the current accepted visual baseline,
-and CharacterReferenceSet v1 remains unchanged. No v0.15 or successor phase/milestone is authorized or
-active. **Phase 2 — Content Operating Model is the current ACTIVE, NOT YET IMPLEMENTED roadmap phase** under
-founder + ChatGPT design/implementation stewardship. Activation does not authorize all Phase 2 scope, a named
-implementation milestone, or later-phase engines.
+The accepted implementation checkpoint remains **v0.14**. SimilarStoic Core v3 remains the current accepted
+visual baseline, and CharacterReferenceSet v1 remains unchanged. **v0.15 — Persistent Idea Gate** is the
+defined and authorized next implementation milestone, but is not implemented or accepted. **Phase 2 — Content
+Operating Model is the current ACTIVE, NOT YET IMPLEMENTED roadmap phase** under founder + ChatGPT
+design/implementation stewardship. This authorizes only v0.15's bounded specification, not all Phase 2 scope
+or later-phase engines; no successor milestone is selected.
 
 ## Accepted end-to-end target operating model
 
@@ -132,11 +131,33 @@ Decision entities, generic mutable workflow state, history overwrite or Opportun
 
 Human authority applies to the exact immutable review representation judged. A material later Opportunity
 change and re-presentation may create another snapshot and decision; both histories remain additive and
-independently understandable. The current narrowest approved implementation direction is immutable Idea Gate
-review snapshots plus immutable Idea Gate decisions for Opportunities, supporting Proceed / Reject / Steer,
-optional founder direction and complete provenance. It is not a named implementation milestone. When such a
-milestone is separately approved, it is expected to use the next additive migration after migrations 1–11; no
-migration number, schema or table is allocated now.
+independently understandable.
+
+### v0.15 — Persistent Idea Gate
+
+v0.15 is the defined and authorized, but unimplemented/unaccepted, first Phase 2 milestone. It persists only
+**IdeaGateReviewSnapshot** and **IdeaGateDecision**: explicit stable identity/provenance plus a schema-versioned
+frozen payload of actually displayed Opportunity review context, and an immutable snapshot-specific founder
+decision. Opportunity remains mutable. Visible Subject identity/slug/name/role freezes in the payload; no full
+metadata dump, Opportunity versioning or normalized snapshot-Subject tables are authorized. Proceed/Reject/
+Steer are the only outcomes; Steer requires non-empty preserved direction; one decision per snapshot is
+enforced; and a later judgment uses a new snapshot.
+
+The next additive migration after migrations 1–11 is limited to those records, foreign keys, uniqueness,
+outcome constraint and historical-read indexes. v0.15 provides create/get/list/history repository behavior,
+separate snapshot then decision writes, domain-qualified API routes, and a minimal Discover/Command Centre
+interaction that displays frozen material, persists the three outcomes and shows history. It has no public
+update/delete/current/latest state, generic approval/workflow system, `Opportunity.status` reinterpretation,
+ResearchPack/job/queue/readiness/automation effect, financial behavior or later-phase scope.
+
+Its full acceptance requirements and exclusions are canonical in [ROADMAP.md](../ROADMAP.md): immutable
+historical snapshots, readable frozen Subject context, each outcome, required Steer direction, additive second
+review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
+migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
+
+Once this definition is reviewed, committed and pushed, Codex is authorized to implement only this exact
+bounded milestone. Material ambiguity about semantics, migration scope, history, API meaning, founder decision
+meaning or deferred scope must return to founder + ChatGPT rather than be inferred.
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
 → ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is
@@ -340,7 +361,7 @@ historical implementation dates:
   Human Gate A Asset is the sole immutable member of CharacterReferenceSet v1, and grounded evidence across
   two scenes succeeded. VisualStyleProfile v3 remains the accepted baseline. Residual AI-clean/professional
   finish is a non-blocking future refinement only; it does not authorize a hamster redesign or further
-  generation. No v0.15 or successor milestone has been selected.
+  generation. At Phase 1 acceptance, no v0.15 or successor milestone was selected.
 
 ## Deferred scope
 

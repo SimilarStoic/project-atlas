@@ -936,7 +936,100 @@ Implement:
 
 Phase 2 is the current **ACTIVE, NOT YET IMPLEMENTED** roadmap phase under founder + ChatGPT
 design/implementation stewardship. Activation does not complete Phase 2, authorize all of its scope at once,
-create a generic state machine, allocate a versioned implementation milestone, or approve database entities.
+create a generic state machine, or approve database entities beyond the separately defined v0.15 boundary.
+
+### v0.15 — Persistent Idea Gate
+
+**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.14 remains
+the latest accepted implementation checkpoint until v0.15 is implemented, reviewed and accepted. This is the
+first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
+
+Purpose:
+
+> Implement the first real Phase 2 vertical slice by persisting immutable Idea Gate review snapshots and
+> immutable Idea Gate founder decisions for Opportunities, with a narrow API and minimal founder-facing
+> Discover interaction.
+
+#### Approved domain and persistence boundary
+
+- **IdeaGateReviewSnapshot** is the immutable representation of the Opportunity proposition/context actually
+  presented to the founder. Opportunity remains mutable. A snapshot has explicit stable identity/provenance,
+  an Opportunity reference, capture/review-preparation time, and a versioned frozen review payload. The payload
+  contains only human-visible review material—not a full metadata dump or fully versioned Opportunity.
+- The payload freezes, when presented, title, summary/viewer benefit, why-now, exact visible Subject context
+  (Subject ID, slug, name and primary/supporting relationship role), score/ranking, Atlas
+  recommendation/explanation, material risk/uncertainty and other displayed context. It does not give
+  `Opportunity.status` Idea Gate meaning or introduce snapshot-owned normalized Subject tables.
+- **IdeaGateDecision** is the immutable, additive founder decision about one exact snapshot. It carries a
+  stable ID, snapshot reference, outcome, founder actor/provenance and decision time. **Proceed** authorizes
+  the reviewed proposition in principle and may have a comment; **Reject** does not authorize it and may have
+  an explanation; **Steer** authorizes it subject to non-empty preserved founder direction. No fourth outcome
+  is authorized.
+- Both records are append-only: create/get/list/history only, no public update/delete, no current/latest/
+  active-approval/revocation state. Exactly one decision may exist per snapshot; a new judgement requires a
+  new snapshot. Any latest view is derived from history.
+
+The expected next additive migration after migrations 1–11 contains only snapshot persistence, decision
+persistence, Opportunity and snapshot-decision foreign-key lineage, one-decision-per-snapshot uniqueness,
+outcome constraint and historical-read indexes. It must not change Opportunity or `Opportunity.status`, add
+approval flags, generic workflow/Approval/Decision tables, Subject redesign, ResearchPack/readiness/Editorial
+Gate records, queues, production, publishing, analytics, financial or automation tables.
+
+#### Approved repository, API and founder interaction
+
+v0.15 must create a snapshot from the current Opportunity plus selected displayed context; get a snapshot;
+list Opportunity snapshots chronologically; record/get one Proceed, Reject or Steer decision; retrieve a
+snapshot's decision; and retrieve complete chronological Idea Gate history. Snapshot and decision are separate
+operations: Atlas freezes the snapshot, shows it to the founder, then records the decision. An undecided
+snapshot is valid. For example, Snapshot A may retain a Steer decision and its direction after the Opportunity
+changes; a later Snapshot B may retain an independent Proceed decision. Neither review cycle rewrites the other.
+
+The real vertical slice uses narrow domain-qualified HTTP behavior equivalent to:
+
+- `POST /api/opportunities/{id}/idea-gate-review-snapshots`
+- `GET /api/idea-gate-review-snapshots/{id}`
+- `POST /api/idea-gate-review-snapshots/{id}/decisions`
+- `GET /api/opportunities/{id}/idea-gate-history`
+
+The existing Discover/Command Centre surface must provide a minimal founder interaction: display review
+material, create/use its frozen snapshot, allow Proceed/Reject/Steer, require direction for Steer, persist the
+decision, and show history clearly enough to prove the slice. It is not a UI redesign, workflow board,
+research queue, analytics dashboard, production control or financial control.
+
+#### Acceptance requirements
+
+v0.15 is accepted only when all of the following are demonstrated:
+
+1. An Opportunity produces an immutable Idea Gate review snapshot.
+2. Later Opportunity mutation leaves snapshot history unchanged.
+3. Exact visible Subject context remains historically readable.
+4. Proceed, Reject and Steer each record durably against one exact snapshot.
+5. Steer rejects empty founder direction.
+6. Steer preserves valid founder direction.
+7. Proceed and Reject retain optional rationale where the narrow model supports it.
+8. Only one decision is allowed per snapshot.
+9. A second review cycle creates independent additive history.
+10. `Opportunity.status` remains unchanged in meaning and data.
+11. No Opportunity approval/current/latest mutable field exists.
+12. No ResearchPack, job, queue, readiness or automation side effect occurs.
+13. Exact history reads through repository/API.
+14. The minimal founder UI reviews and persists all three outcomes.
+15. No generic Approval/Decision/workflow source of truth is introduced.
+16. Existing v0.1–v0.14 behavior remains compatible.
+17. The migration, repository, HTTP/UI and quality tests pass.
+
+Explicit exclusions are research automation and ResearchPack auto-creation; machine readiness; Editorial and
+Learning Gates; title/hook/script approval; production, rendering, publishing, analytics, cost/revenue or
+spend controls; generic workflow/approval/decision systems; queues/workers/retries; scoring/Pillar redesign;
+final Script-to-Claim architecture; orchestration; authentication redesign; and cloud/deployment expansion.
+v0.15 has no ResearchPack, `Opportunity.status`, research-job, queue, workflow-stage or automation side effect.
+Pre-spend authorization, spend proposals, provider pricing, cost estimation, ledgers and enforcement remain
+outside this milestone.
+
+Once this definition is reviewed, committed and pushed, v0.15 is authorized only for bounded implementation
+within this specification. Codex must return material ambiguity about domain semantics, migration scope,
+historical behavior, API meaning, founder decision semantics or deferred scope to founder + ChatGPT rather
+than infer it.
 
 #### Sparse human gates, rich machine readiness
 
@@ -1078,11 +1171,10 @@ operating costs later require per-item authorization remains a financial-control
 spend authorization must be attributable to the exact editorial/production lineage it governs, but no
 authorization, proposal, reservation, ledger or enforcement entity is approved here.
 
-The current narrowest approved Phase 2 implementation direction is to persist immutable Idea Gate review
-snapshots and immutable Idea Gate decisions for Opportunities, supporting Proceed / Reject / Steer with
-optional founder direction and complete historical provenance. This is an implementation direction, not a
-named milestone. It is expected to require the next additive migration after migrations 1–11 when a final
-milestone is approved; no migration number, schema or table is allocated here.
+The current narrowest approved Phase 2 implementation direction is **v0.15 — Persistent Idea Gate**:
+immutable Idea Gate review snapshots and immutable Idea Gate decisions for Opportunities, supporting Proceed /
+Reject / Steer with optional founder direction and complete historical provenance. It is defined and authorized
+for bounded implementation, but is not implemented or accepted; migrations remain 1–11 until that work begins.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1249,8 +1341,8 @@ toward:
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
-  Idea Gate snapshot/decision direction still requires a final milestone definition; activation does not pull
-  forward later phases.
+  first milestone is v0.15 — Persistent Idea Gate, defined and authorized but not implemented or accepted;
+  activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
   cost/control infrastructure—for the operating model.
