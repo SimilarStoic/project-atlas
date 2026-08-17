@@ -27,6 +27,20 @@ existing GitHub roadmap and specification remain authoritative.
 - Acceptance state: migrations 1–11; 75 tests passed; Ruff, Black `--check`, and `git diff --check` passed.
 - At acceptance, local `main == origin/main` and the working tree was clean.
 
+## Current canonical product and roadmap state
+
+**Phase 1 — Product & Business Definition is formally closed.** The founder-approved final
+production-ready SimilarStoic brand identity is approved. The Phase 1 visual decision remains **PASS WITH
+DEFERRED VISUAL REFINEMENT**: residual AI-clean/overly professional finish is non-blocking and does not
+alter the approved hamster identity, colours, sling-bag treatment, proportions or CharacterReferenceSet
+continuity.
+
+The accepted implementation checkpoint remains **v0.14**. The canonical GitHub HEAD will advance when this
+documentation synchronization is committed and pushed; that repository-synchronization change does not create
+or imply a new implementation milestone. SimilarStoic Core v3 remains the current accepted visual baseline,
+and CharacterReferenceSet v1 remains unchanged. No v0.15 or successor phase/milestone is authorized or
+active. A fresh founder + ChatGPT decision is required before any new implementation work is defined.
+
 ## Phase 1 visual acceptance decision
 
 The completed activity was **Phase 1 visual-evidence execution on accepted v0.14**. This is **not v0.15**

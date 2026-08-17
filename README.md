@@ -328,5 +328,10 @@ Character Continuity Foundation, v0.12 Canonical Character Reference Foundation,
 Reference-Grounded Character Generation and v0.14 Explicit Character Reference Bootstrap are complete and
 pushed. The verified checkpoint is `516884b8fab0a29e8e82973d684be1ae8a08bff6`
 (`feat: add character reference bootstrap`), with 75 passing tests and migrations 1–11. The canonical
-handoff records that Phase 1 visual acceptance is closed with **PASS WITH DEFERRED VISUAL
-REFINEMENT**. No v0.15 or subsequent milestone has been selected; later Atlas systems remain out of scope.
+handoff records the formal closure of **Phase 1 — Product & Business Definition**: the final
+production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
+DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
+the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
+v0.14 remains the accepted implementation checkpoint; no v0.15 or successor phase/milestone is active, and
+a fresh founder + ChatGPT decision is required before new implementation work. Later Atlas systems remain out
+of scope.
