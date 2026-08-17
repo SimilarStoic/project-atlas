@@ -936,7 +936,9 @@ Implement:
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
 v0.16 is the latest accepted bounded implementation milestone; v0.15 remains its historical accepted
-predecessor. All other remaining Phase 2 scope is unimplemented.
+predecessor. **v0.17 — Persistent Research Readiness** is the defined and authorized next bounded
+implementation milestone; it is not implemented or accepted. All other remaining Phase 2 scope is
+unimplemented.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1142,7 +1144,152 @@ Research Engine or Phase 9 orchestration behavior.
 
 v0.16 is accepted. Material ambiguity about ResearchPack ownership, decision qualification, same-Opportunity
 validation, Steer semantics, historical compatibility, schema scope, API meaning or later-phase boundaries must
-return to founder + ChatGPT rather than be inferred. No successor milestone is selected.
+return to founder + ChatGPT rather than be inferred. v0.16 itself implies no scope beyond its accepted
+boundary.
+
+### v0.17 — Persistent Research Readiness
+
+**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.16 remains
+the latest accepted implementation milestone and migrations remain canonical through 13 until v0.17 is
+implemented. v0.17 does not complete Phase 2, activate a later phase or select a successor milestone.
+
+Purpose:
+
+> Persist immutable Research Readiness assessments over exact frozen ResearchPack evidence states, with
+> additive reassessment history and explicit assessment provenance, without implementing research-evaluation
+> automation or editorial progression.
+
+#### Approved persistence and evidence-state boundary
+
+A `ResearchReadinessAssessment` is an immutable, additive assessment of one exact frozen ResearchPack evidence
+state. It is not mutable ResearchPack status, workflow state, founder approval, a research job, a Phase 4
+evaluator or EditorialAngle progression authority. v0.17 introduces only one new immutable
+`research_readiness_assessments` persistence concept/table. It must not introduce normalized evidence-snapshot
+tables, a separate ResearchEvidenceSnapshot aggregate, normalized findings rows, generic
+Readiness/Workflow/Approval tables, progression entities or current/latest pointers.
+
+Each assessment belongs to exactly one ResearchPack. ResearchPack Opportunity ownership, v0.16 Idea Gate
+provenance, versioning and the existing Claims/Sources/ClaimEvidence model remain unchanged. The assessment
+contains its own schema-versioned frozen evidence-state JSON payload. At assessment creation, the
+server/repository deterministically constructs that payload from canonical live ResearchPack, Claim, Source and
+ClaimEvidence records; a caller must not submit an arbitrary complete evidence snapshot as canonical input.
+
+The required first-slice frozen payload contains the ResearchPack ID, version, relevant summary and `as_of_date`;
+for every relevant Claim, its ID, text, type, risk level, freshness type, verification/review state, notes and
+review time where present; for every relied-upon Source, its ID, type, title, publisher, URL, publication/access
+time and jurisdiction where present; and every ClaimEvidence Claim/Source relationship, stance, reference and
+notes where present. It must not invent absent evidence-strength or source-quality fields. Claims are ordered by
+stable Claim ID, Sources by stable Source ID, and evidence links by Claim ID then Source ID; structured JSON is
+canonically serialized with stable sorted keys. This is required for historical diffability and reproducibility.
+An evidence-state digest is optional and non-required in v0.17; if deliberately added later, it must hash the
+frozen schema-versioned canonical payload, not live rows, and does not impose uniqueness.
+
+Each immutable record contains an assessment ID, ResearchPack ID, assessment schema version, frozen evidence
+JSON, one outcome, required structured findings JSON, readiness policy/check version, producer kind, producer
+identifier, producer implementation version and assessment timestamp. Constrained provenance/metadata JSON is
+optional only where existing conventions justify it. Current/latest/superseded/selected/best assessment state,
+EditorialAngle ID and workflow state are prohibited.
+
+The only outcomes are **Ready**, **NeedsMoreResearch** and **Blocked**, enforced both by narrow repository
+validation and a database-level constrained vocabulary where repository conventions allow. Findings must explain
+the outcome, surface material deficiencies and may reference Claim IDs and/or frozen Claim representations; an
+optional summary inside the structured findings payload is allowed. A universal reason-code taxonomy, normalized
+findings and mandatory scoring are not approved. Producer provenance must support honest controlled/manual/test
+creation without provider-specific schema, model-specific columns, LLM execution records or research-engine
+state.
+
+#### History, API and no-UI boundary
+
+Assessments are create/get/list-history only: no update, delete, mutable correction or supersede operation.
+Corrections and reassessments are new immutable records. Multiple assessments for one ResearchPack, including
+repeated assessment of the same evidence state/policy by different producers or for audit, are valid; no
+uniqueness beyond assessment ID is required. Earlier Ready, NeedsMoreResearch and Blocked assessments remain
+historically readable after later evidence changes or later assessments. No `research_pack.readiness_status`,
+`current_readiness_id`, `latest_readiness_id`, `assessment_superseded` or persisted selected/best state is
+authorized; a later read may derive a view without persisting one.
+
+The v0.17 vertical slice provides a controlled application/API creation path: the caller supplies assessment ID,
+outcome, structured findings, policy/check version and producer kind/identifier/implementation version, while
+the server freezes canonical evidence itself. It is not founder approval, automated evaluation, fake
+intelligence or orchestration. The narrow HTTP surface is:
+
+- `POST /api/research-packs/{id}/readiness-assessments`
+- `GET /api/research-packs/{id}/readiness-assessments`
+- `GET /api/research-readiness-assessments/{id}`
+
+The create response and reads expose sufficient frozen evidence/provenance to inspect exactly what was assessed.
+No generic `/readiness` workflow route is allowed. v0.17 requires no founder or operator UI: readiness is a
+machine boundary, no real Phase 4 producer exists, and API plus persistence proves the durable contract without
+misrepresenting a manual form as a fourth human gate.
+
+#### Migration 14 and compatibility boundary
+
+Migration 14 is expected and is limited to the one immutable readiness-assessment table, its ResearchPack FK,
+versions, frozen evidence JSON, outcome, findings JSON, policy/check version, producer provenance, timestamp
+and an index supporting ResearchPack history. An optional digest may be included only without widening scope.
+It must not alter migrations 1–13, ResearchPack ownership/versioning, Claims, Sources, ClaimEvidence,
+Opportunity, Idea Gate, EditorialAngle, ContentPiece, Script, title/hook or financial tables.
+
+Existing ResearchPacks may have zero assessments: no backfill or readiness inference is allowed, and zero
+records mean only that no persistent readiness assessment exists. Existing Claims/Sources/ClaimEvidence remain
+untouched and v0.1–v0.16 behavior remains compatible. v0.17 is a persistence contract, not an intelligence
+milestone: it must not implement scoring, rules, automated source-quality/freshness checks, fact checking, LLM
+evaluation or automatic outcome selection. Phase 4 may later produce the same durable assessment contract.
+
+`Ready` remains readiness evidence only. v0.17 must not modify EditorialAngle schema, add an EditorialAngle
+readiness reference, block existing Angle creation, authorize or automatically create an Angle, or add a
+progression record. The separate question of EditorialAngle progression authority remains for founder + ChatGPT
+design. Idea Gate remains upstream and Editorial Gate downstream; v0.17 creates no founder approval, rejection,
+manual override or fourth recurring gate.
+
+#### Acceptance requirements
+
+v0.17 is accepted only when all of the following are demonstrated:
+
+1. An immutable assessment can be created for an existing ResearchPack.
+2. The server/repository freezes canonical current evidence at creation.
+3. The payload preserves ResearchPack ID and version.
+4. The payload preserves relevant Claims and their currently available readiness fields.
+5. The payload preserves relied-upon Sources and currently available provenance fields.
+6. The payload preserves ClaimEvidence relationships and current evidence-link fields.
+7. Payload ordering and serialization are deterministic.
+8. Later live Claim/Source/ClaimEvidence mutation or addition leaves an earlier assessment unchanged.
+9. Ready persists successfully.
+10. NeedsMoreResearch persists successfully.
+11. Blocked persists successfully.
+12. Every other outcome is rejected.
+13. Structured findings persist.
+14. Assessment schema version persists.
+15. Policy/check version persists.
+16. Producer kind, identifier and implementation version persist.
+17. Assessment timestamp persists.
+18. Multiple assessments for one ResearchPack are allowed.
+19. Earlier assessments remain readable after later assessment.
+20. No current/latest/superseded readiness state is persisted.
+21. Historical ResearchPacks with zero assessments remain valid.
+22. No readiness backfill or inference occurs.
+23. A caller cannot replace the server-built evidence snapshot with arbitrary submitted content.
+24. API supports create, list-by-pack and get-by-ID.
+25. No founder approval semantics are introduced.
+26. No UI is required.
+27. No fake, deterministic or LLM evaluator is implemented.
+28. No provider/job/queue/research-automation side effect occurs.
+29. No Opportunity or ResearchPack mutable status changes.
+30. No EditorialAngle creation, validation, schema change or progression behavior occurs.
+31. No generic workflow/readiness/approval abstraction is introduced.
+32. Existing v0.1–v0.16 behavior remains compatible.
+33. Migration, repository, API and quality tests pass.
+
+Explicit exclusions are Phase 4 automated research, source retrieval, Claim extraction, evidence gathering,
+source-quality scoring, automated fact checking, LLM evaluation, automated outcome selection, jobs, queues,
+workers, provider orchestration, founder approval/override, generic workflow, current/latest readiness,
+EditorialAngle progression, Title/Hook, Editorial Gate, production/rendering, publishing, analytics/Learning,
+financial controls/spend authorization and Phase 9 orchestration.
+
+Once this definition is reviewed, committed and pushed, v0.17 is authorized only for bounded implementation
+within this specification. Material ambiguity about frozen evidence content, producer provenance, outcome
+semantics, immutability, API meaning, substantive readiness rules, EditorialAngle progression or later-phase
+boundaries must return to founder + ChatGPT rather than be inferred.
 
 #### Sparse human gates, rich machine readiness
 
@@ -1261,8 +1408,9 @@ deficiencies; Blocked prevents progression under the applicable assessment becau
 issue that must not be silently bypassed. These are not `ResearchPack.status` values or mutable workflow state.
 
 The approved Phase 2 design direction is additive, immutable, versioned research-readiness assessments of an
-exact frozen ResearchPack evidence state (conceptually `ResearchReadinessAssessment`; final class/table naming
-awaits a bounded implementation definition). A ResearchPack ID/version alone is not historically sufficient:
+exact frozen ResearchPack evidence state. v0.17 now defines the bounded one-table
+`ResearchReadinessAssessment`/`research_readiness_assessments` implementation direction. A ResearchPack
+ID/version alone is not historically sufficient:
 Claims may be added or updated after pack creation, Sources may be added later, and ClaimEvidence relationships
 may change. Each assessment must therefore retain a schema-versioned frozen evidence-state payload that can
 reconstruct the ResearchPack ID/version, relevant Claims and readiness-relevant attributes, relied-upon Sources
@@ -1341,9 +1489,9 @@ authorization, proposal, reservation, ledger or enforcement entity is approved h
 
 v0.15 — Persistent Idea Gate remains the historical accepted implementation predecessor. **v0.16 — Authorized
 Research Initiation** is the latest accepted implementation milestone. It adds only deliberate qualifying Idea
-Gate provenance to new lifecycle-created ResearchPack versions through migration 13. The narrowest approved
-next Phase 2 design direction is durable Research Readiness assessment semantics; it is design direction only,
-not a named successor milestone, migration or implementation authorization.
+Gate provenance to new lifecycle-created ResearchPack versions through migration 13. **v0.17 — Persistent
+Research Readiness** is the defined and authorized next Phase 2 implementation milestone: it is not implemented
+or accepted, migrations remain 1–13 until its bounded implementation, and no successor after v0.17 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1506,12 +1654,13 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE; v0.16 ACCEPTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE; v0.16 ACCEPTED; v0.17 DEFINED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
   v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
-  is its latest accepted milestone;
+  is its latest accepted milestone; v0.17 — Persistent Research Readiness is defined and authorized but not
+  implemented or accepted;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

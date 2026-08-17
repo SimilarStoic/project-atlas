@@ -38,8 +38,9 @@ continuity.
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
 unchanged. **v0.16 — Authorized Research Initiation** is the latest accepted implementation milestone; v0.15
 remains its historical accepted predecessor. **Phase 2 — Content Operating Model is the current ACTIVE roadmap
-phase, with accepted v0.15 and v0.16 implementations**, under founder + ChatGPT design/implementation
-stewardship. This does not authorize all Phase 2 scope or later-phase engines.
+phase, with accepted v0.15 and v0.16 implementations and defined/authorized v0.17 — Persistent Research
+Readiness**, under founder + ChatGPT design/implementation stewardship. v0.17 is not implemented or accepted;
+this does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -155,7 +156,7 @@ historical snapshots, readable frozen Subject context, each outcome, required St
 review cycles, unchanged Opportunity semantics, compatible v0.1–v0.14 behavior, real API/UI proof, and passing
 migration/repository/HTTP/UI/quality tests. Editorial Gate spend authorization remains outside v0.15.
 
-Any scope beyond the accepted v0.16 boundary requires a new explicit founder + ChatGPT
+Any scope beyond the accepted v0.16 and defined v0.17 boundaries requires a new explicit founder + ChatGPT
 decision. Material ambiguity about semantics, migration scope, history, API meaning, founder decision meaning
 or deferred scope must return to founder + ChatGPT rather than be inferred.
 
@@ -186,8 +187,8 @@ analytics/Learning, financial controls, Phase 4 research automation and Phase 9 
 
 Migration 13 is limited to the nullable direct provenance foreign key and its historical-protection/indexing
 needs; it does not alter ResearchPack ownership/version uniqueness or other existing domain records. v0.16 is
-accepted; no successor milestone is selected. The full acceptance requirements, implementation boundary and
-ambiguity-return rule are canonical in
+accepted and implies no scope beyond its accepted boundary. The full acceptance requirements, implementation
+boundary and ambiguity-return rule are canonical in
 [ROADMAP.md](../ROADMAP.md) under **v0.16 — Authorized Research Initiation**.
 
 The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
@@ -204,10 +205,36 @@ findings/reasons, assessment schema version, policy/check version, timestamp and
 provenance. Multiple assessments may coexist for one ResearchPack; evidence changes require a new assessment,
 and earlier history remains immutable. No mutable current/latest/superseded readiness pointer or
 `ResearchPack` readiness field is approved. No readiness schema, API, UI, assessment producer, provider call,
-research automation or founder approval/override has been implemented or authorized. A Ready assessment must
+research automation or founder approval/override has been implemented. v0.17 authorizes only its bounded future
+persistence/API contract, not a UI, evaluator, provider call, automation or founder override. A Ready assessment must
 not automatically create an EditorialAngle, ContentPiece or Script; the separate question of how readiness
 could authorize EditorialAngle progression remains undefined. The final Script-to-Claim architecture and
 Editorial QA implementation remain deferred.
+
+### v0.17 — Persistent Research Readiness
+
+v0.17 is the defined and authorized next Phase 2 implementation milestone; it is not implemented or accepted,
+v0.16 remains latest accepted, migrations remain 1–13, and no successor after v0.17 is selected. It introduces
+only one immutable ResearchReadinessAssessment table under a future migration 14. The assessment belongs to one
+ResearchPack and carries its own server/repository-built, deterministic, schema-versioned frozen evidence JSON;
+no normalized snapshot aggregate, findings rows, generic readiness/workflow/approval entity or current/latest
+state is authorized.
+
+The frozen payload preserves the ResearchPack ID/version/summary/as-of context, relevant Claim fields,
+relied-upon Source provenance and ClaimEvidence links in stable ID ordering with canonical JSON serialization.
+Assessment records preserve Ready / NeedsMoreResearch / Blocked, structured findings, schema version,
+policy/check version, producer kind/identifier/implementation version and time. They are create/get/list only:
+multiple records may coexist, no backfill or readiness inference occurs, and corrections/reassessments are new
+records. A caller supplies controlled assessment inputs while the server freezes canonical evidence; callers
+cannot submit an arbitrary canonical snapshot.
+
+The v0.17 API boundary is `POST /api/research-packs/{id}/readiness-assessments`, `GET
+/api/research-packs/{id}/readiness-assessments` and `GET /api/research-readiness-assessments/{id}`. It requires
+no UI, founder approval, evaluator, provider, job, queue or automation. It does not change ResearchPack status,
+EditorialAngle, ContentPiece, Script, Title/Hook, Editorial Gate, progression authority, production,
+publication, analytics/Learning, financial controls, Phase 4 research automation or Phase 9 orchestration.
+v0.17 is authorized only for the detailed bounded implementation and acceptance requirements in
+[ROADMAP.md](../ROADMAP.md); ambiguities return to founder + ChatGPT.
 
 The target second half is Editorial package → Editorial Gate approval + bounded spend authorization →
 production within the authorized envelope → machine production/brand/risk QA → publication readiness →
@@ -224,9 +251,9 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The narrowest approved next Phase 2 design direction is durable Research Readiness assessment semantics. It is
-not a named successor milestone or implementation authorization; material detail beyond this contract returns
-to founder + ChatGPT.
+The narrowest approved next Phase 2 implementation direction is **v0.17 — Persistent Research Readiness**. It
+is defined and authorized for the bounded persistence/API contract above, but has not begun implementation or
+selected any successor milestone; material detail beyond the contract returns to founder + ChatGPT.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate

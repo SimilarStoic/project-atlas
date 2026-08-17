@@ -12,8 +12,9 @@
 
 🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
 design/implementation stewardship; v0.16 is the latest accepted implementation milestone and v0.15 is its
-historical accepted predecessor. Remaining Phase 2 scope is not implemented. Atlas v0.1 through v0.7 are
-complete and pushed.
+historical accepted predecessor. v0.17 — Persistent Research Readiness is defined and authorized for bounded
+implementation, but is not implemented or accepted. Remaining Phase 2 scope is not implemented. Atlas v0.1
+through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -785,7 +786,7 @@ remain valid without fabricated provenance; Steer direction remains canonical on
 consumed by reference. The separate initiation action has no automatic research/job/queue/provider/readiness/
 workflow/automation effect, no consumed/current authorization state and no `Opportunity.status` mutation.
 Migration 13, repository/API/UI implementation and tests are canonical; migrations are now 1–13. v0.15 remains
-the historical accepted predecessor. No successor milestone is selected.
+the historical accepted predecessor. v0.16 itself implies no scope beyond its accepted boundary.
 
 **Research Readiness semantics are approved design direction only.** They define additive, immutable,
 versioned assessments of an exact frozen ResearchPack Claim/Source/ClaimEvidence state, not mutable workflow
@@ -797,6 +798,15 @@ current/latest/superseded pointer; later evidence requires a new assessment. No 
 API, UI, producer, research automation or EditorialAngle progression rule is implemented. A Ready assessment
 does not automatically create editorial records; how readiness may later authorize EditorialAngle progression
 remains a separate design decision.
+
+**v0.17 — Persistent Research Readiness** is the defined and authorized next Phase 2 implementation milestone.
+It is not implemented or accepted; v0.16 remains latest accepted and migrations remain 1–13 until bounded
+implementation. v0.17 is limited to one immutable ResearchReadinessAssessment table with a server-built,
+deterministically ordered, schema-versioned frozen ResearchPack/Claim/Source/ClaimEvidence payload; exact
+Ready / NeedsMoreResearch / Blocked outcomes; structured findings; policy/check, schema and producer
+provenance; additive history; and controlled create/list/get API reads. It has no UI, evaluator, mutable
+current/latest state, backfill, EditorialAngle linkage/progression, automation or later-phase behavior. No
+successor after v0.17 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -817,8 +827,8 @@ formally closed: the final production-ready SimilarStoic brand identity is **APP
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 is now active. v0.16 — Authorized Research Initiation is the latest accepted implementation milestone;
 v0.15 remains its historical accepted predecessor.
-The approved next design direction is durable, machine-bound Research Readiness assessment semantics only; it
-does not name or authorize a successor implementation milestone.
+v0.17 — Persistent Research Readiness is the defined and authorized bounded implementation milestone, not yet
+implemented or accepted. It does not select a successor milestone.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

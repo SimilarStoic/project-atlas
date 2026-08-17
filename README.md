@@ -40,7 +40,8 @@ canonical roadmap and must not redefine it.
 
 Phase 2 is now the **active** roadmap phase. v0.16 Authorized Research Initiation is the latest accepted
 implementation milestone; v0.15 Persistent Idea Gate remains its historical accepted predecessor, and the
-remaining Phase 2 scope is not implemented. Its approved
+remaining Phase 2 scope is not implemented. **v0.17 — Persistent Research Readiness** is defined and
+authorized for bounded implementation, but is not implemented or accepted. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -70,14 +71,13 @@ Reject cannot, snapshot/pack Opportunity lineage must match, historical packs re
 provenance, and Steer direction is consumed by reference. It authorizes no automatic research,
 provider/queue orchestration, historical backfill or later-phase activation.
 
-The approved next **design direction only** is durable Research Readiness assessment semantics. Assessments are
-additive, immutable and versioned against an exact schema-versioned frozen ResearchPack evidence state, because
-Claims, Sources and ClaimEvidence may change after a pack is created. They preserve Ready, NeedsMoreResearch or
-Blocked; findings/reasons; policy/check and schema versions; time; and producer provenance. Readiness is a
-machine boundary, not founder approval or mutable workflow state: it has no persisted current/latest pointer,
-does not automatically create an EditorialAngle, and does not yet define how editorial progression is
-authorized. No readiness schema, API, UI, assessment producer, research automation or successor milestone is
-implemented.
+**v0.17 — Persistent Research Readiness** is the defined and authorized next bounded implementation milestone;
+v0.16 remains latest accepted. It will persist one immutable, additive assessment record per exact
+server-built, deterministically ordered, schema-versioned frozen ResearchPack evidence state. The controlled
+API supplies only outcome, findings, policy/check version and producer provenance; it exposes create/list/get
+history but has no UI or evaluator. Ready, NeedsMoreResearch and Blocked are the only outcomes. No mutable
+current/latest readiness, backfill, ResearchPack status, EditorialAngle linkage/progression, automation or
+successor milestone is authorized; migration 14 does not exist until implementation.
 
 ## Technology baseline
 
