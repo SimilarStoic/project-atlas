@@ -4,9 +4,10 @@
 
 This document is the durable cross-chat re-grounding guide for Project Atlas. GitHub is the canonical
 repository of truth. The founder is product owner and final product and acceptance authority. ChatGPT works
-with the founder as product architect, roadmap interpreter, milestone designer, and architecture steward.
-Codex is a bounded repository inspection and implementation agent; it must not independently decide product
-architecture, roadmap changes, milestone boundaries, domain semantics, or final technical direction.
+with the founder as product architect, technical decision-maker, roadmap interpreter, milestone designer,
+architecture steward, bounded Codex task author, implementation reviewer and anti-drift guard. Codex is a
+bounded repository inspection and implementation agent; it must not independently decide product architecture,
+roadmap changes, milestone boundaries, domain semantics, successor sequencing, or final technical direction.
 
 The canonical roadmap in [ROADMAP.md](../ROADMAP.md) is static by default. Neither a new chat, incomplete
 conversation memory, implementation convenience, nor an inferred better sequence may change phases, reorder
@@ -18,7 +19,14 @@ ChatGPT, it is explicitly identified as such a change, canonical GitHub document
 updated, the change is reviewed and accepted, and that update is committed and pushed. Until then, the
 existing GitHub roadmap and specification remain authoritative.
 
-## Current accepted checkpoint
+## Current implementation state and next authorized milestone
+
+**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone. **v0.18 —
+Readiness-Authorized Editorial Angle Initiation** is the next defined and authorized milestone, but is not
+implemented or accepted. Migrations remain 1–14; migration 15 does not yet exist; no successor after v0.18 is
+selected.
+
+### Historical Phase 1 implementation checkpoint
 
 **v0.14 — Explicit Character Reference Bootstrap**
 
@@ -76,6 +84,19 @@ defines the human-led executable content lifecycle and its approved direction; P
 technical substrate; Phases 4–8 add research, content intelligence, production, distribution and
 analytics/learning capabilities; Phase 9 connects proven components toward the approximately 95% automated
 target; and Phase 10 scales a proven system. No later phase is activated.
+
+The current phase map is:
+
+1. **Phase 1 — Product & Business Definition:** COMPLETE.
+2. **Phase 2 — Content Operating Model:** ACTIVE / INCOMPLETE.
+3. **Phase 3 — Technical Architecture:** NOT ACTIVE.
+4. **Phase 4 — Research Engine:** NOT ACTIVE.
+5. **Phase 5 — Content Intelligence:** NOT ACTIVE.
+6. **Phase 6 — Video Production:** NOT ACTIVE.
+7. **Phase 7 — Distribution:** NOT ACTIVE.
+8. **Phase 8 — Analytics & Learning:** NOT ACTIVE.
+9. **Phase 9 — Automation:** NOT ACTIVE.
+10. **Phase 10 — Scale:** NOT ACTIVE.
 
 ## Approved Phase 2 operating-model specification
 
@@ -212,6 +233,16 @@ The approved lifecycle direction is explicit creation of an EditorialAngle under
 with direct immutable initiation provenance. It is now canonically defined as v0.18 and authorized for bounded
 implementation; it is not implemented or accepted. The final Script-to-Claim architecture and Editorial QA
 implementation remain deferred.
+
+### Research and evidence quality canon
+
+ResearchPacks precede scripting. Primary sources are preferred where appropriate; corroboration must be
+proportional to risk, materiality and importance; and freshness matters. Atlas must distinguish fact,
+interpretation, opinion, forecast and illustration. Unsupported material claims must not silently progress.
+ResearchReadinessAssessment persistence records immutable evidence-state assessments; it does not replace the
+research-quality policy, and readiness is a machine boundary rather than founder approval. The final Phase 4
+research evaluator and final Script-to-Claim architecture remain deferred; no scoring thresholds, universal
+source-count rule, automated fact-check algorithm or evaluator design is implied.
 
 ### v0.17 — Persistent Research Readiness
 
@@ -363,7 +394,22 @@ The non-blocking deferred refinement is specifically residual AI-clean or overly
 illustration finish. Future refinement must increase believable human-drawn imperfection and reduce overly
 smooth/confident contours while preserving the approved hamster identity, proportions, large-ear/long-whisker
 cues, warm tan/orange accents, multi-colour sling-bag, dark-gray strap, and CharacterReferenceSet continuity.
-No post-Phase-1 milestone or further generation is authorized or implied.
+No further Phase 1 visual/generation work is authorized merely by this Phase 1 acceptance record. This historical
+visual boundary does not invalidate or limit the separately authorized Phase 2 milestones.
+
+### Runtime DB / CharacterReferenceSet reconciliation
+
+`data/atlas.db` is ignored local/runtime/demo state, not canonical GitHub truth. A current local runtime DB may
+contain zero CharacterReferenceSets, Assets or GenerationExecutions; that does not rewrite accepted canonical
+history. The canonically accepted `character-reference-set-similarstoic-hamster-core-v1` version `1` contains the
+founder-approved Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` version `9`, SHA-256
+`eaf0af82fe98120613793465f94029a72ae13a79f8e3e258d265e88fa47c450b`.
+
+Current migrations/schema do not seed or restore that accepted set automatically, and current bootstrap does not
+reconstruct the original accepted review environment or bytes. This is a deferred runtime-restoration/bootstrap
+reproducibility gap; it does not block Phase 2. Do not regenerate a replacement Asset, invent
+CharacterReferenceSet v2, silently auto-create reference sets, or reopen VisualStyleProfile v3 acceptance because
+of local runtime row counts.
 
 ## Mandatory fresh-chat protocol
 
@@ -395,6 +441,11 @@ design decision, not invention by a fresh chat or Codex.
 
 > DEFINE → DESIGN WITH FOUNDER / CHATGPT → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → FINAL ACCEPTANCE → COMMIT → PUSH → NEXT MILESTONE
 
+The immediate next action is bounded local implementation of **v0.18 — Readiness-Authorized Editorial Angle
+Initiation**: a bounded Codex task, local uncommitted implementation, validation, founder + ChatGPT review, fixes
+if required, final acceptance, canonical status update, commit and push. Another design cycle is not required
+unless live implementation reveals a material conflict; no milestone after v0.18 is selected.
+
 The governing principle is **CHANGE WITHOUT REBUILD**.
 
 Every newly accepted milestone or checkpoint must refresh canonical status, repository documentation when
@@ -405,9 +456,12 @@ Every future handoff must direct the next chat to repeat this repository-groundi
 
 - Migrations are additive and historical records are preserved.
 - A VisualPlan owns Scenes; a Scene owns AssetSpecs; environment Assets remain background-only.
+- No fake Scenes are permitted.
 - `CharacterProfile`, `VisualStyleProfile`, and `AssetSpec` are separate concepts. No generic Topic model is
   introduced.
 - CharacterReferenceSets are immutable and versioned. They have no mutable current, best, or selected state.
+- No persisted mutable current, latest, best or selected state is permitted unless founder + ChatGPT specifically
+  approve that domain-specific state.
 - Ordinary character generation requires reference grounding. v0.14 bootstrap is explicit and available only
   before the first CharacterReferenceSet for the exact CharacterProfile.
 - One real provider attempt produces one immutable terminal GenerationExecution. A pre-provider failure
@@ -447,11 +501,26 @@ Every future handoff must direct the next chat to repeat this repository-groundi
 - Atlas remains audio-first. Do not introduce premature agents, cloud infrastructure, queues, publishing, or
   analytics.
 
+## Current technical stack and deliberately absent architecture
+
+The current stack is Python 3.12+, a stdlib HTTP server, static HTML/CSS/JS, SQLite, uv, pytest, Ruff, Black,
+GitHub Actions and a Docker scaffold. Relevant environment variables are `ATLAS_DB_PATH`,
+`ATLAS_ASSET_STORAGE_ROOT`, `ATLAS_VISUAL_STYLE_PROFILE_ID`, `OPENAI_API_KEY` and
+`ATLAS_OPENAI_IMAGE_MODEL`.
+
+Until their owning phases are explicitly authorized, do not introduce authentication, cloud deployment
+architecture, queues/workers, scheduling, a generic provider registry, retry/batch orchestration,
+production/rendering, publishing, analytics, agents, or financial implementation/cost monitoring.
+
 ## Canonically accepted creative/product decisions synchronized at v0.14
 
 These are accepted product decisions synchronized into the repository at this checkpoint, not claims about
 historical implementation dates:
 
+- SimilarStoic serves ambitious 20–35-year-old young professionals and beginners: UK-first, with Western/global
+  awareness. Its promise is: **“Understand how to build wealth without spending hours researching it.”**
+  The tone is relaxed, knowledgeable, Gen-Z-friendly, clear, practical, witty and substantial—never guru-like,
+  clickbait/hype-driven, corporate, or falsely certain.
 - The recurring character is a recognisable classic hamster with young-professional relatability, a recurring
   sling/crossbody bag, and hamster-native behaviour.
 - Scene-level personality may range across curious, thoughtful, relaxed, worried, frustrated, cheeky, cute,
@@ -491,3 +560,11 @@ Do not infer approval for neutral CharacterProfile-owned candidate studies, auto
 similarity scoring, visual QA automation, style-reference grounding, generic approval/lifecycle models,
 queues, retries, batch semantics, financial-control implementation (including Cost/Revenue Ledger schema or
 integrations), rendering, animation, audio production, publishing, analytics, cloud systems, or agents.
+
+## Genuinely unspecified — founder + ChatGPT decision required
+
+Do not invent a successor milestone after v0.18. The final Title/Hook domain model, final Script-to-Claim
+architecture, EditorialAngle versioning/revalidation semantics, final Editorial Gate persistence shape, final
+machine editorial-QA model, final Research Readiness evaluator implementation, Phase 4 automation design, later
+publishing architecture, Learning persistence/automation and detailed financial implementation remain unresolved
+or deferred. Each requires founder + ChatGPT design and explicit canonical authorization before implementation.
