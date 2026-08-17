@@ -33,6 +33,13 @@ is a foundation; later phases extend it through publication, platform performanc
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
+Phase 2 now has an approved, unimplemented operating-model direction: sparse version-specific founder gates
+(Idea, Editorial and Learning) remain distinct from rich machine readiness evidence. The editorial chain should
+progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
+rather than normal work, interrupt automation. This is not a generic mutable workflow model or an approved
+schema. Production/publication, Learning, financial-control and orchestration records remain with their later
+phase boundaries.
+
 ## Technology baseline
 
 - Python 3.12+

@@ -735,6 +735,30 @@ design decision on the human-led executable lifecycle and approval semantics ove
 phases retain their defined roles for technical architecture, research, content intelligence, production,
 distribution, analytics/learning, automation and scale. No v0.15 or successor milestone is selected.
 
+# Approved Phase 2 Operating-Model Specification
+
+Phase 2 now has approved specification direction, but remains unactivated and unimplemented. Atlas uses sparse
+human gates and rich machine readiness: human judgement is distinct from readiness evidence, neither may
+silently substitute for the other, and intermediate work should progress automatically only when explicit
+quality, evidence and provenance requirements pass.
+
+The target gates are **Idea** (Proceed / Reject / Steer an opportunity), **Editorial** (Approve / Revise /
+Reject / intentional alternative selection for a Title/Hook/Angle/Script package) and **Learning** (review
+evidence-backed, scoped, reversible performance/economics adaptations). They are version-specific future
+decision concepts, not database entities or a generic mutable workflow state.
+
+The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
+→ ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. The target second
+half is Editorial Gate → production/planning → machine production/brand/risk QA → publication readiness →
+automatic publishing → analytics/economics → machine learning interpretation → Learning Gate. Normal future
+work should be exception-driven after Editorial approval; the existing initial human publication approval
+remains until reliability is demonstrated.
+
+Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
+guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
+generic approval state, Script-to-Claim architecture, queues, production, publishing, analytics, financial
+systems or automation have been created.
+
 # Next Step
 
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is

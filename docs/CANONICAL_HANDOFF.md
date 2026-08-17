@@ -74,6 +74,47 @@ technical substrate; Phases 4–8 add research, content intelligence, production
 analytics/learning capabilities; Phase 9 connects proven components toward the approximately 95% automated
 target; and Phase 10 scales a proven system. This does not activate Phase 2 or any later phase.
 
+## Approved Phase 2 operating-model specification
+
+Phase 2 remains **DEFINED, NOT YET IMPLEMENTED** and unactivated. Atlas uses **sparse human gates and rich
+machine readiness checks**: human approval concentrates at meaningful judgement boundaries, while intermediate
+stages progress automatically only when explicit quality, evidence and provenance requirements pass. Human
+judgement and machine readiness are distinct; neither may silently substitute for the other.
+
+The target founder gates are version-specific operating concepts, not approved database/workflow entities:
+
+- **Idea Gate:** Proceed, Reject or Steer an opportunity based on relevant/audience value, timeliness,
+  discovery context, risk/uncertainty and Atlas's recommendation; it is not ResearchPack approval.
+- **Editorial Gate:** Approve, Revise, Reject or intentionally select an alternative editorial package of
+  Title, Hook, Angle and Script with relevant evidence/risk context. Approval allows that specific proposition
+  and version to progress subject to later readiness; it is not technical final-video approval.
+- **Learning Gate:** accept, reject, limit, seek more evidence for, or override evidence-backed, scoped,
+  reversible and historically attributable learning/adaptations. It must not silently alter brand, roadmap,
+  audience, risk policy or governance.
+
+The approved first half is Opportunity → Idea Gate → Research → machine research-readiness → Editorial Angle
+→ ContentPiece → Title/Hook/Script development → machine editorial QA → Editorial Gate. Research readiness is
+a machine boundary for proposed content/material claims, with conceptual Ready / Needs-more-research / Blocked
+meanings only; the final evidence schema and Script-to-Claim architecture remain deferred. Editorial QA must
+eventually establish research/claim support, uncertainty/freshness treatment, evidence-supported non-
+overpromising editorial content, audio-first meaning preservation, territory/tone, surfaced risk and
+provenance.
+
+The target second half is Editorial Gate → production planning/production → machine production/brand/risk QA
+→ publication readiness → automatic publishing → analytics/economics → machine learning interpretation →
+Learning Gate → approved adaptations. Normal work proceeds automatically after Editorial approval unless a
+QA, risk, financial or system-health exception interrupts it. The existing initial human pre-publication
+approval rule remains until reliability is demonstrated; the long-term target has no routine fourth final-video
+approval gate. Readiness failure is never silently bypassed, including through grounded-to-ungrounded fallback
+or material output substitution.
+
+Progression derives from existing domain records plus durable, version-specific decision history and readiness
+evidence—not a generic mutable `WorkflowItem(status, approved, current_step)` source of truth. Substantive
+versions require relevant re-evaluation; history remains additive. Phase 2 later needs only editorial-chain
+decision/readiness/revision provenance. Production/publication readiness records remain for Phases 6/7,
+Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
+Phase 9. No placeholder entities are approved.
+
 ## Roadmap direction and milestone governance
 
 > Canonical GitHub roadmap → approved end-to-end operating vision → phase objectives/design boundaries → implementation milestones → bounded Codex implementation tasks

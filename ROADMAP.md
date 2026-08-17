@@ -917,6 +917,95 @@ Implement:
 - Analytics
 - Learning
 
+### Approved Phase 2 operating-model specification
+
+Phase 2 remains **DEFINED, NOT YET IMPLEMENTED**. This specification defines direction only; it does not
+activate Phase 2, create a generic state machine, authorize a v0.15 milestone, or approve database entities.
+
+#### Sparse human gates, rich machine readiness
+
+Atlas uses **sparse human gates and rich machine readiness checks**. Human approval is concentrated at
+meaningful judgement boundaries; intermediate pipeline stages should progress automatically when their explicit
+quality, evidence and provenance requirements are satisfied. Human judgement and machine readiness are
+distinct: the machine must not silently manufacture founder approval, and human approval must not substitute
+for technical, evidence or QA readiness.
+
+The recurring target founder gates are:
+
+- **Idea Gate** — “Is this opportunity worth Atlas spending time and money developing?” The conceptual
+  outcomes are Proceed, Reject or Steer. Atlas should present the opportunity, SimilarStoic/audience relevance,
+  timeliness where relevant, likely explanatory value, useful discovery context, obvious risk/uncertainty and
+  its recommendation. This is not a ResearchPack approval gate.
+- **Editorial Gate** — “Is this the editorial proposition SimilarStoic should produce?” It reviews an editorial
+  package, not an isolated Script: Title, Hook, Angle and Script, with relevant rationale, research/evidence
+  summary, material uncertainty, heightened-risk notes and intentional alternatives. The conceptual outcomes
+  are Approve, Revise, Reject or Select alternative. Approval permits that specific proposition/version to
+  progress subject to downstream readiness; it is not final technical-video approval.
+- **Learning Gate** — “What should Atlas learn from what happened?” It eventually presents observed
+  performance/comparisons, what worked or underperformed, evidence versus hypothesis, available
+  cost/revenue/economics context, proposed adaptation, scope and confidence. The founder may Accept learning,
+  Reject learning, Limit scope, Request more evidence or Override direction. Approved learning must be
+  evidence-backed, scoped, reversible and historically attributable; it must not silently rewrite brand,
+  roadmap, audience, risk policy or operating-model governance.
+
+#### Lifecycle and readiness direction
+
+The approved first-half direction is:
+
+> Opportunity → IDEA GATE → Research → machine research-readiness → Editorial Angle → ContentPiece → Title/Hook/Script development → machine editorial QA → EDITORIAL GATE
+
+Research readiness is a machine boundary, not a founder gate. It applies to the proposed content and material
+claims rather than an abstract assertion that a topic is fully researched. Its conceptual outcomes are Ready,
+Needs more research or Blocked; concrete enums/schema remain undefined. Structured Research Packs precede
+scripting; source quality, proportional corroboration, freshness, fact/interpretation/opinion/forecast/
+illustration distinctions and non-silent blocking of unsupported material claims remain required. The final
+evidence schema and Script-to-Claim architecture remain deferred.
+
+Before Editorial Gate, future editorial QA should establish sufficient intended-content research, support for
+material factual claims, appropriate uncertainty/freshness treatment, research-supported angle, non-
+overpromising title/hook, audio-first script comprehension, meaning preservation, SimilarStoic territory/tone,
+surfaced material risk/compliance concerns and sufficient production provenance. This is an operating
+requirement, not universal automated fact-checking implementation.
+
+The approved second-half target is:
+
+> EDITORIAL GATE → production planning → production → machine production/brand/risk QA → publication readiness → automatic publishing → analytics/economics collection → machine learning interpretation → LEARNING GATE → approved adaptations inform future content decisions
+
+In the long-term target, once Editorial Gate is approved, normal production and publishing proceed
+automatically unless machine QA, risk, financial or system-health checks raise an exception. There is no
+routine fourth founder final-video approval gate in that target. The existing initial human pre-publication
+approval rule remains in force until relevant reliability is demonstrated.
+
+Production/publication readiness eventually checks editorial fidelity, production quality, brand/continuity and
+risk/exception conditions. It includes correspondence to the approved Script/package, no new unsupported
+claims or lost material qualifications, accurate captions and non-contradictory visuals, audio-first
+comprehension, complete/correct assets and ordering, technical/render/platform metadata integrity, correct
+visual/character-reference provenance, deliberate break-frame use, and no blocking factual, regulated,
+copyright/IP, cost, provider/system, provenance or platform-policy concern. Publication readiness means the
+approved proposition was faithfully produced, required QA passed, no blocking exception exists, and Atlas can
+explain what it is publishing and why.
+
+Exceptions interrupt automation; normal work does not. Failed readiness must not be silently bypassed. Future
+handling may auto-remediate safe deterministic faults, use later technical retry/reproduction machinery, or
+escalate judgement-required cases. There is no silent grounded-to-ungrounded fallback, material output
+substitution or hidden evidence/brand/risk bypass.
+
+#### Persistence and deferral boundary
+
+Progression is authorized by durable domain-specific decisions and readiness evidence, not a universal mutable
+`WorkflowItem(status, approved, current_step)` equivalent. Human decisions and readiness evidence apply to
+specific reviewed/generated versions or lineages; substantive changes require relevant re-evaluation, and
+revision history remains additive. Future decision history must preserve what was reviewed, gate/outcome,
+founder direction, time and actor/provenance. Future readiness evidence must preserve what/version was checked,
+result/reasons, evidence/provenance, relevant policy/check version and time.
+
+Phase 2 eventually needs only the persistence semantics relevant to the existing editorial chain: Idea Gate and
+Editorial Gate decision history, domain-specific research/editorial readiness evidence, and revision/progression
+provenance. It deliberately defers production/publication readiness records to Phases 6/7, Learning Gate
+records to Phase 8, financial-guardrail records to future financial implementation, and
+automation/orchestration to Phase 9. A later coordinator may orchestrate such objects without becoming the
+source of truth for their domain meaning.
+
 ## Phase 3 — Technical Architecture
 
 Status: SPECIFIED, NOT YET IMPLEMENTED
