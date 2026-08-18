@@ -472,6 +472,11 @@ reinterpreted from text alone. Its established colour pattern, body shape, scale
 visual traits remain stable across scenes and videos. One-off background hamsters need no persistent named/model
 reference unless they later become established recurring characters.
 
+Appearance in a group scene, comparison sheet, specification sheet or other multi-character visual does not by itself
+establish a supporting hamster as a recurring character or approved identity model. A recurring supporting character
+exists only after explicit founder + ChatGPT approval and approval of its own isolated character-specific visual
+reference.
+
 Current character identity is governed jointly by (1) its approved visual reference asset/model, (2) the applicable
 founder-approved written visual contract and (3) mandatory post-generation visual QA. Where written refinement
 deliberately tightens a historical reference image, the refinement governs that specific deliberate change while the

@@ -323,6 +323,11 @@ governs the rest of the concrete appearance. The same rule applies to recurring 
 hamsters need no persistent reference unless they later become recurring. Generated images never become approved
 references automatically: only founder + ChatGPT-approved visual exemplars may do so.
 
+Appearance in a group scene, comparison sheet, specification sheet or other multi-character visual does not by itself
+establish a supporting hamster as a recurring character or approved identity model. A recurring supporting character
+exists only after explicit founder + ChatGPT approval and approval of its own isolated character-specific visual
+reference.
+
 Every generated visual containing the core mascot—including production, infographic, roadmap, presentation,
 internal-documentation, demo and decorative graphics—requires review against v1 and the character, bag and
 flat-colour contracts before use. Any material inconsistency must be corrected, regenerated or rejected and must

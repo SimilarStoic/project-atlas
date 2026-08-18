@@ -953,6 +953,9 @@ visual QA; deliberate written refinements beyond literal v1 pixels govern only t
 governs the rest of the concrete appearance. The same rule applies to established recurring supporting models.
 One-off background hamsters need no persistent reference unless they later become recurring. Generated images never
 become approved references automatically: only founder + ChatGPT-approved visual exemplars may do so.
+Appearance in a group scene, comparison/specification sheet or other multi-character visual does not establish a
+recurring supporting character or approved identity model; explicit founder + ChatGPT approval and that character's
+own isolated visual reference are required.
 
 The current core mascot uses three isolated character-specific identity references and three supplementary
 scene/expression exemplars, recorded in the tracked [asset manifest](assets/README.md) and the canonical handoff.
