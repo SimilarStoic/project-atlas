@@ -19,12 +19,12 @@ ChatGPT, it is explicitly identified as such a change, canonical GitHub document
 updated, the change is reviewed and accepted, and that update is committed and pushed. Until then, the
 existing GitHub roadmap and specification remain authoritative.
 
-## Current implementation state and next authorized milestone
+## Current implementation state
 
-**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone. **v0.18 —
-Readiness-Authorized Editorial Angle Initiation** is the next defined and authorized milestone, but is not
-implemented or accepted. Migrations remain 1–14; migration 15 does not yet exist; no successor after v0.18 is
-selected.
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation milestone.
+**v0.17 — Persistent Research Readiness** is its historical accepted predecessor. Migration 15 is canonical and
+migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE, later phases remain unactivated, and no
+successor after v0.18 is selected.
 
 ### Historical Phase 1 implementation checkpoint
 
@@ -44,11 +44,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone; v0.16
-is its historical accepted predecessor. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and
-authorized for bounded implementation, but is not implemented or accepted. **Phase 2 — Content Operating Model is
-the current ACTIVE roadmap phase, with accepted v0.15, v0.16 and v0.17 implementations**, under founder + ChatGPT
-design/implementation stewardship.
+unchanged. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation
+milestone; v0.17 is its historical accepted predecessor. **Phase 2 — Content Operating Model is the current
+ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15, v0.16, v0.17 and v0.18 implementations**, under founder +
+ChatGPT design/implementation stewardship.
 this does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
@@ -184,8 +183,9 @@ or deferred scope must return to founder + ChatGPT rather than be inferred.
 
 ### v0.16 — Authorized Research Initiation
 
-v0.16 is the historical accepted implementation predecessor to v0.17; v0.15 remains an earlier historical
-accepted predecessor. Migration 13 remains canonical for its bounded implementation, and migrations now extend through 14.
+v0.16 is a historical accepted implementation predecessor to v0.18; v0.17 is the later historical accepted
+predecessor and v0.15 remains an earlier historical accepted predecessor. Migration 13 remains canonical for its
+bounded implementation, and migrations now extend through 1–15.
 Its purpose is deliberate creation of Opportunity-owned ResearchPack versions under explicit qualifying Idea
 Gate provenance, preserving Proceed/Steer founder authority and reference-only Steer direction without
 research automation or workflow state. ResearchPacks retain Opportunity ownership and gain only an immutable,
@@ -230,9 +230,8 @@ and earlier history remains immutable. No mutable current/latest/superseded read
 it adds no UI, evaluator, provider call, research automation or founder
 approval/override. A Ready assessment must not automatically create an EditorialAngle, ContentPiece or Script.
 The approved lifecycle direction is explicit creation of an EditorialAngle under an exact supplied Ready assessment
-with direct immutable initiation provenance. It is now canonically defined as v0.18 and authorized for bounded
-implementation; it is not implemented or accepted. The final Script-to-Claim architecture and Editorial QA
-implementation remain deferred.
+with direct immutable initiation provenance. It is now canonically accepted as v0.18; the final Script-to-Claim
+architecture and Editorial QA implementation remain deferred.
 
 ### Research and evidence quality canon
 
@@ -246,9 +245,8 @@ source-count rule, automated fact-check algorithm or evaluator design is implied
 
 ### v0.17 — Persistent Research Readiness
 
-v0.17 is the latest accepted implementation milestone. v0.16 is its historical accepted predecessor,
-migration 14 is canonical, migrations extend through 14, and v0.18 is the defined and authorized next milestone
-(not implemented or accepted). v0.17 introduces only one immutable
+v0.17 is a historical accepted implementation predecessor to v0.18. Migration 15 is canonical and migrations
+extend through 1–15. v0.17 introduces only one immutable
 ResearchReadinessAssessment table. The assessment belongs to one
 ResearchPack and carries its own server/repository-built, deterministic, schema-versioned frozen evidence JSON;
 no normalized snapshot aggregate, findings rows, generic readiness/workflow/approval entity or current/latest
@@ -270,9 +268,9 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 ### v0.18 — Readiness-Authorized Editorial Angle Initiation
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.18 belongs to
-Phase 2. It is the next implementation milestone; v0.17 remains latest accepted, migrations remain 1–14, and no
-milestone after v0.18 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the latest accepted
+implementation milestone. v0.17 is its historical accepted predecessor; migration 15 is canonical, migrations
+extend through 1–15, and no milestone after v0.18 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -301,7 +299,7 @@ Angle/Opportunity/Pack/assessment provenance without duplicating frozen readines
 404-style; malformed or invalid lifecycle requests are 400-style under existing conventions. No UI is required or
 authorized: this is not a founder gate and persistence/API proves the boundary without a premature manual workflow.
 
-Migration 15 is expected only when implementation begins and is limited to the nullable direct reference on
+Migration 15 is canonical and is limited to the nullable direct reference on
 `editorial_angles`, a restrictive FK and a lineage index. It must not change Angle versioning, ResearchPack,
 ReadinessAssessment, Claim links, ContentPiece, Script, Title/Hook or Editorial Gate. The full v0.18 acceptance
 criteria are canonical in [ROADMAP.md](../ROADMAP.md), including legacy compatibility, exact-Ready validation,
@@ -330,10 +328,10 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The latest accepted Phase 2 implementation is **v0.17 — Persistent Research Readiness**. Its bounded
-persistence/API contract is accepted. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and
-authorized, but not implemented or accepted; it selects no milestone after v0.18. Material detail beyond its
-approved boundary returns to founder + ChatGPT.
+The latest accepted Phase 2 implementation is **v0.18 — Readiness-Authorized Editorial Angle Initiation**. Its
+bounded persistence/API contract is accepted; **v0.17 — Persistent Research Readiness** is its historical accepted
+predecessor. v0.18 selects no milestone after itself. Material detail beyond its approved boundary returns to
+founder + ChatGPT.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -441,10 +439,8 @@ design decision, not invention by a fresh chat or Codex.
 
 > DEFINE → DESIGN WITH FOUNDER / CHATGPT → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → FINAL ACCEPTANCE → COMMIT → PUSH → NEXT MILESTONE
 
-The immediate next action is bounded local implementation of **v0.18 — Readiness-Authorized Editorial Angle
-Initiation**: a bounded Codex task, local uncommitted implementation, validation, founder + ChatGPT review, fixes
-if required, final acceptance, canonical status update, commit and push. Another design cycle is not required
-unless live implementation reveals a material conflict; no milestone after v0.18 is selected.
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the accepted implementation checkpoint. No
+successor milestone after v0.18 is selected; any future scope requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 

@@ -323,6 +323,81 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 HTTPStatus.CREATED,
             )
             return
+        editorial_angle_suffix = "/editorial-angles"
+        if path.startswith(opportunity_prefix) and path.endswith(editorial_angle_suffix):
+            opportunity_id = unquote(
+                path[len(opportunity_prefix) : -len(editorial_angle_suffix)]
+            ).strip("/")
+            if not opportunity_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("EditorialAngle initiation payload must be an object.")
+                editorial_angle_id = payload.get("id")
+                research_pack_id = payload.get("research_pack_id")
+                assessment_id = payload.get("research_readiness_assessment_id")
+                if not isinstance(editorial_angle_id, str) or not editorial_angle_id.strip():
+                    raise ValueError("EditorialAngle ID must be non-empty text.")
+                if not isinstance(research_pack_id, str) or not research_pack_id.strip():
+                    raise ValueError("ResearchPack ID must be non-empty text.")
+                if not isinstance(assessment_id, str) or not assessment_id.strip():
+                    raise ValueError("Research readiness assessment ID must be non-empty text.")
+                required_text = (
+                    "working_title",
+                    "thesis",
+                    "audience_promise",
+                    "framing",
+                )
+                if any(
+                    not isinstance(payload.get(field), str) or not payload[field].strip()
+                    for field in required_text
+                ):
+                    raise ValueError("EditorialAngle text fields must be non-empty text.")
+                key_takeaways = payload.get("key_takeaways")
+                if not isinstance(key_takeaways, list):
+                    raise ValueError("EditorialAngle key_takeaways must be a list.")
+                metadata = payload.get("metadata")
+                if metadata is not None and not isinstance(metadata, dict):
+                    raise ValueError("EditorialAngle metadata must be an object or null.")
+                editorial_angle = (
+                    self.server.repository.create_editorial_angle_under_research_readiness(
+                        editorial_angle_id.strip(),
+                        opportunity_id,
+                        research_pack_id.strip(),
+                        assessment_id.strip(),
+                        payload["working_title"],
+                        payload["thesis"],
+                        payload["audience_promise"],
+                        payload["framing"],
+                        key_takeaways,
+                        metadata,
+                    )
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {
+                        "error": "Opportunity, ResearchPack or "
+                        "ResearchReadinessAssessment not found."
+                    },
+                    HTTPStatus.NOT_FOUND,
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "editorial_angle",
+                    "editorial_angle": self.server.repository.editorial_angle_payload(
+                        editorial_angle.id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         readiness_assessment_prefix = "/api/research-packs/"
         readiness_assessment_suffix = "/readiness-assessments"
         if path.startswith(readiness_assessment_prefix) and path.endswith(

@@ -935,17 +935,17 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.17 — Persistent Research Readiness** is the latest accepted implementation milestone; v0.16 is its
-historical accepted predecessor. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is the defined and
-authorized next implementation milestone; it is not implemented or accepted. All other remaining Phase 2 scope is
-unimplemented.
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation milestone;
+v0.17 is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15.
+Phase 2 remains ACTIVE / INCOMPLETE; all remaining Phase 2 scope is unimplemented, no later phase is activated,
+and no milestone after v0.18 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.17 is the latest accepted implementation
-milestone; v0.16 and v0.15 remain historical accepted predecessors. This is the
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation
+milestone; v0.17, v0.16 and v0.15 remain historical accepted predecessors. This is the
 first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1037,9 +1037,9 @@ than infer it.
 
 ### v0.16 — Authorized Research Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.17 is the latest accepted implementation
-milestone; v0.16 remains its historical accepted predecessor. Migrations are canonical through 14. v0.16 does not
-complete Phase 2 or activate a later phase.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation
+milestone; v0.17 and v0.16 remain historical accepted predecessors. Migrations are canonical through 1–15. v0.16
+does not complete Phase 2 or activate a later phase.
 
 Purpose:
 
@@ -1149,10 +1149,9 @@ boundary.
 
 ### v0.17 — Persistent Research Readiness
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.17 remains the latest accepted implementation milestone;
-migration 14 is canonical and migrations now extend through 14. v0.16 remains its historical accepted
-predecessor. v0.18 is the defined and authorized next milestone, but is not implemented or accepted. v0.17 does
-not complete Phase 2 or activate a later phase.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation milestone;
+v0.17 is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15.
+v0.17 did not complete Phase 2 or activate a later phase.
 
 Purpose:
 
@@ -1293,10 +1292,10 @@ must return to founder + ChatGPT rather than be inferred.
 
 ### v0.18 — Readiness-Authorized Editorial Angle Initiation
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.18 is the
-next implementation milestone owned by **Phase 2 — Content Operating Model**. v0.17 remains the latest accepted
-implementation milestone, migration 14 remains canonical, and migrations remain 1–14 until v0.18 implementation
-begins. This definition does not complete Phase 2, activate a later phase, or select a milestone after v0.18.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation milestone owned by
+**Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is canonical,
+and migrations extend through 1–15. This acceptance does not complete Phase 2, activate a later phase, or select a
+milestone after v0.18.
 
 Purpose:
 
@@ -1305,7 +1304,7 @@ Purpose:
 > claim-level revalidation, UI, or Phase 5 automation.
 
 The approved relationship is a direct, immutable EditorialAngle → ResearchReadinessAssessment creation-
-provenance reference, conceptually `research_readiness_assessment_id`. v0.18 is expected to add this as a direct,
+provenance reference, conceptually `research_readiness_assessment_id`. v0.18 adds this as a direct,
 nullable foreign key: null for historical/legacy/demo Angles and required only through the new explicit Phase 2
 lifecycle-creation path. It is not metadata-only primary provenance, a separate progression/authorization record,
 a generic workflow entity, readiness consumption, current/latest state or founder approval.
@@ -1397,7 +1396,7 @@ revalidation, candidate generation/ranking, LLM/provider calls, Phase 5 content 
 progression, Script/Title/Hook work, editorial QA/Gate, jobs/queues/workers, Phase 9 orchestration,
 production/rendering, publishing, analytics/Learning and financial controls.
 
-v0.18 deliberately consumes-by-reference Ready research evidence into editorial initiation. Phase 5 may later
+v0.18 deliberately references exact Ready research evidence for editorial initiation without consuming it. Phase 5 may later
 automate Angle generation and Phase 9 may later orchestrate progression; neither is part of v0.18. Material
 ambiguity about provenance meaning, lifecycle-only enforcement, legacy compatibility, exact Ready qualification,
 same-Pack/Opportunity validation, update immutability, Claim-link boundary, API semantics or later-phase boundaries
@@ -1599,10 +1598,10 @@ operating costs later require per-item authorization remains a financial-control
 spend authorization must be attributable to the exact editorial/production lineage it governs, but no
 authorization, proposal, reservation, ledger or enforcement entity is approved here.
 
-v0.15 — Persistent Idea Gate and v0.16 — Authorized Research Initiation are historical accepted implementation
-predecessors. **v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone;
-migrations are canonical through 14. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and
-authorized for bounded implementation but is not implemented or accepted; no milestone after v0.18 is selected.
+v0.15 — Persistent Idea Gate, v0.16 — Authorized Research Initiation and **v0.17 — Persistent Research
+Readiness** are historical accepted implementation predecessors. **v0.18 — Readiness-Authorized Editorial Angle
+Initiation** is the latest accepted implementation milestone; migration 15 is canonical and migrations extend
+through 1–15. Phase 2 remains ACTIVE / INCOMPLETE, and no milestone after v0.18 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1765,14 +1764,14 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE; v0.17 ACCEPTED; v0.18 DEFINED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.18 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
   v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
-  is its historical accepted milestone; v0.17 — Persistent Research Readiness is its latest accepted
-  implementation milestone; v0.18 — Readiness-Authorized Editorial Angle Initiation is its defined and
-  authorized, but unimplemented, next milestone;
+  is its historical accepted milestone; v0.17 — Persistent Research Readiness is its historical accepted
+  predecessor; v0.18 — Readiness-Authorized Editorial Angle Initiation is its latest accepted implementation
+  milestone; no milestone after v0.18 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

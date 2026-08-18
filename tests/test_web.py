@@ -1179,3 +1179,144 @@ def test_research_readiness_assessment_api_is_server_frozen_and_history_only(
         assert "not found" in missing_get["error"]
     finally:
         server.server_close()
+
+
+def test_editorial_angle_lifecycle_api_requires_explicit_exact_ready_provenance(
+    tmp_path: Path,
+) -> None:
+    """v0.18 exposes only deliberate Ready-assessment Angle initiation over HTTP."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid lifecycle request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    try:
+        repository = server.repository
+        pack_id = "research-pack-isa-deadline-v1"
+        other_opportunity_id = "http-angle-other-opportunity"
+        repository.create_opportunity(
+            other_opportunity_id, "Other", "Summary", "Why now", 1, "proposed"
+        )
+        other_pack = repository.create_research_pack(
+            "http-angle-other-pack", other_opportunity_id, 1, "Other pack"
+        )
+
+        def assessment(assessment_id: str, target_pack_id: str, outcome: str):
+            return repository.create_research_readiness_assessment(
+                assessment_id,
+                target_pack_id,
+                outcome,
+                {"summary": f"{outcome} for HTTP lifecycle testing."},
+                "readiness-policy-v1",
+                "test",
+                "http-test",
+                "v1",
+            )
+
+        ready = assessment("http-angle-ready", pack_id, "Ready")
+        needs_more = assessment("http-angle-needs-more", pack_id, "NeedsMoreResearch")
+        blocked = assessment("http-angle-blocked", pack_id, "Blocked")
+        other_ready = assessment("http-angle-other-ready", other_pack.id, "Ready")
+        endpoint = f"{base_url}/api/opportunities/uk-isa-rules/editorial-angles"
+        payload = {
+            "id": "http-readiness-angle",
+            "research_pack_id": pack_id,
+            "research_readiness_assessment_id": ready.id,
+            "working_title": "A deliberate lifecycle Angle",
+            "thesis": "Exact Ready provenance is stored.",
+            "audience_promise": "Understand the decision boundary.",
+            "framing": "A focused explainer.",
+            "key_takeaways": ["Ready provenance is exact."],
+            "metadata": {"source": "http-test"},
+        }
+        created, status = request_json(
+            Request(
+                endpoint,
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        angle = created["editorial_angle"]
+        assert created["kind"] == "editorial_angle"
+        assert angle["opportunity_id"] == "uk-isa-rules"
+        assert angle["research_pack_id"] == pack_id
+        assert angle["research_readiness_assessment_id"] == ready.id
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM content_pieces WHERE editorial_angle_id = ?", (angle["id"],)
+            ).fetchone()[0]
+            == 0
+        )
+
+        for assessment_id in (needs_more.id, blocked.id):
+            rejected, status = request_error(
+                Request(
+                    endpoint,
+                    data=json.dumps(
+                        payload
+                        | {
+                            "id": f"http-rejected-{assessment_id}",
+                            "research_readiness_assessment_id": assessment_id,
+                        }
+                    ).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert "Ready" in rejected["error"]
+        for patch in (
+            {"research_readiness_assessment_id": "missing"},
+            {"research_pack_id": other_pack.id},
+            {"research_readiness_assessment_id": other_ready.id},
+            {"key_takeaways": "not-a-list"},
+        ):
+            rejected, status = request_error(
+                Request(
+                    endpoint,
+                    data=json.dumps(
+                        payload | {"id": f"http-invalid-{len(patch)}"} | patch
+                    ).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == (
+                404 if patch.get("research_readiness_assessment_id") == "missing" else 400
+            )
+            assert rejected["error"]
+        missing_opportunity, status = request_error(
+            Request(
+                f"{base_url}/api/opportunities/missing/editorial-angles",
+                data=json.dumps(payload | {"id": "http-missing-opportunity"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "not found" in missing_opportunity["error"]
+    finally:
+        server.server_close()

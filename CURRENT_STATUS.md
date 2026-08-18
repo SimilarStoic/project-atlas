@@ -2,19 +2,19 @@
 
 ## Last Updated
 
-17 August 2026
+18 August 2026
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE; v0.17 ACCEPTED; v0.18 DEFINED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.18 ACCEPTED)**
 
 ## Overall Status
 
-🟢 Phase 1 is formally closed. Phase 2 is now the active roadmap phase under founder + ChatGPT
-design/implementation stewardship; v0.17 is the latest accepted implementation milestone and v0.16 is its
-historical accepted predecessor. v0.18 — Readiness-Authorized Editorial Angle Initiation is the defined and
-authorized next implementation milestone, but is not implemented or accepted. Remaining Phase 2 scope is not implemented. Atlas v0.1
-through v0.7 are complete and pushed.
+🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
+design/implementation stewardship; v0.18 — Readiness-Authorized Editorial Angle Initiation is the latest accepted
+implementation milestone and v0.17 is its historical accepted predecessor. Migration 15 is canonical and
+migrations extend through 1–15. Remaining Phase 2 scope is not implemented, later phases remain unactivated, and
+no milestone after v0.18 is selected. Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -46,7 +46,7 @@ bootstrap alongside the founder-approved SimilarStoic Core v3 visual-style basel
 - Initial commit created
 - Initial commit pushed to GitHub
 
-## Git
+## Historical v0.14 Git Checkpoint
 
 Current commit:
 
@@ -71,6 +71,26 @@ Validated state:
 - pytest: **75 passed** at the accepted v0.14 checkpoint.
 - `git diff --check` passed.
 - SQLite migrations: **1–11**.
+
+## Atlas v0.18 Checkpoint
+
+**Project Atlas v0.18 — Readiness-Authorized Editorial Angle Initiation** is the accepted implementation
+checkpoint.
+
+- v0.18 is the latest accepted implementation milestone; v0.17 is its historical accepted predecessor.
+- Migration 15 is canonical; SQLite migrations extend through **1–15**.
+- An EditorialAngle can be created under one exact explicitly supplied `Ready` ResearchReadinessAssessment through
+  immutable direct provenance: **this EditorialAngle was initiated under this exact Ready
+  ResearchReadinessAssessment.**
+- Historical/demo/legacy Angles retain null provenance without backfill, and low-level legacy creation remains
+  compatible.
+- Readiness is neither current/latest state nor consumed; one Ready assessment may support multiple Angles, and
+  later reassessments do not rewrite prior provenance.
+- Existing same-ResearchPack Claim-link semantics remain unchanged; no frozen Claim matching, automatic
+  ContentPiece/Script creation, `Opportunity.status` mutation, workflow state or UI was introduced.
+- Validation passed: **86 tests passed**; Ruff, Black `--check`, and `git diff --check` passed.
+- Phase 2 remains ACTIVE / INCOMPLETE; Phase 1 remains complete, later phases remain unactivated, and no successor
+  milestone after v0.18 is selected.
 
 ## Atlas v0.2 Checkpoint
 
@@ -737,8 +757,9 @@ proven workflows only; it must not automate uncertainty merely because automatio
 
 Phase 2 is **ACTIVE**: it is the current roadmap phase under founder + ChatGPT design/implementation
 stewardship. Activation does not authorize all Phase 2 scope or later-phase engines. **v0.16 — Authorized
-Research Initiation** is the latest accepted implementation milestone; v0.15 remains its historical accepted
-predecessor. Later phases retain their defined roles for technical architecture, research, content intelligence,
+Research Initiation** is a historical accepted implementation predecessor; v0.18 — Readiness-Authorized Editorial
+Angle Initiation is the latest accepted implementation milestone and v0.17 is its historical accepted predecessor.
+Later phases retain their defined roles for technical architecture, research, content intelligence,
 production, distribution, analytics/learning, automation and scale; no later milestone or phase is activated.
 
 # Approved Phase 2 Operating-Model Specification
@@ -798,17 +819,17 @@ current/latest/superseded pointer; later evidence requires a new assessment. Mig
 API are canonical; no UI, evaluator/producer, research automation or EditorialAngle progression implementation
 exists. A Ready assessment does not automatically create editorial records.
 
-**v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone. v0.16 is its
-historical accepted predecessor and migrations are canonical through 14. v0.17 is limited to one immutable
+**v0.17 — Persistent Research Readiness** is a historical accepted implementation predecessor to v0.18. Migration
+15 is canonical and migrations extend through 1–15. v0.17 is limited to one immutable
 ResearchReadinessAssessment table with a server-built,
 deterministically ordered, schema-versioned frozen ResearchPack/Claim/Source/ClaimEvidence payload; exact
 Ready / NeedsMoreResearch / Blocked outcomes; structured findings; policy/check, schema and producer
 provenance; additive history; and controlled create/list/get API reads. It has no UI, evaluator, mutable
 current/latest state, backfill, automation or later-phase behavior.
 
-**v0.18 — Readiness-Authorized Editorial Angle Initiation** is now defined and authorized for bounded
-implementation, but is not implemented or accepted. It is the next Phase 2 milestone: deliberate creation of an
-Opportunity-owned EditorialAngle under one exact supplied immutable `Ready` ResearchReadinessAssessment, using a
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the accepted implementation checkpoint and latest
+accepted Phase 2 milestone: deliberate creation of an Opportunity-owned EditorialAngle under one exact supplied
+immutable `Ready` ResearchReadinessAssessment, using a
 direct immutable `research_readiness_assessment_id` reference. The reference is nullable for historical/demo/legacy
 Angles, required only on the dedicated lifecycle path, and means only that the Angle was initiated under that exact
 Ready assessment—not that mutable Angle content remains perpetually validated. Existing low-level Angle creation
@@ -816,8 +837,8 @@ remains compatible, with no backfill or global readiness requirement. The lifecy
 ResearchPack and assessment → same ResearchPack lineage; it rejects missing, cross-lineage, NeedsMoreResearch and
 Blocked input. No latest/current selection, consumption, readiness mutation, frozen Claim matching, ContentPiece,
 Script, `Opportunity.status` mutation, workflow entity, provider call, UI or Phase 5 automation is authorized.
-Migration 15 is expected only when implementation begins, limited to the nullable restrictive FK and lineage index.
-Migrations remain 1–14. No milestone after v0.18 is selected.
+Migration 15 is canonical, limited to the nullable restrictive FK and lineage index. Migrations extend through
+1–15. No milestone after v0.18 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -836,9 +857,9 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 is now active. v0.17 — Persistent Research Readiness remains the latest accepted implementation milestone;
-v0.16 is its historical accepted predecessor. v0.18 — Readiness-Authorized Editorial Angle Initiation is defined
-and authorized for bounded implementation, but is not implemented or accepted; it selects no milestone after v0.18.
+Phase 2 remains active and incomplete. v0.18 — Readiness-Authorized Editorial Angle Initiation is the latest
+accepted implementation milestone; v0.17 is its historical accepted predecessor. Migration 15 is canonical,
+migrations extend through 1–15, and no milestone after v0.18 is selected.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

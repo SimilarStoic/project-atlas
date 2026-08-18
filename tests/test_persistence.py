@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -452,6 +452,250 @@ def test_research_readiness_assessments_freeze_exact_evidence_and_preserve_histo
         repository.close()
 
 
+def test_editorial_angle_readiness_initiation_preserves_exact_immutable_provenance(
+    tmp_path,
+) -> None:
+    """v0.18 creates only explicitly Ready-assessed Angles without changing older behavior."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        repository.create_opportunity(
+            "angle-opportunity-a", "A", "Summary", "Why now", 1, "proposed"
+        )
+        repository.create_opportunity(
+            "angle-opportunity-b", "B", "Summary", "Why now", 1, "proposed"
+        )
+        pack_a = repository.create_research_pack(
+            "angle-research-pack-a", "angle-opportunity-a", 1, "Pack A"
+        )
+        pack_b = repository.create_research_pack(
+            "angle-research-pack-b", "angle-opportunity-b", 1, "Pack B"
+        )
+
+        def assessment(assessment_id: str, pack_id: str, outcome: str):
+            return repository.create_research_readiness_assessment(
+                assessment_id,
+                pack_id,
+                outcome,
+                {"summary": f"{outcome} assessment."},
+                "readiness-policy-v1",
+                "test",
+                "persistence-test",
+                "v1",
+            )
+
+        needs_more = assessment("angle-needs-more", pack_a.id, "NeedsMoreResearch")
+        blocked = assessment("angle-blocked", pack_a.id, "Blocked")
+        ready_a = assessment("angle-ready-a", pack_a.id, "Ready")
+        ready_b = assessment("angle-ready-b", pack_a.id, "Ready")
+        ready_other_pack = assessment("angle-ready-other", pack_b.id, "Ready")
+        assessment_count = repository.connection.execute(
+            "SELECT COUNT(*) FROM research_readiness_assessments"
+        ).fetchone()[0]
+        original_status = repository.get_opportunity(pack_a.opportunity_id).status
+
+        legacy = repository.create_editorial_angle(
+            "angle-legacy",
+            pack_a.opportunity_id,
+            pack_a.id,
+            "Legacy",
+            "Thesis",
+            "Promise",
+            "Frame",
+            ["One"],
+        )
+        assert legacy.research_readiness_assessment_id is None
+        assert (
+            repository.get_editorial_angle(
+                "editorial-angle-isa-decision-tree-v1"
+            ).research_readiness_assessment_id
+            is None
+        )
+
+        arguments = (
+            "angle-invalid",
+            pack_a.opportunity_id,
+            pack_a.id,
+            "Title",
+            "Thesis",
+            "Promise",
+            "Frame",
+            ["One"],
+        )
+        with pytest.raises(ValueError, match="Ready"):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], arguments[1], arguments[2], needs_more.id, *arguments[3:]
+            )
+        with pytest.raises(ValueError, match="Ready"):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], arguments[1], arguments[2], blocked.id, *arguments[3:]
+            )
+        with pytest.raises(KeyError):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], arguments[1], arguments[2], "missing-assessment", *arguments[3:]
+            )
+        with pytest.raises(ValueError, match="ResearchPack"):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], pack_a.opportunity_id, pack_b.id, ready_other_pack.id, *arguments[3:]
+            )
+        with pytest.raises(ValueError, match="ResearchReadinessAssessment"):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], pack_a.opportunity_id, pack_a.id, ready_other_pack.id, *arguments[3:]
+            )
+        with pytest.raises(KeyError):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], "missing-opportunity", pack_a.id, ready_a.id, *arguments[3:]
+            )
+        with pytest.raises(KeyError):
+            repository.create_editorial_angle_under_research_readiness(
+                arguments[0], pack_a.opportunity_id, "missing-pack", ready_a.id, *arguments[3:]
+            )
+
+        first = repository.create_editorial_angle_under_research_readiness(
+            "angle-ready-first", pack_a.opportunity_id, pack_a.id, ready_a.id, *arguments[3:]
+        )
+        second = repository.create_editorial_angle_under_research_readiness(
+            "angle-ready-second", pack_a.opportunity_id, pack_a.id, ready_a.id, *arguments[3:]
+        )
+        later = repository.create_editorial_angle_under_research_readiness(
+            "angle-ready-later", pack_a.opportunity_id, pack_a.id, ready_b.id, *arguments[3:]
+        )
+        assert first.research_readiness_assessment_id == ready_a.id
+        assert second.research_readiness_assessment_id == ready_a.id
+        assert later.research_readiness_assessment_id == ready_b.id
+        assert (
+            repository.editorial_angle_payload(first.id)["research_readiness_assessment_id"]
+            == ready_a.id
+        )
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM research_readiness_assessments"
+            ).fetchone()[0]
+            == assessment_count
+        )
+
+        updated = repository.update_editorial_angle(replace(first, thesis="Edited mutable thesis."))
+        assert updated.research_readiness_assessment_id == ready_a.id
+        with pytest.raises(ValueError, match="readiness provenance"):
+            repository.update_editorial_angle(
+                replace(updated, research_readiness_assessment_id=ready_b.id)
+            )
+        assert repository.get_opportunity(pack_a.opportunity_id).status == original_status
+
+        claim = repository.create_claim(
+            "angle-pack-a-claim",
+            pack_a.id,
+            "No frozen matching is required.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        repository.link_claim_to_editorial_angle(first.id, claim.id, "core")
+        other_claim = repository.create_claim(
+            "angle-pack-b-claim",
+            pack_b.id,
+            "Different pack.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        with pytest.raises(ValueError, match="Angle's ResearchPack"):
+            repository.link_claim_to_editorial_angle(first.id, other_claim.id, "supporting")
+    finally:
+        repository.close()
+
+
+def test_migration_15_adds_nullable_angle_readiness_lineage_without_backfill(tmp_path) -> None:
+    """Migration 15 preserves pre-v0.18 Angles while adding restrictive provenance."""
+
+    database = tmp_path / "atlas-v017.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:14]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-17T00:00:00+00:00')",
+                (version,),
+            )
+        connection.execute(
+            "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "historical-angle-opportunity",
+                "Title",
+                "Summary",
+                "Why now",
+                1,
+                "proposed",
+                "{}",
+                "now",
+                "now",
+            ),
+        )
+        connection.execute(
+            "INSERT INTO research_packs "
+            "(id, opportunity_id, version, summary, as_of_date, metadata_json, created_at, "
+            "updated_at, idea_gate_decision_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "historical-angle-pack",
+                "historical-angle-opportunity",
+                1,
+                "Summary",
+                None,
+                "{}",
+                "now",
+                "now",
+                None,
+            ),
+        )
+        connection.execute(
+            "INSERT INTO editorial_angles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "historical-angle",
+                "historical-angle-opportunity",
+                "historical-angle-pack",
+                "Title",
+                "Thesis",
+                "Promise",
+                "Frame",
+                '["One"]',
+                "{}",
+                "now",
+                "now",
+            ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        assert (
+            repository.get_editorial_angle("historical-angle").research_readiness_assessment_id
+            is None
+        )
+        assert repository.connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' "
+            "AND name='idx_editorial_angles_research_readiness_assessment'"
+        ).fetchone()
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM editorial_angles "
+                "WHERE research_readiness_assessment_id IS NOT NULL"
+            ).fetchone()[0]
+            == 0
+        )
+    finally:
+        repository.close()
+
+
 def test_migration_11_adds_reference_lineage_without_backfilling_history(
     tmp_path,
 ) -> None:
@@ -479,7 +723,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -900,7 +1144,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -1094,7 +1338,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -1239,7 +1483,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                15,
+                16,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -1261,7 +1505,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 15"
+                "SELECT version FROM schema_migrations WHERE version = 16"
             ).fetchone()
             is None
         )
@@ -3309,7 +3553,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

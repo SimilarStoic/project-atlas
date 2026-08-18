@@ -163,6 +163,7 @@ class EditorialAngle:
     id: str
     opportunity_id: str
     research_pack_id: str
+    research_readiness_assessment_id: str | None
     working_title: str
     thesis: str
     audience_promise: str
@@ -828,6 +829,20 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
         ),
     ),
+    (
+        15,
+        (
+            """
+        ALTER TABLE editorial_angles
+        ADD COLUMN research_readiness_assessment_id TEXT NULL
+        REFERENCES research_readiness_assessments(id) ON DELETE RESTRICT
+        """,
+            """
+        CREATE INDEX idx_editorial_angles_research_readiness_assessment
+          ON editorial_angles (research_readiness_assessment_id, created_at, id)
+        """,
+        ),
+    ),
 )
 
 
@@ -1397,7 +1412,11 @@ class AtlasRepository:
         stamp = now()
         with self.connection:
             self.connection.execute(
-                "INSERT INTO editorial_angles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO editorial_angles "
+                "(id, opportunity_id, research_pack_id, working_title, thesis, audience_promise, "
+                "framing, key_takeaways_json, metadata_json, created_at, updated_at, "
+                "research_readiness_assessment_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
                 (
                     editorial_angle_id,
                     opportunity_id,
@@ -1410,6 +1429,60 @@ class AtlasRepository:
                     json.dumps(metadata or {}),
                     stamp,
                     stamp,
+                ),
+            )
+        return self.get_editorial_angle(editorial_angle_id)
+
+    def create_editorial_angle_under_research_readiness(
+        self,
+        editorial_angle_id: str,
+        opportunity_id: str,
+        research_pack_id: str,
+        research_readiness_assessment_id: str,
+        working_title: str,
+        thesis: str,
+        audience_promise: str,
+        framing: str,
+        key_takeaways: list[str],
+        metadata: dict[str, Any] | None = None,
+    ) -> EditorialAngle:
+        """Deliberately create one Angle under an exact Ready readiness assessment."""
+
+        self.get_opportunity(opportunity_id)
+        research_pack = self.get_research_pack(research_pack_id)
+        if research_pack.opportunity_id != opportunity_id:
+            raise ValueError("An EditorialAngle must use a ResearchPack from the same Opportunity.")
+        assessment = self.get_research_readiness_assessment(research_readiness_assessment_id)
+        if assessment.outcome != "Ready":
+            raise ValueError(
+                "Only a Ready ResearchReadinessAssessment may authorize EditorialAngle creation."
+            )
+        if assessment.research_pack_id != research_pack.id:
+            raise ValueError(
+                "The ResearchReadinessAssessment must belong to the EditorialAngle ResearchPack."
+            )
+        self._validate_editorial_angle_takeaways(key_takeaways)
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO editorial_angles "
+                "(id, opportunity_id, research_pack_id, working_title, thesis, audience_promise, "
+                "framing, key_takeaways_json, metadata_json, created_at, updated_at, "
+                "research_readiness_assessment_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    editorial_angle_id,
+                    opportunity_id,
+                    research_pack_id,
+                    working_title,
+                    thesis,
+                    audience_promise,
+                    framing,
+                    json.dumps(key_takeaways),
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                    assessment.id,
                 ),
             )
         return self.get_editorial_angle(editorial_angle_id)
@@ -1449,9 +1522,13 @@ class AtlasRepository:
         if (
             editorial_angle.opportunity_id != persisted_angle.opportunity_id
             or editorial_angle.research_pack_id != persisted_angle.research_pack_id
+            or (
+                editorial_angle.research_readiness_assessment_id
+                != persisted_angle.research_readiness_assessment_id
+            )
         ):
             raise ValueError(
-                "EditorialAngle Opportunity and ResearchPack provenance are immutable."
+                "EditorialAngle Opportunity, ResearchPack and readiness provenance are immutable."
             )
         self._validate_editorial_angle_takeaways(editorial_angle.key_takeaways)
         with self.connection:
@@ -1561,6 +1638,7 @@ class AtlasRepository:
             "id": angle.id,
             "opportunity_id": angle.opportunity_id,
             "research_pack_id": angle.research_pack_id,
+            "research_readiness_assessment_id": angle.research_readiness_assessment_id,
             "working_title": angle.working_title,
             "thesis": angle.thesis,
             "audience_promise": angle.audience_promise,
@@ -3458,7 +3536,11 @@ class AtlasRepository:
             for angle in angles:
                 self.connection.execute(
                     "INSERT OR IGNORE INTO editorial_angles "
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "(id, opportunity_id, research_pack_id, working_title, thesis, "
+                    "audience_promise, "
+                    "framing, key_takeaways_json, metadata_json, created_at, updated_at, "
+                    "research_readiness_assessment_id) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)",
                     angle,
                 )
             for editorial_angle_id, claim_id, role in relationships:
@@ -4240,6 +4322,7 @@ class AtlasRepository:
             row["id"],
             row["opportunity_id"],
             row["research_pack_id"],
+            row["research_readiness_assessment_id"],
             row["working_title"],
             row["thesis"],
             row["audience_promise"],
