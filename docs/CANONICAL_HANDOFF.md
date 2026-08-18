@@ -395,6 +395,164 @@ cues, warm tan/orange accents, multi-colour sling-bag, dark-gray strap, and Char
 No further Phase 1 visual/generation work is authorized merely by this Phase 1 acceptance record. This historical
 visual boundary does not invalidate or limit the separately authorized Phase 2 milestones.
 
+### Current founder + ChatGPT visual-specification clarification
+
+This is a current approved clarification of the existing SimilarStoic hamster identity contract. It builds on,
+but does not rewrite, the historical v0.14 visual-acceptance record. It creates no milestone, schema change,
+CharacterReferenceSet version, VisualStyleProfile version, implementation authorization, or later-phase activation.
+
+The current core mascot identity is governed jointly by the immutable
+`character-reference-set-similarstoic-hamster-core-v1` reference asset and this current founder + ChatGPT-approved
+visual-refinement contract. The set contains only the approved position-1 Asset
+`asset-9a02b4cb416744a994965e2e1f2f0c33`, version 9, SHA-256
+`eaf0af82fe98120613793465f94029a72ae13a79f8e3e258d265e88fa47c450b`. Where this clarification deliberately
+tightens future depiction requirements beyond the literal original v1 pixels—including more prominent rounded ears,
+more prominent whiskers, a broad/soft hamster-like face, toothless mouths, fixed bag panel/layout rules, flat-colour
+rendering and mandatory consistency QA—it governs future conforming depictions without mutating, replacing or
+rewriting that historical reference asset. CharacterReferenceSet v2, replacement, silent substitution, or a new
+mascot identity is not authorized. SimilarStoic Core v3 remains unchanged as the accepted visual-language baseline.
+
+The core mascot is unmistakably hamster-like, never mouse-like: a broad, soft, rounded hamster face/muzzle and a
+compact, rounded hamster-native body. It retains both visibly large, rounded ears—deliberately slightly more
+prominent than in the original v1 reference when pose allows—long distinct whiskers extending well beyond the
+muzzle, simple alert dark eyes, a mostly white/light body, warm tan/orange inner ears, nose and paws/hands/feet,
+minimal or no fur detail, and simple, slightly crude hand-drawn anatomy. It must not receive glossy mascot
+rendering, polished AI-clean finish, species drift, accidental body-proportion change, or facial-identity drift.
+Expression may vary broadly—happy, excited, curious, thoughtful, surprised, determined, concerned, worried,
+frustrated, cheeky, vulnerable, overwhelmed, triumphant, or otherwise scene-appropriate—through eyes, brows where
+used, mouth shape, gesture and posture only. It must not alter identity, ear scale, whisker length or presence,
+face proportions, core colouring, sling-bag design or body proportions.
+
+#### Toothless mouth rule
+
+Closed, smiling, surprised/open, speaking/open and wide-cheerful mouths are permitted, but every core-mascot mouth
+must remain simple and toothless. Visible white teeth, small front teeth, dental detail, duplicate mouth lines,
+malformed inner-mouth shapes, inconsistent lips and extra mouth anatomy are non-canonical generation errors. An
+image showing teeth is non-conforming and must be corrected, regenerated or rejected.
+
+#### Fixed signature bag
+
+Only the main core mascot wears the identity-defining signature sling/crossbody bag. It has a genuinely crossbody
+placement, dark-gray strap, dark/black zipper band and dark outline, red/orange strip along its upper area, green
+upper/central panel, blue lower-left panel, yellow lower-right panel, the same recognizable curved sling-bag
+silhouette as the approved reference, the same panel adjacency and colour relationships, and consistent zipper/pull
+treatment where visible. Perspective and pose may change the view, but must not redesign its panel arrangement,
+colour ordering, silhouette, strap identity or zipper structure.
+
+Supporting/background hamsters may use believable Syrian/golden-like, Russian dwarf-like, Roborovski-like or other
+appropriate hamster colour/type variations. They remain hamster-like and secondary, must not duplicate the full
+core identity, and never wear the signature bag. The mostly-white/light core identity plus the bag are reserved for
+the main mascot. Supporting hamsters are not purely ad hoc background variations: a small recurring set of
+secondary hamster models may be established and reused across scenes and videos. Each may have its own stable hamster
+type/colour pattern, body shape, body size/scale, facial characteristics and other secondary-character traits. Once
+defined, its established appearance is stable for future depictions of that same model; future generations must not
+randomly redesign or re-randomize it. Recurring supporting models may differ materially from one another in colour,
+size and shape, but remain secondary, never wear the core bag and never duplicate the full core identity. One-off
+background hamsters may vary freely within the approved hamster visual language only if they neither become nor
+imitate an already established recurring supporting model.
+
+#### Approved visual model and reference grounding
+
+Mascot and recurring supporting characters must not be reconstructed from text description alone when an approved
+visual reference model exists. Text documentation defines visual rules, constraints, identity semantics and QA
+requirements; approved visual reference assets define the concrete appearance of the character model.
+
+For the core mascot, `character-reference-set-similarstoic-hamster-core-v1` remains the immutable historical
+identity anchor, while the current founder + ChatGPT-approved refinement contract remains authoritative for deliberate
+refinements beyond literal v1 pixels. Founder-approved refined exemplar images may serve as concrete visual
+references for the current depiction standard. Future core-mascot generation should use an approved visual reference
+asset as image/reference grounding whenever the generation mechanism supports it. The mascot must not be recreated
+approximately from prose alone if an approved visual reference can be supplied; a text-only recreation that
+materially reinterprets the model is non-conforming.
+
+The same principle applies to recurring supporting hamster models: once established and approved, each model's
+approved visual reference is its concrete identity reference for future depictions. Future depictions should be
+reference-grounded from that approved model wherever technically possible, rather than randomly reconstructed or
+reinterpreted from text alone. Its established colour pattern, body shape, scale, facial characteristics and other
+visual traits remain stable across scenes and videos. One-off background hamsters need no persistent named/model
+reference unless they later become established recurring characters.
+
+Current character identity is governed jointly by (1) its approved visual reference asset/model, (2) the applicable
+founder-approved written visual contract and (3) mandatory post-generation visual QA. Where written refinement
+deliberately tightens a historical reference image, the refinement governs that specific deliberate change while the
+reference continues to govern the rest of the concrete appearance. Prose is not permission to redraw or reinterpret
+unspecified details. A newly generated image never becomes an approved model reference automatically; only a founder
+and ChatGPT-approved visual exemplar may become one.
+
+Reference grounding does not itself make a generation accepted. Every depiction must still pass the mandatory visual
+consistency QA below. If it introduces changed proportions, altered bag geometry or colour placement, missing or
+shortened whiskers, changed ear size, teeth, incorrect mouth anatomy, missing/duplicate/stray outlines, new
+shading/gradients, changed core colours, supporting-character drift or any other material deviation from the approved
+reference plus written contract, it is non-conforming and must be corrected, regenerated or rejected. If an approved
+visual reference is unavailable to a process expected to generate a recurring character, that process must not
+silently approximate the character from text and treat the result as canonical or publishable: fail closed.
+
+#### Current tracked core-mascot reference manifest and hierarchy
+
+The approved current-depiction assets below are durable, Git-tracked reference bytes. They supplement the immutable
+historical v1 anchor and current written refinement contract; they do not create CharacterReferenceSet v2, alter v1,
+alter VisualStyleProfile v3, create a runtime entity, or implement reference-passing or automated QA.
+
+Core-mascot generation uses this hierarchy:
+
+1. approved isolated core identity reference(s);
+2. the founder + ChatGPT-approved written visual-refinement contract;
+3. optional core scene/expression exemplars; and
+4. mandatory post-generation visual QA.
+
+| Role class | Verified tracked asset | Dimensions | SHA-256 | Approved use |
+| --- | --- | --- | --- | --- |
+| CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png` | 1448x1086 | `11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956` | Preferred primary isolated core-mascot grounding asset. |
+| CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/a5564bd0-51d2-4713-82c1-42138f12a8dc.png` | 1448x1086 | `d3acb16af30b9a5aca29e92e2e8f19d7b5a21df4b8e572de054756ca23321cc4` | Preferred primary/supplementary core-only multi-pose grounding asset. |
+| CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` | 1536x1024 | `eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46` | Approved supplementary core-only specification/identity grounding; not preferred as sole grounding input. |
+| CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png` | 1448x1086 | `27ff66e34a8649a22c649a5593c93d0532cd176cf69dafb61bc19a1d2e1eb85a` | Supplementary flowchart/explaining pose, expression, composition and context. |
+| CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` | 1448x1086 | `24dc9fd6367d6f7c4f9731b12bd1b7e7376edf7870ecee0a8ac066699363ff65` | Supplementary growth-chart/surprised-expression pose, composition and context. |
+| CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` | 1448x1086 | `95ad2c8a75b7ce798eb315d1c84d34571bb1a44ace1922b141bdb2173fdfae4f` | Supplementary reading/thinking pose, expression, composition and context. |
+
+The three identity assets contain no supporting hamster model and are the only core-mascot identity inputs in this
+manifest. The scene/expression exemplars are supplementary only: their whiteboards, charts, books, tables, chairs,
+diagrams and any other props are scene context, never mascot identity features.
+
+Supporting-character references must live in separate per-character directories. Identity references from different
+recurring characters must never be pooled. A recurring supporting character must receive its own isolated approved
+reference(s) before stable reuse. Generated images never become approved references automatically; founder + ChatGPT
+approval is required before an image can be added as a character reference.
+
+This canonizes the tracked reference assets and reference-grounded generation requirements only. It does not
+implement image-conditioning/reference-passing code or automated QA, create supporting-character entities, define a
+supporting roster, create a milestone or authorize a later phase. Those implementation details remain separately
+designed and authorized work.
+
+#### Flat-colour and outline contract
+
+All hamster characters use direct-transition flat block colours. Gradients, tonal or volumetric shading, painterly
+blending, textured/detailed fur, cross-hatching, glossy highlights and polished AI-clean rendering are prohibited.
+Outlines must be simple, sparse, dark, hand-drawn, slightly imperfect and sufficient to define anatomy clearly;
+missing limb contours, duplicate contours, stray lines, extra anatomy and contradictory outlines are prohibited.
+Line-count variation must not change the character model.
+
+#### Mandatory consistency review; automation remains deferred
+
+Every generated visual containing the core mascot—including production visuals, infographics, roadmap graphics,
+presentations, internal-documentation graphics, demo illustrations and decorative uses—must be reviewed against
+CharacterReferenceSet v1, this character contract, the bag contract and the flat-colour contract before it is
+usable, production-ready, publishable or used as a project graphic. Review must confirm hamster-like identity and
+stable proportions; sufficiently large rounded ears; long whiskers on all visible sides as appropriate; correct
+eyes, nose, white/light body and warm tan/orange accents; correct limb/paw contours without missing, duplicate or
+stray lines or extra anatomy; no malformed facial geometry or teeth; flat colours without shading/gradients; exact
+bag geometry, panel layout, colour arrangement, dark-gray strap and visible zipper/pull treatment; supporting
+hamsters without the bag; and expression variation without identity drift. When a supporting hamster represents an
+already established recurring model, review must also confirm that its established colour pattern, body shape, scale
+and distinguishing facial/character traits match that model's prior approved appearance.
+
+Generation alone is not acceptance. Any material inconsistency is non-conforming and must be corrected,
+regenerated or rejected; it must not silently progress downstream or to publication. If consistency cannot be
+established confidently, fail closed. A recurring supporting hamster that has materially drifted from its established
+model is likewise non-conforming and must be corrected, regenerated or rejected. This mandatory review/rejection
+requirement is approved now. Its technical mechanism may later be manual, deterministic, model-based or hybrid;
+automated character-consistency-QA architecture and implementation remain explicitly deferred until separately
+authorized.
+
 ### Runtime DB / CharacterReferenceSet reconciliation
 
 `data/atlas.db` is ignored local/runtime/demo state, not canonical GitHub truth. A current local runtime DB may

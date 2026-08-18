@@ -281,6 +281,96 @@ Accepted immutable evidence:
 VisualStyleProfile v3 remains the current accepted baseline. At this Phase 1 visual-acceptance checkpoint, no
 v0.15 or post-Phase-1 milestone had been selected.
 
+## Current Founder + ChatGPT Visual-Specification Clarification
+
+This current clarification tightens the existing approved mascot contract; it does not rewrite the historical
+v0.14 record or create a new milestone, CharacterReferenceSet, VisualStyleProfile, schema or implementation scope.
+The current core mascot identity is governed jointly by the immutable
+`character-reference-set-similarstoic-hamster-core-v1` reference asset and this current founder + ChatGPT-approved
+visual-refinement contract. The set contains only the approved Asset/version/SHA recorded above. Where this
+clarification deliberately tightens future depiction requirements beyond the literal original v1 pixels—more
+prominent rounded ears and whiskers, broad/soft hamster-like face, toothless mouths, fixed bag panel/layout rules,
+flat-colour rendering and mandatory consistency QA—it governs future conforming depictions without mutating,
+replacing or rewriting the historical reference asset. CharacterReferenceSet v2, replacement and silent substitution
+are not authorized; absence of runtime rows or bytes does not change that rule.
+
+The main mascot must remain unmistakably hamster-like, never mouse-like: broad soft rounded face/muzzle, compact
+rounded hamster-native body, visibly large rounded ears (slightly more prominent than v1 when pose allows), long
+distinct whiskers beyond the muzzle, alert dark eyes, mostly white/light body, warm tan/orange inner ears/nose/paws,
+minimal/no fur detail and crude hand-drawn anatomy. Expression may change eyes, brows, mouth, gesture and posture,
+but never identity, ear scale, whiskers, proportions, core colouring or bag design. All mouths are simple and
+toothless: teeth, dental detail, duplicate mouth lines, malformed inner-mouth shapes, inconsistent lips and extra
+mouth anatomy are non-conforming.
+
+Only the core mascot wears the fixed genuinely crossbody sling bag: dark-gray strap, dark/black zipper band and
+outline, red/orange upper strip, green upper/central panel, blue lower-left panel, yellow lower-right panel, the
+approved curved silhouette, fixed panel adjacency/colour ordering, and consistent visible zipper/pull treatment.
+Supporting hamsters may vary as believable hamster types but remain secondary, never wear the bag and never duplicate
+the full core identity. A small recurring set of supporting hamster models may be established and reused across
+scenes and videos; each model's hamster type/colour pattern, body shape, size/scale, facial characteristics and
+other stable secondary traits must remain consistent once established. One-off background hamsters may vary within
+the approved language only if they do not become or imitate an established recurring model. Hamsters use
+direct-transition flat block colours and simple sparse dark, hand-drawn,
+slightly imperfect outlines: gradients, shading, painterly blending, fur texture/detail, cross-hatching, glossy
+highlights, AI-clean rendering, missing/duplicate/stray contours and extra anatomy are prohibited.
+
+Established recurring characters must use approved visual reference assets/models as concrete image/reference
+grounding whenever the generation mechanism supports it; they must not be materially reconstructed or reinterpreted
+from prose alone when an approved reference exists. The current mascot is jointly governed by the immutable
+CharacterReferenceSet v1 asset, current founder + ChatGPT-approved written refinement contract and mandatory visual
+QA; deliberate written refinements beyond literal v1 pixels govern only those refinements, while the reference
+governs the rest of the concrete appearance. The same rule applies to recurring supporting models. One-off background
+hamsters need no persistent reference unless they later become recurring. Generated images never become approved
+references automatically: only founder + ChatGPT-approved visual exemplars may do so.
+
+Every generated visual containing the core mascot—including production, infographic, roadmap, presentation,
+internal-documentation, demo and decorative graphics—requires review against v1 and the character, bag and
+flat-colour contracts before use. Any material inconsistency must be corrected, regenerated or rejected and must
+fail closed if consistency cannot be established. This mandatory review/rejection requirement is canonical now; its
+technical mechanism remains unspecified, and automated character-consistency-QA architecture/implementation remains
+deferred. When a supporting hamster represents an established recurring model, review must also confirm its
+established colour pattern, body shape, scale and distinguishing facial/character traits; material drift is
+non-conforming and must be corrected, regenerated or rejected.
+
+Reference grounding is not acceptance by itself. A generation materially deviating from the approved reference +
+written contract—including proportions, bag geometry/colour placement, whiskers, ear size, mouth anatomy, outlines,
+shading/gradients, core colours or supporting-character model—is non-conforming. If an approved reference is
+unavailable to a process expected to generate a recurring character, it must fail closed rather than silently
+approximate the character from text and treat the output as canonical or publishable. This does not choose
+refined-exemplar storage, implement image-conditioning/reference passing, automated QA or supporting-character
+entities; all such technical enforcement remains deferred.
+
+### Verified current core-mascot visual-reference checkpoint
+
+The approved current-depiction references are now durable, Git-tracked bytes under
+`assets/visual-references/core-mascot/`. They supplement the immutable historical CharacterReferenceSet v1 anchor and
+the current founder + ChatGPT-approved visual-refinement contract; they do not alter v1, create v2, alter
+VisualStyleProfile v3, or add runtime implementation.
+
+- **CORE IDENTITY REFERENCES:**
+  - Preferred primary isolated grounding: `identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png` (1448x1086;
+    SHA-256 `11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956`).
+  - Preferred primary/supplementary multi-pose grounding: `identity/a5564bd0-51d2-4713-82c1-42138f12a8dc.png`
+    (1448x1086; SHA-256 `d3acb16af30b9a5aca29e92e2e8f19d7b5a21df4b8e572de054756ca23321cc4`).
+  - Supplementary core-only specification/identity grounding, not preferred as sole input:
+    `identity/fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` (1536x1024; SHA-256
+    `eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46`).
+- **CORE SCENE / EXPRESSION EXEMPLARS:**
+  - Flowchart/explaining: `scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png` (1448x1086; SHA-256
+    `27ff66e34a8649a22c649a5593c93d0532cd176cf69dafb61bc19a1d2e1eb85a`).
+  - Growth-chart/surprised expression: `scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` (1448x1086; SHA-256
+    `24dc9fd6367d6f7c4f9731b12bd1b7e7376edf7870ecee0a8ac066699363ff65`).
+  - Reading/thinking: `scenes/42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` (1448x1086; SHA-256
+    `95ad2c8a75b7ce798eb315d1c84d34571bb1a44ace1922b141bdb2173fdfae4f`).
+
+The identity references are the primary grounding inputs and contain no supporting hamster model. Scene/expression
+exemplars are supplementary only: their whiteboards, charts, books, tables, chairs and other props are scene context,
+never identity features, and they cannot override identity references or the written contract. Core-mascot generation
+remains reference-grounded and subject to mandatory post-generation QA. Supporting characters require separate,
+isolated per-character approved references before stable reuse; cross-character identity pooling is prohibited.
+Generated images do not become approved references automatically. Automated reference selection, image-conditioning
+and QA remain deferred; no runtime implementation has been added.
+
 ## Atlas v0.11 Checkpoint
 
 **Project Atlas v0.11 — Character Continuity Foundation** is complete, accepted, committed and pushed.

@@ -914,9 +914,77 @@ Closure record:
   treatment, proportions and reference continuity are preserved.
 - Final Phase 1 acceptance review — APPROVED. Phase 1 is formally closed.
 
+### Current approved hamster visual-specification clarification
+
+This current founder + ChatGPT clarification tightens the existing v1 mascot identity contract without rewriting
+the historical v0.14 record or creating a new milestone, CharacterReferenceSet version, VisualStyleProfile version,
+schema change or implementation authorization. The current core mascot identity is governed jointly by the immutable
+`character-reference-set-similarstoic-hamster-core-v1` reference asset and this approved visual-refinement contract.
+Where the contract deliberately tightens future depiction requirements beyond the literal original v1 pixels—more
+prominent rounded ears and whiskers, broad/soft hamster-like face, toothless mouths, fixed bag panel/layout rules,
+flat-colour rendering and mandatory consistency QA—it governs future conforming depictions without mutating,
+replacing or rewriting the historical reference asset. CharacterReferenceSet v2, replacement and silent substitution
+are not authorized.
+
+The core mascot remains unmistakably hamster-like, never mouse-like: broad soft rounded face/muzzle, compact rounded
+hamster-native body, visibly large rounded ears (slightly more prominent than v1 when pose allows), long distinct
+whiskers beyond the muzzle, dark alert eyes, mostly white/light body, warm tan/orange inner ears/nose/paws,
+minimal/no fur detail and crude hand-drawn anatomy. Expression may vary without identity, ear, whisker, proportion,
+colour or bag drift. Mouths are simple and toothless: teeth, dental detail, duplicate mouth lines, malformed
+inner-mouth shapes, inconsistent lips and extra mouth anatomy are generation errors.
+
+Only the main mascot wears the fixed genuinely crossbody bag: dark-gray strap; dark/black zipper band and outline;
+red/orange upper strip; green upper/central panel; blue lower-left panel; yellow lower-right panel; the approved
+curved silhouette; fixed panel adjacency/colour ordering; and consistent visible zipper/pull treatment. Supporting
+hamsters remain secondary, may vary as believable hamster types, and never wear the bag or duplicate the full core
+identity. A small recurring set of supporting hamster models may be established and reused across scenes and videos;
+each model's hamster type/colour pattern, body shape, size/scale, facial characteristics and other stable secondary
+traits must remain consistent once established. One-off background hamsters may vary within the approved language
+only if they do not become or imitate an established recurring model. All hamster rendering is flat block colour with
+sparse, dark, hand-drawn, slightly imperfect outlines:
+no gradients, shading, painterly blending, textured fur, cross-hatching, glossy highlights, AI-clean finish,
+missing/duplicate/stray contours or extra anatomy.
+
+Established recurring characters must use approved visual reference assets/models as concrete image/reference
+grounding whenever the generation mechanism supports it; they must not be materially reconstructed or reinterpreted
+from prose alone when an approved reference exists. The current mascot remains jointly governed by the immutable
+CharacterReferenceSet v1 asset, the current founder + ChatGPT-approved written refinement contract and mandatory
+visual QA; deliberate written refinements beyond literal v1 pixels govern only those refinements, while the reference
+governs the rest of the concrete appearance. The same rule applies to established recurring supporting models.
+One-off background hamsters need no persistent reference unless they later become recurring. Generated images never
+become approved references automatically: only founder + ChatGPT-approved visual exemplars may do so.
+
+The current core mascot uses three isolated character-specific identity references and three supplementary
+scene/expression exemplars, recorded in the tracked [asset manifest](assets/README.md) and the canonical handoff.
+Identity references define the concrete model and must never be pooled across recurring characters; supporting
+characters require their own isolated approved references before stable reuse. Scene/expression exemplars are
+supplementary only and their props/context never become identity features. Automated reference selection,
+image-conditioning and QA remain deferred.
+
+Every generated core-mascot visual—including project and decorative graphics—requires consistency review against
+v1, the character, bag and flat-colour contracts before use. Non-conforming visuals must be corrected, regenerated
+or rejected and fail closed if consistency cannot be established. This is a mandatory product/production
+requirement, not an implementation of automated QA: manual, deterministic, model-based or hybrid mechanisms remain
+open, while automated character-consistency-QA architecture and implementation remain deferred. When a supporting
+hamster represents an established recurring model, review must also confirm its established colour pattern, body
+shape, scale and distinguishing facial/character traits; material drift is non-conforming and must be corrected,
+regenerated or rejected.
+
+Reference grounding is not acceptance by itself. Any generation that materially deviates from the approved reference
++ written contract—including changed proportions, bag geometry/colour placement, whiskers, ear size, mouth anatomy,
+outlines, shading/gradients, core colours or supporting-character model—is non-conforming. If an approved reference
+is unavailable to a process expected to generate a recurring character, it must fail closed rather than silently
+approximate the character from text and treat the output as canonical or publishable. This does not choose refined-
+exemplar storage, implement image-conditioning/reference passing, automated QA or supporting-character entities; all
+such technical enforcement remains deferred.
+
+The full canonical contract, exact approved v1 asset provenance, runtime/replacement prohibition and review boundary
+are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
+
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE, NOT YET IMPLEMENTED
+Status: ACTIVE / INCOMPLETE. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted
+implementation milestone; migration 15 is canonical, and no successor milestone is selected.
 
 Implement:
 - Research
