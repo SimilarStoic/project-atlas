@@ -21,12 +21,12 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.24 — Editorial Gate + Approved VisualPlan Initiation** remains the latest accepted implementation milestone;
-**v0.25 — Operational Visual Production Inputs** is locally implemented and pending founder acceptance/push. Migration
-20 is canonical and migrations extend through 1–20; migration 21 is absent. Phase 2 remains ACTIVE / INCOMPLETE and
-later phases remain unactivated. No successor after v0.25 is selected. Founder acceptance covers v0.23 implementation commit
-`01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state documentation commit
-`64e5da9183d9a0fe1492e6968f266f26abd4538c`; Black 26.3.1, Ruff, 99 pytest tests and `git diff --check` passed.
+**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation milestone; **v0.24 — Editorial
+Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. Migration 20 is canonical and
+migrations extend through 1–20; migration 21 is absent. Phase 2 remains ACTIVE / INCOMPLETE and
+later phases remain unactivated. No successor after v0.25 is selected. Founder acceptance covers v0.25 implementation
+commit `065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
+`67500b338ecb959177b131ece2f59b9b11fb327c`; Black 26.3.1, Ruff, 107 pytest tests and `git diff --check` passed.
 Founder acceptance for v0.22 covers implementation commit
 `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
@@ -59,10 +59,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
-**v0.24 — Editorial Gate + Approved VisualPlan Initiation** remains the latest accepted implementation milestone;
-**v0.25 — Operational Visual Production Inputs** is locally implemented and pending founder acceptance/push. **Phase 2
-— Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.24
-implementations, locally implemented v0.25, and no selected successor after v0.25**, under founder + ChatGPT design/implementation
+**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation milestone; **v0.24 — Editorial
+Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. **Phase 2 — Content Operating Model is
+the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.25 implementations and no selected
+successor after v0.25**, under founder + ChatGPT design/implementation
 stewardship. This does not authorize
 all Phase 2 scope or later-phase engines.
 
@@ -286,9 +286,9 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the historical
 accepted predecessor to v0.19. v0.17 is its historical accepted predecessor; migration 15 is canonical and
-migrations extend through 1–17. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted
-implementation milestone; v0.23 is its historical accepted predecessor. Migration 19 is latest, migration 20 is
-absent, and no successor after v0.24 is selected.
+migrations extend through 1–17. v0.25 — Operational Visual Production Inputs is the latest accepted implementation
+milestone; v0.24 is its accepted historical predecessor. Migration 20 is latest, migration 21 is absent, and no
+successor after v0.25 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -333,9 +333,9 @@ lineage validation, update immutability, Claim boundaries, API semantics or late
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 — Editorial Gate + Approved VisualPlan Initiation
-is the latest accepted Phase 2 milestone. v0.23 is its historical accepted predecessor; migration 19 is latest,
-migration 20 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. Founder acceptance covers implementation commit
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
+latest accepted Phase 2 milestone. v0.24 is its accepted historical predecessor; migration 20 is latest,
+migration 21 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. Founder acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Its purpose is the next smallest deliberate lifecycle edge:
@@ -398,15 +398,15 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The latest accepted Phase 2 implementation remains **v0.24 — Editorial Gate + Approved VisualPlan Initiation**;
-**v0.25 — Operational Visual Production Inputs** is locally implemented and pending founder acceptance/push. Material
-detail beyond the approved boundaries returns to founder + ChatGPT.
+The latest accepted Phase 2 implementation is **v0.25 — Operational Visual Production Inputs**; **v0.24 — Editorial
+Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. Material detail beyond the approved
+boundaries returns to founder + ChatGPT.
 
 ### v0.20 — Readiness-Lineage-Preserving Script Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 — Editorial Gate + Approved VisualPlan Initiation
-is the latest accepted Phase 2 milestone. v0.23 is its historical accepted predecessor; migration 19 is latest,
-migration 20 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.24 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
+latest accepted Phase 2 milestone. v0.24 is its accepted historical predecessor; migration 20 is latest,
+migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.25 is selected.
 
 v0.20 adds one deliberate lifecycle edge: eligible ContentPiece → complete immutable Script version. Eligibility is
 derived only from durable ContentPiece → EditorialAngle → exact `Ready` ResearchReadinessAssessment → ResearchPack
@@ -426,9 +426,9 @@ Validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff -
 
 ### v0.21 — Editorial Draft Package Foundation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 — Editorial Gate + Approved VisualPlan Initiation
-is the latest accepted Phase 2 milestone. v0.23 is its historical accepted predecessor. Migration 19 is latest,
-migration 20 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.24 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
+latest accepted Phase 2 milestone. v0.24 is its accepted historical predecessor. Migration 20 is latest,
+migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.25 is selected.
 
 v0.21 adds immutable append-only TitleOption and HookOption alternatives for an eligible ContentPiece and frozen
 EditorialPackageSnapshots that bind one exact TitleOption, HookOption and Script version from that same ContentPiece.
@@ -443,10 +443,10 @@ commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation comm
 
 ### v0.22 — Closed Script Claim Provenance Foundation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is a historical accepted Phase 2 milestone. v0.24 —
-Editorial Gate + Approved VisualPlan Initiation is the latest accepted Phase 2 milestone; v0.23 is its historical
-accepted predecessor. Migration 19 is latest, migration 20 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.24 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is a historical accepted Phase 2 milestone. v0.25 —
+Operational Visual Production Inputs is the latest accepted Phase 2 milestone; v0.24 is its accepted historical
+predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
+after v0.25 is selected.
 
 v0.22 adds one closed immutable ScriptClaimSet per exact immutable Script, with zero or more immutable
 ScriptClaimLinks that store Claim identities only. A closed empty set is meaningful and distinct from no set; no
@@ -471,9 +471,9 @@ passed.
 ### v0.23 — Deterministic Editorial Readiness Assessment
 
 **Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is a historical accepted Phase 2 milestone; v0.22 is its
-historical accepted predecessor. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted Phase
-2 milestone. Migration 19 is latest, migration 20 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
-after v0.24 is selected.
+historical accepted predecessor. v0.25 — Operational Visual Production Inputs is the latest accepted Phase 2
+milestone; v0.24 is its accepted historical predecessor. Migration 20 is latest, migration 21 is absent, Phase 2
+remains ACTIVE / INCOMPLETE, and no successor after v0.25 is selected.
 
 v0.23 appends one immutable `EditorialReadinessAssessment` for an exact immutable `EditorialPackageSnapshot`.
 Assessment provenance is resolved through the exact package TitleOption, HookOption, Script and ScriptClaimSet to
@@ -498,9 +498,9 @@ implementation commit `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-sta
 
 ### v0.24 — Editorial Gate + Approved VisualPlan Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 is the latest accepted Phase 2 milestone and the accepted
-predecessor to locally implemented v0.25; v0.23 is its historical accepted predecessor. Migration 19 is historical,
-while migration 20 is latest; Phase 2 remains ACTIVE / INCOMPLETE and no successor after v0.25 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 is an accepted historical predecessor to v0.25; v0.23 is its
+historical accepted predecessor. Migration 19 is historical, while migration 20 is latest; Phase 2 remains ACTIVE /
+INCOMPLETE and no successor after v0.25 is selected.
 
 v0.24 adds exact immutable `EditorialGateDecision` history over one supplied `EditorialPackageSnapshot` and one
 supplied exact `Ready` `EditorialReadinessAssessment`. Outcomes are only `Approve`, `Revise` and `Reject`; records are
@@ -528,9 +528,9 @@ host because of a process-runtime hang. Ruff passed, **102 pytest tests** passed
 
 ### v0.25 — Operational Visual Production Inputs
 
-**Status: LOCALLY IMPLEMENTED / PENDING FOUNDER ACCEPTANCE AND PUSH.** v0.25 is selected and locally implemented;
-v0.24 remains its latest accepted predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE
-/ INCOMPLETE and no successor after v0.25 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 is the latest accepted Phase 2 milestone; v0.24 is its
+accepted historical predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE
+and no successor after v0.25 is selected.
 
 v0.25 operationalizes only visual inputs below an exact existing `Approve` Editorial Gate chain. Dedicated Scene and
 AssetSpec create/list/update operations revalidate `VisualPlan → visual_plan_gate_provenance → Approve
@@ -555,10 +555,11 @@ membership or visual canon changes occur.
 The API adds dedicated Gate-qualified Scene and AssetSpec authoring, managed raw-byte Asset import, Asset history and
 safe content retrieval, and immutable AssetSelection create/list/get. Provider generation is unchanged and optional.
 There is no narration, captions, timing, render/timeline, MP4, final-media manifest, QA, paid production, spend/cost,
-UI, workflow, publishing, analytics, Learning or successor work. Implementation commit:
-`065e10bc6e36bf009f54fbce9a0135ef0cae9273`. Validation pending documentation synchronization: Ruff passed, **107
-pytest tests** passed and `git diff --check` passed; Black 26.3.1 formatting equivalence passed for 10 repository Python
-files through the accepted in-process API check after the documented Windows CLI worker-process hang.
+UI, workflow, publishing, analytics, Learning or successor work. Founder acceptance covers implementation commit
+`065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
+`67500b338ecb959177b131ece2f59b9b11fb327c`. Ruff passed, **107 pytest tests** passed and `git diff --check` passed;
+Black 26.3.1 formatting equivalence passed for 10 repository Python files through the accepted in-process API check
+after the documented Windows CLI worker-process hang.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -873,9 +874,9 @@ already-pushed commits, reset/clean away work, select the successor milestone or
 remains final product, business, quality, scope and acceptance authority; founder + ChatGPT remain architecture,
 specification, roadmap and milestone authority; Codex remains the bounded repository inspection and execution agent.
 
-**v0.24 — Editorial Gate + Approved VisualPlan Initiation** remains the latest accepted implementation checkpoint.
-**v0.25 — Operational Visual Production Inputs** is locally implemented and pending founder acceptance/push. No
-successor after v0.25 is selected; any scope beyond v0.25 requires a new explicit founder + ChatGPT decision.
+**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation checkpoint. **v0.24 — Editorial
+Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. No successor after v0.25 is selected;
+any scope beyond v0.25 requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 

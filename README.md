@@ -5,9 +5,10 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.24 — Editorial Gate + Approved VisualPlan Initiation remains the latest accepted
-implementation milestone. v0.25 — Operational Visual Production Inputs is locally implemented and pending founder
-acceptance/push. Migration 20 is the latest canonical migration, migration 21 is absent, and Phase 2 remains ACTIVE /
+SQLite foundation for SimilarStoic. v0.25 — Operational Visual Production Inputs is the latest accepted
+implementation milestone; v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical
+predecessor. Migration 20 is the latest canonical
+migration, migration 21 is absent, and Phase 2 remains ACTIVE /
 INCOMPLETE. No successor after v0.25 is selected. Later workflow, research automation and production systems remain
 deferred.
 
@@ -46,9 +47,9 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.24 Editorial Gate + Approved VisualPlan Initiation remains the latest
-accepted implementation milestone; v0.25 Operational Visual Production Inputs is locally implemented and pending
-founder acceptance/push. Migrations 1–20 are canonical, with migration 20 latest and migration 21 absent. No successor
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.25 Operational Visual Production Inputs is the latest accepted
+implementation milestone; v0.24 Editorial Gate + Approved VisualPlan Initiation is its accepted historical
+predecessor. Migrations 1–20 are canonical, with migration 20 latest and migration 21 absent. No successor
 after v0.25 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
@@ -129,9 +130,9 @@ live mutable Claim data. Migration 17 adds only the two provenance tables, restr
 lookup index, without backfill or copied readiness/evidence provenance. The Script-scoped API is
 `POST`/`GET /api/scripts/{script_id}/claim-set`. v0.22 does not add ranges, segments, ClaimEvidence links, package
 changes, QA/Gate, workflow, UI, production, publishing, analytics, Learning or orchestration. v0.21 is its accepted
-historical predecessor; v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted milestone and
-v0.23 is its historical accepted predecessor. Migration 19 is latest, migration 20 is absent, and no successor after
-v0.24 is selected. Acceptance covers
+historical predecessor; v0.25 — Operational Visual Production Inputs is the latest accepted milestone and v0.24 is its
+accepted historical predecessor. Migration 20 is latest, migration 21 is absent, and no successor after v0.25 is
+selected. Acceptance covers
 implementation commit `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`
 passed.
@@ -149,9 +150,9 @@ plus `GET /api/editorial-readiness-assessments/{assessment_id}`. v0.23 adds no s
 production, publishing, analytics or orchestration. Black 26.3.1 `--check`, Ruff, 99 pytest tests and
 `git diff --check` passed. Founder acceptance covers implementation commit
 `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state documentation commit
-`64e5da9183d9a0fe1492e6968f266f26abd4538c`. v0.24 — Editorial Gate + Approved VisualPlan Initiation is accepted;
-v0.23 is its historical accepted predecessor. Migration 19 is latest, migration 20 is absent, and no successor after
-v0.24 is selected.
+`64e5da9183d9a0fe1492e6968f266f26abd4538c`. v0.25 — Operational Visual Production Inputs is the latest accepted
+milestone; v0.24 is its accepted historical predecessor. Migration 20 is latest, migration 21 is absent, and no
+successor after v0.25 is selected.
 
 ## v0.24 Accepted Checkpoint
 
@@ -180,11 +181,10 @@ check. The documented Black CLI command could not terminate in this Windows host
 this is a host exception, not a formatting failure. Ruff passed, **102 pytest tests** passed, and `git diff --check`
 passed.
 
-## v0.25 Pending Founder Acceptance
+## v0.25 Accepted Checkpoint
 
-**v0.25 — Operational Visual Production Inputs** is selected and locally implemented, pending founder acceptance and
-push. v0.24 remains the latest accepted predecessor; migration 20 is latest, migration 21 is absent, Phase 2 remains
-ACTIVE / INCOMPLETE and no successor after v0.25 is selected.
+**v0.25 — Operational Visual Production Inputs** is ACCEPTED. v0.24 is its accepted historical predecessor; migration
+20 is latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE and no successor after v0.25 is selected.
 
 Gate-authorized VisualPlans now support dedicated ordered Scene and AssetSpec authoring while retaining their existing
 mutable models and compatibility low-level operations. Every dedicated path re-resolves exact `Approve` Editorial Gate
@@ -199,10 +199,11 @@ GenerationExecution provenance and reject manual reference overrides. Provider g
 
 The API adds dedicated Scene/AssetSpec authoring, managed import, Asset history/content and AssetSelection create/list/get
 surfaces. v0.25 adds no narration, captions, timing, rendering, final-media artifact or manifest, QA, paid production,
-provider/spend/cost work, UI, publishing, analytics, Learning, workflow or successor scope. Implementation commit:
-`065e10bc6e36bf009f54fbce9a0135ef0cae9273`. Validation pending documentation synchronization: Ruff, **107 pytest tests**
-and `git diff --check` passed; Black 26.3.1 formatting equivalence across 10 repository Python files passed through the
-accepted in-process API check after the documented Windows CLI worker-process hang.
+provider/spend/cost work, UI, publishing, analytics, Learning, workflow or successor scope. Founder acceptance covers
+implementation commit `065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
+`67500b338ecb959177b131ece2f59b9b11fb327c`. Ruff, **107 pytest tests** and `git diff --check` passed; Black 26.3.1
+formatting equivalence across 10 repository Python files passed through the accepted in-process API check after the
+documented Windows CLI worker-process hang.
 
 ## Technology baseline
 
@@ -521,7 +522,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.24 — Editorial Gate + Approved VisualPlan Initiation remains the latest accepted implementation checkpoint; v0.25
-— Operational Visual Production Inputs is locally implemented and pending founder acceptance/push. Migrations 1–20 are
-canonical, with migration 20 latest and migration 21 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.25
+v0.25 — Operational Visual Production Inputs is the latest accepted implementation checkpoint; v0.24 — Editorial Gate
++ Approved VisualPlan Initiation is its accepted historical predecessor. Migrations 1–20 are canonical, with migration
+20 latest and migration 21 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.25
 is selected, and later Conveyor systems remain out of scope.
