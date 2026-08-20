@@ -21,10 +21,11 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; **v0.21 —
-Editorial Draft Package Foundation** is its historical accepted predecessor. Migration 17 is canonical and migrations
-extend through 1–17. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after
-v0.22 is selected; migration 18 is absent. Founder acceptance covers implementation commit
+**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; **v0.23 —
+Deterministic Editorial Readiness Assessment** is selected, locally implemented and validated pending founder
+acceptance/push. Migration 18 is canonical and migrations extend through 1–18; migration 19 is absent. Phase 2
+remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after v0.23 is selected. Founder
+acceptance for v0.22 covers implementation commit
 `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
 fresh session must verify the live GitHub checkpoint before acting.
@@ -56,11 +57,11 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
-**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; **v0.21 —
-Editorial Draft Package Foundation** is its historical accepted predecessor. **Phase 2 — Content Operating Model is
-the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.22 implementations and no selected
-successor after v0.22**, under founder + ChatGPT design/implementation stewardship. This does not authorize all Phase
-2 scope or later-phase engines.
+**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; **v0.23 —
+Deterministic Editorial Readiness Assessment** is selected, locally implemented and validated pending founder
+acceptance/push. **Phase 2 — Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted
+v0.15 through v0.22 implementations and no selected successor after v0.23**, under founder + ChatGPT
+design/implementation stewardship. This does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -282,8 +283,8 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the historical
 accepted predecessor to v0.19. v0.17 is its historical accepted predecessor; migration 15 is canonical and
-migrations extend through 1–17. v0.22 is the latest accepted implementation milestone; v0.21 is its historical
-accepted predecessor; no successor after v0.22 is selected.
+migrations extend through 1–17. v0.22 remains the latest accepted implementation milestone; v0.23 is selected,
+locally implemented and validated pending founder acceptance/push; no successor after v0.23 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -423,8 +424,9 @@ Validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff -
 ### v0.21 — Editorial Draft Package Foundation
 
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
-is its historical accepted predecessor. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.22 is selected.
+is its historical accepted predecessor. v0.23 is selected, locally implemented and validated pending founder
+acceptance/push. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.23 is selected.
 
 v0.21 adds immutable append-only TitleOption and HookOption alternatives for an eligible ContentPiece and frozen
 EditorialPackageSnapshots that bind one exact TitleOption, HookOption and Script version from that same ContentPiece.
@@ -439,9 +441,10 @@ commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation comm
 
 ### v0.22 — Closed Script Claim Provenance Foundation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21 is its
-historical accepted predecessor. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.22 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 remains the latest accepted Phase 2 milestone. v0.21 is its
+historical accepted predecessor. v0.23 is selected, locally implemented and validated pending founder
+acceptance/push. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.23 is selected.
 
 v0.22 adds one closed immutable ScriptClaimSet per exact immutable Script, with zero or more immutable
 ScriptClaimLinks that store Claim identities only. A closed empty set is meaningful and distinct from no set; no
@@ -462,6 +465,31 @@ approval/workflow, UI, production, publishing, analytics, Learning and orchestra
 implementation commit `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`
 passed.
+
+### v0.23 — Deterministic Editorial Readiness Assessment
+
+**Status: SELECTED / LOCALLY IMPLEMENTED AND VALIDATED / PENDING FOUNDER ACCEPTANCE AND PUSH.** v0.22 remains the
+latest accepted Phase 2 milestone. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.23 is selected.
+
+v0.23 appends one immutable `EditorialReadinessAssessment` for an exact immutable `EditorialPackageSnapshot`.
+Assessment provenance is resolved through the exact package TitleOption, HookOption, Script and ScriptClaimSet to
+the existing exact upstream Ready research assessment's frozen evidence; it copies none of those inputs. Multiple
+assessment records per package are allowed; there is no current/latest/superseded state.
+
+The server alone derives outcome and structured findings using evaluator `deterministic-editorial-readiness` version
+`v1` and assessment schema version 1. Its sole blocking policy is `SCRIPT_CLAIM_SET_MISSING`: no ScriptClaimSet
+persists `NotReady` with a blocking error finding. A closed empty set is complete valid zero-Claim provenance and may
+be `Ready`; a valid populated set must resolve exact frozen Claim/evidence/source representation. Broken package or
+provenance state is an integrity error, not a persisted synthetic `NotReady`. v0.23 defines no blocking rule for
+risk, freshness or verification status.
+
+Migration 18 adds only `editorial_readiness_assessments`, a restrictive EditorialPackageSnapshot FK and package
+history index, without backfill or duplicated package/research provenance. The narrow API is
+`POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/readiness-assessments` and
+`GET /api/editorial-readiness-assessments/{assessment_id}`. No subjective/model QA, Editorial Gate, score, provider,
+UI, spend, production, publishing, analytics, Learning or orchestration is included. Local validation passed: Black
+26.3.1 `--check`, Ruff, 99 pytest tests and `git diff --check`.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -776,10 +804,10 @@ already-pushed commits, reset/clean away work, select the successor milestone or
 remains final product, business, quality, scope and acceptance authority; founder + ChatGPT remain architecture,
 specification, roadmap and milestone authority; Codex remains the bounded repository inspection and execution agent.
 
-**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation checkpoint. Its
-implementation was validated and pushed at `346ddd76d19c8520541f77db4dda7853e8e8a5ed`.
-**v0.21 — Editorial Draft Package Foundation** is its historical accepted predecessor. No successor after v0.22 is
-selected; any scope beyond v0.22 requires a new explicit founder + ChatGPT decision.
+**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation checkpoint and was
+validated and pushed at `346ddd76d19c8520541f77db4dda7853e8e8a5ed`. **v0.23 — Deterministic Editorial Readiness
+Assessment** is locally implemented and validated pending founder acceptance/push. No successor after v0.23 is
+selected; any scope beyond v0.23 requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 
