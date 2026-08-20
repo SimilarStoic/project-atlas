@@ -778,6 +778,189 @@ def test_editorial_package_api_retains_explicit_options_and_exact_snapshots(tmp_
         server.server_close()
 
 
+def test_script_claim_set_api_closes_and_reads_exact_frozen_provenance(tmp_path: Path) -> None:
+    """v0.22 exposes one closed, explicit Claim set per immutable Script."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid ScriptClaimSet request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    def post(path: str, payload: dict) -> tuple[dict, int]:
+        return request_json(
+            Request(
+                f"{base_url}{path}",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+
+    try:
+        repository = server.repository
+        opportunity_id = "http-script-claim-opportunity"
+        other_opportunity_id = "http-script-claim-other-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        repository.create_opportunity(
+            other_opportunity_id, "Other", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack(
+            "http-script-claim-pack", opportunity_id, 1, "Research pack"
+        )
+        other_pack = repository.create_research_pack(
+            "http-script-claim-other-pack", other_opportunity_id, 1, "Other pack"
+        )
+        claim = repository.create_claim(
+            "http-script-claim",
+            pack.id,
+            "Frozen HTTP Claim.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        unlinked_claim = repository.create_claim(
+            "http-script-claim-unlinked",
+            pack.id,
+            "Unlinked Claim.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        other_claim = repository.create_claim(
+            "http-script-claim-other",
+            other_pack.id,
+            "Other Claim.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        ready = repository.create_research_readiness_assessment(
+            "http-script-claim-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready."},
+            "policy-v1",
+            "test",
+            "web-test",
+            "v1",
+        )
+        fields = ("Angle", "Thesis", "Promise", "Frame", ["Takeaway"])
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "http-script-claim-angle", opportunity_id, pack.id, ready.id, *fields
+        )
+        repository.link_claim_to_editorial_angle(angle.id, claim.id, "core")
+        piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-script-claim-piece", opportunity_id, angle.id, "video", "Compatibility title"
+        )
+        script = repository.create_script_under_content_piece_readiness(
+            "http-script-claim-script", piece.id, "Complete narration."
+        )
+        endpoint = f"/api/scripts/{script.id}/claim-set"
+
+        no_set, status = request_json(Request(f"{base_url}{endpoint}"))
+        assert status == 200
+        assert no_set["script_claim_set"] is None
+        created, status = post(endpoint, {"id": "http-script-claim-set", "claim_ids": [claim.id]})
+        assert status == 201
+        assert created["kind"] == "script_claim_set"
+        assert created["script_claim_set"]["claim_ids"] == [claim.id]
+        assert created["script_claim_set"]["frozen_claims"][0]["text"] == "Frozen HTTP Claim."
+        fetched, status = request_json(Request(f"{base_url}{endpoint}"))
+        assert status == 200
+        assert fetched["script_claim_set"] == created["script_claim_set"]
+
+        for invalid_payload in (
+            {"id": "duplicate", "claim_ids": [claim.id, claim.id]},
+            {"id": "unsupported", "claim_ids": [], "range": [0, 1]},
+            {"id": "missing-field"},
+            {"id": "wrong-pack", "claim_ids": [other_claim.id]},
+            {"id": "unlinked", "claim_ids": [unlinked_claim.id]},
+        ):
+            rejected, status = request_error(
+                Request(
+                    f"{base_url}{endpoint}",
+                    data=json.dumps(invalid_payload).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert rejected["error"]
+        second, status = request_error(
+            Request(
+                f"{base_url}{endpoint}",
+                data=json.dumps({"id": "second", "claim_ids": []}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "only one" in second["error"]
+
+        empty_script = repository.create_script_under_content_piece_readiness(
+            "http-script-claim-empty-script", piece.id, "Editorial-only narration."
+        )
+        empty_endpoint = f"/api/scripts/{empty_script.id}/claim-set"
+        empty, status = post(empty_endpoint, {"id": "http-script-claim-empty", "claim_ids": []})
+        assert status == 201
+        assert empty["script_claim_set"]["claim_ids"] == []
+        assert empty["script_claim_set"]["frozen_claims"] == []
+        missing_script, status = request_error(
+            Request(
+                f"{base_url}/api/scripts/missing/claim-set",
+                data=json.dumps({"id": "missing", "claim_ids": []}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "Script not found" in missing_script["error"]
+        missing_claim_script = repository.create_script_under_content_piece_readiness(
+            "http-script-claim-missing-script", piece.id, "Another narration."
+        )
+        missing_claim, status = request_error(
+            Request(
+                f"{base_url}/api/scripts/{missing_claim_script.id}/claim-set",
+                data=json.dumps({"id": "missing-claim", "claim_ids": ["missing"]}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "Claim not found" in missing_claim["error"]
+        assert repository.list_editorial_package_snapshots_for_content_piece(piece.id) == []
+    finally:
+        server.server_close()
+
+
 def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scenes(
     tmp_path: Path,
 ) -> None:

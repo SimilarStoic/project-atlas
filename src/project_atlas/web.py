@@ -122,6 +122,33 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                     {"error": "Research readiness assessment not found."}, HTTPStatus.NOT_FOUND
                 )
             return
+        script_claim_set_prefix = "/api/scripts/"
+        script_claim_set_suffix = "/claim-set"
+        if parsed.path.startswith(script_claim_set_prefix) and parsed.path.endswith(
+            script_claim_set_suffix
+        ):
+            script_id = unquote(
+                parsed.path[len(script_claim_set_prefix) : -len(script_claim_set_suffix)]
+            ).strip("/")
+            if not script_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                claim_set = self.server.repository.script_claim_set_payload(script_id)
+            except KeyError:
+                self._send_json({"error": "Script not found."}, HTTPStatus.NOT_FOUND)
+                return
+            except ValueError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(
+                {
+                    "kind": "script_claim_set",
+                    "script_id": script_id,
+                    "script_claim_set": claim_set,
+                }
+            )
+            return
         content_piece_prefix = "/api/content-pieces/"
         editorial_history_routes = {
             "/title-options": (
@@ -325,6 +352,55 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        script_claim_set_prefix = "/api/scripts/"
+        script_claim_set_suffix = "/claim-set"
+        if path.startswith(script_claim_set_prefix) and path.endswith(script_claim_set_suffix):
+            script_id = unquote(
+                path[len(script_claim_set_prefix) : -len(script_claim_set_suffix)]
+            ).strip("/")
+            if not script_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("ScriptClaimSet payload must be an object.")
+                allowed_fields = {"id", "claim_ids"}
+                if set(payload) - allowed_fields:
+                    raise ValueError("ScriptClaimSet payload contains unsupported fields.")
+                claim_set_id = payload.get("id")
+                claim_ids = payload.get("claim_ids")
+                if not isinstance(claim_set_id, str) or not claim_set_id.strip():
+                    raise ValueError("ScriptClaimSet ID must be non-empty text.")
+                if not isinstance(claim_ids, list) or any(
+                    not isinstance(claim_id, str) or not claim_id.strip() for claim_id in claim_ids
+                ):
+                    raise ValueError("ScriptClaimSet claim_ids must be an array of non-empty text.")
+                claim_set = self.server.repository.create_script_claim_set(
+                    claim_set_id.strip(), script_id, claim_ids
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError as error:
+                message = (
+                    "Script not found."
+                    if error.args and error.args[0] == script_id
+                    else "Claim not found."
+                )
+                self._send_json({"error": message}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "script_claim_set",
+                    "script_claim_set": self.server.repository.script_claim_set_payload(
+                        claim_set.script_id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         opportunity_prefix = "/api/opportunities/"
         snapshot_suffix = "/idea-gate-review-snapshots"
         if path.startswith(opportunity_prefix) and path.endswith(snapshot_suffix):

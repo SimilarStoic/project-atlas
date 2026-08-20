@@ -212,6 +212,24 @@ class Script:
 
 
 @dataclass(frozen=True)
+class ScriptClaimSet:
+    """One closed, immutable Claim-provenance declaration for an exact Script."""
+
+    id: str
+    script_id: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class ScriptClaimLink:
+    """One immutable Claim identity membership in a closed ScriptClaimSet."""
+
+    script_claim_set_id: str
+    claim_id: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class TitleOption:
     """An immutable title alternative owned by one ContentPiece."""
 
@@ -926,6 +944,31 @@ MIGRATIONS: tuple[Migration, ...] = (
             "ON editorial_package_snapshots (hook_option_id)",
             "CREATE INDEX idx_editorial_package_snapshots_script "
             "ON editorial_package_snapshots (script_id)",
+        ),
+    ),
+    (
+        17,
+        (
+            """
+        CREATE TABLE script_claim_sets (
+          id TEXT PRIMARY KEY,
+          script_id TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE script_claim_links (
+          script_claim_set_id TEXT NOT NULL,
+          claim_id TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          PRIMARY KEY (script_claim_set_id, claim_id),
+          FOREIGN KEY (script_claim_set_id) REFERENCES script_claim_sets(id) ON DELETE RESTRICT,
+          FOREIGN KEY (claim_id) REFERENCES claims(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_script_claim_links_claim "
+            "ON script_claim_links (claim_id, script_claim_set_id)",
         ),
     ),
 )
@@ -1930,6 +1973,124 @@ class AtlasRepository:
             (content_piece_id,),
         ).fetchone()
         return self._script(row) if row else None
+
+    def create_script_claim_set(
+        self, script_claim_set_id: str, script_id: str, claim_ids: list[str]
+    ) -> ScriptClaimSet:
+        """Close one explicit, immutable Claim-provenance set for an eligible Script."""
+
+        if not isinstance(script_claim_set_id, str) or not script_claim_set_id.strip():
+            raise ValueError("ScriptClaimSet ID must be non-empty text.")
+        if not isinstance(claim_ids, list) or any(
+            not isinstance(claim_id, str) or not claim_id.strip() for claim_id in claim_ids
+        ):
+            raise ValueError("ScriptClaimSet claim_ids must be an array of non-empty text.")
+        normalized_claim_ids = [claim_id.strip() for claim_id in claim_ids]
+        if len(set(normalized_claim_ids)) != len(normalized_claim_ids):
+            raise ValueError("ScriptClaimSet claim_ids must not contain duplicates.")
+
+        script = self.get_script(script_id)
+        if self.get_script_claim_set_for_script(script.id) is not None:
+            raise ValueError("A Script may have only one closed ScriptClaimSet.")
+        content_piece = self._validate_content_piece_readiness_lineage(script.content_piece_id)
+        editorial_angle = self.get_editorial_angle(content_piece.editorial_angle_id)
+        assessment = self.get_research_readiness_assessment(
+            editorial_angle.research_readiness_assessment_id or ""
+        )
+        frozen_claims = self._frozen_claims_by_id(assessment)
+        for claim_id in normalized_claim_ids:
+            claim = self.get_claim(claim_id)
+            if claim.research_pack_id != editorial_angle.research_pack_id:
+                raise ValueError(
+                    "A ScriptClaimSet Claim must belong to the EditorialAngle ResearchPack."
+                )
+            if claim.id not in frozen_claims:
+                raise ValueError(
+                    "A ScriptClaimSet Claim must appear in the exact Ready assessment "
+                    "frozen evidence."
+                )
+            try:
+                self.get_editorial_angle_claim(editorial_angle.id, claim.id)
+            except KeyError as error:
+                raise ValueError(
+                    "A ScriptClaimSet Claim must be associated with the originating EditorialAngle."
+                ) from error
+
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO script_claim_sets VALUES (?, ?, ?)",
+                (script_claim_set_id.strip(), script.id, stamp),
+            )
+            self.connection.executemany(
+                "INSERT INTO script_claim_links VALUES (?, ?, ?)",
+                [
+                    (script_claim_set_id.strip(), claim_id, stamp)
+                    for claim_id in normalized_claim_ids
+                ],
+            )
+        return self.get_script_claim_set(script_claim_set_id.strip())
+
+    def get_script_claim_set(self, script_claim_set_id: str) -> ScriptClaimSet:
+        row = self.connection.execute(
+            "SELECT * FROM script_claim_sets WHERE id = ?", (script_claim_set_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(script_claim_set_id)
+        return self._script_claim_set(row)
+
+    def get_script_claim_set_for_script(self, script_id: str) -> ScriptClaimSet | None:
+        """Return a Script's closed provenance declaration, if one exists."""
+
+        row = self.connection.execute(
+            "SELECT * FROM script_claim_sets WHERE script_id = ?", (script_id,)
+        ).fetchone()
+        return self._script_claim_set(row) if row else None
+
+    def list_script_claim_links(self, script_claim_set_id: str) -> list[ScriptClaimLink]:
+        """Return immutable Claim memberships in deterministic identity order."""
+
+        self.get_script_claim_set(script_claim_set_id)
+        rows = self.connection.execute(
+            "SELECT * FROM script_claim_links WHERE script_claim_set_id = ? ORDER BY claim_id",
+            (script_claim_set_id,),
+        )
+        return [self._script_claim_link(row) for row in rows]
+
+    def script_claim_set_payload(self, script_id: str) -> dict[str, Any] | None:
+        """Resolve a Script's closed Claim identities against exact frozen readiness evidence."""
+
+        self.get_script(script_id)
+        claim_set = self.get_script_claim_set_for_script(script_id)
+        if claim_set is None:
+            return None
+        claim_ids = [link.claim_id for link in self.list_script_claim_links(claim_set.id)]
+        assessment = self._script_claim_set_readiness_assessment(claim_set)
+        frozen_claims = self._frozen_claims_by_id(assessment)
+        frozen_evidence = assessment.frozen_evidence_state
+        linked_evidence = [
+            evidence
+            for evidence in frozen_evidence.get("claim_evidence", [])
+            if isinstance(evidence, dict) and evidence.get("claim_id") in set(claim_ids)
+        ]
+        source_ids = {
+            evidence["source_id"]
+            for evidence in linked_evidence
+            if isinstance(evidence.get("source_id"), str)
+        }
+        return {
+            "id": claim_set.id,
+            "script_id": claim_set.script_id,
+            "created_at": claim_set.created_at,
+            "claim_ids": claim_ids,
+            "frozen_claims": [frozen_claims[claim_id] for claim_id in claim_ids],
+            "frozen_claim_evidence": linked_evidence,
+            "frozen_sources": [
+                source
+                for source in frozen_evidence.get("sources", [])
+                if isinstance(source, dict) and source.get("id") in source_ids
+            ],
+        }
 
     def content_piece_payload(self, content_piece_id: str) -> dict[str, Any]:
         """Load a read-only ContentPiece with its latest immutable Script version."""
@@ -3012,6 +3173,34 @@ class AtlasRepository:
                 "The EditorialAngle ResearchPack must belong to the ContentPiece Opportunity."
             )
         return content_piece
+
+    def _script_claim_set_readiness_assessment(
+        self, script_claim_set: ScriptClaimSet
+    ) -> ResearchReadinessAssessment:
+        """Derive the exact historical readiness assessment for a closed Script claim set."""
+
+        script = self.get_script(script_claim_set.script_id)
+        content_piece = self._validate_content_piece_readiness_lineage(script.content_piece_id)
+        editorial_angle = self.get_editorial_angle(content_piece.editorial_angle_id)
+        assessment_id = editorial_angle.research_readiness_assessment_id
+        if assessment_id is None:
+            raise ValueError("A ScriptClaimSet requires EditorialAngle readiness provenance.")
+        return self.get_research_readiness_assessment(assessment_id)
+
+    @staticmethod
+    def _frozen_claims_by_id(
+        assessment: ResearchReadinessAssessment,
+    ) -> dict[str, dict[str, Any]]:
+        """Return exact frozen Claim representations keyed by immutable Claim identity."""
+
+        claims = assessment.frozen_evidence_state.get("claims")
+        if not isinstance(claims, list):
+            raise ValueError("Research readiness frozen evidence must contain Claims.")
+        return {
+            claim["id"]: claim
+            for claim in claims
+            if isinstance(claim, dict) and isinstance(claim.get("id"), str)
+        }
 
     @staticmethod
     def _validate_editorial_option_text(text: str, record_name: str) -> None:
@@ -4750,6 +4939,14 @@ class AtlasRepository:
             row["created_at"],
             row["updated_at"],
         )
+
+    @staticmethod
+    def _script_claim_set(row: sqlite3.Row) -> ScriptClaimSet:
+        return ScriptClaimSet(row["id"], row["script_id"], row["created_at"])
+
+    @staticmethod
+    def _script_claim_link(row: sqlite3.Row) -> ScriptClaimLink:
+        return ScriptClaimLink(row["script_claim_set_id"], row["claim_id"], row["created_at"])
 
     @staticmethod
     def _title_option(row: sqlite3.Row) -> TitleOption:

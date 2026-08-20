@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -1312,6 +1312,265 @@ def test_migration_16_adds_editorial_package_schema_without_backfill(tmp_path) -
         repository.close()
 
 
+def test_migration_17_adds_closed_script_claim_provenance_without_backfill(tmp_path) -> None:
+    """Migration 17 is additive over v0.21 and adds no Claim or Script copies."""
+
+    database = tmp_path / "atlas-v021.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:16]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-20T00:00:00+00:00')",
+                (version,),
+            )
+        connection.execute(
+            "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "historical-script-opportunity",
+                "Title",
+                "Summary",
+                "Why",
+                1,
+                "proposed",
+                "{}",
+                "now",
+                "now",
+            ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        table_names = {
+            row[0]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert {"script_claim_sets", "script_claim_links"} <= table_names
+        assert repository.get_opportunity("historical-script-opportunity").title == "Title"
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM script_claim_sets").fetchone()[0]
+            == 0
+        )
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM script_claim_links").fetchone()[0]
+            == 0
+        )
+        assert repository.connection.execute(
+            "SELECT version FROM schema_migrations WHERE version = 17"
+        ).fetchone()
+    finally:
+        repository.close()
+
+
+def test_script_claim_sets_close_explicit_frozen_claim_provenance(tmp_path) -> None:
+    """v0.22 closes explicit Script Claim identity sets against exact frozen readiness evidence."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity_id = "script-claim-opportunity"
+        other_opportunity_id = "script-claim-other-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        repository.create_opportunity(
+            other_opportunity_id, "Other", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack("script-claim-pack", opportunity_id, 1, "Research")
+        other_pack = repository.create_research_pack(
+            "script-claim-other-pack", other_opportunity_id, 1, "Other research"
+        )
+        claim_one = repository.create_claim(
+            "script-claim-one",
+            pack.id,
+            "Frozen Claim one.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        claim_two = repository.create_claim(
+            "script-claim-two",
+            pack.id,
+            "Frozen Claim two.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        unlinked_claim = repository.create_claim(
+            "script-claim-unlinked",
+            pack.id,
+            "Frozen but unlinked.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        other_claim = repository.create_claim(
+            "script-claim-other",
+            other_pack.id,
+            "Other Claim.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        source = repository.create_source(
+            "script-claim-source",
+            "primary",
+            "Source",
+            "Publisher",
+            "https://example.test/script",
+            "now",
+        )
+        repository.link_claim_evidence(claim_one.id, source.id, "supports", "p. 1")
+        ready = repository.create_research_readiness_assessment(
+            "script-claim-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready."},
+            "policy-v1",
+            "test",
+            "persistence-test",
+            "v1",
+        )
+        fields = ("Angle", "Thesis", "Promise", "Frame", ["Takeaway"])
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "script-claim-angle", opportunity_id, pack.id, ready.id, *fields
+        )
+        repository.link_claim_to_editorial_angle(angle.id, claim_one.id, "core")
+        repository.link_claim_to_editorial_angle(angle.id, claim_two.id, "supporting")
+        piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "script-claim-piece", opportunity_id, angle.id, "video", "Compatibility title"
+        )
+        script_one = repository.create_script_under_content_piece_readiness(
+            "script-claim-script-one", piece.id, "Original complete narration."
+        )
+        assert repository.script_claim_set_payload(script_one.id) is None
+
+        closed_set = repository.create_script_claim_set(
+            "script-claim-set-one", script_one.id, [claim_two.id, claim_one.id]
+        )
+        assert closed_set.script_id == script_one.id
+        assert [link.claim_id for link in repository.list_script_claim_links(closed_set.id)] == [
+            claim_one.id,
+            claim_two.id,
+        ]
+        frozen_payload = repository.script_claim_set_payload(script_one.id)
+        assert frozen_payload is not None
+        assert frozen_payload["claim_ids"] == [claim_one.id, claim_two.id]
+        assert [claim["text"] for claim in frozen_payload["frozen_claims"]] == [
+            "Frozen Claim one.",
+            "Frozen Claim two.",
+        ]
+        assert frozen_payload["frozen_claim_evidence"][0]["claim_id"] == claim_one.id
+        assert frozen_payload["frozen_sources"][0]["id"] == source.id
+        with pytest.raises(ValueError, match="only one"):
+            repository.create_script_claim_set("script-claim-set-again", script_one.id, [])
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute(
+                "DELETE FROM script_claim_sets WHERE id = ?", (closed_set.id,)
+            )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute("DELETE FROM claims WHERE id = ?", (claim_one.id,))
+
+        repository.update_claim(replace(claim_one, text="Later mutable Claim text."))
+        later_source = repository.create_source(
+            "script-claim-later-source",
+            "primary",
+            "Later",
+            "Publisher",
+            "https://example.test/later",
+            "now",
+        )
+        repository.link_claim_evidence(claim_one.id, later_source.id, "context", "p. 2")
+        repository.update_editorial_angle_claim_role(angle.id, claim_one.id, "supporting")
+        with repository.connection:
+            repository.connection.execute(
+                "DELETE FROM editorial_angle_claims WHERE editorial_angle_id = ? AND claim_id = ?",
+                (angle.id, claim_one.id),
+            )
+        assert repository.script_claim_set_payload(script_one.id) == frozen_payload
+
+        script_two = repository.create_script_under_content_piece_readiness(
+            "script-claim-script-two", piece.id, "Corrected complete narration."
+        )
+        repository.link_claim_to_editorial_angle(angle.id, claim_one.id, "core")
+        second_set = repository.create_script_claim_set(
+            "script-claim-set-two", script_two.id, [claim_one.id]
+        )
+        assert [link.claim_id for link in repository.list_script_claim_links(second_set.id)] == [
+            claim_one.id
+        ]
+        script_three = repository.create_script_under_content_piece_readiness(
+            "script-claim-script-three", piece.id, "Editorial-only narration."
+        )
+        empty_set = repository.create_script_claim_set(
+            "script-claim-set-empty", script_three.id, []
+        )
+        assert repository.get_script_claim_set_for_script(script_three.id) == empty_set
+        assert repository.list_script_claim_links(empty_set.id) == []
+        assert repository.script_claim_set_payload(script_three.id)["claim_ids"] == []
+
+        late_claim = repository.create_claim(
+            "script-claim-late",
+            pack.id,
+            "Too late for frozen evidence.",
+            "fact",
+            "low",
+            "current",
+            "reviewed",
+            "",
+        )
+        repository.link_claim_to_editorial_angle(angle.id, late_claim.id, "core")
+        script_invalid = repository.create_script_under_content_piece_readiness(
+            "script-claim-script-invalid", piece.id, "Another narration."
+        )
+        for claim_ids, error in (
+            ([claim_one.id, claim_one.id], "duplicates"),
+            ([other_claim.id], "ResearchPack"),
+            ([late_claim.id], "frozen evidence"),
+            ([unlinked_claim.id], "originating EditorialAngle"),
+        ):
+            with pytest.raises(ValueError, match=error):
+                repository.create_script_claim_set(
+                    f"script-claim-rejected-{len(claim_ids)}-{claim_ids[0]}",
+                    script_invalid.id,
+                    claim_ids,
+                )
+            assert repository.get_script_claim_set_for_script(script_invalid.id) is None
+
+        table_names = {
+            row[0]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert {"script_claim_sets", "script_claim_links"} <= table_names
+        assert {"claim_snapshots", "script_claim_evidence", "script_segments"}.isdisjoint(
+            table_names
+        )
+        assert "research_readiness_assessment_id" not in {
+            row[1] for row in repository.connection.execute("PRAGMA table_info(script_claim_sets)")
+        }
+        assert repository.list_editorial_package_snapshots_for_content_piece(piece.id) == []
+    finally:
+        repository.close()
+
+
 def test_migration_15_adds_nullable_angle_readiness_lineage_without_backfill(tmp_path) -> None:
     """Migration 15 preserves pre-v0.18 Angles while adding restrictive provenance."""
 
@@ -1426,7 +1685,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -1847,7 +2106,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -2041,7 +2300,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -2186,7 +2445,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                17,
+                18,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -2208,7 +2467,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 17"
+                "SELECT version FROM schema_migrations WHERE version = 18"
             ).fetchone()
             is None
         )
@@ -4256,7 +4515,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
