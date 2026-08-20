@@ -584,6 +584,200 @@ def test_script_lifecycle_api_appends_versions_only_under_ready_content_piece_li
         server.server_close()
 
 
+def test_editorial_package_api_retains_explicit_options_and_exact_snapshots(tmp_path: Path) -> None:
+    """v0.21 exposes append-only editorial alternatives and frozen package history."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid editorial-package request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    def post(path: str, payload: dict) -> tuple[dict, int]:
+        return request_json(
+            Request(
+                f"{base_url}{path}",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+
+    try:
+        repository = server.repository
+        opportunity_id = "http-editorial-package-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack(
+            "http-editorial-package-pack", opportunity_id, 1, "Research pack"
+        )
+        ready = repository.create_research_readiness_assessment(
+            "http-editorial-package-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready."},
+            "policy-v1",
+            "test",
+            "web-test",
+            "v1",
+        )
+        fields = ("Angle", "Thesis", "Promise", "Frame", ["Takeaway"])
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "http-editorial-package-angle", opportunity_id, pack.id, ready.id, *fields
+        )
+        content_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-editorial-package-piece",
+            opportunity_id,
+            angle.id,
+            "video",
+            "Compatibility title",
+        )
+        script = repository.create_script_under_content_piece_readiness(
+            "http-editorial-package-script", content_piece.id, "Exact narration."
+        )
+        prefix = f"/api/content-pieces/{content_piece.id}"
+        title_payload = {
+            "id": "http-title-1",
+            "text": "Exact title",
+            "metadata": {"author": "human"},
+        }
+        first_title, status = post(f"{prefix}/title-options", title_payload)
+        assert status == 201
+        assert first_title["kind"] == "title_option"
+        assert first_title["title_option"]["text"] == "Exact title"
+        second_title, status = post(
+            f"{prefix}/title-options", {"id": "http-title-2", "text": "Revised title"}
+        )
+        assert status == 201
+        hook_payload = {"id": "http-hook-1", "text": "Exact hook"}
+        first_hook, status = post(f"{prefix}/hook-options", hook_payload)
+        assert status == 201
+        second_hook, status = post(
+            f"{prefix}/hook-options", {"id": "http-hook-2", "text": "Revised hook"}
+        )
+        assert status == 201
+        snapshot_payload = {
+            "id": "http-package-1",
+            "title_option_id": first_title["title_option"]["id"],
+            "hook_option_id": first_hook["hook_option"]["id"],
+            "script_id": script.id,
+        }
+        snapshot, status = post(f"{prefix}/editorial-package-snapshots", snapshot_payload)
+        assert status == 201
+        assert snapshot["kind"] == "editorial_package_snapshot"
+        assert snapshot["editorial_package_snapshot"]["content_piece_id"] == content_piece.id
+        assert snapshot["editorial_package_snapshot"]["title_option_id"] == "http-title-1"
+        snapshot_two, status = post(
+            f"{prefix}/editorial-package-snapshots",
+            snapshot_payload
+            | {
+                "id": "http-package-2",
+                "title_option_id": second_title["title_option"]["id"],
+                "hook_option_id": second_hook["hook_option"]["id"],
+            },
+        )
+        assert status == 201
+        assert snapshot_two["editorial_package_snapshot"]["id"] == "http-package-2"
+
+        title_history, status = request_json(Request(f"{base_url}{prefix}/title-options"))
+        assert status == 200
+        assert [record["id"] for record in title_history["title_options"]] == [
+            "http-title-1",
+            "http-title-2",
+        ]
+        hook_history, _ = request_json(Request(f"{base_url}{prefix}/hook-options"))
+        assert len(hook_history["hook_options"]) == 2
+        package_history, _ = request_json(
+            Request(f"{base_url}{prefix}/editorial-package-snapshots")
+        )
+        assert [record["id"] for record in package_history["editorial_package_snapshots"]] == [
+            "http-package-1",
+            "http-package-2",
+        ]
+        fetched, _ = request_json(
+            Request(f"{base_url}/api/editorial-package-snapshots/http-package-1")
+        )
+        assert fetched["editorial_package_snapshot"]["script_id"] == script.id
+        assert repository.get_content_piece(content_piece.id).working_title == "Compatibility title"
+        assert repository.list_visual_plans_for_content_piece(content_piece.id) == []
+
+        malformed, status = request_error(
+            Request(
+                f"{base_url}{prefix}/title-options",
+                data=json.dumps(title_payload | {"id": "bad-title", "selected": True}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert malformed["error"]
+        missing_piece, status = request_error(
+            Request(
+                f"{base_url}/api/content-pieces/missing/title-options",
+                data=json.dumps(title_payload | {"id": "missing-piece-title"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "ContentPiece not found" in missing_piece["error"]
+        missing_option, status = request_error(
+            Request(
+                f"{base_url}{prefix}/editorial-package-snapshots",
+                data=json.dumps(
+                    snapshot_payload | {"id": "missing-option", "title_option_id": "missing"}
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert missing_option["error"]
+
+        legacy_angle = repository.create_editorial_angle(
+            "http-editorial-package-legacy-angle", opportunity_id, pack.id, *fields
+        )
+        legacy_piece = repository.create_content_piece(
+            "http-editorial-package-legacy-piece",
+            opportunity_id,
+            legacy_angle.id,
+            "video",
+            "Legacy title",
+        )
+        rejected, status = request_error(
+            Request(
+                f"{base_url}/api/content-pieces/{legacy_piece.id}/hook-options",
+                data=json.dumps({"id": "legacy-hook", "text": "Rejected"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "readiness provenance" in rejected["error"]
+    finally:
+        server.server_close()
+
+
 def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scenes(
     tmp_path: Path,
 ) -> None:

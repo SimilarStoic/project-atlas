@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -1075,6 +1075,243 @@ def test_script_readiness_initiation_appends_immutable_versions_under_exact_line
         repository.close()
 
 
+def test_editorial_package_records_are_append_only_and_exact_under_ready_lineage(tmp_path) -> None:
+    """v0.21 freezes explicit alternatives without selection, mutation, or downstream work."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity_id = "editorial-package-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack(
+            "editorial-package-pack", opportunity_id, 1, "Research pack"
+        )
+        ready = repository.create_research_readiness_assessment(
+            "editorial-package-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready for package testing."},
+            "policy-v1",
+            "test",
+            "persistence-test",
+            "v1",
+        )
+        fields = (
+            "Ready Angle",
+            "Exact readiness lineage permits editorial drafting.",
+            "Understand the boundary.",
+            "A focused explainer.",
+            ["Lineage is exact."],
+        )
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "editorial-package-angle", opportunity_id, pack.id, ready.id, *fields
+        )
+        content_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "editorial-package-piece",
+            opportunity_id,
+            angle.id,
+            "video",
+            "Compatibility working title",
+        )
+        original_piece = repository.get_content_piece(content_piece.id)
+        script_v1 = repository.create_script_under_content_piece_readiness(
+            "editorial-package-script-v1", content_piece.id, "Original narration."
+        )
+        title_v1 = repository.create_title_option_under_content_piece_readiness(
+            "editorial-package-title-v1",
+            content_piece.id,
+            "First exact title",
+            {"author": "human"},
+        )
+        title_v2 = repository.create_title_option_under_content_piece_readiness(
+            "editorial-package-title-v2", content_piece.id, "Revised exact title"
+        )
+        hook_v1 = repository.create_hook_option_under_content_piece_readiness(
+            "editorial-package-hook-v1", content_piece.id, "First exact hook"
+        )
+        hook_v2 = repository.create_hook_option_under_content_piece_readiness(
+            "editorial-package-hook-v2", content_piece.id, "Revised exact hook"
+        )
+        snapshot_v1 = repository.create_editorial_package_snapshot(
+            "editorial-package-snapshot-v1",
+            content_piece.id,
+            title_v1.id,
+            hook_v1.id,
+            script_v1.id,
+        )
+        script_v2 = repository.create_script_under_content_piece_readiness(
+            "editorial-package-script-v2", content_piece.id, "Revised narration."
+        )
+        snapshot_v2 = repository.create_editorial_package_snapshot(
+            "editorial-package-snapshot-v2",
+            content_piece.id,
+            title_v2.id,
+            hook_v2.id,
+            script_v2.id,
+        )
+
+        assert [
+            option.text
+            for option in repository.list_title_options_for_content_piece(content_piece.id)
+        ] == [
+            "First exact title",
+            "Revised exact title",
+        ]
+        assert [
+            option.text
+            for option in repository.list_hook_options_for_content_piece(content_piece.id)
+        ] == [
+            "First exact hook",
+            "Revised exact hook",
+        ]
+        assert repository.get_title_option(title_v1.id).metadata == {"author": "human"}
+        assert repository.get_content_piece(content_piece.id) == original_piece
+        assert [
+            (snapshot.title_option_id, snapshot.hook_option_id, snapshot.script_id)
+            for snapshot in repository.list_editorial_package_snapshots_for_content_piece(
+                content_piece.id
+            )
+        ] == [
+            (title_v1.id, hook_v1.id, script_v1.id),
+            (title_v2.id, hook_v2.id, script_v2.id),
+        ]
+        assert repository.get_editorial_package_snapshot(snapshot_v1.id) == snapshot_v1
+        assert repository.get_editorial_package_snapshot(snapshot_v2.id) == snapshot_v2
+        assert repository.list_visual_plans_for_content_piece(content_piece.id) == []
+
+        other_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "editorial-package-other-piece",
+            opportunity_id,
+            angle.id,
+            "video",
+            "Other compatibility title",
+        )
+        other_title = repository.create_title_option_under_content_piece_readiness(
+            "editorial-package-other-title", other_piece.id, "Other title"
+        )
+        other_hook = repository.create_hook_option_under_content_piece_readiness(
+            "editorial-package-other-hook", other_piece.id, "Other hook"
+        )
+        other_script = repository.create_script_under_content_piece_readiness(
+            "editorial-package-other-script", other_piece.id, "Other narration."
+        )
+        for title_id, hook_id, script_id in (
+            (other_title.id, hook_v1.id, script_v1.id),
+            (title_v1.id, other_hook.id, script_v1.id),
+            (title_v1.id, hook_v1.id, other_script.id),
+        ):
+            with pytest.raises(ValueError, match="same ContentPiece"):
+                repository.create_editorial_package_snapshot(
+                    f"editorial-package-rejected-{title_id}",
+                    content_piece.id,
+                    title_id,
+                    hook_id,
+                    script_id,
+                )
+
+        legacy_angle = repository.create_editorial_angle(
+            "editorial-package-legacy-angle", opportunity_id, pack.id, *fields
+        )
+        legacy_piece = repository.create_content_piece(
+            "editorial-package-legacy-piece",
+            opportunity_id,
+            legacy_angle.id,
+            "video",
+            "Legacy title",
+        )
+        with pytest.raises(ValueError, match="readiness provenance"):
+            repository.create_title_option_under_content_piece_readiness(
+                "editorial-package-legacy-title", legacy_piece.id, "Rejected title"
+            )
+        with pytest.raises(ValueError, match="readiness provenance"):
+            repository.create_hook_option_under_content_piece_readiness(
+                "editorial-package-legacy-hook", legacy_piece.id, "Rejected hook"
+            )
+        with pytest.raises(ValueError, match="readiness provenance"):
+            repository.create_editorial_package_snapshot(
+                "editorial-package-legacy-snapshot",
+                legacy_piece.id,
+                title_v1.id,
+                hook_v1.id,
+                script_v1.id,
+            )
+        with pytest.raises(ValueError, match="non-empty"):
+            repository.create_title_option_under_content_piece_readiness(
+                "editorial-package-empty-title", content_piece.id, ""
+            )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute("DELETE FROM title_options WHERE id = ?", (title_v1.id,))
+
+        title_columns = {
+            row[1] for row in repository.connection.execute("PRAGMA table_info(title_options)")
+        }
+        snapshot_columns = {
+            row[1]
+            for row in repository.connection.execute(
+                "PRAGMA table_info(editorial_package_snapshots)"
+            )
+        }
+        assert {"selected", "current", "latest", "approved", "score"}.isdisjoint(title_columns)
+        assert {"selected", "current", "latest", "approved", "version"}.isdisjoint(snapshot_columns)
+    finally:
+        repository.close()
+
+
+def test_migration_16_adds_editorial_package_schema_without_backfill(tmp_path) -> None:
+    """Migration 16 is additive over a v0.20 database and leaves historical rows untouched."""
+
+    database = tmp_path / "atlas-v020.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:15]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-20T00:00:00+00:00')",
+                (version,),
+            )
+        connection.execute(
+            "INSERT INTO opportunities VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                "historical-package-opportunity",
+                "Title",
+                "Summary",
+                "Why",
+                1,
+                "proposed",
+                "{}",
+                "now",
+                "now",
+            ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        assert repository.get_opportunity("historical-package-opportunity").title == "Title"
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM title_options").fetchone()[0] == 0
+        )
+        assert repository.connection.execute("SELECT COUNT(*) FROM hook_options").fetchone()[0] == 0
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM editorial_package_snapshots"
+            ).fetchone()[0]
+            == 0
+        )
+        assert repository.connection.execute(
+            "SELECT version FROM schema_migrations WHERE version = 16"
+        ).fetchone()
+    finally:
+        repository.close()
+
+
 def test_migration_15_adds_nullable_angle_readiness_lineage_without_backfill(tmp_path) -> None:
     """Migration 15 preserves pre-v0.18 Angles while adding restrictive provenance."""
 
@@ -1189,7 +1426,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -1610,7 +1847,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -1804,7 +2041,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -1949,7 +2186,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                16,
+                17,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -1971,7 +2208,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 16"
+                "SELECT version FROM schema_migrations WHERE version = 17"
             ).fetchone()
             is None
         )
@@ -4019,7 +4256,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

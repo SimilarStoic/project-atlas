@@ -122,6 +122,93 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                     {"error": "Research readiness assessment not found."}, HTTPStatus.NOT_FOUND
                 )
             return
+        content_piece_prefix = "/api/content-pieces/"
+        editorial_history_routes = {
+            "/title-options": (
+                "title_option_history",
+                self.server.repository.list_title_options_for_content_piece,
+                self.server.repository.title_option_payload,
+                "title_options",
+            ),
+            "/hook-options": (
+                "hook_option_history",
+                self.server.repository.list_hook_options_for_content_piece,
+                self.server.repository.hook_option_payload,
+                "hook_options",
+            ),
+            "/editorial-package-snapshots": (
+                "editorial_package_snapshot_history",
+                self.server.repository.list_editorial_package_snapshots_for_content_piece,
+                self.server.repository.editorial_package_snapshot_payload,
+                "editorial_package_snapshots",
+            ),
+        }
+        for suffix, (
+            kind,
+            list_records,
+            payload_for,
+            response_key,
+        ) in editorial_history_routes.items():
+            if parsed.path.startswith(content_piece_prefix) and parsed.path.endswith(suffix):
+                content_piece_id = unquote(
+                    parsed.path[len(content_piece_prefix) : -len(suffix)]
+                ).strip("/")
+                if not content_piece_id:
+                    self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                    return
+                try:
+                    self.server.repository.get_content_piece(content_piece_id)
+                except KeyError:
+                    self._send_json({"error": "ContentPiece not found."}, HTTPStatus.NOT_FOUND)
+                    return
+                self._send_json(
+                    {
+                        "kind": kind,
+                        "content_piece_id": content_piece_id,
+                        response_key: [
+                            payload_for(record) for record in list_records(content_piece_id)
+                        ],
+                    }
+                )
+                return
+        editorial_record_routes = {
+            "/api/title-options/": (
+                "title_option",
+                self.server.repository.get_title_option,
+                self.server.repository.title_option_payload,
+                "title_option",
+            ),
+            "/api/hook-options/": (
+                "hook_option",
+                self.server.repository.get_hook_option,
+                self.server.repository.hook_option_payload,
+                "hook_option",
+            ),
+            "/api/editorial-package-snapshots/": (
+                "editorial_package_snapshot",
+                self.server.repository.get_editorial_package_snapshot,
+                self.server.repository.editorial_package_snapshot_payload,
+                "editorial_package_snapshot",
+            ),
+        }
+        for prefix, (
+            kind,
+            get_record,
+            payload_for,
+            response_key,
+        ) in editorial_record_routes.items():
+            if parsed.path.startswith(prefix):
+                record_id = unquote(parsed.path[len(prefix) :]).strip("/")
+                if not record_id:
+                    self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                    return
+                try:
+                    self._send_json(
+                        {"kind": kind, response_key: payload_for(get_record(record_id))}
+                    )
+                except KeyError:
+                    self._send_json({"error": f"{kind} not found."}, HTTPStatus.NOT_FOUND)
+                return
         if parsed.path == "/api/demo/content":
             content = content_payload().copy()
             content.pop("scene_plan", None)
@@ -324,6 +411,114 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             )
             return
         content_piece_prefix = "/api/content-pieces/"
+        title_option_suffix = "/title-options"
+        hook_option_suffix = "/hook-options"
+        for suffix, record_name, create_option, payload_for, response_key in (
+            (
+                title_option_suffix,
+                "TitleOption",
+                self.server.repository.create_title_option_under_content_piece_readiness,
+                self.server.repository.title_option_payload,
+                "title_option",
+            ),
+            (
+                hook_option_suffix,
+                "HookOption",
+                self.server.repository.create_hook_option_under_content_piece_readiness,
+                self.server.repository.hook_option_payload,
+                "hook_option",
+            ),
+        ):
+            if path.startswith(content_piece_prefix) and path.endswith(suffix):
+                content_piece_id = unquote(path[len(content_piece_prefix) : -len(suffix)]).strip(
+                    "/"
+                )
+                if not content_piece_id:
+                    self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                    return
+                try:
+                    content_length = int(self.headers.get("Content-Length", "0"))
+                    payload = json.loads(self.rfile.read(content_length))
+                    if not isinstance(payload, dict):
+                        raise ValueError(f"{record_name} initiation payload must be an object.")
+                    allowed_fields = {"id", "text", "metadata"}
+                    if set(payload) - allowed_fields:
+                        raise ValueError(
+                            f"{record_name} initiation payload contains unsupported fields."
+                        )
+                    record_id = payload.get("id")
+                    text = payload.get("text")
+                    metadata = payload.get("metadata")
+                    if not isinstance(record_id, str) or not record_id.strip():
+                        raise ValueError(f"{record_name} ID must be non-empty text.")
+                    if not isinstance(text, str) or not text.strip():
+                        raise ValueError(f"{record_name} text must be non-empty text.")
+                    if metadata is not None and not isinstance(metadata, dict):
+                        raise ValueError(f"{record_name} metadata must be an object or null.")
+                    record = create_option(record_id.strip(), content_piece_id, text, metadata)
+                except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                    self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                    return
+                except KeyError:
+                    self._send_json({"error": "ContentPiece not found."}, HTTPStatus.NOT_FOUND)
+                    return
+                self._send_json(
+                    {"kind": response_key, response_key: payload_for(record)}, HTTPStatus.CREATED
+                )
+                return
+        editorial_package_snapshot_suffix = "/editorial-package-snapshots"
+        if path.startswith(content_piece_prefix) and path.endswith(
+            editorial_package_snapshot_suffix
+        ):
+            content_piece_id = unquote(
+                path[len(content_piece_prefix) : -len(editorial_package_snapshot_suffix)]
+            ).strip("/")
+            if not content_piece_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("EditorialPackageSnapshot payload must be an object.")
+                allowed_fields = {"id", "title_option_id", "hook_option_id", "script_id"}
+                if set(payload) - allowed_fields:
+                    raise ValueError(
+                        "EditorialPackageSnapshot payload contains unsupported fields."
+                    )
+                values = {name: payload.get(name) for name in allowed_fields}
+                if any(
+                    not isinstance(value, str) or not value.strip() for value in values.values()
+                ):
+                    raise ValueError("EditorialPackageSnapshot IDs must be non-empty text.")
+                snapshot = self.server.repository.create_editorial_package_snapshot(
+                    values["id"].strip(),
+                    content_piece_id,
+                    values["title_option_id"].strip(),
+                    values["hook_option_id"].strip(),
+                    values["script_id"].strip(),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError as error:
+                message = (
+                    "ContentPiece not found."
+                    if error.args and error.args[0] == content_piece_id
+                    else "TitleOption, HookOption, or Script not found."
+                )
+                self._send_json({"error": message}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "editorial_package_snapshot",
+                    "editorial_package_snapshot": (
+                        self.server.repository.editorial_package_snapshot_payload(snapshot)
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         script_suffix = "/scripts"
         if path.startswith(content_piece_prefix) and path.endswith(script_suffix):
             content_piece_id = unquote(path[len(content_piece_prefix) : -len(script_suffix)]).strip(

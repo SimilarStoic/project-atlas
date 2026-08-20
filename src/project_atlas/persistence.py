@@ -212,6 +212,40 @@ class Script:
 
 
 @dataclass(frozen=True)
+class TitleOption:
+    """An immutable title alternative owned by one ContentPiece."""
+
+    id: str
+    content_piece_id: str
+    text: str
+    metadata: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class HookOption:
+    """An immutable hook alternative owned by one ContentPiece."""
+
+    id: str
+    content_piece_id: str
+    text: str
+    metadata: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class EditorialPackageSnapshot:
+    """One frozen editorial proposition composed from exact ContentPiece records."""
+
+    id: str
+    content_piece_id: str
+    title_option_id: str
+    hook_option_id: str
+    script_id: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class VisualPlan:
     """A visual translation plan for one immutable Script version."""
 
@@ -841,6 +875,57 @@ MIGRATIONS: tuple[Migration, ...] = (
         CREATE INDEX idx_editorial_angles_research_readiness_assessment
           ON editorial_angles (research_readiness_assessment_id, created_at, id)
         """,
+        ),
+    ),
+    (
+        16,
+        (
+            """
+        CREATE TABLE title_options (
+          id TEXT PRIMARY KEY,
+          content_piece_id TEXT NOT NULL,
+          text TEXT NOT NULL CHECK (length(trim(text)) > 0),
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (content_piece_id) REFERENCES content_pieces(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE hook_options (
+          id TEXT PRIMARY KEY,
+          content_piece_id TEXT NOT NULL,
+          text TEXT NOT NULL CHECK (length(trim(text)) > 0),
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (content_piece_id) REFERENCES content_pieces(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE editorial_package_snapshots (
+          id TEXT PRIMARY KEY,
+          content_piece_id TEXT NOT NULL,
+          title_option_id TEXT NOT NULL,
+          hook_option_id TEXT NOT NULL,
+          script_id TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (content_piece_id) REFERENCES content_pieces(id) ON DELETE RESTRICT,
+          FOREIGN KEY (title_option_id) REFERENCES title_options(id) ON DELETE RESTRICT,
+          FOREIGN KEY (hook_option_id) REFERENCES hook_options(id) ON DELETE RESTRICT,
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_title_options_content_piece_created "
+            "ON title_options (content_piece_id, created_at, id)",
+            "CREATE INDEX idx_hook_options_content_piece_created "
+            "ON hook_options (content_piece_id, created_at, id)",
+            "CREATE INDEX idx_editorial_package_snapshots_content_piece_created "
+            "ON editorial_package_snapshots (content_piece_id, created_at, id)",
+            "CREATE INDEX idx_editorial_package_snapshots_title_option "
+            "ON editorial_package_snapshots (title_option_id)",
+            "CREATE INDEX idx_editorial_package_snapshots_hook_option "
+            "ON editorial_package_snapshots (hook_option_id)",
+            "CREATE INDEX idx_editorial_package_snapshots_script "
+            "ON editorial_package_snapshots (script_id)",
         ),
     ),
 )
@@ -1818,47 +1903,7 @@ class AtlasRepository:
     ) -> Script:
         """Deliberately append one Script under exact Ready ContentPiece provenance."""
 
-        content_piece = self.get_content_piece(content_piece_id)
-        try:
-            editorial_angle = self.get_editorial_angle(content_piece.editorial_angle_id)
-        except KeyError as error:
-            raise ValueError(
-                "The ContentPiece provenance must reference an existing EditorialAngle."
-            ) from error
-        if editorial_angle.opportunity_id != content_piece.opportunity_id:
-            raise ValueError(
-                "The ContentPiece and EditorialAngle must belong to the same Opportunity."
-            )
-        assessment_id = editorial_angle.research_readiness_assessment_id
-        if assessment_id is None:
-            raise ValueError(
-                "A readiness-authorized Script requires EditorialAngle readiness provenance."
-            )
-        try:
-            assessment = self.get_research_readiness_assessment(assessment_id)
-        except KeyError as error:
-            raise ValueError(
-                "The EditorialAngle readiness provenance must reference an existing "
-                "ResearchReadinessAssessment."
-            ) from error
-        if assessment.outcome != "Ready":
-            raise ValueError(
-                "Only a Ready ResearchReadinessAssessment may authorize Script creation."
-            )
-        if assessment.research_pack_id != editorial_angle.research_pack_id:
-            raise ValueError(
-                "The ResearchReadinessAssessment must belong to the EditorialAngle ResearchPack."
-            )
-        try:
-            research_pack = self.get_research_pack(editorial_angle.research_pack_id)
-        except KeyError as error:
-            raise ValueError(
-                "The EditorialAngle must reference an existing ResearchPack."
-            ) from error
-        if research_pack.opportunity_id != content_piece.opportunity_id:
-            raise ValueError(
-                "The EditorialAngle ResearchPack must belong to the ContentPiece Opportunity."
-            )
+        self._validate_content_piece_readiness_lineage(content_piece_id)
         with self.connection:
             self._insert_script(script_id, content_piece_id, narration_text, metadata)
         return self.get_script(script_id)
@@ -1906,6 +1951,156 @@ class AtlasRepository:
                 if latest_script
                 else None
             ),
+        }
+
+    def create_title_option_under_content_piece_readiness(
+        self,
+        title_option_id: str,
+        content_piece_id: str,
+        text: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> TitleOption:
+        """Append one immutable title alternative under exact Ready ContentPiece provenance."""
+
+        self._validate_content_piece_readiness_lineage(content_piece_id)
+        self._validate_editorial_option_text(text, "TitleOption")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO title_options VALUES (?, ?, ?, ?, ?)",
+                (title_option_id, content_piece_id, text, json.dumps(metadata or {}), now()),
+            )
+        return self.get_title_option(title_option_id)
+
+    def get_title_option(self, title_option_id: str) -> TitleOption:
+        row = self.connection.execute(
+            "SELECT * FROM title_options WHERE id = ?", (title_option_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(title_option_id)
+        return self._title_option(row)
+
+    def list_title_options_for_content_piece(self, content_piece_id: str) -> list[TitleOption]:
+        """Return immutable title alternatives in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM title_options WHERE content_piece_id = ? ORDER BY created_at, id",
+            (content_piece_id,),
+        )
+        return [self._title_option(row) for row in rows]
+
+    def create_hook_option_under_content_piece_readiness(
+        self,
+        hook_option_id: str,
+        content_piece_id: str,
+        text: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> HookOption:
+        """Append one immutable hook alternative under exact Ready ContentPiece provenance."""
+
+        self._validate_content_piece_readiness_lineage(content_piece_id)
+        self._validate_editorial_option_text(text, "HookOption")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO hook_options VALUES (?, ?, ?, ?, ?)",
+                (hook_option_id, content_piece_id, text, json.dumps(metadata or {}), now()),
+            )
+        return self.get_hook_option(hook_option_id)
+
+    def get_hook_option(self, hook_option_id: str) -> HookOption:
+        row = self.connection.execute(
+            "SELECT * FROM hook_options WHERE id = ?", (hook_option_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(hook_option_id)
+        return self._hook_option(row)
+
+    def list_hook_options_for_content_piece(self, content_piece_id: str) -> list[HookOption]:
+        """Return immutable hook alternatives in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM hook_options WHERE content_piece_id = ? ORDER BY created_at, id",
+            (content_piece_id,),
+        )
+        return [self._hook_option(row) for row in rows]
+
+    def create_editorial_package_snapshot(
+        self,
+        snapshot_id: str,
+        content_piece_id: str,
+        title_option_id: str,
+        hook_option_id: str,
+        script_id: str,
+    ) -> EditorialPackageSnapshot:
+        """Freeze one explicit title, hook and Script proposition for an eligible ContentPiece."""
+
+        self._validate_content_piece_readiness_lineage(content_piece_id)
+        title_option = self.get_title_option(title_option_id)
+        hook_option = self.get_hook_option(hook_option_id)
+        script = self.get_script(script_id)
+        if title_option.content_piece_id != content_piece_id:
+            raise ValueError("A package TitleOption must belong to the same ContentPiece.")
+        if hook_option.content_piece_id != content_piece_id:
+            raise ValueError("A package HookOption must belong to the same ContentPiece.")
+        if script.content_piece_id != content_piece_id:
+            raise ValueError("A package Script must belong to the same ContentPiece.")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO editorial_package_snapshots VALUES (?, ?, ?, ?, ?, ?)",
+                (snapshot_id, content_piece_id, title_option_id, hook_option_id, script_id, now()),
+            )
+        return self.get_editorial_package_snapshot(snapshot_id)
+
+    def get_editorial_package_snapshot(self, snapshot_id: str) -> EditorialPackageSnapshot:
+        row = self.connection.execute(
+            "SELECT * FROM editorial_package_snapshots WHERE id = ?", (snapshot_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(snapshot_id)
+        return self._editorial_package_snapshot(row)
+
+    def list_editorial_package_snapshots_for_content_piece(
+        self, content_piece_id: str
+    ) -> list[EditorialPackageSnapshot]:
+        """Return frozen editorial propositions in stable creation order."""
+
+        rows = self.connection.execute(
+            "SELECT * FROM editorial_package_snapshots WHERE content_piece_id = ? "
+            "ORDER BY created_at, id",
+            (content_piece_id,),
+        )
+        return [self._editorial_package_snapshot(row) for row in rows]
+
+    @staticmethod
+    def title_option_payload(title_option: TitleOption) -> dict[str, Any]:
+        return {
+            "id": title_option.id,
+            "content_piece_id": title_option.content_piece_id,
+            "text": title_option.text,
+            "metadata": title_option.metadata,
+            "created_at": title_option.created_at,
+        }
+
+    @staticmethod
+    def hook_option_payload(hook_option: HookOption) -> dict[str, Any]:
+        return {
+            "id": hook_option.id,
+            "content_piece_id": hook_option.content_piece_id,
+            "text": hook_option.text,
+            "metadata": hook_option.metadata,
+            "created_at": hook_option.created_at,
+        }
+
+    @staticmethod
+    def editorial_package_snapshot_payload(
+        snapshot: EditorialPackageSnapshot,
+    ) -> dict[str, Any]:
+        return {
+            "id": snapshot.id,
+            "content_piece_id": snapshot.content_piece_id,
+            "title_option_id": snapshot.title_option_id,
+            "hook_option_id": snapshot.hook_option_id,
+            "script_id": snapshot.script_id,
+            "created_at": snapshot.created_at,
         }
 
     def create_visual_plan(
@@ -2770,6 +2965,58 @@ class AtlasRepository:
         editorial_angle = self.get_editorial_angle(editorial_angle_id)
         if editorial_angle.opportunity_id != opportunity_id:
             raise ValueError("A ContentPiece must use an EditorialAngle from the same Opportunity.")
+
+    def _validate_content_piece_readiness_lineage(self, content_piece_id: str) -> ContentPiece:
+        """Return a ContentPiece only when its stored initiation lineage remains exactly Ready."""
+
+        content_piece = self.get_content_piece(content_piece_id)
+        try:
+            editorial_angle = self.get_editorial_angle(content_piece.editorial_angle_id)
+        except KeyError as error:
+            raise ValueError(
+                "The ContentPiece provenance must reference an existing EditorialAngle."
+            ) from error
+        if editorial_angle.opportunity_id != content_piece.opportunity_id:
+            raise ValueError(
+                "The ContentPiece and EditorialAngle must belong to the same Opportunity."
+            )
+        assessment_id = editorial_angle.research_readiness_assessment_id
+        if assessment_id is None:
+            raise ValueError(
+                "A readiness-authorized editorial record requires EditorialAngle "
+                "readiness provenance."
+            )
+        try:
+            assessment = self.get_research_readiness_assessment(assessment_id)
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialAngle readiness provenance must reference an existing "
+                "ResearchReadinessAssessment."
+            ) from error
+        if assessment.outcome != "Ready":
+            raise ValueError(
+                "Only a Ready ResearchReadinessAssessment may authorize editorial record creation."
+            )
+        if assessment.research_pack_id != editorial_angle.research_pack_id:
+            raise ValueError(
+                "The ResearchReadinessAssessment must belong to the EditorialAngle ResearchPack."
+            )
+        try:
+            research_pack = self.get_research_pack(editorial_angle.research_pack_id)
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialAngle must reference an existing ResearchPack."
+            ) from error
+        if research_pack.opportunity_id != content_piece.opportunity_id:
+            raise ValueError(
+                "The EditorialAngle ResearchPack must belong to the ContentPiece Opportunity."
+            )
+        return content_piece
+
+    @staticmethod
+    def _validate_editorial_option_text(text: str, record_name: str) -> None:
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError(f"{record_name} text must be non-empty text.")
 
     def _insert_script(
         self,
@@ -4502,6 +4749,37 @@ class AtlasRepository:
             json.loads(row["metadata_json"]),
             row["created_at"],
             row["updated_at"],
+        )
+
+    @staticmethod
+    def _title_option(row: sqlite3.Row) -> TitleOption:
+        return TitleOption(
+            row["id"],
+            row["content_piece_id"],
+            row["text"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _hook_option(row: sqlite3.Row) -> HookOption:
+        return HookOption(
+            row["id"],
+            row["content_piece_id"],
+            row["text"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _editorial_package_snapshot(row: sqlite3.Row) -> EditorialPackageSnapshot:
+        return EditorialPackageSnapshot(
+            row["id"],
+            row["content_piece_id"],
+            row["title_option_id"],
+            row["hook_option_id"],
+            row["script_id"],
+            row["created_at"],
         )
 
     @staticmethod
