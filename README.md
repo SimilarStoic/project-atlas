@@ -1,16 +1,22 @@
-# Project Atlas
+# Conveyor
 
-> Working title — a scalable Python application platform.
+Conveyor is a scalable Python application platform and editorial operating system.
+SimilarStoic is its outward-facing channel, editorial brand and mascot world: **SimilarStoic by Conveyor**.
+Project Atlas is the legacy project name.
 
-Project Atlas is a local, dependency-free editorial control interface and durable
+Conveyor is a local, dependency-free editorial control interface and durable
 SQLite foundation for SimilarStoic. It implements through v0.14, including reference-grounded
 character generation and an explicit first-reference bootstrap operation. Later workflow, research
 automation and production systems remain deferred.
 
+The display rename does not change the legacy technical compatibility namespace: Python distribution
+`project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
+`data/atlas.db` path remain unchanged.
+
 For the canonical repository checkpoint, cross-chat re-grounding procedure, and roadmap-governance protocol,
 see [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
-Atlas is a composable, evolvable system: implementation-specific pipeline components remain replaceable behind
+Conveyor is a composable, evolvable system: implementation-specific pipeline components remain replaceable behind
 stable boundaries, while accepted changes preserve historical provenance through additive/versioned evolution.
 Core domain/provenance invariants remain deliberately governed rather than casually replaced. SimilarStoic's
 brand scope extends beyond finance to useful explanatory subjects, and its sparse visual baseline may use
@@ -23,12 +29,12 @@ analytics remains separate, though it may inform unit economics. This is concept
 ledger, integration, formula, threshold, enforcement or automation implementation is present or authorized.
 Future financial records must preserve provenance, provider independence and immutable historical execution
 semantics. Paid external production will eventually require prior founder authorization of a bounded maximum
-spend envelope tied to the approved editorial proposition. Atlas should spend less when it can still clear the
+spend envelope tied to the approved editorial proposition. Conveyor should spend less when it can still clear the
 required quality, brand, evidence and risk floor; it must stop and escalate rather than exceed that ceiling or
 silently lower the floor. This is a future operating principle, not financial or spend-authorization
 implementation.
 
-Atlas's approved end-state is an approximately **95% automated content operating system**, not a human-free
+Conveyor's approved end-state is an approximately **95% automated content operating system**, not a human-free
 system. Routine execution should progressively automate around founder judgement at three target gates: Idea
 (opportunity approval/steering), Editorial (title, hook, angle, script, evidence/risk and revision decisions
 plus bounded paid-production spend authorization) and Learning (performance, hypotheses, adaptations and
@@ -38,10 +44,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now the **active** roadmap phase. v0.17 Persistent Research Readiness remains the latest accepted
-implementation milestone; v0.16 Authorized Research Initiation is its historical accepted predecessor. v0.18
-Readiness-Authorized Editorial Angle Initiation is the defined and authorized next milestone, but is not
-implemented or accepted, and the remaining Phase 2 scope is not implemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.18 Readiness-Authorized Editorial Angle Initiation is the latest
+accepted implementation milestone; v0.17 Persistent Research Readiness is its historical accepted predecessor.
+Migrations 1–15 are canonical, with migration 15 the latest canonical migration, and no successor milestone is
+selected. The remaining Phase 2 scope is not implemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -51,7 +57,7 @@ phase boundaries.
 
 Future Editorial Gate proposals may compare feasible production options and explain expected quality,
 capability, risk and cost trade-offs, including qualified—not guaranteed—commercial or strategic upside.
-Quality is a floor: Atlas optimizes cost inside it, never by silently degrading it. Authorized ceilings govern
+Quality is a floor: Conveyor optimizes cost inside it, never by silently degrading it. Authorized ceilings govern
 paid external spend only; an overspend requires human escalation, while the exact financial-control mechanics
 remain deferred.
 
@@ -59,7 +65,7 @@ The first approved implementation direction is immutable Idea Gate review snapsh
 decisions for mutable Opportunities: Proceed, Reject or Steer with optional founder direction and preserved
 history. A decision applies to the exact snapshot reviewed, has no automatic research/workflow side effect, and
 does not reuse `Opportunity.status` or approval flags. This direction is now defined as
-**v0.15 — Persistent Idea Gate**, the latest accepted Phase 2 implementation milestone. It adds only
+**v0.15 — Persistent Idea Gate**, a historical accepted Phase 2 implementation milestone. It adds only
 immutable snapshot/decision provenance, a narrow domain-qualified API and minimal Discover interaction
 through additive migration 12; v0.14 remains the historical accepted predecessor.
 The approved spend-authorization direction is not part of this first Idea Gate implementation slice.
@@ -70,22 +76,21 @@ Reject cannot, snapshot/pack Opportunity lineage must match, historical packs re
 provenance, and Steer direction is consumed by reference. It authorizes no automatic research,
 provider/queue orchestration, historical backfill or later-phase activation.
 
-**v0.17 — Persistent Research Readiness** remains the latest accepted implementation milestone; v0.16 is its
+**v0.17 — Persistent Research Readiness** is the historical accepted predecessor to v0.18; v0.16 is its
 historical accepted predecessor. It persists one immutable, additive assessment record per exact
 server-built, deterministically ordered, schema-versioned frozen ResearchPack evidence state. The controlled
 API supplies only outcome, findings, policy/check version and producer provenance; it exposes create/list/get
 history but has no UI or evaluator. Ready, NeedsMoreResearch and Blocked are the only outcomes. No mutable
-current/latest readiness, backfill, ResearchPack status or automation is authorized; migration 14 is canonical
-and migrations extend through 14.
+current/latest readiness, backfill, ResearchPack status or automation is authorized; migration 14 remains its
+historical migration, and migrations now extend canonically through 15.
 
-**v0.18 — Readiness-Authorized Editorial Angle Initiation** is defined and authorized for bounded implementation,
-not implemented or accepted. It is the deliberate creation of an Opportunity-owned EditorialAngle under one exact
-supplied immutable `Ready` assessment, preserving a direct immutable initiation-provenance reference. The reference
-is nullable for historical/demo/legacy Angles and required only by the new lifecycle path; no backfill, latest/current
-selection, readiness consumption, frozen Claim matching, workflow record, UI, provider call, Phase 5 generation,
-ContentPiece or Script behavior is included. Migration 15 is expected only during implementation and only for the
-nullable restrictive FK and assessment-lineage index. v0.17 remains the latest accepted milestone; no milestone
-after v0.18 is selected.
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation milestone. It
+provides deliberate creation of an Opportunity-owned EditorialAngle under one exact supplied immutable `Ready`
+assessment, preserving a direct immutable initiation-provenance reference. The reference is nullable for
+historical/demo/legacy Angles and required only by the new lifecycle path; no backfill, latest/current selection,
+readiness consumption, frozen Claim matching, workflow record, UI, provider call, Phase 5 generation, ContentPiece
+or Script behavior is included. Migration 15 is canonical for the nullable restrictive FK and assessment-lineage
+index. No milestone after v0.18 is selected.
 
 ## Technology baseline
 
@@ -136,7 +141,7 @@ Build the development image:
 docker compose build
 ```
 
-The compose definition is intentionally a scaffold until Atlas gains a runnable service.
+The compose definition is intentionally a scaffold until Conveyor gains a runnable service.
 
 ## Run the MVP UI shell
 
@@ -149,13 +154,13 @@ it does not call AI services, research sources, publishing platforms, or analyti
 
 ## Local persistence
 
-Atlas now stores its first persistent application data in SQLite at
-`data/atlas.db` by default. Set `ATLAS_DB_PATH` to use a different local database:
+Conveyor stores its persistent application data in SQLite at the legacy compatibility path
+`data/atlas.db` by default. Set the legacy compatibility variable `ATLAS_DB_PATH` to use a different local database:
 
     $env:ATLAS_DB_PATH = 'C:\path\to\atlas.db'
     uv run python -m project_atlas
 
-On startup, Atlas applies recorded SQLite schema migrations and then idempotently
+On startup, Conveyor applies recorded SQLite schema migrations and then idempotently
 seeds the six existing Discover opportunities. Existing local changes are never
 overwritten by later startup seeding.
 
@@ -404,7 +409,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.17 — Persistent Research Readiness remains the latest accepted implementation checkpoint; v0.16 is its
-historical accepted predecessor. v0.18 — Readiness-Authorized Editorial Angle Initiation is defined and authorized
-but not implemented or accepted. Migrations are canonical through 14. Later Atlas
-systems remain out of scope.
+v0.18 — Readiness-Authorized Editorial Angle Initiation is the latest accepted implementation checkpoint; v0.17 is
+its historical accepted predecessor. Migrations 1–15 are canonical, with migration 15 the latest canonical
+migration. Phase 2 is ACTIVE / INCOMPLETE, no successor milestone is selected, and later Conveyor systems remain
+out of scope.

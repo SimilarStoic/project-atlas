@@ -931,7 +931,7 @@ def test_reference_review_serves_eligible_hamster_and_creates_ordered_set(tmp_pa
         retained = content["content"]["character_reference_review"]["reference_sets"]
         assert retained[-1]["members"][0]["asset"]["content_digest"]
         assert (
-            "At character-generation time, Atlas resolves the highest version"
+            "At character-generation time, Conveyor resolves the highest version"
             in (Path(__file__).parents[1] / "src/project_atlas/static/app.js").read_text()
         )
         script = (Path(__file__).parents[1] / "src/project_atlas/static/app.js").read_text()

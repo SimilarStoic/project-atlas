@@ -1,8 +1,11 @@
-# Project Atlas — Project Guide
+# Conveyor — Project Guide
 
 ## Purpose
 
-Project Atlas is a long-term Python application. This repository starts with durable engineering boundaries so new capabilities can be added without turning the codebase into a monolith.
+Conveyor is the current long-term engine/project and operating system. SimilarStoic is the outward-facing channel,
+editorial brand and mascot world: **SimilarStoic by Conveyor**. Project Atlas is the historical/legacy project name.
+This repository starts with durable engineering boundaries so new capabilities can be added without turning the
+codebase into a monolith.
 
 ## Architectural principles
 
@@ -14,7 +17,8 @@ Project Atlas is a long-term Python application. This repository starts with dur
 
 ## Source layout
 
-The `src/` layout prevents tests and local commands from accidentally importing an uninstalled working copy. The canonical package name is `project_atlas`.
+The `src/` layout prevents tests and local commands from accidentally importing an uninstalled working copy. The
+legacy compatibility package name remains `project_atlas`; the product rename does not change it.
 
 As the system grows, organize code by bounded capability rather than by one global technical layer. A future capability can own its application, domain, and infrastructure concerns while sharing only deliberately stable abstractions.
 

@@ -1,4 +1,4 @@
-# Project Atlas — SimilarStoic Roadmap
+# Conveyor — SimilarStoic Roadmap
 
 ## Mission
 
@@ -55,7 +55,7 @@ relationships or social decisions; energy and attention; mental models; modern a
 independence; and useful explanations of how systems or other parts of the world work. The editorial purpose
 is to make useful parts of the world understandable and entertaining for the target audience.
 
-These are strategic territories, not a final Atlas Pillar taxonomy.
+These are strategic territories, not a final Conveyor Pillar taxonomy.
 
 ## Editorial inclusion test
 
@@ -71,9 +71,9 @@ miscellaneous trivia without meaningful relevance or insight, or random entertai
 brand's explanatory purpose. Life design connected to money, time or work; the psychology of consumption or
 status; careers and income; and financial relationships are potentially strong fits.
 
-## Atlas domain distinction
+## Conveyor domain distinction
 
-Atlas deliberately distinguishes:
+Conveyor deliberately distinguishes:
 
 - **Pillars** — strategic portfolio organisation.
 - **Subjects** — reusable concepts and knowledge domains.
@@ -126,7 +126,7 @@ Another core principle:
 
 # Content Pillars
 
-The following are current editorial portfolio themes. They guide strategy today but do not define the final persistent Atlas Pillar taxonomy.
+The following are current editorial portfolio themes. They guide strategy today but do not define the final persistent Conveyor Pillar taxonomy.
 
 ## 1. Build & Protect Wealth
 
@@ -270,7 +270,7 @@ Topic discovery should draw from:
 - Evergreen knowledge gaps
 - Existing SimilarStoic content
 
-Atlas should produce a curated daily shortlist of 5–10 opportunities. Initially, Atlas proposes and the founder approves or steers the selection. Research begins only after that approval.
+Conveyor should produce a curated daily shortlist of 5–10 opportunities. Initially, Conveyor proposes and the founder approves or steers the selection. Research begins only after that approval.
 
 The core question is:
 
@@ -339,7 +339,7 @@ The future Research & Evidence system must be flexible enough for different stat
 
 Current ISA rules may require current authoritative primary sources, jurisdiction-aware financial/tax evidence and strong freshness requirements. A behavioural piece such as “Why earning more doesn't make you feel richer” may combine economic evidence, behavioural research, statistics, academic or expert sources, illustrative examples and editorial interpretation. “How much money is enough?” may combine objective claims, calculations, research findings, editorial interpretation and philosophical framing.
 
-Atlas must not assume every statement has the same evidence burden. The future system should support different claim/statement types, provenance, source relationships, verification states and freshness requirements without hard-coding a narrow financial-news workflow. The final Research & Evidence schema is intentionally deferred to the next architectural milestone.
+Conveyor must not assume every statement has the same evidence burden. The future system should support different claim/statement types, provenance, source relationships, verification states and freshness requirements without hard-coding a narrow financial-news workflow. The final Research & Evidence schema is intentionally deferred to the next architectural milestone.
 
 ---
 
@@ -584,7 +584,7 @@ Maintain a knowledge map showing what SimilarStoic has covered and where knowled
 
 ## Knowledge and content intelligence
 
-Project Atlas is specified as a structured knowledge and content-intelligence system, not merely a content archive.
+Conveyor is specified as a structured knowledge and content-intelligence system, not merely a content archive.
 
 It should connect:
 
@@ -600,18 +600,18 @@ The knowledge system should eventually support portfolio-gap analysis, including
 
 ## Hybrid user interface
 
-Atlas is specified as a hybrid dashboard and conversational-control model.
+Conveyor is specified as a hybrid dashboard and conversational-control model.
 
 - The dashboard provides visibility, approvals, workflow status, important changes and useful performance information.
-- Conversational Atlas provides natural-language steering, investigation and eventually actions.
+- Conversational Conveyor provides natural-language steering, investigation and eventually actions.
 - The interface prioritises decisions and exceptions, rather than unnecessary technical complexity.
 
 The initial MVP screens are:
 
-1. **Command Centre** — strongest opportunities, content requiring attention, Atlas activity, important knowledge/source changes, lightweight performance summary and access to Atlas Chat.
+1. **Command Centre** — strongest opportunities, content requiring attention, Conveyor activity, important knowledge/source changes, lightweight performance summary and access to Conveyor Chat.
 2. **Discover / Opportunities** — 5–10 opportunities with relevance, why-now context, viewer benefit, suggested angle, evidence quality, risk, portfolio relevance and visual potential.
 3. **Content Workspace** — an item's lifecycle, research, claims, sources, angle, script, visual plan, QA state and approval controls.
-4. **Atlas Chat** — natural-language questions, steering and eventually actions.
+4. **Conveyor Chat** — natural-language questions, steering and eventually actions.
 
 ## MVP
 
@@ -627,7 +627,7 @@ Automated video production, automated publishing and advanced analytics are late
 
 The architecture follows a **change without rebuild** principle. Data, capabilities, workflows, configuration and interface should remain loosely coupled.
 
-Atlas is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
+Conveyor is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
 image/visual providers, production stages, rendering components, publishing integrations, analytics
 integrations and other implementation-specific pipes should be replaceable behind stable boundaries, explicit
 inputs/outputs, loose coupling and preserved provenance. Replacing one pipe must not require reconstructing
@@ -913,6 +913,15 @@ Closure record:
   AI-clean/overly professional finish is non-blocking; the approved hamster identity, colours, sling-bag
   treatment, proportions and reference continuity are preserved.
 - Final Phase 1 acceptance review — APPROVED. Phase 1 is formally closed.
+
+### Current product-identity clarification
+
+**Conveyor** is the current engine, project and operating-system identity. **Project Atlas** is the historical/legacy
+project name. **SimilarStoic** remains the outward-facing channel, editorial brand and mascot world: **SimilarStoic by
+Conveyor**. Legacy Atlas technical identifiers remain intentionally preserved for compatibility; historical Project
+Atlas records remain historical truth and are not rewritten. This rename creates no implementation milestone and does
+not change schema, migrations, package namespace, environment-variable names, DB path, API routes, GitHub repository
+name, or successor state.
 
 ### Current approved hamster visual-specification clarification
 
@@ -1475,7 +1484,7 @@ must return to founder + ChatGPT rather than be inferred.
 
 #### Sparse human gates, rich machine readiness
 
-Atlas uses **sparse human gates and rich machine readiness checks**. Human approval is concentrated at
+Conveyor uses **sparse human gates and rich machine readiness checks**. Human approval is concentrated at
 meaningful judgement boundaries; intermediate pipeline stages should progress automatically when their explicit
 quality, evidence and provenance requirements are satisfied. Human judgement and machine readiness are
 distinct: the machine must not silently manufacture founder approval, and human approval must not substitute
@@ -1483,8 +1492,8 @@ for technical, evidence or QA readiness.
 
 The recurring target founder gates are:
 
-- **Idea Gate** — “Is this opportunity worth Atlas spending time and money developing?” The conceptual
-  outcomes are Proceed, Reject or Steer. Atlas should present the opportunity, SimilarStoic/audience relevance,
+- **Idea Gate** — “Is this opportunity worth Conveyor spending time and money developing?” The conceptual
+  outcomes are Proceed, Reject or Steer. Conveyor should present the opportunity, SimilarStoic/audience relevance,
   timeliness where relevant, likely explanatory value, useful discovery context, obvious risk/uncertainty and
   its recommendation. This is not a ResearchPack approval gate.
 - **Editorial Gate** — “Is this the editorial proposition SimilarStoic should produce?” It reviews an editorial
@@ -1493,8 +1502,8 @@ The recurring target founder gates are:
   are Approve, Revise, Reject or Select alternative. Approval permits that specific proposition/version to
   progress subject to downstream readiness; it is not final technical-video approval. Where paid external
   production is contemplated, the same Editorial Gate also carries the separate linked judgement of the
-  maximum spend Atlas may use to produce that approved proposition; it is not a fourth recurring founder gate.
-- **Learning Gate** — “What should Atlas learn from what happened?” It eventually presents observed
+  maximum spend Conveyor may use to produce that approved proposition; it is not a fourth recurring founder gate.
+- **Learning Gate** — “What should Conveyor learn from what happened?” It eventually presents observed
   performance/comparisons, what worked or underperformed, evidence versus hypothesis, available
   cost/revenue/economics context, proposed adaptation, scope and confidence. The founder may Accept learning,
   Reject learning, Limit scope, Request more evidence or Override direction. Approved learning must be
@@ -1504,9 +1513,9 @@ The recurring target founder gates are:
 #### Editorial Gate bounded production-spend authorization
 
 No paid external production spend may occur without prior human authorization of a bounded spend envelope tied
-to the approved editorial proposition. The authorization is a **maximum allowed spend**, not a target: Atlas
+to the approved editorial proposition. The authorization is a **maximum allowed spend**, not a target: Conveyor
 should spend less when it can still clear the required quality, brand, evidence and risk thresholds. If the
-required quality would need more than the authorized ceiling, Atlas must stop and escalate; it must neither
+required quality would need more than the authorized ceiling, Conveyor must stop and escalate; it must neither
 exceed that ceiling nor silently lower the approved quality requirement.
 
 The eventual founder-facing Editorial Gate production/spend proposal should identify the exact editorial
@@ -1517,20 +1526,20 @@ the maximum requested authorization. Economy, recommended and premium are illust
 approved enums or a fixed number of options. Estimated return must distinguish measured historical evidence,
 modelled expectation and speculation; it is never a guaranteed justification for spend.
 
-Atlas should seek the lowest-cost production path that still clears the required quality, brand, evidence and
+Conveyor should seek the lowest-cost production path that still clears the required quality, brand, evidence and
 risk floor. It must optimize provider, model, attempt count and workflow before lowering that floor; premium
 is not automatically better and cheapest is not automatically preferred. Once relevant later production and
-financial systems exist, Atlas may operate beneath an approved envelope only while sufficient remaining budget
+financial systems exist, Conveyor may operate beneath an approved envelope only while sufficient remaining budget
 exists. It must not silently exceed the ceiling or continue open-ended retries because providers are available.
 Exceptional additional spend or material risk requires a new human authorization/exception path.
 
 #### Idea Gate review snapshots and decision history
 
 Opportunities remain mutable discovery records. Founder Idea Gate decisions must not point only to an evolving
-current Opportunity: Atlas should preserve an immutable review snapshot of exactly what was presented for
+current Opportunity: Conveyor should preserve an immutable review snapshot of exactly what was presented for
 founder judgement. The conceptual snapshot freezes enough reviewable context to establish what was seen,
 including Opportunity identity, title, summary, why-now context, relevant Subject context, score/ranking if
-presented, Atlas recommendation/explanation, material risk/uncertainty and review timestamp/provenance. This
+presented, Conveyor recommendation/explanation, material risk/uncertainty and review timestamp/provenance. This
 does not convert Opportunity into a fully versioned aggregate or define snapshot fields/schema/table names.
 
 Idea Gate decisions are durable, immutable/additive, historically preserved, specific to one immutable review
@@ -1569,7 +1578,7 @@ research-initiation action validates the qualifying decision, same-Opportunity l
 direction as specified by v0.16.
 
 A single qualifying Proceed or Steer may support multiple ResearchPack versions. No consumed/one-use/current
-authorization state is approved. When an Opportunity changes materially, Atlas must obtain a new Idea Gate
+authorization state is approved. When an Opportunity changes materially, Conveyor must obtain a new Idea Gate
 snapshot and decision before treating later research as authorized for the changed proposition. Historical
 ResearchPacks remain valid without fabricated Idea Gate provenance; future linkage is additive and needs no
 destructive backfill. v0.16 does not authorize generic progression/authorization entities, `Opportunity.stage`,
@@ -1639,7 +1648,7 @@ claims or lost material qualifications, accurate captions and non-contradictory 
 comprehension, complete/correct assets and ordering, technical/render/platform metadata integrity, correct
 visual/character-reference provenance, deliberate break-frame use, and no blocking factual, regulated,
 copyright/IP, cost, provider/system, provenance or platform-policy concern. Publication readiness means the
-approved proposition was faithfully produced, required QA passed, no blocking exception exists, and Atlas can
+approved proposition was faithfully produced, required QA passed, no blocking exception exists, and Conveyor can
 explain what it is publishing and why.
 
 Exceptions interrupt automation; normal work does not. Failed readiness must not be silently bypassed. Future
@@ -1797,7 +1806,7 @@ Potentially expand:
 
 ## Canonical end-to-end target operating model
 
-Project Atlas is intended to become an approximately **95% automated content operating system**. This target
+Conveyor is intended to become an approximately **95% automated content operating system**. This target
 automates routine execution; it does not remove human judgement. Automation must increase only after relevant
 quality, provenance and operating behaviour are demonstrated: **automate proven workflows; do not automate
 uncertainty merely because automation is technically possible.** High-risk claims, material factual
@@ -1807,11 +1816,11 @@ other later-defined areas may require human review.
 The intended recurring founder interaction is concentrated, where practical, at three target operating-model
 gates. These are not approved database or workflow-state entities:
 
-- **Idea Gate** — Atlas generates, ranks and explains candidate opportunities; the founder approves, rejects,
+- **Idea Gate** — Conveyor generates, ranks and explains candidate opportunities; the founder approves, rejects,
   steers or reprioritises them.
-- **Editorial Gate** — Atlas prepares title, hook, angle, script, supporting research/evidence context and
+- **Editorial Gate** — Conveyor prepares title, hook, angle, script, supporting research/evidence context and
   relevant risk/uncertainty notes; the founder approves, rejects, requests revision or selects alternatives.
-- **Learning Gate** — Atlas presents performance, learning, evidence-backed hypotheses and proposed changes
+- **Learning Gate** — Conveyor presents performance, learning, evidence-backed hypotheses and proposed changes
   to future ideas, titles, hooks, scripts, visuals, formats, timing or distribution, with economics context
   where available; the founder steers and accepts or rejects strategic adaptations.
 
@@ -1821,7 +1830,7 @@ generation orchestration, narration/audio, assembly/rendering, quality checks, p
 learning, scheduling, cost/revenue tracking, economics/control reporting and financial guardrails. This
 direction does not authorize deferred phases early.
 
-Atlas already has durable foundations for:
+Conveyor already has durable foundations for:
 
 > Opportunity → Research Pack / Claims / Sources / Evidence → Editorial Angle → ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset
 
@@ -1894,4 +1903,4 @@ approval and canonical synchronization.
 
 > DEFINE → DESIGN WITH USER → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → COMMIT → PUSH → NEXT MILESTONE
 
-This process supports **change without rebuild**. It does not imply that the final Atlas workflow, Pillar taxonomy, research rules, scoring system or evidence taxonomy is already settled.
+This process supports **change without rebuild**. It does not imply that the final Conveyor workflow, Pillar taxonomy, research rules, scoring system or evidence taxonomy is already settled.

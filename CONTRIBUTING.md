@@ -1,6 +1,10 @@
-# Contributing to Project Atlas
+# Contributing to Conveyor
 
 ## Before you start
+
+Conveyor is the current engine/project identity. SimilarStoic remains the outward-facing channel, editorial brand and
+mascot world (**SimilarStoic by Conveyor**); Project Atlas remains the historical/legacy project name. The technical
+package namespace remains `project_atlas` for compatibility.
 
 - Discuss changes that introduce a new service, persistence technology, public interface, or major dependency before implementation.
 - Keep pull requests focused. Separate refactors from behavior changes where practical.

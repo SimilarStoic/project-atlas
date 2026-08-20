@@ -96,7 +96,7 @@ function snapshotReview(snapshot) {
     opportunity.why_now +
     "</p><p><b>Score</b><br>" +
     opportunity.score +
-    "</p><p><b>Atlas recommendation</b><br>" +
+    "</p><p><b>Conveyor recommendation</b><br>" +
     context.atlas_recommendation +
     "</p><p><b>Risk</b><br>" +
     context.material_risk +
@@ -182,7 +182,7 @@ function requestJson(url, options) {
   return fetch(url, options).then(function (response) {
     return response.json().then(function (payload) {
       if (!response.ok) {
-        throw new Error(payload.error || "Atlas could not complete the Idea Gate action.");
+        throw new Error(payload.error || "Conveyor could not complete the Idea Gate action.");
       }
       return payload;
     });
@@ -582,7 +582,7 @@ function characterReferenceReview(review) {
     review.character_profile.name +
     " · v" +
     review.character_profile.version +
-    '</h3><p>Choose existing eligible, scene-derived hamster Assets in the order they should form one immutable visual reference basis. At character-generation time, Atlas resolves the highest version for this CharacterProfile; it does not guarantee consistency.</p><div class="reference-assets">' +
+    '</h3><p>Choose existing eligible, scene-derived hamster Assets in the order they should form one immutable visual reference basis. At character-generation time, Conveyor resolves the highest version for this CharacterProfile; it does not guarantee consistency.</p><div class="reference-assets">' +
     candidates +
     '</div><div class="actions"><button class="create-reference-set" data-character-profile-id="' +
     review.character_profile.id +
@@ -595,7 +595,7 @@ function characterReferenceReview(review) {
 function bindActions() {
   document.querySelectorAll(".actions button").forEach(function (element) {
     element.onclick = function () {
-      if (element.textContent === "Ask Atlas") {
+      if (element.textContent === "Ask Conveyor") {
         screen("chat");
       }
       say(element.textContent + " is recorded locally for this demo.");

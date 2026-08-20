@@ -1,4 +1,4 @@
-"""Dependency-free local server for the Project Atlas MVP UI shell."""
+"""Dependency-free local server for the Conveyor MVP UI shell."""
 
 from __future__ import annotations
 
@@ -556,7 +556,7 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             return
         except Exception:
             self._send_json(
-                {"error": "Atlas could not persist the generation result."},
+                {"error": "Conveyor could not persist the generation result."},
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
             return
@@ -589,11 +589,11 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         """Keep local demo-server logs concise."""
 
-        print(f"[Atlas] {format % args}")
+        print(f"[Conveyor] {format % args}")
 
 
 class AtlasHTTPServer(HTTPServer):
-    """HTTP server that owns the local Atlas application repository."""
+    """HTTP server that owns the local Conveyor application repository."""
 
     def __init__(
         self,
@@ -634,16 +634,16 @@ def create_server(
 def main() -> None:
     """Start the local MVP UI shell."""
 
-    parser = argparse.ArgumentParser(description="Run the Project Atlas MVP UI shell.")
+    parser = argparse.ArgumentParser(description="Run the Conveyor MVP UI shell.")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1).")
     parser.add_argument("--port", default=8000, type=int, help="Port to bind (default: 8000).")
     args = parser.parse_args()
     server = create_server(args.host, args.port)
-    print(f"Project Atlas MVP is running at http://{args.host}:{args.port}")
+    print(f"Conveyor MVP is running at http://{args.host}:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nProject Atlas MVP stopped.")
+        print("\nConveyor MVP stopped.")
     finally:
         server.server_close()
 

@@ -1,4 +1,4 @@
-"""Explicitly local demo data for the Atlas MVP UI shell.
+"""Explicitly local demo data for the Conveyor MVP UI shell.
 
 This module models the UI's future-facing concepts without representing a
 production repository, workflow engine, research service, or AI integration.
@@ -202,6 +202,6 @@ def chat_reply(message: str) -> str:
             "personalised advice."
         )
     return (
-        "This is a local Atlas demo. Try asking about tomorrow's topic, the recommendation, "
+        "This is a local Conveyor demo. Try asking about tomorrow's topic, the recommendation, "
         "credit-content gaps, or making the £60k angle more relevant."
     )

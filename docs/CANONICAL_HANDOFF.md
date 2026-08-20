@@ -1,8 +1,8 @@
-# Project Atlas — Canonical Handoff and Governance
+# Conveyor — Canonical Handoff and Governance
 
 ## Purpose and authority
 
-This document is the durable cross-chat re-grounding guide for Project Atlas. GitHub is the canonical
+This document is the durable cross-chat re-grounding guide for Conveyor. GitHub is the canonical
 repository of truth. The founder is product owner and final product and acceptance authority. ChatGPT works
 with the founder as product architect, technical decision-maker, roadmap interpreter, milestone designer,
 architecture steward, bounded Codex task author, implementation reviewer and anti-drift guard. Codex is a
@@ -25,6 +25,15 @@ existing GitHub roadmap and specification remain authoritative.
 **v0.17 — Persistent Research Readiness** is its historical accepted predecessor. Migration 15 is canonical and
 migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE, later phases remain unactivated, and no
 successor after v0.18 is selected.
+
+### Current product identity
+
+**Conveyor** is the current engine, project and operating-system identity. **Project Atlas** is the historical/legacy
+project name. **SimilarStoic** remains the outward-facing channel, editorial brand and mascot world: **SimilarStoic by
+Conveyor**. Legacy Atlas technical identifiers remain intentionally preserved for compatibility; historical Project
+Atlas records remain historical truth and are not rewritten. This rename creates no implementation milestone and does
+not change schema, migrations, package namespace, environment-variable names, DB path, API routes, GitHub repository
+name, or successor state.
 
 ### Historical Phase 1 implementation checkpoint
 
@@ -52,7 +61,7 @@ this does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
-Atlas is intended to become an approximately **95% automated content operating system**. The target is not to
+Conveyor is intended to become an approximately **95% automated content operating system**. The target is not to
 remove human judgement: routine execution is progressively automated while founder interaction concentrates,
 where practical, at three target operating-model gates. The **Idea Gate** covers review, approval, rejection,
 steering and reprioritisation of explained candidate opportunities. The **Editorial Gate** covers founder
@@ -100,7 +109,7 @@ The current phase map is:
 ## Approved Phase 2 operating-model specification
 
 Phase 2 is **ACTIVE**. Its bounded v0.15 implementation is accepted; all remaining Phase 2 scope remains
-unimplemented. Atlas uses **sparse human gates and rich
+unimplemented. Conveyor uses **sparse human gates and rich
 machine readiness checks**: human approval concentrates at meaningful judgement boundaries, while intermediate
 stages progress automatically only when explicit quality, evidence and provenance requirements pass. Human
 judgement and machine readiness are distinct; neither may silently substitute for the other.
@@ -108,7 +117,7 @@ judgement and machine readiness are distinct; neither may silently substitute fo
 The target founder gates are version-specific operating concepts, not approved database/workflow entities:
 
 - **Idea Gate:** Proceed, Reject or Steer an opportunity based on relevant/audience value, timeliness,
-  discovery context, risk/uncertainty and Atlas's recommendation; it is not ResearchPack approval.
+  discovery context, risk/uncertainty and Conveyor's recommendation; it is not ResearchPack approval.
 - **Editorial Gate:** Approve, Revise, Reject or intentionally select an alternative editorial package of
   Title, Hook, Angle and Script with relevant evidence/risk context. Approval allows that specific proposition
   and version to progress subject to later readiness; it is not technical final-video approval. Where paid
@@ -119,9 +128,9 @@ The target founder gates are version-specific operating concepts, not approved d
   audience, risk policy or governance.
 
 No paid external production spend may occur without prior human authorization of a bounded envelope tied to
-the approved editorial proposition. Approval authorizes a maximum, not a target: Atlas should spend less when
+the approved editorial proposition. Approval authorizes a maximum, not a target: Conveyor should spend less when
 it can still meet the required quality, brand, evidence and risk floor. If meeting that floor would exceed the
-ceiling, Atlas must stop and escalate rather than overspend or silently lower the quality requirement.
+ceiling, Conveyor must stop and escalate rather than overspend or silently lower the quality requirement.
 
 The eventual Editorial Gate production/spend proposal should make its exact editorial lineage and maximum
 request understandable, with estimated total and stage/provider cost where available, expected quality,
@@ -130,9 +139,9 @@ commercial or strategic upside. It must distinguish measured evidence, modelled 
 projected return is never guaranteed justification. Illustrative economy/recommended/premium labels are not
 fixed future enums or a required number of choices.
 
-Atlas seeks the lowest-cost feasible path that clears the approved quality, brand, evidence and risk floor.
+Conveyor seeks the lowest-cost feasible path that clears the approved quality, brand, evidence and risk floor.
 Provider, model, attempt count and workflow should be optimized before any quality bar changes; premium is not
-automatically better and cheapest is not automatically preferred. Within a future authorized envelope Atlas
+automatically better and cheapest is not automatically preferred. Within a future authorized envelope Conveyor
 may spend less, but sufficient remaining budget is required before paid external work begins. It must not
 silently overspend or use open-ended retries. Exceptional extra spend or material risk requires a new human
 authorization/exception path.
@@ -140,7 +149,7 @@ authorization/exception path.
 Opportunities remain mutable discovery records. Idea Gate authority must therefore apply to an immutable review
 snapshot of exactly what the founder judged, not only to evolving current Opportunity state. The conceptual
 snapshot freezes reviewable Opportunity identity, title, summary, why-now context, relevant Subject context,
-score/ranking if presented, Atlas recommendation/explanation, material risk/uncertainty and review
+score/ranking if presented, Conveyor recommendation/explanation, material risk/uncertainty and review
 timestamp/provenance. This does not make Opportunity a fully versioned aggregate or approve fields/schema.
 
 Idea Gate decisions are durable, immutable/additive and specific to one immutable snapshot. **Proceed**
@@ -236,7 +245,7 @@ architecture and Editorial QA implementation remain deferred.
 ### Research and evidence quality canon
 
 ResearchPacks precede scripting. Primary sources are preferred where appropriate; corroboration must be
-proportional to risk, materiality and importance; and freshness matters. Atlas must distinguish fact,
+proportional to risk, materiality and importance; and freshness matters. Conveyor must distinguish fact,
 interpretation, opinion, forecast and illustration. Unsupported material claims must not silently progress.
 ResearchReadinessAssessment persistence records immutable evidence-state assessments; it does not replace the
 research-quality policy, and readiness is a machine boundary rather than founder approval. The final Phase 4
@@ -574,14 +583,14 @@ of local runtime row counts.
 
 ## Mandatory fresh-chat protocol
 
-Absence from current ChatGPT or Codex memory is never evidence that a Project Atlas requirement does not
+Absence from current ChatGPT or Codex memory is never evidence that a Conveyor requirement does not
 exist. A new ChatGPT conversation must first reconcile:
 
 1. the latest canonical GitHub state;
 2. the latest accepted checkpoint;
 3. this canonical handoff/re-grounding document;
 4. a fresh Codex Repository Grounding Audit; and
-5. a fresh Codex Complete Project Atlas Specification Map.
+5. a fresh Codex Complete Conveyor Specification Map.
 
 It must distinguish canonical GitHub truth, implemented-but-documentation-stale work,
 accepted-but-not-yet-canonically-synchronized work, provisional work, deferred work, superseded work, and
@@ -626,7 +635,7 @@ Every future handoff must direct the next chat to repeat this repository-groundi
 - One real provider attempt produces one immutable terminal GenerationExecution. A pre-provider failure
   produces no execution; a failed provider attempt produces a failed execution and no Asset; success produces
   an execution and at most one Asset.
-- Atlas is a composable pipeline: providers, research engines, adapters, narration/audio and image/visual
+- Conveyor is a composable pipeline: providers, research engines, adapters, narration/audio and image/visual
   providers, production stages, rendering components, publishing and analytics integrations, and other
   implementation-specific pipes remain replaceable behind stable boundaries, explicit inputs/outputs,
   loose coupling and preserved provenance. Replacing one pipe must not require rebuilding the whole loop.
@@ -646,7 +655,7 @@ Every future handoff must direct the next chat to repeat this repository-groundi
   No new phase, phase activation or implementation is implied.
 - The future pre-spend rule is prior human authorization of a bounded maximum paid-external-production envelope
   tied to the exact approved editorial proposition. It is not a target spend or a fourth routine founder gate.
-  Atlas must optimize cost within the required quality, brand, evidence and risk floor, stop/escalate before an
+  Conveyor must optimize cost within the required quality, brand, evidence and risk floor, stop/escalate before an
   overspend, and never silently reduce quality or rely on open-ended retries. A future proposal must make
   lineage, cost/quality/risk alternatives and qualified—not guaranteed—upside intelligible. No authorization,
   proposal, ledger, production or enforcement entity is approved by this documentation.
@@ -657,7 +666,7 @@ Every future handoff must direct the next chat to repeat this repository-groundi
   historical preservation, immutable/versioned reference semantics, execution semantics or established domain
   meaning requires explicit founder + ChatGPT architecture/specification approval, deliberate canonical
   synchronization, review, acceptance, commit and push.
-- Atlas remains audio-first. Do not introduce premature agents, cloud infrastructure, queues, publishing, or
+- Conveyor remains audio-first. Do not introduce premature agents, cloud infrastructure, queues, publishing, or
   analytics.
 
 ## Current technical stack and deliberately absent architecture

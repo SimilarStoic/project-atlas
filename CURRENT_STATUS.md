@@ -1,4 +1,4 @@
-# Project Atlas — Current Status
+# Conveyor — Current Status
 
 ## Last Updated
 
@@ -25,9 +25,19 @@ founder-approved Phase 1 visual baseline is SimilarStoic Core v3; v2 remains his
 
 The v0.1 UI baseline, v0.2 persistent discovery foundation and v0.3 research and evidence foundation are implemented and safely stored on GitHub.
 
-Atlas v0.8 through v0.14 are complete and pushed. Atlas now has immutable, versioned character identity,
+Atlas v0.8 through v0.14 are complete and pushed. Conveyor now has immutable, versioned character identity,
 canonical visual-reference foundations, reference-grounded character generation, and explicit first-reference
 bootstrap alongside the founder-approved SimilarStoic Core v3 visual-style baseline.
+
+## Current Product Identity
+
+**Conveyor** is the current engine, project and operating-system identity. **Project Atlas** is the historical/legacy
+project name. **SimilarStoic** remains the outward-facing channel, editorial brand and mascot world: **SimilarStoic by
+Conveyor**. Legacy Atlas technical identifiers remain intentionally preserved for compatibility, including
+`project_atlas`, `project-atlas`, `Atlas*`, `ATLAS_*`, `data/atlas.db`, `atlas_recommendation`, API routes and the
+GitHub repository/remote name. Historical Project Atlas records remain historical truth and are not rewritten. This
+rename creates no implementation milestone and does not change schema, migrations, package namespace, environment
+variable names, DB path, API routes, GitHub repository name, or successor state.
 
 ---
 
@@ -471,7 +481,7 @@ and social decisions; energy and attention; mental models; modern adulthood; fin
 explanations of how systems or other parts of the world work. The editorial purpose is to make useful parts of
 the world understandable and entertaining for the target audience.
 
-These are strategic examples, not a final Atlas Pillar taxonomy.
+These are strategic examples, not a final Conveyor Pillar taxonomy.
 
 ## Editorial Inclusion Test
 
@@ -505,7 +515,7 @@ Confident, approachable, humorous and relatable without becoming a guru or sacri
 
 ## Content Pillars
 
-The current editorial portfolio themes guide strategy but do not define the final persistent Atlas Pillar taxonomy.
+The current editorial portfolio themes guide strategy but do not define the final persistent Conveyor Pillar taxonomy.
 
 1. Build & Protect Wealth
 2. Keep More of What You Earn
@@ -513,7 +523,7 @@ The current editorial portfolio themes guide strategy but do not define the fina
 4. Spot the Next Opportunity
 5. Think & Decide Better
 
-## Atlas Domain Distinction
+## Conveyor Domain Distinction
 
 - **Pillars** are strategic portfolio organisation.
 - **Subjects** are reusable concepts and knowledge domains.
@@ -596,7 +606,8 @@ Topic discovery draws from current events, community signals, trends, evergreen 
 
 Community sources are not authoritative evidence.
 
-Atlas produces a curated daily shortlist of 5–10 opportunities. Initially Atlas proposes and the founder approves or steers; research begins only after approval.
+Conveyor produces a curated daily shortlist of 5–10 opportunities. Initially Conveyor proposes and the founder
+approves or steers; research begins only after approval.
 
 ## Editorial Integrity
 
@@ -696,7 +707,7 @@ Maintain a knowledge map of covered subjects and outstanding knowledge gaps so t
 
 ## Knowledge + Content Intelligence
 
-Atlas is specified as a structured knowledge + content intelligence system, not merely a content archive:
+Conveyor is specified as a structured knowledge + content intelligence system, not merely a content archive:
 
 > Pillars (portfolio) → Subjects (knowledge) → Opportunities → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Opportunities/Angles
 
@@ -718,10 +729,10 @@ Automated video production, automated publishing and advanced analytics are late
 
 The planned core screens are:
 
-- **Command Centre** — strongest opportunities, attention-needed content, Atlas activity, important knowledge/source changes, lightweight performance and Atlas Chat access.
+- **Command Centre** — strongest opportunities, attention-needed content, Conveyor activity, important knowledge/source changes, lightweight performance and Conveyor Chat access.
 - **Discover / Opportunities** — 5–10 opportunities with relevance, why-now context, viewer benefit, suggested angle, evidence quality, risk, portfolio relevance and visual potential.
 - **Content Workspace** — lifecycle, research, claims, sources, angle, script, visual plan, QA state and approval controls.
-- **Atlas Chat** — natural-language questions, steering and eventually actions.
+- **Conveyor Chat** — natural-language questions, steering and eventually actions.
 
 The interface prioritises decisions and exceptions over unnecessary technical complexity.
 
@@ -729,7 +740,7 @@ The interface prioritises decisions and exceptions over unnecessary technical co
 
 The architecture follows a “change without rebuild” principle: data, capabilities, workflows, configuration and interface remain loosely coupled.
 
-Atlas is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
+Conveyor is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
 image/visual providers, production stages, rendering components, publishing integrations, analytics
 integrations and other implementation-specific pipes should be replaceable behind stable boundaries, explicit
 inputs/outputs, loose coupling and preserved provenance. Replacing one pipe must not require reconstructing
@@ -838,7 +849,7 @@ Phase 1 closure status:
 
 # Canonical End-to-End Target Operating Model
 
-Atlas is intended to become an approximately **95% automated content operating system**: routine execution is
+Conveyor is intended to become an approximately **95% automated content operating system**: routine execution is
 progressively automated, while founder interaction concentrates where practical at an **Idea Gate**
 (opportunity approval/steering), an **Editorial Gate** (title, hook, angle, script, evidence/risk review and
 revision decisions) and a **Learning Gate** (performance, hypotheses, proposed adaptations and available
@@ -860,7 +871,7 @@ production, distribution, analytics/learning, automation and scale; no later mil
 # Approved Phase 2 Operating-Model Specification
 
 Phase 2 now has approved specification direction and is active. Its narrow v0.15 implementation is accepted;
-remaining scope is unimplemented. Atlas uses sparse human gates and rich machine readiness:
+remaining scope is unimplemented. Conveyor uses sparse human gates and rich machine readiness:
 human judgement is distinct from readiness evidence, neither may
 silently substitute for the other, and intermediate work should progress automatically only when explicit
 quality, evidence and provenance requirements pass.
@@ -871,8 +882,8 @@ evidence-backed, scoped, reversible performance/economics adaptations). They are
 decision concepts, not database entities or a generic mutable workflow state.
 
 Where paid external production is contemplated, the Editorial Gate also contains the linked founder judgement
-of the maximum spend Atlas may use for that approved proposition. It is a bounded ceiling, not a spend target,
-and does not create a fourth routine founder gate. Atlas should choose the lowest-cost path that still clears
+of the maximum spend Conveyor may use for that approved proposition. It is a bounded ceiling, not a spend target,
+and does not create a fourth routine founder gate. Conveyor should choose the lowest-cost path that still clears
 the approved quality, brand, evidence and risk floor; it must stop and escalate rather than exceed the ceiling
 or silently lower that floor. A future production/spend proposal may explain lineage, estimated cost and
 breakdown, quality/cost/risk trade-offs, alternatives, premium rationale, and qualified commercial/strategic
