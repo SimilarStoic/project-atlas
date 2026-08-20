@@ -847,6 +847,234 @@ def test_content_piece_readiness_initiation_preserves_exact_angle_lineage(tmp_pa
         repository.close()
 
 
+def test_script_readiness_initiation_appends_immutable_versions_under_exact_lineage(
+    tmp_path,
+) -> None:
+    """v0.20 appends Scripts only through a ContentPiece's exact Ready lineage."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity_id = "script-readiness-opportunity"
+        other_opportunity_id = "script-readiness-other-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        repository.create_opportunity(
+            other_opportunity_id, "Other", "Summary", "Why now", 1, "proposed"
+        )
+        research_pack = repository.create_research_pack(
+            "script-readiness-pack", opportunity_id, 1, "Research pack"
+        )
+        other_research_pack = repository.create_research_pack(
+            "script-readiness-other-pack", other_opportunity_id, 1, "Other research pack"
+        )
+
+        def assessment(assessment_id: str, pack_id: str, outcome: str):
+            return repository.create_research_readiness_assessment(
+                assessment_id,
+                pack_id,
+                outcome,
+                {"summary": f"{outcome} assessment."},
+                "readiness-policy-v1",
+                "test",
+                "persistence-test",
+                "v1",
+            )
+
+        def angle(angle_id: str, pack_id: str, assessment_id: str | None = None):
+            fields = (
+                "A readiness-authorized Angle",
+                "Exact stored provenance authorizes drafting.",
+                "Understand the lineage.",
+                "A focused explainer.",
+                ["Provenance is exact."],
+            )
+            if assessment_id is None:
+                return repository.create_editorial_angle(angle_id, opportunity_id, pack_id, *fields)
+            return repository.create_editorial_angle_under_research_readiness(
+                angle_id, opportunity_id, pack_id, assessment_id, *fields
+            )
+
+        ready = assessment("script-ready", research_pack.id, "Ready")
+        blocked = assessment("script-blocked", research_pack.id, "Blocked")
+        other_ready = assessment("script-other-ready", other_research_pack.id, "Ready")
+        eligible_angle = angle("script-eligible-angle", research_pack.id, ready.id)
+        eligible_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "script-eligible-piece",
+            opportunity_id,
+            eligible_angle.id,
+            "video",
+            "An eligible ContentPiece.",
+        )
+        original_piece = repository.get_content_piece(eligible_piece.id)
+        original_angle = repository.get_editorial_angle(eligible_angle.id)
+        original_assessment = repository.get_research_readiness_assessment(ready.id)
+        original_pack = repository.get_research_pack(research_pack.id)
+        original_visual_plan_count = len(
+            repository.list_visual_plans_for_content_piece(eligible_piece.id)
+        )
+
+        first = repository.create_script_under_content_piece_readiness(
+            "script-eligible-v1",
+            eligible_piece.id,
+            "Original complete narration.",
+            {"source": "v0.20-test"},
+        )
+        second = repository.create_script_under_content_piece_readiness(
+            "script-eligible-v2", eligible_piece.id, "Revised complete narration."
+        )
+        third = repository.create_script_under_content_piece_readiness(
+            "script-eligible-v3", eligible_piece.id, "A third complete narration."
+        )
+        assert [first.version, second.version, third.version] == [1, 2, 3]
+        assert [
+            script.version
+            for script in repository.list_scripts_for_content_piece(eligible_piece.id)
+        ] == [1, 2, 3]
+        assert repository.get_script(first.id).narration_text == "Original complete narration."
+        assert repository.latest_script_for_content_piece(eligible_piece.id) == third
+        assert all(
+            script.content_piece_id == eligible_piece.id
+            for script in repository.list_scripts_for_content_piece(eligible_piece.id)
+        )
+        assert repository.get_content_piece(eligible_piece.id) == original_piece
+        assert repository.get_editorial_angle(eligible_angle.id) == original_angle
+        assert repository.get_research_readiness_assessment(ready.id) == original_assessment
+        assert repository.get_research_pack(research_pack.id) == original_pack
+        assert (
+            len(repository.list_visual_plans_for_content_piece(eligible_piece.id))
+            == original_visual_plan_count
+        )
+
+        legacy_angle = angle("script-legacy-angle", research_pack.id)
+        legacy_piece = repository.create_content_piece(
+            "script-legacy-piece",
+            opportunity_id,
+            legacy_angle.id,
+            "video",
+            "A legacy ContentPiece.",
+        )
+        low_level_script = repository.create_script(
+            "script-low-level-compatible",
+            legacy_piece.id,
+            7,
+            "Compatibility Script version.",
+        )
+        assert low_level_script.version == 7
+
+        blocked_angle = angle("script-blocked-angle", research_pack.id)
+        blocked_piece = repository.create_content_piece(
+            "script-blocked-piece", opportunity_id, blocked_angle.id, "video", "Blocked."
+        )
+        mismatched_angle = angle("script-mismatched-angle", research_pack.id)
+        mismatched_piece = repository.create_content_piece(
+            "script-mismatched-piece", opportunity_id, mismatched_angle.id, "video", "Mismatched."
+        )
+        missing_assessment_angle = angle("script-missing-assessment-angle", research_pack.id)
+        missing_assessment_piece = repository.create_content_piece(
+            "script-missing-assessment-piece",
+            opportunity_id,
+            missing_assessment_angle.id,
+            "video",
+            "Missing assessment.",
+        )
+        missing_angle = angle("script-missing-angle", research_pack.id)
+        missing_angle_piece = repository.create_content_piece(
+            "script-missing-angle-piece",
+            opportunity_id,
+            missing_angle.id,
+            "video",
+            "Missing angle.",
+        )
+        missing_pack = repository.create_research_pack(
+            "script-missing-pack", opportunity_id, 2, "Missing-pack research."
+        )
+        missing_pack_ready = assessment("script-missing-pack-ready", missing_pack.id, "Ready")
+        missing_pack_angle = angle(
+            "script-missing-pack-angle", missing_pack.id, missing_pack_ready.id
+        )
+        missing_pack_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "script-missing-pack-piece",
+            opportunity_id,
+            missing_pack_angle.id,
+            "video",
+            "Missing pack.",
+        )
+        wrong_opportunity_pack = repository.create_research_pack(
+            "script-wrong-opportunity-pack", opportunity_id, 3, "Wrong-opportunity research."
+        )
+        wrong_opportunity_ready = assessment(
+            "script-wrong-opportunity-ready", wrong_opportunity_pack.id, "Ready"
+        )
+        wrong_opportunity_angle = angle(
+            "script-wrong-opportunity-angle", wrong_opportunity_pack.id, wrong_opportunity_ready.id
+        )
+        wrong_opportunity_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "script-wrong-opportunity-piece",
+            opportunity_id,
+            wrong_opportunity_angle.id,
+            "video",
+            "Wrong opportunity.",
+        )
+        repository.connection.execute("PRAGMA foreign_keys = OFF")
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                (blocked.id, blocked_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                (other_ready.id, mismatched_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                ("missing-assessment", missing_assessment_angle.id),
+            )
+            repository.connection.execute(
+                "DELETE FROM editorial_angles WHERE id = ?", (missing_angle.id,)
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_pack_id = ? WHERE id = ?",
+                ("missing-pack", missing_pack_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE research_readiness_assessments SET research_pack_id = ? WHERE id = ?",
+                ("missing-pack", missing_pack_ready.id),
+            )
+            repository.connection.execute(
+                "UPDATE research_packs SET opportunity_id = ? WHERE id = ?",
+                (other_opportunity_id, wrong_opportunity_pack.id),
+            )
+        repository.connection.execute("PRAGMA foreign_keys = ON")
+
+        for content_piece_id, error in (
+            (legacy_piece.id, "readiness provenance"),
+            (blocked_piece.id, "Only a Ready"),
+            (mismatched_piece.id, "ResearchReadinessAssessment"),
+            (missing_assessment_piece.id, "existing ResearchReadinessAssessment"),
+            (missing_angle_piece.id, "existing EditorialAngle"),
+            (missing_pack_piece.id, "existing ResearchPack"),
+            (wrong_opportunity_piece.id, "ResearchPack must belong"),
+        ):
+            with pytest.raises(ValueError, match=error):
+                repository.create_script_under_content_piece_readiness(
+                    f"script-rejected-{content_piece_id}", content_piece_id, "Rejected narration."
+                )
+        with pytest.raises(KeyError):
+            repository.create_script_under_content_piece_readiness(
+                "script-missing-content-piece", "missing-content-piece", "Missing ContentPiece."
+            )
+        table_names = {
+            row[0]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert {"titles", "hooks", "script_claims", "workflow_states"}.isdisjoint(table_names)
+    finally:
+        repository.close()
+
+
 def test_migration_15_adds_nullable_angle_readiness_lineage_without_backfill(tmp_path) -> None:
     """Migration 15 preserves pre-v0.18 Angles while adding restrictive provenance."""
 

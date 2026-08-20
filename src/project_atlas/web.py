@@ -323,6 +323,55 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 HTTPStatus.CREATED,
             )
             return
+        content_piece_prefix = "/api/content-pieces/"
+        script_suffix = "/scripts"
+        if path.startswith(content_piece_prefix) and path.endswith(script_suffix):
+            content_piece_id = unquote(path[len(content_piece_prefix) : -len(script_suffix)]).strip(
+                "/"
+            )
+            if not content_piece_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("Script initiation payload must be an object.")
+                allowed_fields = {"id", "narration_text", "metadata"}
+                unexpected_fields = set(payload) - allowed_fields
+                if unexpected_fields:
+                    raise ValueError("Script initiation payload contains unsupported fields.")
+                script_id = payload.get("id")
+                narration_text = payload.get("narration_text")
+                metadata = payload.get("metadata")
+                if not isinstance(script_id, str) or not script_id.strip():
+                    raise ValueError("Script ID must be non-empty text.")
+                if not isinstance(narration_text, str) or not narration_text.strip():
+                    raise ValueError("Script narration_text must be non-empty text.")
+                if metadata is not None and not isinstance(metadata, dict):
+                    raise ValueError("Script metadata must be an object or null.")
+                script = self.server.repository.create_script_under_content_piece_readiness(
+                    script_id.strip(), content_piece_id, narration_text, metadata
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "ContentPiece not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "script",
+                    "script": {
+                        "id": script.id,
+                        "content_piece_id": script.content_piece_id,
+                        "version": script.version,
+                        "narration_text": script.narration_text,
+                    },
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         content_piece_suffix = "/content-pieces"
         if path.startswith(opportunity_prefix) and path.endswith(content_piece_suffix):
             opportunity_id = unquote(

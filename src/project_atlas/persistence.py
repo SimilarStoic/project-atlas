@@ -1803,20 +1803,64 @@ class AtlasRepository:
     ) -> Script:
         """Create an immutable Script version for a ContentPiece."""
 
-        stamp = now()
         with self.connection:
-            self.connection.execute(
-                "INSERT INTO scripts VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (
-                    script_id,
-                    content_piece_id,
-                    version,
-                    narration_text,
-                    json.dumps(metadata or {}),
-                    stamp,
-                    stamp,
-                ),
+            self._insert_script(
+                script_id, content_piece_id, narration_text, metadata, version=version
             )
+        return self.get_script(script_id)
+
+    def create_script_under_content_piece_readiness(
+        self,
+        script_id: str,
+        content_piece_id: str,
+        narration_text: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> Script:
+        """Deliberately append one Script under exact Ready ContentPiece provenance."""
+
+        content_piece = self.get_content_piece(content_piece_id)
+        try:
+            editorial_angle = self.get_editorial_angle(content_piece.editorial_angle_id)
+        except KeyError as error:
+            raise ValueError(
+                "The ContentPiece provenance must reference an existing EditorialAngle."
+            ) from error
+        if editorial_angle.opportunity_id != content_piece.opportunity_id:
+            raise ValueError(
+                "The ContentPiece and EditorialAngle must belong to the same Opportunity."
+            )
+        assessment_id = editorial_angle.research_readiness_assessment_id
+        if assessment_id is None:
+            raise ValueError(
+                "A readiness-authorized Script requires EditorialAngle readiness provenance."
+            )
+        try:
+            assessment = self.get_research_readiness_assessment(assessment_id)
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialAngle readiness provenance must reference an existing "
+                "ResearchReadinessAssessment."
+            ) from error
+        if assessment.outcome != "Ready":
+            raise ValueError(
+                "Only a Ready ResearchReadinessAssessment may authorize Script creation."
+            )
+        if assessment.research_pack_id != editorial_angle.research_pack_id:
+            raise ValueError(
+                "The ResearchReadinessAssessment must belong to the EditorialAngle ResearchPack."
+            )
+        try:
+            research_pack = self.get_research_pack(editorial_angle.research_pack_id)
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialAngle must reference an existing ResearchPack."
+            ) from error
+        if research_pack.opportunity_id != content_piece.opportunity_id:
+            raise ValueError(
+                "The EditorialAngle ResearchPack must belong to the ContentPiece Opportunity."
+            )
+        with self.connection:
+            self._insert_script(script_id, content_piece_id, narration_text, metadata)
         return self.get_script(script_id)
 
     def get_script(self, script_id: str) -> Script:
@@ -2726,6 +2770,48 @@ class AtlasRepository:
         editorial_angle = self.get_editorial_angle(editorial_angle_id)
         if editorial_angle.opportunity_id != opportunity_id:
             raise ValueError("A ContentPiece must use an EditorialAngle from the same Opportunity.")
+
+    def _insert_script(
+        self,
+        script_id: str,
+        content_piece_id: str,
+        narration_text: str,
+        metadata: dict[str, Any] | None,
+        *,
+        version: int | None = None,
+    ) -> None:
+        """Insert one Script, deriving a version from immutable history when requested."""
+
+        stamp = now()
+        if version is None:
+            self.connection.execute(
+                "INSERT INTO scripts (id, content_piece_id, version, narration_text, "
+                "metadata_json, created_at, updated_at) "
+                "SELECT ?, ?, COALESCE(MAX(version), 0) + 1, ?, ?, ?, ? "
+                "FROM scripts WHERE content_piece_id = ?",
+                (
+                    script_id,
+                    content_piece_id,
+                    narration_text,
+                    json.dumps(metadata or {}),
+                    stamp,
+                    stamp,
+                    content_piece_id,
+                ),
+            )
+            return
+        self.connection.execute(
+            "INSERT INTO scripts VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                script_id,
+                content_piece_id,
+                version,
+                narration_text,
+                json.dumps(metadata or {}),
+                stamp,
+                stamp,
+            ),
+        )
 
     def _validate_visual_plan_script(self, content_piece_id: str, script_id: str) -> None:
         script = self.get_script(script_id)

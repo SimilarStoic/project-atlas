@@ -345,6 +345,245 @@ def test_content_piece_lifecycle_api_requires_ready_authorized_angle_provenance(
         server.server_close()
 
 
+def test_script_lifecycle_api_appends_versions_only_under_ready_content_piece_lineage(
+    tmp_path: Path,
+) -> None:
+    """v0.20 exposes deliberate Script drafting without downstream side effects."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid Script lifecycle request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    try:
+        repository = server.repository
+        opportunity_id = "uk-isa-rules"
+        other_opportunity_id = "http-script-other-opportunity"
+        repository.create_opportunity(
+            other_opportunity_id, "Other", "Summary", "Why now", 1, "proposed"
+        )
+        pack_id = "research-pack-isa-deadline-v1"
+        other_pack = repository.create_research_pack(
+            "http-script-other-pack", other_opportunity_id, 1, "Other pack"
+        )
+
+        def assessment(assessment_id: str, target_pack_id: str, outcome: str):
+            return repository.create_research_readiness_assessment(
+                assessment_id,
+                target_pack_id,
+                outcome,
+                {"summary": f"{outcome} for HTTP Script lifecycle testing."},
+                "readiness-policy-v1",
+                "test",
+                "http-test",
+                "v1",
+            )
+
+        ready = assessment("http-script-ready", pack_id, "Ready")
+        blocked = assessment("http-script-blocked", pack_id, "Blocked")
+        other_ready = assessment("http-script-other-ready", other_pack.id, "Ready")
+        fields = (
+            "A deliberate lifecycle Angle",
+            "Exact Ready provenance is stored.",
+            "Understand the decision boundary.",
+            "A focused explainer.",
+            ["Ready provenance is exact."],
+        )
+        eligible_angle = repository.create_editorial_angle_under_research_readiness(
+            "http-script-ready-angle", opportunity_id, pack_id, ready.id, *fields
+        )
+        eligible_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-script-ready-piece",
+            opportunity_id,
+            eligible_angle.id,
+            "video",
+            "A deliberate lifecycle ContentPiece",
+        )
+        endpoint = f"{base_url}/api/content-pieces/{eligible_piece.id}/scripts"
+        payload = {
+            "id": "http-script-v1",
+            "narration_text": "First complete narration.",
+            "metadata": {"source": "http-test"},
+        }
+        created, status = request_json(
+            Request(
+                endpoint,
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        assert created == {
+            "kind": "script",
+            "script": {
+                "id": "http-script-v1",
+                "content_piece_id": eligible_piece.id,
+                "version": 1,
+                "narration_text": "First complete narration.",
+            },
+        }
+        second, status = request_json(
+            Request(
+                endpoint,
+                data=json.dumps(payload | {"id": "http-script-v2"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 201
+        assert second["script"]["version"] == 2
+        assert repository.get_script("http-script-v1").narration_text == "First complete narration."
+        assert repository.get_content_piece(eligible_piece.id) == eligible_piece
+        assert repository.list_visual_plans_for_content_piece(eligible_piece.id) == []
+
+        def post_error(content_piece_id: str, body: dict) -> tuple[dict, int]:
+            return request_error(
+                Request(
+                    f"{base_url}/api/content-pieces/{content_piece_id}/scripts",
+                    data=json.dumps(body).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+
+        for invalid_payload in (
+            payload | {"id": "http-script-version", "version": 99},
+            payload | {"id": "http-script-readiness", "research_readiness_assessment_id": ready.id},
+            payload | {"id": "http-script-title", "title": "Unsupported title"},
+            payload | {"id": "http-script-hook", "hook": "Unsupported hook"},
+            payload | {"id": "http-script-claims", "claim_ids": ["claim"]},
+            payload | {"id": "http-script-production", "visual_plan_id": "plan"},
+            payload | {"id": "http-script-empty", "narration_text": ""},
+        ):
+            rejected, status = post_error(eligible_piece.id, invalid_payload)
+            assert status == 400
+            assert rejected["error"]
+        missing_piece, status = post_error(
+            "missing-content-piece", payload | {"id": "http-script-missing"}
+        )
+        assert status == 404
+        assert "ContentPiece not found" in missing_piece["error"]
+
+        def legacy_piece(angle_id: str, piece_id: str):
+            editorial_angle = repository.create_editorial_angle(
+                angle_id, opportunity_id, pack_id, *fields
+            )
+            return repository.create_content_piece(
+                piece_id, opportunity_id, editorial_angle.id, "video", "Legacy ContentPiece"
+            )
+
+        null_piece = legacy_piece("http-script-null-angle", "http-script-null-piece")
+        blocked_piece = legacy_piece("http-script-blocked-angle", "http-script-blocked-piece")
+        mismatched_piece = legacy_piece(
+            "http-script-mismatched-angle", "http-script-mismatched-piece"
+        )
+        missing_assessment_piece = legacy_piece(
+            "http-script-missing-assessment-angle", "http-script-missing-assessment-piece"
+        )
+        missing_angle_piece = legacy_piece(
+            "http-script-missing-angle", "http-script-missing-angle-piece"
+        )
+        missing_pack = repository.create_research_pack(
+            "http-script-missing-pack", opportunity_id, 2, "Missing pack"
+        )
+        missing_pack_ready = assessment("http-script-missing-pack-ready", missing_pack.id, "Ready")
+        missing_pack_angle = repository.create_editorial_angle_under_research_readiness(
+            "http-script-missing-pack-angle",
+            opportunity_id,
+            missing_pack.id,
+            missing_pack_ready.id,
+            *fields,
+        )
+        missing_pack_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-script-missing-pack-piece",
+            opportunity_id,
+            missing_pack_angle.id,
+            "video",
+            "Missing-pack ContentPiece",
+        )
+        wrong_pack = repository.create_research_pack(
+            "http-script-wrong-pack", opportunity_id, 3, "Wrong pack"
+        )
+        wrong_ready = assessment("http-script-wrong-ready", wrong_pack.id, "Ready")
+        wrong_angle = repository.create_editorial_angle_under_research_readiness(
+            "http-script-wrong-angle", opportunity_id, wrong_pack.id, wrong_ready.id, *fields
+        )
+        wrong_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-script-wrong-piece",
+            opportunity_id,
+            wrong_angle.id,
+            "video",
+            "Wrong-lineage ContentPiece",
+        )
+        repository.connection.execute("PRAGMA foreign_keys = OFF")
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                (blocked.id, blocked_piece.editorial_angle_id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                (other_ready.id, mismatched_piece.editorial_angle_id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                ("missing-assessment", missing_assessment_piece.editorial_angle_id),
+            )
+            repository.connection.execute(
+                "DELETE FROM editorial_angles WHERE id = ?",
+                (missing_angle_piece.editorial_angle_id,),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_pack_id = ? WHERE id = ?",
+                ("missing-pack", missing_pack_piece.editorial_angle_id),
+            )
+            repository.connection.execute(
+                "UPDATE research_readiness_assessments SET research_pack_id = ? WHERE id = ?",
+                ("missing-pack", missing_pack_ready.id),
+            )
+            repository.connection.execute(
+                "UPDATE research_packs SET opportunity_id = ? WHERE id = ?",
+                (other_opportunity_id, wrong_pack.id),
+            )
+        repository.connection.execute("PRAGMA foreign_keys = ON")
+
+        for piece in (
+            null_piece,
+            blocked_piece,
+            mismatched_piece,
+            missing_assessment_piece,
+            missing_angle_piece,
+            missing_pack_piece,
+            wrong_piece,
+        ):
+            rejected, status = post_error(piece.id, payload | {"id": f"rejected-{piece.id}"})
+            assert status == 400
+            assert rejected["error"]
+    finally:
+        server.server_close()
+
+
 def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scenes(
     tmp_path: Path,
 ) -> None:
