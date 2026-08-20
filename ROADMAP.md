@@ -995,9 +995,10 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation
-milestone. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor;
-migration 16 is canonical. No successor after v0.21 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.21 — Editorial Draft Package Foundation** remains the latest accepted
+implementation milestone. **v0.22 — Closed Script Claim Provenance Foundation** is selected/authorized, locally
+implemented and pending founder final acceptance/push; migration 17 is canonical. No successor after v0.22 is
+selected.
 
 Implement:
 - Research
@@ -1016,10 +1017,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone; v0.20 is its
-historical accepted predecessor. Migration 16 is canonical and migrations extend through 1–16. Phase 2 remains ACTIVE /
-INCOMPLETE; all remaining Phase 2 scope is
-unimplemented and no later phase is activated. No milestone after v0.21 is selected.
+**v0.21 — Editorial Draft Package Foundation** remains the latest accepted implementation milestone. **v0.22 —
+Closed Script Claim Provenance Foundation** is locally implemented and pending founder final acceptance/push.
+Migration 17 is canonical and migrations extend through 1–17. Phase 2 remains ACTIVE / INCOMPLETE; all remaining
+Phase 2 scope is unimplemented and no later phase is activated. No successor after v0.22 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1794,6 +1795,33 @@ publishing, analytics, Learning or orchestration is included.
 Founder acceptance covers implementation commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial
 documentation commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and
 `git diff --check` passed.
+
+### v0.22 — Closed Script Claim Provenance Foundation
+
+**Status: SELECTED / AUTHORIZED; LOCALLY IMPLEMENTED AND PENDING FOUNDER FINAL ACCEPTANCE/PUSH.** v0.21 remains
+the latest accepted Phase 2 milestone. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.22 is selected.
+
+v0.22 establishes one durable provenance boundary: exact immutable Script → one closed immutable ScriptClaimSet →
+zero or more immutable ScriptClaimLinks → Claim identities resolved through the Script's exact upstream Ready
+assessment frozen evidence. A set is created once and closed by its immutable existence; an empty set is valid and
+means deliberate zero-Claim provenance, distinct from no set. Membership is explicit, atomic and cannot later be
+appended, removed or replaced. Correction requires a new immutable Script version with its own set.
+
+Each supplied Claim must exist, belong to the originating Angle's exact ResearchPack, appear in the exact Ready
+assessment's `frozen_evidence_state`, and be linked to that Angle at declaration time. Historical reads resolve Claim
+and ClaimEvidence representations only from frozen evidence; they do not present later mutable Claim content as
+historical support. Later live Claim, Source, ClaimEvidence or Angle-link changes do not rewrite closed sets.
+
+Migration 17 adds only `script_claim_sets` and `script_claim_links`, restrictive foreign keys, one-set-per-Script and
+unique set membership constraints, plus a Claim lookup index. It includes no backfill and no copied readiness,
+ResearchPack, Angle, ClaimEvidence or package provenance. `POST`/`GET /api/scripts/{script_id}/claim-set` create and
+retrieve the Script-scoped closed set, including its frozen historical representation. Script initiation and
+EditorialPackageSnapshot behavior remain unchanged.
+
+v0.22 excludes Script ranges/segments, Script-to-ClaimEvidence links, Claim snapshots, package Claim links, QA/Gate,
+approval/revision or workflow state, UI, production, publishing, analytics, Learning and orchestration. Local
+validation passed: Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`.
 
 ## Phase 3 — Technical Architecture
 

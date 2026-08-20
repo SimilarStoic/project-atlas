@@ -21,14 +21,12 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone.
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor. Migration 16 is
-canonical and migrations extend through 1–16. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain
-unactivated. No successor after v0.21 is selected; migration 17 is absent. v0.21 implementation was committed and
-pushed at `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` (`feat: add editorial draft package foundation`), with its
-initial documentation record at `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`. Founder acceptance confirms Black
-26.3.1, Ruff, 93 pytest tests and `git diff --check` passed. A fresh session must verify the live GitHub checkpoint
-before acting.
+**v0.21 — Editorial Draft Package Foundation** remains the latest accepted implementation milestone. **v0.22 —
+Closed Script Claim Provenance Foundation** is selected/authorized, locally implemented and pending founder final
+acceptance/push. Migration 17 is canonical and migrations extend through 1–17. Phase 2 remains ACTIVE / INCOMPLETE
+and later phases remain unactivated. No successor after v0.22 is selected; migration 18 is absent. v0.22 local
+validation confirms Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A fresh session must verify
+the live GitHub checkpoint before acting.
 
 ### Current product identity
 
@@ -56,13 +54,12 @@ DEFERRED VISUAL REFINEMENT**: residual AI-clean/overly professional finish is no
 alter the approved hamster identity, colours, sling-bag treatment, proportions or CharacterReferenceSet
 continuity.
 
-SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone;
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor. **Phase 2 —
+SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
+**v0.21 — Editorial Draft Package Foundation** remains the latest accepted implementation milestone; **v0.22 — Closed
+Script Claim Provenance Foundation** is locally implemented and pending founder final acceptance/push. **Phase 2 —
 Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.21
-implementations and no selected successor after v0.21**, under founder + ChatGPT
-design/implementation stewardship. This does not authorize all Phase 2 scope or
-later-phase engines.
+implementations and no selected successor after v0.22**, under founder + ChatGPT design/implementation stewardship.
+This does not authorize all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -438,6 +435,30 @@ v0.21 excludes selection/current/latest or approval state, Script-to-Claim, edit
 VisualPlan, production, publishing, analytics, Learning and orchestration. Founder acceptance covers implementation
 commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation commit
 `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and `git diff --check` passed.
+
+### v0.22 — Closed Script Claim Provenance Foundation
+
+**Status: SELECTED / AUTHORIZED; LOCALLY IMPLEMENTED AND PENDING FOUNDER FINAL ACCEPTANCE/PUSH.** v0.21 remains
+the latest accepted Phase 2 milestone. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.22 is selected.
+
+v0.22 adds one closed immutable ScriptClaimSet per exact immutable Script, with zero or more immutable
+ScriptClaimLinks that store Claim identities only. A closed empty set is meaningful and distinct from no set; no
+membership can later be appended, removed or replaced. Correcting provenance means creating a new immutable Script
+version and closing its own set.
+
+Creation derives the Script's existing ContentPiece → EditorialAngle → exact Ready assessment → ResearchPack →
+Opportunity lineage. Every explicit Claim must belong to that exact Angle ResearchPack, occur in the exact assessment's
+`frozen_evidence_state`, and be associated with the Angle at declaration time. Historical reads resolve linked IDs to
+the frozen Claim/evidence representation from that assessment, never treating later mutable Claim or evidence data as
+the Script's historical support. Later Angle-link edits do not rewrite a closed set.
+
+Migration 17 adds only `script_claim_sets` and `script_claim_links`, restrictive foreign keys, uniqueness constraints
+and a Claim lookup index, without backfill or duplicated readiness/evidence provenance. The narrow API is
+`POST`/`GET /api/scripts/{script_id}/claim-set`; Script initiation and EditorialPackageSnapshot semantics remain
+unchanged. v0.22 excludes ranges/segments, ClaimEvidence links, Claim snapshots, package Claim links, QA/Gate,
+approval/workflow, UI, production, publishing, analytics, Learning and orchestration. Local validation passed:
+Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -874,8 +895,8 @@ integrations), rendering, animation, audio production, publishing, analytics, cl
 
 ## Genuinely unspecified — founder + ChatGPT decision required
 
-Do not invent a successor milestone after v0.19. The final Title/Hook domain model, final Script-to-Claim
-architecture, EditorialAngle versioning/revalidation semantics, final Editorial Gate persistence shape, final
-machine editorial-QA model, final Research Readiness evaluator implementation, Phase 4 automation design, later
-publishing architecture, Learning persistence/automation and detailed financial implementation remain unresolved
-or deferred. Each requires founder + ChatGPT design and explicit canonical authorization before implementation.
+Do not invent a successor milestone after v0.22. Statement-level Script provenance, machine editorial-QA, Editorial
+Gate persistence, EditorialAngle versioning/revalidation semantics, final Research Readiness evaluator
+implementation, Phase 4 automation design, later publishing architecture, Learning persistence/automation and
+detailed financial implementation remain unresolved or deferred. Each requires founder + ChatGPT design and explicit
+canonical authorization before implementation.

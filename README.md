@@ -5,11 +5,11 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.21 — Editorial Draft Package
-Foundation; v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor. Migration
-16 is the latest canonical migration and Phase 2 remains
-ACTIVE / INCOMPLETE. No successor after v0.21 is selected. Later workflow, research automation and production
-systems remain deferred.
+SQLite foundation for SimilarStoic. v0.21 — Editorial Draft Package Foundation remains the latest accepted
+implementation milestone. v0.22 — Closed Script Claim Provenance Foundation is selected/authorized, locally
+implemented and pending founder final acceptance/push. Migration 17 is the latest canonical migration and Phase 2
+remains ACTIVE / INCOMPLETE. No successor after v0.22 is selected. Later workflow, research automation and
+production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -46,11 +46,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.20 Readiness-Lineage-Preserving Script Initiation is the latest
-accepted implementation milestone; v0.19 Editorial-Angle-Authorized ContentPiece Initiation is its historical
-accepted predecessor. v0.21 Editorial Draft Package Foundation is the latest accepted implementation milestone.
-Migrations 1–16 are canonical, with migration 16 the latest canonical migration. No successor after v0.21 is
-selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.21 Editorial Draft Package Foundation remains the latest accepted
+implementation milestone; v0.22 Closed Script Claim Provenance Foundation is locally implemented and pending
+founder final acceptance/push. Migrations 1–17 are canonical, with migration 17 the latest canonical migration. No
+successor after v0.22 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -120,6 +119,18 @@ history indexes. `working_title` remains unsynchronized compatibility data. No s
 state, Script-to-Claim, QA/Gate, UI, production, publishing, analytics or orchestration is included. Founder
 acceptance covers implementation commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation
 commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and `git diff --check` passed.
+
+**v0.22 — Closed Script Claim Provenance Foundation** is selected/authorized, locally implemented and pending
+founder final acceptance/push. It adds a single closed immutable ScriptClaimSet for an exact Script and zero or more
+immutable ScriptClaimLinks. An empty set is deliberate and distinct from no set; correction requires a new immutable
+Script version. Linked Claim identities are validated against the exact upstream Ready assessment's frozen evidence
+and current Angle membership at declaration time; reads expose frozen historical Claim/evidence representations, not
+live mutable Claim data. Migration 17 adds only the two provenance tables, restrictive foreign keys, uniqueness and
+lookup index, without backfill or copied readiness/evidence provenance. The Script-scoped API is
+`POST`/`GET /api/scripts/{script_id}/claim-set`. v0.22 does not add ranges, segments, ClaimEvidence links, package
+changes, QA/Gate, workflow, UI, production, publishing, analytics, Learning or orchestration. v0.21 remains the
+latest accepted predecessor; migration 18 is absent and no successor after v0.22 is selected. Local validation
+passed: Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`.
 
 ## Technology baseline
 
@@ -438,7 +449,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.21 — Editorial Draft Package Foundation is the latest accepted implementation checkpoint; v0.20 is its
-historical accepted predecessor. Migrations 1–16 are canonical, with migration 16 the latest
-canonical migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.21 is selected, and later Conveyor
-systems remain out of scope.
+v0.21 — Editorial Draft Package Foundation remains the latest accepted implementation checkpoint. v0.22 — Closed
+Script Claim Provenance Foundation is locally implemented and pending founder final acceptance/push. Migrations 1–17
+are canonical, with migration 17 the latest canonical migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after
+v0.22 is selected, and later Conveyor systems remain out of scope.

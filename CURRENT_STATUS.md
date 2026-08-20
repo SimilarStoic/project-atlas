@@ -6,15 +6,15 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.21 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.22 LOCALLY IMPLEMENTED / PENDING ACCEPTANCE)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship; v0.21 — Editorial Draft Package Foundation is the latest accepted implementation
-milestone and v0.20 is its historical accepted predecessor. Migration 16 is canonical and migrations extend through
-1–16. Remaining Phase 2 scope is
-unimplemented, later phases remain unactivated, and no milestone after v0.21 is selected. Atlas v0.1 through v0.7
+design/implementation stewardship; v0.21 — Editorial Draft Package Foundation remains the latest accepted
+implementation milestone and v0.22 — Closed Script Claim Provenance Foundation is locally implemented, pending
+founder final acceptance/push. Migration 17 is canonical and migrations extend through 1–17. Remaining Phase 2 scope
+is unimplemented, later phases remain unactivated, and no successor after v0.22 is selected. Atlas v0.1 through v0.7
 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
@@ -165,6 +165,30 @@ selected. Validation passed: Black 26.3.1 `--check`, Ruff, **93 pytest tests**, 
 
 - Implementation commit: `4e36cf6cfabe7e6dbe99e54804653edeec277d9a`.
 - Initial documentation commit: `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`.
+
+## v0.22 Local Implementation Checkpoint — Pending Founder Acceptance/Push
+
+**v0.22 — Closed Script Claim Provenance Foundation** adds one closed immutable `ScriptClaimSet` for an exact
+immutable Script, with zero or more immutable `ScriptClaimLink` Claim identities. An empty set is valid and differs
+from no set; no membership can later be appended, removed or replaced. Correction is represented by a new immutable
+Script version with its own set.
+
+Creation validates the exact existing Script → ContentPiece → EditorialAngle → `Ready`
+ResearchReadinessAssessment → ResearchPack → Opportunity lineage. Every supplied Claim must belong to that exact
+Angle's ResearchPack, appear in that exact assessment's `frozen_evidence_state`, and be linked to the Angle at
+declaration time. Reads resolve the linked identities only against that frozen historical Claim/evidence state; live
+Claim, Source, ClaimEvidence and Angle-link changes do not rewrite closed provenance.
+
+Migration 17 is additive only: `script_claim_sets` and `script_claim_links` with restrictive foreign keys, one set
+per Script and unique per-set Claim membership. It adds no readiness, ResearchPack, Angle, evidence or snapshot copy;
+it leaves Script initiation and EditorialPackageSnapshot semantics unchanged. The API is
+`POST`/`GET /api/scripts/{script_id}/claim-set`. v0.22 excludes ranges/segments, ClaimEvidence links, QA/Gate,
+approval/workflow, UI, production, publishing, analytics, Learning and orchestration.
+
+v0.21 remains the latest accepted predecessor. v0.22 is selected/authorized, locally implemented and validated,
+but **pending founder final acceptance/push**. Migration 17 is latest, migration 18 is absent, Phase 2 remains
+ACTIVE / INCOMPLETE, and no successor after v0.22 is selected. Local validation passed: Black 26.3.1 `--check`,
+Ruff, **96 pytest tests**, and `git diff --check`.
 
 ## Atlas v0.2 Checkpoint
 
