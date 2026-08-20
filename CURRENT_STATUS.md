@@ -13,8 +13,9 @@
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
 design/implementation stewardship; v0.18 — Readiness-Authorized Editorial Angle Initiation is the latest accepted
 implementation milestone and v0.17 is its historical accepted predecessor. Migration 15 is canonical and
-migrations extend through 1–15. Remaining Phase 2 scope is not implemented, later phases remain unactivated, and
-no milestone after v0.18 is selected. Atlas v0.1 through v0.7 are complete and pushed.
+migrations extend through 1–15. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the next defined and
+authorized bounded milestone, but is not implemented or accepted. Remaining Phase 2 scope is unimplemented, later
+phases remain unactivated, and no milestone after v0.19 is selected. Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -99,8 +100,27 @@ checkpoint.
 - Existing same-ResearchPack Claim-link semantics remain unchanged; no frozen Claim matching, automatic
   ContentPiece/Script creation, `Opportunity.status` mutation, workflow state or UI was introduced.
 - Validation passed: **86 tests passed**; Ruff, Black `--check`, and `git diff --check` passed.
-- Phase 2 remains ACTIVE / INCOMPLETE; Phase 1 remains complete, later phases remain unactivated, and no successor
-  milestone after v0.18 is selected.
+- Phase 2 remains ACTIVE / INCOMPLETE; Phase 1 remains complete, later phases remain unactivated, and v0.19 is the
+  next defined and authorized bounded milestone, not an implemented or accepted checkpoint. No successor after
+  v0.19 is selected.
+
+## v0.19 Defined/Authorized Milestone
+
+**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is **DEFINED AND AUTHORIZED FOR BOUNDED
+IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** It is the next deliberate lifecycle edge: explicit creation of a
+ContentPiece from one exact eligible Opportunity-owned EditorialAngle that already carries its exact immutable
+`Ready` ResearchReadinessAssessment provenance. The planned lifecycle path requires exact Opportunity/Angle
+lineage, non-null provenance, exact existing `Ready` assessment, and internally consistent assessment →
+ResearchPack → Angle → Opportunity lineage; it must not select latest/current/any Ready or substitute an
+assessment.
+
+Legacy/demo/seed null-provenance Angles remain valid and unmodified but are ineligible for this path; existing
+low-level ContentPiece creation remains compatible. The existing immutable ContentPiece → EditorialAngle reference
+is expected to provide the durable chain to readiness: no duplicate assessment reference and no migration 16 are
+authorized. One eligible Angle may initiate multiple ContentPieces; no consumption/current/latest/progressed state,
+upstream revalidation, UI, editorial package, Title/Hook/Script, Editorial Gate, provider call, production,
+publishing, analytics or orchestration is included. The planned API is
+`POST /api/opportunities/{opportunity_id}/content-pieces`; it does not yet exist.
 
 ## Atlas v0.2 Checkpoint
 
@@ -865,8 +885,9 @@ Phase 2 is **ACTIVE**: it is the current roadmap phase under founder + ChatGPT d
 stewardship. Activation does not authorize all Phase 2 scope or later-phase engines. **v0.16 — Authorized
 Research Initiation** is a historical accepted implementation predecessor; v0.18 — Readiness-Authorized Editorial
 Angle Initiation is the latest accepted implementation milestone and v0.17 is its historical accepted predecessor.
-Later phases retain their defined roles for technical architecture, research, content intelligence,
-production, distribution, analytics/learning, automation and scale; no later milestone or phase is activated.
+v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is defined and authorized for bounded implementation,
+but is not implemented or accepted. Later phases retain their defined roles for technical architecture, research,
+content intelligence, production, distribution, analytics/learning, automation and scale; no later phase is activated.
 
 # Approved Phase 2 Operating-Model Specification
 
@@ -944,7 +965,8 @@ ResearchPack and assessment → same ResearchPack lineage; it rejects missing, c
 Blocked input. No latest/current selection, consumption, readiness mutation, frozen Claim matching, ContentPiece,
 Script, `Opportunity.status` mutation, workflow entity, provider call, UI or Phase 5 automation is authorized.
 Migration 15 is canonical, limited to the nullable restrictive FK and lineage index. Migrations extend through
-1–15. No milestone after v0.18 is selected.
+1–15. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the next defined and authorized bounded
+milestone, but is not implemented or accepted; no milestone after v0.19 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -964,8 +986,11 @@ Reference-grounded generation and explicit first-reference bootstrap are complet
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 remains active and incomplete. v0.18 — Readiness-Authorized Editorial Angle Initiation is the latest
-accepted implementation milestone; v0.17 is its historical accepted predecessor. Migration 15 is canonical,
-migrations extend through 1–15, and no milestone after v0.18 is selected.
+accepted implementation milestone; v0.17 is its historical accepted predecessor. Migration 15 is canonical and
+migrations extend through 1–15. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the next defined and
+authorized bounded milestone, but is not implemented or accepted; no milestone after v0.19 is selected. The exact
+immediate next action is bounded local v0.19 implementation → validation → founder + ChatGPT review → fixes if
+required → acceptance → commit → push.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
