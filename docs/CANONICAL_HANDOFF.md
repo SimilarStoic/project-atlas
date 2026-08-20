@@ -21,12 +21,13 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.21 — Editorial Draft Package Foundation** remains the latest accepted implementation milestone. **v0.22 —
-Closed Script Claim Provenance Foundation** is selected/authorized, locally implemented and pending founder final
-acceptance/push. Migration 17 is canonical and migrations extend through 1–17. Phase 2 remains ACTIVE / INCOMPLETE
-and later phases remain unactivated. No successor after v0.22 is selected; migration 18 is absent. v0.22 local
-validation confirms Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A fresh session must verify
-the live GitHub checkpoint before acting.
+**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; **v0.21 —
+Editorial Draft Package Foundation** is its historical accepted predecessor. Migration 17 is canonical and migrations
+extend through 1–17. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after
+v0.22 is selected; migration 18 is absent. Founder acceptance covers implementation commit
+`346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
+`3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
+fresh session must verify the live GitHub checkpoint before acting.
 
 ### Current product identity
 
@@ -55,11 +56,11 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
-**v0.21 — Editorial Draft Package Foundation** remains the latest accepted implementation milestone; **v0.22 — Closed
-Script Claim Provenance Foundation** is locally implemented and pending founder final acceptance/push. **Phase 2 —
-Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.21
-implementations and no selected successor after v0.22**, under founder + ChatGPT design/implementation stewardship.
-This does not authorize all Phase 2 scope or later-phase engines.
+**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; **v0.21 —
+Editorial Draft Package Foundation** is its historical accepted predecessor. **Phase 2 — Content Operating Model is
+the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.22 implementations and no selected
+successor after v0.22**, under founder + ChatGPT design/implementation stewardship. This does not authorize all Phase
+2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -281,8 +282,8 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the historical
 accepted predecessor to v0.19. v0.17 is its historical accepted predecessor; migration 15 is canonical and
-migrations extend through 1–16. v0.21 is the latest accepted implementation milestone; v0.20 is its historical
-accepted predecessor; no milestone after v0.21 is selected.
+migrations extend through 1–17. v0.22 is the latest accepted implementation milestone; v0.21 is its historical
+accepted predecessor; no successor after v0.22 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -327,9 +328,9 @@ lineage validation, update immutability, Claim boundaries, API semantics or late
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20
-is its historical accepted predecessor; migration 16 remains the latest canonical migration, and Phase 2 remains ACTIVE /
-INCOMPLETE. Founder acceptance covers implementation commit
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
+is its historical accepted predecessor; migration 17 remains the latest canonical migration, and Phase 2 remains ACTIVE
+/ INCOMPLETE. Founder acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Its purpose is the next smallest deliberate lifecycle edge:
@@ -392,16 +393,16 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The latest accepted Phase 2 implementation is **v0.21 — Editorial Draft Package Foundation**.
-Its bounded persistence/API contract is accepted; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is its
-historical accepted predecessor. Material detail
+The latest accepted Phase 2 implementation is **v0.22 — Closed Script Claim Provenance Foundation**.
+Its bounded persistence/API contract is accepted; **v0.21 — Editorial Draft Package Foundation** is its historical
+accepted predecessor. Material detail
 beyond the approved boundaries returns to founder + ChatGPT.
 
 ### v0.20 — Readiness-Lineage-Preserving Script Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20
-is its historical accepted predecessor; migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.21 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
+is its historical accepted predecessor; migration 17 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.22 is selected.
 
 v0.20 adds one deliberate lifecycle edge: eligible ContentPiece → complete immutable Script version. Eligibility is
 derived only from durable ContentPiece → EditorialAngle → exact `Ready` ResearchReadinessAssessment → ResearchPack
@@ -421,9 +422,9 @@ Validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff -
 
 ### v0.21 — Editorial Draft Package Foundation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20 is its
-historical accepted predecessor. Migration 16 is latest, migration 17 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.21 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
+is its historical accepted predecessor. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.22 is selected.
 
 v0.21 adds immutable append-only TitleOption and HookOption alternatives for an eligible ContentPiece and frozen
 EditorialPackageSnapshots that bind one exact TitleOption, HookOption and Script version from that same ContentPiece.
@@ -438,8 +439,8 @@ commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation comm
 
 ### v0.22 — Closed Script Claim Provenance Foundation
 
-**Status: SELECTED / AUTHORIZED; LOCALLY IMPLEMENTED AND PENDING FOUNDER FINAL ACCEPTANCE/PUSH.** v0.21 remains
-the latest accepted Phase 2 milestone. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21 is its
+historical accepted predecessor. Migration 17 is latest, migration 18 is absent, Phase 2 remains ACTIVE /
 INCOMPLETE, and no successor after v0.22 is selected.
 
 v0.22 adds one closed immutable ScriptClaimSet per exact immutable Script, with zero or more immutable
@@ -457,8 +458,10 @@ Migration 17 adds only `script_claim_sets` and `script_claim_links`, restrictive
 and a Claim lookup index, without backfill or duplicated readiness/evidence provenance. The narrow API is
 `POST`/`GET /api/scripts/{script_id}/claim-set`; Script initiation and EditorialPackageSnapshot semantics remain
 unchanged. v0.22 excludes ranges/segments, ClaimEvidence links, Claim snapshots, package Claim links, QA/Gate,
-approval/workflow, UI, production, publishing, analytics, Learning and orchestration. Local validation passed:
-Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`.
+approval/workflow, UI, production, publishing, analytics, Learning and orchestration. Founder acceptance covers
+implementation commit `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
+`3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`
+passed.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -773,10 +776,10 @@ already-pushed commits, reset/clean away work, select the successor milestone or
 remains final product, business, quality, scope and acceptance authority; founder + ChatGPT remain architecture,
 specification, roadmap and milestone authority; Codex remains the bounded repository inspection and execution agent.
 
-**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation checkpoint. Its implementation
-was validated, committed and pushed at `4e36cf6cfabe7e6dbe99e54804653edeec277d9a`.
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor. No successor after
-v0.21 is selected; any scope beyond v0.21 requires a new explicit founder + ChatGPT decision.
+**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation checkpoint. Its
+implementation was validated and pushed at `346ddd76d19c8520541f77db4dda7853e8e8a5ed`.
+**v0.21 — Editorial Draft Package Foundation** is its historical accepted predecessor. No successor after v0.22 is
+selected; any scope beyond v0.22 requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 
