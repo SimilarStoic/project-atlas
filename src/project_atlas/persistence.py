@@ -363,6 +363,17 @@ class Asset:
 
 
 @dataclass(frozen=True)
+class AssetSelection:
+    """One immutable, explicit visual-input choice for one exact AssetSpec."""
+
+    id: str
+    asset_spec_id: str
+    asset_id: str
+    character_reference_set_id: str | None
+    created_at: str
+
+
+@dataclass(frozen=True)
 class VisualStyleProfile:
     """An immutable, versioned visual-language configuration for generation."""
 
@@ -1075,6 +1086,29 @@ MIGRATIONS: tuple[Migration, ...] = (
         CREATE INDEX idx_visual_plan_gate_provenance_decision
           ON visual_plan_gate_provenance (editorial_gate_decision_id)
         """,
+        ),
+    ),
+    (
+        20,
+        (
+            """
+        CREATE TABLE asset_selections (
+          id TEXT PRIMARY KEY,
+          asset_spec_id TEXT NOT NULL,
+          asset_id TEXT NOT NULL,
+          character_reference_set_id TEXT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (asset_spec_id) REFERENCES asset_specs(id) ON DELETE RESTRICT,
+          FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE RESTRICT,
+          FOREIGN KEY (character_reference_set_id)
+            REFERENCES character_reference_sets(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_asset_selections_asset_spec_created "
+            "ON asset_selections (asset_spec_id, created_at, id)",
+            "CREATE INDEX idx_asset_selections_asset ON asset_selections (asset_id)",
+            "CREATE INDEX idx_asset_selections_character_reference_set "
+            "ON asset_selections (character_reference_set_id)",
         ),
     ),
 )
@@ -2730,6 +2764,33 @@ class AtlasRepository:
             )
         return self.get_scene(scene_id)
 
+    def create_scene_under_visual_plan_authorization(
+        self,
+        scene_id: str,
+        visual_plan_id: str,
+        sequence: int,
+        narration_excerpt: str,
+        visual_intent: str,
+        hamster_action: str | None = None,
+        on_screen_text: str | None = None,
+        transition_note: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Scene:
+        """Create a Scene only below a still-valid Gate-authorized VisualPlan."""
+
+        self._require_gate_authorized_visual_plan(visual_plan_id)
+        return self.create_scene(
+            scene_id,
+            visual_plan_id,
+            sequence,
+            narration_excerpt,
+            visual_intent,
+            hamster_action,
+            on_screen_text,
+            transition_note,
+            metadata,
+        )
+
     def get_scene(self, scene_id: str) -> Scene:
         row = self.connection.execute("SELECT * FROM scenes WHERE id = ?", (scene_id,)).fetchone()
         if row is None:
@@ -2743,6 +2804,12 @@ class AtlasRepository:
             "SELECT * FROM scenes WHERE visual_plan_id = ? ORDER BY sequence", (visual_plan_id,)
         )
         return [self._scene(row) for row in rows]
+
+    def list_scenes_under_visual_plan_authorization(self, visual_plan_id: str) -> list[Scene]:
+        """List ordered operational Scenes only for a Gate-authorized VisualPlan."""
+
+        self._require_gate_authorized_visual_plan(visual_plan_id)
+        return self.list_scenes_for_visual_plan(visual_plan_id)
 
     def update_scene(self, scene: Scene) -> Scene:
         """Persist normal scene edits without moving the Scene to another VisualPlan."""
@@ -2770,6 +2837,13 @@ class AtlasRepository:
         if result.rowcount != 1:
             raise KeyError(scene.id)
         return self.get_scene(scene.id)
+
+    def update_scene_under_visual_plan_authorization(self, scene: Scene) -> Scene:
+        """Persist ordinary authoring edits below a Gate-authorized VisualPlan."""
+
+        persisted_scene = self.get_scene(scene.id)
+        self._require_gate_authorized_visual_plan(persisted_scene.visual_plan_id)
+        return self.update_scene(scene)
 
     def visual_plan_payload(self, visual_plan_id: str) -> dict[str, Any]:
         """Load one visual plan with its ordered, non-authoritative Scene locators."""
@@ -2945,6 +3019,33 @@ class AtlasRepository:
             )
         return self.get_asset_spec(asset_spec_id)
 
+    def create_asset_spec_under_scene_authorization(
+        self,
+        asset_spec_id: str,
+        scene_id: str,
+        asset_type: str,
+        purpose: str,
+        description: str,
+        generation_prompt: str,
+        continuity_key: str | None = None,
+        character_profile_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> AssetSpec:
+        """Create a provider-neutral AssetSpec only below an authorized Scene."""
+
+        self._require_gate_authorized_scene(scene_id)
+        return self.create_asset_spec(
+            asset_spec_id,
+            scene_id,
+            asset_type,
+            purpose,
+            description,
+            generation_prompt,
+            continuity_key,
+            character_profile_id,
+            metadata,
+        )
+
     def get_asset_spec(self, asset_spec_id: str) -> AssetSpec:
         row = self.connection.execute(
             "SELECT * FROM asset_specs WHERE id = ?", (asset_spec_id,)
@@ -2960,6 +3061,12 @@ class AtlasRepository:
             "SELECT * FROM asset_specs WHERE scene_id = ? ORDER BY created_at, id", (scene_id,)
         )
         return [self._asset_spec(row) for row in rows]
+
+    def list_asset_specs_under_scene_authorization(self, scene_id: str) -> list[AssetSpec]:
+        """List operational AssetSpecs only below a Gate-authorized Scene."""
+
+        self._require_gate_authorized_scene(scene_id)
+        return self.list_asset_specs_for_scene(scene_id)
 
     def update_asset_spec(self, asset_spec: AssetSpec) -> AssetSpec:
         """Persist requirement edits without changing the owning Scene provenance."""
@@ -2996,6 +3103,13 @@ class AtlasRepository:
         if result.rowcount != 1:
             raise KeyError(asset_spec.id)
         return self.get_asset_spec(asset_spec.id)
+
+    def update_asset_spec_under_scene_authorization(self, asset_spec: AssetSpec) -> AssetSpec:
+        """Persist ordinary requirement edits below a Gate-authorized Scene."""
+
+        persisted_spec = self.get_asset_spec(asset_spec.id)
+        self._require_gate_authorized_scene(persisted_spec.scene_id)
+        return self.update_asset_spec(asset_spec)
 
     def create_asset(
         self,
@@ -3178,12 +3292,137 @@ class AtlasRepository:
         )
         return [self._asset(row) for row in rows]
 
+    def list_assets_under_asset_spec_authorization(self, asset_spec_id: str) -> list[Asset]:
+        """List Asset history only below a Gate-authorized operational AssetSpec."""
+
+        self._require_gate_authorized_asset_spec(asset_spec_id)
+        return self.list_assets_for_asset_spec(asset_spec_id)
+
+    def import_asset_under_asset_spec_authorization(
+        self,
+        asset_id: str,
+        asset_spec_id: str,
+        content: bytes,
+        media_type: str,
+        storage: Any,
+    ) -> Asset:
+        """Copy one verified image into managed storage and register an immutable import."""
+
+        if not isinstance(asset_id, str) or not asset_id.strip():
+            raise ValueError("Imported Asset ID must be non-empty text.")
+        self._require_gate_authorized_asset_spec(asset_spec_id)
+        self._validate_imported_asset_content(content, media_type)
+        content_digest = sha256(content).hexdigest()
+        stored_path: Path | None = None
+        try:
+            stored_path = storage.write(asset_spec_id, asset_id.strip(), content, media_type)
+            storage_path = storage.relative_path(stored_path)
+            with self.connection:
+                self.connection.execute("BEGIN IMMEDIATE")
+                version = self.connection.execute(
+                    "SELECT COALESCE(MAX(version), 0) + 1 FROM assets WHERE asset_spec_id = ?",
+                    (asset_spec_id,),
+                ).fetchone()[0]
+                self.connection.execute(
+                    "INSERT INTO assets (id, asset_spec_id, version, storage_path, media_type, "
+                    "source_kind, metadata_json, created_at, generation_execution_id, "
+                    "content_digest) "
+                    "VALUES (?, ?, ?, ?, ?, 'imported', '{}', ?, NULL, ?)",
+                    (
+                        asset_id.strip(),
+                        asset_spec_id,
+                        version,
+                        storage_path,
+                        media_type,
+                        now(),
+                        content_digest,
+                    ),
+                )
+        except Exception:
+            if stored_path is not None:
+                storage.remove_newly_written(stored_path)
+            raise
+        return self.get_asset(asset_id.strip())
+
+    def create_asset_selection(
+        self,
+        selection_id: str,
+        asset_spec_id: str,
+        asset_id: str,
+        character_reference_set_id: str | None = None,
+    ) -> AssetSelection:
+        """Append one explicit, immutable managed visual-input selection."""
+
+        if not isinstance(selection_id, str) or not selection_id.strip():
+            raise ValueError("AssetSelection ID must be non-empty text.")
+        character_reference_set_id = self._normalized_optional_identifier(
+            character_reference_set_id
+        )
+        asset_spec = self._require_gate_authorized_asset_spec(asset_spec_id)
+        asset = self.get_asset(asset_id)
+        if asset.asset_spec_id != asset_spec.id:
+            raise ValueError("An AssetSelection Asset must belong to its exact AssetSpec.")
+        self._validate_selectable_managed_asset(asset)
+        self._validate_asset_selection_character_provenance(
+            asset_spec, asset, character_reference_set_id
+        )
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO asset_selections "
+                "(id, asset_spec_id, asset_id, character_reference_set_id, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    selection_id.strip(),
+                    asset_spec.id,
+                    asset.id,
+                    character_reference_set_id,
+                    now(),
+                ),
+            )
+        return self.get_asset_selection(selection_id.strip())
+
+    def get_asset_selection(self, selection_id: str) -> AssetSelection:
+        row = self.connection.execute(
+            "SELECT * FROM asset_selections WHERE id = ?", (selection_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(selection_id)
+        return self._asset_selection(row)
+
+    def list_asset_selections_for_asset_spec(self, asset_spec_id: str) -> list[AssetSelection]:
+        """Return immutable selection history without a current-state interpretation."""
+
+        self._require_gate_authorized_asset_spec(asset_spec_id)
+        rows = self.connection.execute(
+            "SELECT * FROM asset_selections WHERE asset_spec_id = ? ORDER BY created_at, id",
+            (asset_spec_id,),
+        )
+        return [self._asset_selection(row) for row in rows]
+
+    def asset_selection_payload(self, selection_id: str) -> dict[str, Any]:
+        selection = self.get_asset_selection(selection_id)
+        asset = self.get_asset(selection.asset_id)
+        return {
+            "id": selection.id,
+            "asset_spec_id": selection.asset_spec_id,
+            "asset_id": selection.asset_id,
+            "character_reference_set_id": selection.character_reference_set_id,
+            "created_at": selection.created_at,
+            "asset": {
+                "id": asset.id,
+                "version": asset.version,
+                "media_type": asset.media_type,
+                "source_kind": asset.source_kind,
+                "content_digest": asset.content_digest,
+            },
+        }
+
     def managed_asset_path(self, asset_id: str) -> Path:
-        """Resolve one generated Asset only when its stored file is safely managed by Atlas."""
+        """Resolve one registered generated or imported Asset below managed storage only."""
 
         asset = self.get_asset(asset_id)
-        if asset.source_kind != "generated":
-            raise ValueError("Only Atlas-generated Assets have managed file content.")
+        if asset.source_kind not in {"generated", "imported"}:
+            raise ValueError("Only managed generated or imported Assets have file content.")
         if asset.media_type not in {"image/png", "image/jpeg", "image/webp"}:
             raise ValueError("Asset media type is not safe for managed image serving.")
         if not isinstance(asset.storage_path, str) or not asset.storage_path:
@@ -3623,6 +3862,131 @@ class AtlasRepository:
             snapshot, assessment, decision.outcome, decision.actor, decision.comment
         )
         return snapshot, assessment
+
+    def _require_gate_authorized_visual_plan(self, visual_plan_id: str) -> VisualPlan:
+        """Resolve a plan only when its v0.24 Approve provenance remains exact and coherent."""
+
+        visual_plan = self.get_visual_plan(visual_plan_id)
+        provenance = self.get_visual_plan_gate_provenance(visual_plan.id)
+        if provenance is None:
+            raise ValueError("VisualPlan is not authorized by an Editorial Gate decision.")
+        decision = self.get_editorial_gate_decision(provenance.editorial_gate_decision_id)
+        snapshot, _assessment = self._validate_editorial_gate_decision_lineage(decision)
+        if decision.outcome != "Approve":
+            raise ValueError(
+                "VisualPlan operational authoring requires an Approve EditorialGateDecision."
+            )
+        self._validate_editorial_package_snapshot_integrity(snapshot)
+        if (
+            visual_plan.content_piece_id != snapshot.content_piece_id
+            or visual_plan.script_id != snapshot.script_id
+        ):
+            raise ValueError(
+                "VisualPlan provenance must match the exact approved Editorial Gate package."
+            )
+        return visual_plan
+
+    def _require_gate_authorized_scene(self, scene_id: str) -> Scene:
+        scene = self.get_scene(scene_id)
+        self._require_gate_authorized_visual_plan(scene.visual_plan_id)
+        return scene
+
+    def _require_gate_authorized_asset_spec(self, asset_spec_id: str) -> AssetSpec:
+        asset_spec = self.get_asset_spec(asset_spec_id)
+        self._require_gate_authorized_scene(asset_spec.scene_id)
+        return asset_spec
+
+    @staticmethod
+    def _validate_imported_asset_content(content: bytes, media_type: str) -> None:
+        """Accept only bounded, recognizable image content for managed manual imports."""
+
+        if not isinstance(content, bytes) or not content:
+            raise ValueError("Imported Asset content must be non-empty bytes.")
+        signatures = {
+            "image/png": lambda value: value.startswith(b"\x89PNG\r\n\x1a\n")
+            and b"IHDR" in value[:32],
+            "image/jpeg": lambda value: value.startswith(b"\xff\xd8")
+            and value.endswith(b"\xff\xd9"),
+            "image/webp": lambda value: len(value) >= 12
+            and value.startswith(b"RIFF")
+            and value[8:12] == b"WEBP",
+        }
+        validator = signatures.get(media_type)
+        if validator is None:
+            raise ValueError(
+                "Imported Asset media type is not supported for managed image storage."
+            )
+        if not validator(content):
+            raise ValueError("Imported Asset bytes do not match the declared image media type.")
+
+    def _validate_selectable_managed_asset(self, asset: Asset) -> None:
+        if asset.source_kind not in {"generated", "imported"}:
+            raise ValueError("AssetSelection requires a managed generated or imported Asset.")
+        self._validate_content_digest(asset.content_digest)
+        if asset.content_digest is None:
+            raise ValueError("AssetSelection requires an immutable Asset content digest.")
+        managed_path = self.managed_asset_path(asset.id)
+        if sha256(managed_path.read_bytes()).hexdigest() != asset.content_digest:
+            raise ValueError("Managed Asset bytes do not match the stored content digest.")
+        if asset.source_kind == "generated":
+            if asset.generation_execution_id is None:
+                raise ValueError(
+                    "Generated AssetSelection requires GenerationExecution provenance."
+                )
+            execution = self.get_generation_execution(asset.generation_execution_id)
+            if execution.outcome != "succeeded" or execution.asset_spec_id != asset.asset_spec_id:
+                raise ValueError(
+                    "Generated AssetSelection requires a succeeded matching execution."
+                )
+
+    def _validate_asset_selection_character_provenance(
+        self,
+        asset_spec: AssetSpec,
+        asset: Asset,
+        character_reference_set_id: str | None,
+    ) -> None:
+        if asset.source_kind == "imported":
+            if asset_spec.character_profile_id is None:
+                if character_reference_set_id is not None:
+                    raise ValueError(
+                        "Imported non-character AssetSelections cannot specify a "
+                        "CharacterReferenceSet."
+                    )
+                return
+            if character_reference_set_id is None:
+                raise ValueError(
+                    "Imported character AssetSelections require an exact CharacterReferenceSet."
+                )
+            reference_set = self.get_character_reference_set(character_reference_set_id)
+            if reference_set.character_profile_id != asset_spec.character_profile_id:
+                raise ValueError(
+                    "AssetSelection CharacterReferenceSet must match the AssetSpec "
+                    "CharacterProfile."
+                )
+            return
+        if asset.source_kind == "generated":
+            if character_reference_set_id is not None:
+                raise ValueError(
+                    "Generated AssetSelections preserve GenerationExecution reference provenance."
+                )
+            execution = self.get_generation_execution(asset.generation_execution_id or "")
+            if asset_spec.character_profile_id is not None and (
+                execution.character_profile_id != asset_spec.character_profile_id
+            ):
+                raise ValueError(
+                    "Generated AssetSelection CharacterProfile must match its GenerationExecution."
+                )
+            if execution.character_reference_set_id is not None:
+                reference_set = self.get_character_reference_set(
+                    execution.character_reference_set_id
+                )
+                if reference_set.character_profile_id != execution.character_profile_id:
+                    raise ValueError(
+                        "Generated AssetSelection reference provenance must match its "
+                        "GenerationExecution CharacterProfile."
+                    )
+            return
+        raise ValueError("AssetSelection requires a managed generated or imported Asset.")
 
     def _validate_script_claim_set_frozen_provenance(self, claim_set: ScriptClaimSet) -> None:
         """Require a closed set's memberships to resolve only against frozen Ready evidence."""
@@ -5567,6 +5931,16 @@ class AtlasRepository:
             row["source_kind"],
             row["content_digest"],
             json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _asset_selection(row: sqlite3.Row) -> AssetSelection:
+        return AssetSelection(
+            row["id"],
+            row["asset_spec_id"],
+            row["asset_id"],
+            row["character_reference_set_id"],
             row["created_at"],
         )
 

@@ -85,6 +85,104 @@ def ensure_character_reference_set(server, storage_root: Path) -> str:
     ).id
 
 
+def create_authorized_visual_plan(server, prefix: str):
+    """Create an exact v0.24-approved VisualPlan for v0.25 HTTP lifecycle tests."""
+
+    repository = server.repository
+    opportunity_id = f"{prefix}-opportunity"
+    repository.create_opportunity(
+        opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+    )
+    pack = repository.create_research_pack(f"{prefix}-pack", opportunity_id, 1, "Research")
+    claim = repository.create_claim(
+        f"{prefix}-claim", pack.id, "Frozen claim.", "fact", "low", "stable", "reviewed", ""
+    )
+    source = repository.create_source(
+        f"{prefix}-source",
+        "primary",
+        "Source",
+        "Publisher",
+        f"https://example.test/{prefix}",
+        "2026-08-20T00:00:00+00:00",
+    )
+    repository.link_claim_evidence(claim.id, source.id, "supports", "p. 1")
+    research_ready = repository.create_research_readiness_assessment(
+        f"{prefix}-research-ready",
+        pack.id,
+        "Ready",
+        {"summary": "Ready."},
+        "policy-v1",
+        "test",
+        "http-test",
+        "v1",
+    )
+    angle = repository.create_editorial_angle_under_research_readiness(
+        f"{prefix}-angle",
+        opportunity_id,
+        pack.id,
+        research_ready.id,
+        "Angle",
+        "Thesis",
+        "Promise",
+        "Frame",
+        ["Takeaway"],
+    )
+    repository.link_claim_to_editorial_angle(angle.id, claim.id, "core")
+    piece = repository.create_content_piece_under_editorial_angle_readiness(
+        f"{prefix}-piece", opportunity_id, angle.id, "video", "Working title"
+    )
+    script = repository.create_script_under_content_piece_readiness(
+        f"{prefix}-script", piece.id, "Narration."
+    )
+    repository.create_script_claim_set(f"{prefix}-claim-set", script.id, [claim.id])
+    title = repository.create_title_option_under_content_piece_readiness(
+        f"{prefix}-title", piece.id, "Title"
+    )
+    hook = repository.create_hook_option_under_content_piece_readiness(
+        f"{prefix}-hook", piece.id, "Hook"
+    )
+    package = repository.create_editorial_package_snapshot(
+        f"{prefix}-package", piece.id, title.id, hook.id, script.id
+    )
+    editorial_ready = repository.create_editorial_readiness_assessment(
+        f"{prefix}-editorial-ready", package.id
+    )
+    approve = repository.create_editorial_gate_decision(
+        f"{prefix}-approve", package.id, editorial_ready.id, "Approve", "founder"
+    )
+    return repository.create_visual_plan_under_editorial_gate(
+        f"{prefix}-plan", approve.id, "Operational visual direction"
+    )
+
+
+def request_json(server, request: Request | str) -> tuple[dict, int]:
+    """Serve exactly one JSON request against the dependency-free local server."""
+
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+    with urlopen(request) as response:
+        payload = json.load(response)
+        status = response.status
+    thread.join(timeout=2)
+    return payload, status
+
+
+def request_error(server, request: Request) -> tuple[dict, int]:
+    """Serve one expected HTTP error and return its JSON body and status."""
+
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+    try:
+        urlopen(request)
+    except HTTPError as error:
+        payload = json.loads(error.read())
+        status = error.code
+    else:
+        raise AssertionError("The invalid lifecycle request unexpectedly succeeded.")
+    thread.join(timeout=2)
+    return payload, status
+
+
 def test_demo_data_represents_future_content_concepts() -> None:
     """Demo data keeps opportunities and content-package concepts separate."""
 
@@ -2388,6 +2486,217 @@ def test_asset_content_endpoint_rejects_unknown_missing_and_unsafe_files(tmp_pat
             else:
                 raise AssertionError("Unsafe or unknown Asset content was served.")
             thread.join(timeout=2)
+    finally:
+        server.server_close()
+
+
+def test_operational_visual_input_api_uses_gate_lineage_and_managed_import(tmp_path: Path) -> None:
+    """v0.25 exposes only narrow Gate-qualified visual-input authoring routes."""
+
+    storage_root = tmp_path / "assets"
+    server = create_server(
+        port=0, database_path=tmp_path / "atlas.db", asset_storage_root=storage_root
+    )
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDRtest"
+    try:
+        plan = create_authorized_visual_plan(server, "http-visual-input")
+        scene, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/visual-plans/{plan.id}/scenes",
+                data=json.dumps(
+                    {
+                        "id": "http-visual-scene",
+                        "sequence": 1,
+                        "narration_excerpt": "Narration locator.",
+                        "visual_intent": "Visual intent.",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert scene["scene"]["visual_plan_id"] == plan.id
+        scenes, status = request_json(server, f"{base_url}/api/visual-plans/{plan.id}/scenes")
+        assert status == 200
+        assert [item["id"] for item in scenes["scenes"]] == ["http-visual-scene"]
+        updated_scene, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/scenes/http-visual-scene",
+                data=b'{"visual_intent":"Edited intent."}',
+                headers={"Content-Type": "application/json"},
+                method="PUT",
+            ),
+        )
+        assert status == 200
+        assert updated_scene["scene"]["visual_intent"] == "Edited intent."
+        asset_spec, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/scenes/http-visual-scene/asset-specs",
+                data=json.dumps(
+                    {
+                        "id": "http-visual-spec",
+                        "asset_type": "graphic",
+                        "purpose": "Support the narration.",
+                        "description": "A simple visual.",
+                        "generation_prompt": "Draw a simple visual.",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert asset_spec["asset_spec"]["scene_id"] == "http-visual-scene"
+        imported, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/asset-specs/http-visual-spec/assets/import",
+                data=png,
+                headers={"Content-Type": "image/png", "X-Asset-ID": "http-imported-asset"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert imported["asset"]["source_kind"] == "imported"
+        assert imported["asset"]["version"] == 1
+        assert imported["asset"]["content_digest"] == sha256(png).hexdigest()
+        assets, status = request_json(server, f"{base_url}/api/asset-specs/http-visual-spec/assets")
+        assert status == 200
+        assert [asset["id"] for asset in assets["assets"]] == ["http-imported-asset"]
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(f"{base_url}/api/assets/http-imported-asset/content") as response:
+            assert response.headers["Content-Type"] == "image/png"
+            assert response.read() == png
+        thread.join(timeout=2)
+        selection, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/asset-specs/http-visual-spec/asset-selections",
+                data=b'{"id":"http-visual-selection","asset_id":"http-imported-asset"}',
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert selection["asset_selection"]["asset_id"] == "http-imported-asset"
+        history, status = request_json(
+            server, f"{base_url}/api/asset-specs/http-visual-spec/asset-selections"
+        )
+        assert status == 200
+        assert [item["id"] for item in history["asset_selections"]] == ["http-visual-selection"]
+        fetched, status = request_json(
+            server, f"{base_url}/api/asset-selections/http-visual-selection"
+        )
+        assert status == 200
+        assert fetched["asset_selection"]["asset"]["content_digest"] == sha256(png).hexdigest()
+
+        legacy_plan = server.repository.get_visual_plan("visual-plan-isa-deadline-video-v1")
+        rejected, status = request_error(
+            server,
+            Request(
+                f"{base_url}/api/visual-plans/{legacy_plan.id}/scenes",
+                data=b'{"id":"rejected-scene","sequence":1,"narration_excerpt":"Locator","visual_intent":"Intent"}',
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 400
+        assert "not authorized" in rejected["error"]
+        malformed, status = request_error(
+            server,
+            Request(
+                f"{base_url}/api/asset-specs/http-visual-spec/assets/import",
+                data=b"not a png",
+                headers={"Content-Type": "image/png"},
+                method="POST",
+            ),
+        )
+        assert status == 400
+        assert "do not match" in malformed["error"]
+        override, status = request_error(
+            server,
+            Request(
+                f"{base_url}/api/asset-specs/http-visual-spec/assets/import",
+                data=png,
+                headers={
+                    "Content-Type": "image/png",
+                    "X-Asset-Version": "99",
+                    "X-Asset-Digest": "0" * 64,
+                },
+                method="POST",
+            ),
+        )
+        assert status == 400
+        assert "server-derived" in override["error"]
+    finally:
+        server.server_close()
+
+
+def test_asset_selection_api_requires_explicit_manual_character_reference(tmp_path: Path) -> None:
+    """Imported character choices bind one caller-supplied matching reference set."""
+
+    storage_root = tmp_path / "assets"
+    server = create_server(
+        port=0, database_path=tmp_path / "atlas.db", asset_storage_root=storage_root
+    )
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDRtest"
+    try:
+        plan = create_authorized_visual_plan(server, "http-character-selection")
+        scene = server.repository.create_scene_under_visual_plan_authorization(
+            "http-character-scene", plan.id, 1, "Locator", "Intent"
+        )
+        spec = server.repository.create_asset_spec_under_scene_authorization(
+            "http-character-spec",
+            scene.id,
+            "character",
+            "Show the hamster.",
+            "Canonical hamster visual.",
+            "Illustrate the hamster.",
+            character_profile_id="character-profile-similarstoic-hamster-core-v1",
+        )
+        asset = server.repository.import_asset_under_asset_spec_authorization(
+            "http-character-import",
+            spec.id,
+            png,
+            "image/png",
+            LocalAssetStorage(storage_root),
+        )
+        reference_set_id = ensure_character_reference_set(server, storage_root)
+        missing, status = request_error(
+            server,
+            Request(
+                f"{base_url}/api/asset-specs/{spec.id}/asset-selections",
+                data=json.dumps({"id": "missing-reference", "asset_id": asset.id}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 400
+        assert "require an exact CharacterReferenceSet" in missing["error"]
+        selected, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/asset-specs/{spec.id}/asset-selections",
+                data=json.dumps(
+                    {
+                        "id": "character-reference-selection",
+                        "asset_id": asset.id,
+                        "character_reference_set_id": reference_set_id,
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert selected["asset_selection"]["character_reference_set_id"] == reference_set_id
     finally:
         server.server_close()
 

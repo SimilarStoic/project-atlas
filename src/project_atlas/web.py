@@ -7,6 +7,7 @@ import json
 import mimetypes
 import sqlite3
 import uuid
+from dataclasses import replace
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -15,6 +16,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload
 from project_atlas.generation import (
     AssetGenerator,
+    AssetStorageFailure,
     GenerationService,
     InvalidCharacterReferenceBootstrap,
     LocalAssetStorage,
@@ -27,6 +29,7 @@ from project_atlas.generation import (
 from project_atlas.persistence import AtlasRepository
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
+MAX_IMPORTED_ASSET_BYTES = 10 * 1024 * 1024
 
 
 class AtlasRequestHandler(BaseHTTPRequestHandler):
@@ -38,6 +41,129 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Handle only local static assets and demo API responses."""
 
         parsed = urlparse(self.path)
+        visual_plan_prefix = "/api/visual-plans/"
+        scene_suffix = "/scenes"
+        if parsed.path.startswith(visual_plan_prefix) and parsed.path.endswith(scene_suffix):
+            visual_plan_id = unquote(
+                parsed.path[len(visual_plan_prefix) : -len(scene_suffix)]
+            ).strip("/")
+            if not visual_plan_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                scenes = self.server.repository.list_scenes_under_visual_plan_authorization(
+                    visual_plan_id
+                )
+            except KeyError:
+                self._send_json({"error": "VisualPlan not found."}, HTTPStatus.NOT_FOUND)
+                return
+            except ValueError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(
+                {
+                    "kind": "scene_history",
+                    "visual_plan_id": visual_plan_id,
+                    "scenes": [self._scene_payload(scene) for scene in scenes],
+                }
+            )
+            return
+        scene_prefix = "/api/scenes/"
+        asset_spec_suffix = "/asset-specs"
+        if parsed.path.startswith(scene_prefix) and parsed.path.endswith(asset_spec_suffix):
+            scene_id = unquote(parsed.path[len(scene_prefix) : -len(asset_spec_suffix)]).strip("/")
+            if not scene_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                asset_specs = self.server.repository.list_asset_specs_under_scene_authorization(
+                    scene_id
+                )
+            except KeyError:
+                self._send_json({"error": "Scene not found."}, HTTPStatus.NOT_FOUND)
+                return
+            except ValueError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(
+                {
+                    "kind": "asset_spec_history",
+                    "scene_id": scene_id,
+                    "asset_specs": [
+                        self.server.repository.asset_spec_payload(asset_spec.id)
+                        for asset_spec in asset_specs
+                    ],
+                }
+            )
+            return
+        asset_spec_prefix = "/api/asset-specs/"
+        asset_suffix = "/assets"
+        selection_suffix = "/asset-selections"
+        if parsed.path.startswith(asset_spec_prefix) and parsed.path.endswith(asset_suffix):
+            asset_spec_id = unquote(parsed.path[len(asset_spec_prefix) : -len(asset_suffix)]).strip(
+                "/"
+            )
+            if not asset_spec_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                assets = self.server.repository.list_assets_under_asset_spec_authorization(
+                    asset_spec_id
+                )
+            except KeyError:
+                self._send_json({"error": "AssetSpec not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "asset_history",
+                    "asset_spec_id": asset_spec_id,
+                    "assets": [self._asset_payload(asset) for asset in assets],
+                }
+            )
+            return
+        if parsed.path.startswith(asset_spec_prefix) and parsed.path.endswith(selection_suffix):
+            asset_spec_id = unquote(
+                parsed.path[len(asset_spec_prefix) : -len(selection_suffix)]
+            ).strip("/")
+            if not asset_spec_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                selections = self.server.repository.list_asset_selections_for_asset_spec(
+                    asset_spec_id
+                )
+            except KeyError:
+                self._send_json({"error": "AssetSpec not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "asset_selection_history",
+                    "asset_spec_id": asset_spec_id,
+                    "asset_selections": [
+                        self.server.repository.asset_selection_payload(selection.id)
+                        for selection in selections
+                    ],
+                }
+            )
+            return
+        asset_selection_prefix = "/api/asset-selections/"
+        if parsed.path.startswith(asset_selection_prefix):
+            selection_id = unquote(parsed.path[len(asset_selection_prefix) :]).strip("/")
+            if not selection_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "asset_selection",
+                        "asset_selection": self.server.repository.asset_selection_payload(
+                            selection_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json({"error": "AssetSelection not found."}, HTTPStatus.NOT_FOUND)
+            return
         if parsed.path == "/api/demo/opportunities":
             self._send_json(
                 {"kind": "demo", "opportunities": self.server.repository.discover_payload()}
@@ -450,6 +576,177 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        visual_plan_prefix = "/api/visual-plans/"
+        scene_suffix = "/scenes"
+        if path.startswith(visual_plan_prefix) and path.endswith(scene_suffix):
+            visual_plan_id = unquote(path[len(visual_plan_prefix) : -len(scene_suffix)]).strip("/")
+            if not visual_plan_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("Scene payload")
+                allowed_fields = {
+                    "id",
+                    "sequence",
+                    "narration_excerpt",
+                    "visual_intent",
+                    "hamster_action",
+                    "on_screen_text",
+                    "transition_note",
+                    "metadata",
+                }
+                self._reject_unsupported_fields(payload, allowed_fields, "Scene payload")
+                scene = self.server.repository.create_scene_under_visual_plan_authorization(
+                    self._required_text(payload, "id", "Scene"),
+                    visual_plan_id,
+                    payload.get("sequence"),
+                    self._required_text(payload, "narration_excerpt", "Scene"),
+                    self._required_text(payload, "visual_intent", "Scene"),
+                    self._optional_text(payload, "hamster_action", "Scene"),
+                    self._optional_text(payload, "on_screen_text", "Scene"),
+                    self._optional_text(payload, "transition_note", "Scene"),
+                    self._optional_object(payload, "metadata", "Scene"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "VisualPlan not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {"kind": "scene", "scene": self._scene_payload(scene)}, HTTPStatus.CREATED
+            )
+            return
+        scene_prefix = "/api/scenes/"
+        asset_spec_suffix = "/asset-specs"
+        if path.startswith(scene_prefix) and path.endswith(asset_spec_suffix):
+            scene_id = unquote(path[len(scene_prefix) : -len(asset_spec_suffix)]).strip("/")
+            if not scene_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("AssetSpec payload")
+                allowed_fields = {
+                    "id",
+                    "asset_type",
+                    "purpose",
+                    "description",
+                    "generation_prompt",
+                    "continuity_key",
+                    "character_profile_id",
+                    "metadata",
+                }
+                self._reject_unsupported_fields(payload, allowed_fields, "AssetSpec payload")
+                asset_spec = self.server.repository.create_asset_spec_under_scene_authorization(
+                    self._required_text(payload, "id", "AssetSpec"),
+                    scene_id,
+                    self._required_text(payload, "asset_type", "AssetSpec"),
+                    self._required_text(payload, "purpose", "AssetSpec"),
+                    self._required_text(payload, "description", "AssetSpec"),
+                    self._required_text(payload, "generation_prompt", "AssetSpec"),
+                    self._optional_text(payload, "continuity_key", "AssetSpec"),
+                    self._optional_text(payload, "character_profile_id", "AssetSpec"),
+                    self._optional_object(payload, "metadata", "AssetSpec"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "Scene or CharacterProfile not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "asset_spec",
+                    "asset_spec": self.server.repository.asset_spec_payload(asset_spec.id),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        asset_spec_prefix = "/api/asset-specs/"
+        import_suffix = "/assets/import"
+        selection_suffix = "/asset-selections"
+        if path.startswith(asset_spec_prefix) and path.endswith(import_suffix):
+            asset_spec_id = unquote(path[len(asset_spec_prefix) : -len(import_suffix)]).strip("/")
+            if not asset_spec_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                forbidden_headers = {
+                    "X-Asset-Version",
+                    "X-Asset-Digest",
+                    "X-Asset-Storage-Path",
+                    "X-Asset-Source-Kind",
+                }
+                if any(header in self.headers for header in forbidden_headers):
+                    raise ValueError(
+                        "Imported Asset version, digest, storage path, and source kind are "
+                        "server-derived."
+                    )
+                content = self._read_imported_asset_content()
+                media_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip()
+                asset_id = self.headers.get("X-Asset-ID") or f"asset-import-{uuid.uuid4().hex}"
+                asset = self.server.repository.import_asset_under_asset_spec_authorization(
+                    asset_id,
+                    asset_spec_id,
+                    content,
+                    media_type,
+                    self.server.generation_service.storage,
+                )
+            except (ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "AssetSpec not found."}, HTTPStatus.NOT_FOUND)
+                return
+            except (AssetStorageFailure, OSError):
+                self._send_json(
+                    {"error": "Conveyor could not store the imported Asset."},
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+                return
+            self._send_json(
+                {"kind": "asset", "asset": self._asset_payload(asset)}, HTTPStatus.CREATED
+            )
+            return
+        if path.startswith(asset_spec_prefix) and path.endswith(selection_suffix):
+            asset_spec_id = unquote(path[len(asset_spec_prefix) : -len(selection_suffix)]).strip(
+                "/"
+            )
+            if not asset_spec_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("AssetSelection payload")
+                self._reject_unsupported_fields(
+                    payload,
+                    {"id", "asset_id", "character_reference_set_id"},
+                    "AssetSelection payload",
+                )
+                selection = self.server.repository.create_asset_selection(
+                    self._required_text(payload, "id", "AssetSelection"),
+                    asset_spec_id,
+                    self._required_text(payload, "asset_id", "AssetSelection"),
+                    self._optional_text(payload, "character_reference_set_id", "AssetSelection"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "AssetSpec, Asset, or CharacterReferenceSet not found."},
+                    HTTPStatus.NOT_FOUND,
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "asset_selection",
+                    "asset_selection": self.server.repository.asset_selection_payload(selection.id),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         editorial_readiness_prefix = "/api/editorial-package-snapshots/"
         editorial_readiness_suffix = "/readiness-assessments"
         if path.startswith(editorial_readiness_prefix) and path.endswith(
@@ -1212,6 +1509,195 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 ),
             }
         )
+
+    def do_PUT(self) -> None:  # noqa: N802
+        """Update only mutable operational Scene or AssetSpec authoring detail."""
+
+        path = urlparse(self.path).path
+        scene_prefix = "/api/scenes/"
+        if path.startswith(scene_prefix):
+            scene_id = unquote(path[len(scene_prefix) :]).strip("/")
+            if not scene_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("Scene update payload")
+                allowed_fields = {
+                    "sequence",
+                    "narration_excerpt",
+                    "visual_intent",
+                    "hamster_action",
+                    "on_screen_text",
+                    "transition_note",
+                    "metadata",
+                }
+                self._reject_unsupported_fields(payload, allowed_fields, "Scene update payload")
+                if not payload:
+                    raise ValueError("Scene update payload must include one mutable field.")
+                scene = self.server.repository.get_scene(scene_id)
+                changes = self._scene_changes(payload)
+                updated = self.server.repository.update_scene_under_visual_plan_authorization(
+                    replace(scene, **changes)
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "Scene not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json({"kind": "scene", "scene": self._scene_payload(updated)})
+            return
+        asset_spec_prefix = "/api/asset-specs/"
+        if path.startswith(asset_spec_prefix):
+            asset_spec_id = unquote(path[len(asset_spec_prefix) :]).strip("/")
+            if not asset_spec_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("AssetSpec update payload")
+                allowed_fields = {
+                    "asset_type",
+                    "purpose",
+                    "description",
+                    "generation_prompt",
+                    "continuity_key",
+                    "character_profile_id",
+                    "metadata",
+                }
+                self._reject_unsupported_fields(payload, allowed_fields, "AssetSpec update payload")
+                if not payload:
+                    raise ValueError("AssetSpec update payload must include one mutable field.")
+                asset_spec = self.server.repository.get_asset_spec(asset_spec_id)
+                changes = self._asset_spec_changes(payload)
+                updated = self.server.repository.update_asset_spec_under_scene_authorization(
+                    replace(asset_spec, **changes)
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "AssetSpec or CharacterProfile not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "asset_spec",
+                    "asset_spec": self.server.repository.asset_spec_payload(updated.id),
+                }
+            )
+            return
+        self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+
+    def _read_json_object(self, label: str) -> dict:
+        content_length = int(self.headers.get("Content-Length", "0"))
+        payload = json.loads(self.rfile.read(content_length))
+        if not isinstance(payload, dict):
+            raise ValueError(f"{label} must be an object.")
+        return payload
+
+    def _read_imported_asset_content(self) -> bytes:
+        try:
+            content_length = int(self.headers.get("Content-Length", ""))
+        except ValueError as error:
+            raise ValueError("Imported Asset Content-Length must be an integer.") from error
+        if content_length < 1 or content_length > MAX_IMPORTED_ASSET_BYTES:
+            raise ValueError(
+                f"Imported Asset content must be between 1 and {MAX_IMPORTED_ASSET_BYTES} bytes."
+            )
+        content = self.rfile.read(content_length)
+        if len(content) != content_length:
+            raise ValueError(
+                "Imported Asset request body ended before Content-Length bytes arrived."
+            )
+        return content
+
+    @staticmethod
+    def _reject_unsupported_fields(payload: dict, allowed_fields: set[str], label: str) -> None:
+        if set(payload) - allowed_fields:
+            raise ValueError(f"{label} contains unsupported fields.")
+
+    @staticmethod
+    def _required_text(payload: dict, field: str, label: str) -> str:
+        value = payload.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{label} {field} must be non-empty text.")
+        return value.strip()
+
+    @staticmethod
+    def _optional_text(payload: dict, field: str, label: str) -> str | None:
+        value = payload.get(field)
+        if value is None:
+            return None
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{label} {field} must be non-empty text or null.")
+        return value.strip()
+
+    @staticmethod
+    def _optional_object(payload: dict, field: str, label: str) -> dict | None:
+        value = payload.get(field)
+        if value is None:
+            return None
+        if not isinstance(value, dict):
+            raise ValueError(f"{label} {field} must be an object or null.")
+        return value
+
+    def _scene_changes(self, payload: dict) -> dict:
+        changes = {}
+        for field in (
+            "narration_excerpt",
+            "visual_intent",
+            "hamster_action",
+            "on_screen_text",
+            "transition_note",
+        ):
+            if field in payload:
+                changes[field] = self._optional_text(payload, field, "Scene")
+                if field in {"narration_excerpt", "visual_intent"} and changes[field] is None:
+                    raise ValueError(f"Scene {field} must be non-empty text.")
+        if "sequence" in payload:
+            changes["sequence"] = payload["sequence"]
+        if "metadata" in payload:
+            changes["metadata"] = self._optional_object(payload, "metadata", "Scene") or {}
+        return changes
+
+    def _asset_spec_changes(self, payload: dict) -> dict:
+        changes = {}
+        for field in ("asset_type", "purpose", "description", "generation_prompt"):
+            if field in payload:
+                changes[field] = self._required_text(payload, field, "AssetSpec")
+        for field in ("continuity_key", "character_profile_id"):
+            if field in payload:
+                changes[field] = self._optional_text(payload, field, "AssetSpec")
+        if "metadata" in payload:
+            changes["metadata"] = self._optional_object(payload, "metadata", "AssetSpec") or {}
+        return changes
+
+    @staticmethod
+    def _scene_payload(scene) -> dict:
+        return {
+            "id": scene.id,
+            "visual_plan_id": scene.visual_plan_id,
+            "sequence": scene.sequence,
+            "narration_excerpt": scene.narration_excerpt,
+            "visual_intent": scene.visual_intent,
+            "hamster_action": scene.hamster_action,
+            "on_screen_text": scene.on_screen_text,
+            "transition_note": scene.transition_note,
+            "metadata": scene.metadata,
+        }
+
+    @staticmethod
+    def _asset_payload(asset) -> dict:
+        return {
+            "id": asset.id,
+            "asset_spec_id": asset.asset_spec_id,
+            "version": asset.version,
+            "storage_path": asset.storage_path,
+            "media_type": asset.media_type,
+            "source_kind": asset.source_kind,
+            "content_digest": asset.content_digest,
+        }
 
     def _send_json(self, payload: object, status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(payload).encode("utf-8")

@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -1824,6 +1824,233 @@ def test_editorial_gate_decisions_and_approved_visual_plans_are_exact_and_additi
         repository.close()
 
 
+def test_operational_visual_authoring_and_managed_import_require_gate_lineage(tmp_path) -> None:
+    """v0.25 reuses mutable Scene/AssetSpec models only below an approved Gate plan."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        piece, script, package, ready = _create_ready_editorial_package(repository, "visual-input")
+        approve = repository.create_editorial_gate_decision(
+            "visual-input-approve", package.id, ready.id, "Approve", "founder"
+        )
+        plan = repository.create_visual_plan_under_editorial_gate(
+            "visual-input-plan", approve.id, "Operational visual direction"
+        )
+        scene = repository.create_scene_under_visual_plan_authorization(
+            "visual-input-scene", plan.id, 1, "Narration locator.", "Visual intent."
+        )
+        updated_scene = repository.update_scene_under_visual_plan_authorization(
+            replace(scene, visual_intent="Edited visual intent.")
+        )
+        assert updated_scene.visual_intent == "Edited visual intent."
+        assert [
+            item.id for item in repository.list_scenes_under_visual_plan_authorization(plan.id)
+        ] == [scene.id]
+        asset_spec = repository.create_asset_spec_under_scene_authorization(
+            "visual-input-spec",
+            scene.id,
+            "graphic",
+            "Support the narration.",
+            "A simple visual.",
+            "Draw a simple visual.",
+        )
+        updated_spec = repository.update_asset_spec_under_scene_authorization(
+            replace(asset_spec, purpose="Support the edited narration.")
+        )
+        assert updated_spec.purpose == "Support the edited narration."
+
+        storage = LocalAssetStorage(storage_root)
+        png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDRtest"
+        historical = repository.create_asset(
+            "visual-input-historical", asset_spec.id, 4, "legacy.png", "image/png", "manual"
+        )
+        imported = repository.import_asset_under_asset_spec_authorization(
+            "visual-input-imported", asset_spec.id, png, "image/png", storage
+        )
+        assert (historical.version, imported.version) == (4, 5)
+        assert imported.source_kind == "imported"
+        assert imported.content_digest == sha256(png).hexdigest()
+        assert repository.managed_asset_path(imported.id).read_bytes() == png
+        selection = repository.create_asset_selection(
+            "visual-input-selection", asset_spec.id, imported.id
+        )
+        assert selection.asset_id == imported.id
+        assert repository.list_asset_selections_for_asset_spec(asset_spec.id) == [selection]
+        assert not hasattr(repository, "update_asset_selection")
+        repository.connection.execute(
+            "CREATE TRIGGER imported_asset_abort BEFORE INSERT ON assets "
+            "WHEN NEW.id = 'visual-input-failed-import' "
+            "BEGIN SELECT RAISE(ABORT, 'import persistence failure'); END"
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="import persistence failure"):
+            repository.import_asset_under_asset_spec_authorization(
+                "visual-input-failed-import", asset_spec.id, png, "image/png", storage
+            )
+        assert not (storage_root / asset_spec.id / "visual-input-failed-import.png").exists()
+        with pytest.raises(ValueError, match="do not match"):
+            repository.import_asset_under_asset_spec_authorization(
+                "visual-input-malformed", asset_spec.id, b"not an image", "image/png", storage
+            )
+
+        legacy_plan = repository.create_visual_plan(
+            "visual-input-legacy-plan", piece.id, script.id, "Compatibility plan"
+        )
+        with pytest.raises(ValueError, match="not authorized"):
+            repository.create_scene_under_visual_plan_authorization(
+                "visual-input-legacy-scene", legacy_plan.id, 1, "Locator", "Intent"
+            )
+        legacy_scene = repository.create_scene(
+            "visual-input-low-level-scene", legacy_plan.id, 1, "Locator", "Intent"
+        )
+        assert legacy_scene.visual_plan_id == legacy_plan.id
+        with pytest.raises(ValueError, match="not authorized"):
+            repository.create_asset_spec_under_scene_authorization(
+                "visual-input-legacy-spec",
+                legacy_scene.id,
+                "graphic",
+                "Purpose",
+                "Description",
+                "Prompt",
+            )
+    finally:
+        repository.close()
+
+
+def test_migration_20_adds_only_additive_asset_selection_history_without_backfill(tmp_path) -> None:
+    """Migration 20 preserves the existing visual foundation and adds no current-state columns."""
+
+    database = tmp_path / "atlas-v024.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:19]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-20T00:00:00+00:00')",
+                (version,),
+            )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        columns = {
+            row[1] for row in repository.connection.execute("PRAGMA table_info(asset_selections)")
+        }
+        assert columns == {
+            "id",
+            "asset_spec_id",
+            "asset_id",
+            "character_reference_set_id",
+            "created_at",
+        }
+        assert repository.connection.execute(
+            "SELECT version FROM schema_migrations WHERE version = 20"
+        ).fetchone()
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM asset_selections").fetchone()[0]
+            == 0
+        )
+        table_names = {
+            row[0]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert (
+            not {
+                "production_manifests",
+                "visual_production_snapshots",
+                "cost_ledgers",
+            }
+            & table_names
+        )
+    finally:
+        repository.close()
+
+
+def test_asset_selection_enforces_managed_digest_and_explicit_character_reference(tmp_path) -> None:
+    """Selections bind exact managed inputs without current-state or reference inference."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        _piece, _script, package, ready = _create_ready_editorial_package(repository, "selection")
+        approve = repository.create_editorial_gate_decision(
+            "selection-approve", package.id, ready.id, "Approve", "founder"
+        )
+        plan = repository.create_visual_plan_under_editorial_gate(
+            "selection-plan", approve.id, "Direction"
+        )
+        scene = repository.create_scene_under_visual_plan_authorization(
+            "selection-scene", plan.id, 1, "Locator", "Intent"
+        )
+        profile_id = "character-profile-similarstoic-hamster-core-v1"
+        character_spec = repository.create_asset_spec_under_scene_authorization(
+            "selection-character-spec",
+            scene.id,
+            "character",
+            "Show the hamster.",
+            "A canonical hamster visual.",
+            "Illustrate the hamster.",
+            character_profile_id=profile_id,
+        )
+        storage = LocalAssetStorage(storage_root)
+        png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDRtest"
+        imported = repository.import_asset_under_asset_spec_authorization(
+            "selection-character-import", character_spec.id, png, "image/png", storage
+        )
+        reference_set_id = ensure_character_reference_set(repository, storage_root, profile_id)
+        with pytest.raises(ValueError, match="require an exact CharacterReferenceSet"):
+            repository.create_asset_selection(
+                "selection-missing-reference", character_spec.id, imported.id
+            )
+        selected = repository.create_asset_selection(
+            "selection-with-reference", character_spec.id, imported.id, reference_set_id
+        )
+        assert selected.character_reference_set_id == reference_set_id
+        assert [
+            member.asset_id
+            for member in repository.list_character_reference_set_members(reference_set_id)
+        ] != [imported.id]
+
+        non_character_spec = repository.create_asset_spec_under_scene_authorization(
+            "selection-graphic-spec", scene.id, "graphic", "Purpose", "Description", "Prompt"
+        )
+        non_character_import = repository.import_asset_under_asset_spec_authorization(
+            "selection-graphic-import", non_character_spec.id, png, "image/png", storage
+        )
+        with pytest.raises(ValueError, match="non-character"):
+            repository.create_asset_selection(
+                "selection-invalid-reference",
+                non_character_spec.id,
+                non_character_import.id,
+                reference_set_id,
+            )
+        with pytest.raises(ValueError, match="exact AssetSpec"):
+            repository.create_asset_selection(
+                "selection-wrong-owner",
+                character_spec.id,
+                non_character_import.id,
+                reference_set_id,
+            )
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE assets SET content_digest = ? WHERE id = ?", ("0" * 64, imported.id)
+            )
+        with pytest.raises(ValueError, match="do not match"):
+            repository.create_asset_selection(
+                "selection-digest-mismatch", character_spec.id, imported.id, reference_set_id
+            )
+    finally:
+        repository.close()
+
+
 def test_migration_19_adds_editorial_gate_tables_without_backfill(tmp_path) -> None:
     """Migration 19 is additive over v0.23 and preserves historical VisualPlans."""
 
@@ -2188,7 +2415,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -2609,7 +2836,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -2803,7 +3030,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -2948,7 +3175,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                20,
+                21,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -2970,7 +3197,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 20"
+                "SELECT version FROM schema_migrations WHERE version = 21"
             ).fetchone()
             is None
         )
@@ -5018,7 +5245,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")
