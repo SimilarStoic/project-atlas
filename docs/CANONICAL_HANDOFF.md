@@ -21,13 +21,14 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation milestone.
-**v0.21 — Editorial Draft Package Foundation** is selected, locally implemented and pending founder
-acceptance/push. Migration 16 is canonical and migrations extend through 1–16. Phase 2 remains ACTIVE /
-INCOMPLETE and later phases remain unactivated. No successor after v0.21 is selected. v0.20 implementation was
-committed and pushed at `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c` (`feat: initiate Scripts from Ready
-ContentPieces`); its acceptance evidence remains Black 26.3.1, Ruff, 90 pytest tests and `git diff --check`. A
-fresh session must verify the live GitHub checkpoint before acting.
+**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone.
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor. Migration 16 is
+canonical and migrations extend through 1–16. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain
+unactivated. No successor after v0.21 is selected; migration 17 is absent. v0.21 implementation was committed and
+pushed at `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` (`feat: add editorial draft package foundation`), with its
+initial documentation record at `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`. Founder acceptance confirms Black
+26.3.1, Ruff, 93 pytest tests and `git diff --check` passed. A fresh session must verify the live GitHub checkpoint
+before acting.
 
 ### Current product identity
 
@@ -56,10 +57,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation
-milestone; **v0.21 — Editorial Draft Package Foundation** is locally implemented pending founder acceptance/push.
-**Phase 2 — Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through
-v0.20 implementations, v0.21 pending acceptance, and no selected successor after v0.21**, under founder + ChatGPT
+unchanged. **v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone;
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor. **Phase 2 —
+Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.21
+implementations and no selected successor after v0.21**, under founder + ChatGPT
 design/implementation stewardship. This does not authorize all Phase 2 scope or
 later-phase engines.
 
@@ -283,8 +284,8 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the historical
 accepted predecessor to v0.19. v0.17 is its historical accepted predecessor; migration 15 is canonical and
-migrations extend through 1–16. v0.20 is the latest accepted implementation milestone; v0.21 is locally
-implemented pending founder acceptance; no milestone after v0.21 is selected.
+migrations extend through 1–16. v0.21 is the latest accepted implementation milestone; v0.20 is its historical
+accepted predecessor; no milestone after v0.21 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -329,8 +330,8 @@ lineage validation, update immutability, Claim boundaries, API semantics or late
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted Phase 2 milestone. v0.19
-is its historical accepted predecessor; migration 15 remains the latest canonical migration, and Phase 2 remains ACTIVE /
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20
+is its historical accepted predecessor; migration 16 remains the latest canonical migration, and Phase 2 remains ACTIVE /
 INCOMPLETE. Founder acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
@@ -394,16 +395,16 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The latest accepted Phase 2 implementation is **v0.20 — Readiness-Lineage-Preserving Script Initiation**.
-Its bounded persistence/API contract is accepted; **v0.21 — Editorial Draft Package Foundation** is locally
-implemented pending founder acceptance/push. Material detail
+The latest accepted Phase 2 implementation is **v0.21 — Editorial Draft Package Foundation**.
+Its bounded persistence/API contract is accepted; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is its
+historical accepted predecessor. Material detail
 beyond the approved boundaries returns to founder + ChatGPT.
 
 ### v0.20 — Readiness-Lineage-Preserving Script Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted Phase 2 milestone. v0.19 is its
-historical accepted predecessor. v0.21 is its selected, locally implemented successor pending founder acceptance;
-migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.21 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20
+is its historical accepted predecessor; migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.21 is selected.
 
 v0.20 adds one deliberate lifecycle edge: eligible ContentPiece → complete immutable Script version. Eligibility is
 derived only from durable ContentPiece → EditorialAngle → exact `Ready` ResearchReadinessAssessment → ResearchPack
@@ -423,9 +424,9 @@ Validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff -
 
 ### v0.21 — Editorial Draft Package Foundation
 
-**Status: SELECTED AND AUTHORIZED; LOCALLY IMPLEMENTED, PENDING FOUNDER ACCEPTANCE/PUSH.** v0.20 remains the
-latest accepted Phase 2 milestone. Migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
-after v0.21 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20 is its
+historical accepted predecessor. Migration 16 is latest, migration 17 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.21 is selected.
 
 v0.21 adds immutable append-only TitleOption and HookOption alternatives for an eligible ContentPiece and frozen
 EditorialPackageSnapshots that bind one exact TitleOption, HookOption and Script version from that same ContentPiece.
@@ -434,7 +435,9 @@ unsynchronized compatibility data. Migration 16 adds only the three approved tab
 history indexes, without backfill. ContentPiece-scoped create/list APIs and narrow GET retrieval are included.
 
 v0.21 excludes selection/current/latest or approval state, Script-to-Claim, editorial QA/Gate, workflow, UI,
-VisualPlan, production, publishing, analytics, Learning and orchestration.
+VisualPlan, production, publishing, analytics, Learning and orchestration. Founder acceptance covers implementation
+commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation commit
+`46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and `git diff --check` passed.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -749,12 +752,10 @@ already-pushed commits, reset/clean away work, select the successor milestone or
 remains final product, business, quality, scope and acceptance authority; founder + ChatGPT remain architecture,
 specification, roadmap and milestone authority; Codex remains the bounded repository inspection and execution agent.
 
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation checkpoint.
-Its implementation was validated, committed and pushed at
-`8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is
-its historical accepted predecessor. **v0.21 — Editorial Draft Package Foundation** is locally implemented pending
-founder acceptance/push. No successor after v0.21 is selected; any scope beyond v0.21 requires a new explicit
-founder + ChatGPT decision.
+**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation checkpoint. Its implementation
+was validated, committed and pushed at `4e36cf6cfabe7e6dbe99e54804653edeec277d9a`.
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor. No successor after
+v0.21 is selected; any scope beyond v0.21 requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 

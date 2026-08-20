@@ -995,9 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted
-implementation milestone. **v0.21 — Editorial Draft Package Foundation** is selected, locally implemented and
-pending founder acceptance/push; migration 16 is canonical. No successor after v0.21 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation
+milestone. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is its historical accepted predecessor;
+migration 16 is canonical. No successor after v0.21 is selected.
 
 Implement:
 - Research
@@ -1016,17 +1016,17 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation milestone; v0.21
-— Editorial Draft Package Foundation is locally implemented pending founder acceptance/push. Migration 16 is
-canonical and migrations extend through 1–16. Phase 2 remains ACTIVE / INCOMPLETE; all remaining Phase 2 scope is
+**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone; v0.20 is its
+historical accepted predecessor. Migration 16 is canonical and migrations extend through 1–16. Phase 2 remains ACTIVE /
+INCOMPLETE; all remaining Phase 2 scope is
 unimplemented and no later phase is activated. No milestone after v0.21 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted implementation
-milestone; v0.19, v0.18, v0.17, v0.16 and v0.15 remain historical accepted predecessors. This is the
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted implementation
+milestone; v0.20, v0.19, v0.18, v0.17, v0.16 and v0.15 remain historical accepted predecessors. This is the
 first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1118,8 +1118,8 @@ than infer it.
 
 ### v0.16 — Authorized Research Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted implementation
-milestone; v0.19, v0.18, v0.17 and v0.16 remain historical accepted predecessors. Migrations are canonical through 1–15. v0.16
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted implementation
+milestone; v0.20, v0.19, v0.18, v0.17 and v0.16 remain historical accepted predecessors. Migrations are canonical through 1–16. v0.16
 does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1230,8 +1230,8 @@ boundary.
 
 ### v0.17 — Persistent Research Readiness
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted implementation milestone;
-v0.19, v0.18 and v0.17 are historical accepted predecessors. Migration 15 is canonical and migrations extend through 1–15.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted implementation milestone;
+v0.20, v0.19, v0.18 and v0.17 are historical accepted predecessors. Migration 16 is canonical and migrations extend through 1–16.
 v0.17 did not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1376,8 +1376,8 @@ must return to founder + ChatGPT rather than be inferred.
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the historical accepted predecessor to v0.19
 within **Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is
 canonical, and migrations extend through 1–15. This acceptance does not complete Phase 2 or activate a later phase.
-v0.20 is the latest accepted implementation milestone; v0.21 is locally implemented pending founder acceptance;
-no milestone after v0.21 is selected.
+v0.21 is the latest accepted implementation milestone; v0.20 is its historical accepted predecessor; no milestone
+after v0.21 is selected.
 
 Purpose:
 
@@ -1486,8 +1486,8 @@ must return to founder + ChatGPT rather than be inferred.
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted Phase 2 milestone. v0.19
-is its historical accepted predecessor; migration 15 remains the latest canonical migration, and Phase 2 remains ACTIVE /
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20
+is its historical accepted predecessor; migration 16 remains the latest canonical migration, and Phase 2 remains ACTIVE /
 INCOMPLETE. Founder acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
@@ -1737,18 +1737,19 @@ authorization, proposal, reservation, ledger or enforcement entity is approved h
 v0.15 — Persistent Idea Gate, v0.16 — Authorized Research Initiation, **v0.17 — Persistent Research Readiness**
 and **v0.18 — Readiness-Authorized Editorial Angle Initiation** are historical accepted implementation
 predecessors. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is a historical accepted implementation
-predecessor; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation
-milestone. Migration 16 is canonical and migrations extend through 1–16. Phase 2 remains ACTIVE / INCOMPLETE, and
-v0.21 is locally implemented pending founder acceptance; no milestone after v0.21 is selected.
+predecessor; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is a historical accepted implementation
+predecessor; **v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone.
+Migration 16 is canonical and migrations extend through 1–16. Phase 2 remains ACTIVE / INCOMPLETE, and no milestone
+after v0.21 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
 
 ### v0.20 — Readiness-Lineage-Preserving Script Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted Phase 2 milestone. v0.19 is its
-historical accepted predecessor. v0.21 is its selected, locally implemented successor pending founder acceptance;
-migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.21 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20
+is its historical accepted predecessor; migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.21 is selected.
 
 Purpose:
 
@@ -1777,9 +1778,9 @@ Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. Initial docum
 
 ### v0.21 — Editorial Draft Package Foundation
 
-**Status: SELECTED AND AUTHORIZED; LOCALLY IMPLEMENTED, PENDING FOUNDER ACCEPTANCE/PUSH.** v0.20 remains the
-latest accepted Phase 2 milestone. Migration 16 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
-after v0.21 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.21 is the latest accepted Phase 2 milestone. v0.20 is its
+historical accepted predecessor. Migration 16 is latest, migration 17 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.21 is selected.
 
 v0.21 adds durable append-only TitleOption and HookOption alternatives owned by one eligible ContentPiece, and an
 immutable EditorialPackageSnapshot that explicitly records one TitleOption, HookOption and exact Script version from
@@ -1790,6 +1791,9 @@ Migration 16 adds only `title_options`, `hook_options` and `editorial_package_sn
 keys and history indexes. ContentPiece-scoped APIs create/list alternatives and snapshots; narrow GET routes retrieve
 them. No current/latest/selected or approval state, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan, production,
 publishing, analytics, Learning or orchestration is included.
+Founder acceptance covers implementation commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial
+documentation commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and
+`git diff --check` passed.
 
 ## Phase 3 — Technical Architecture
 
@@ -1949,7 +1953,7 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.20 ACCEPTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.21 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
@@ -1957,8 +1961,8 @@ toward:
   is its historical accepted milestone; v0.17 — Persistent Research Readiness is its historical accepted
   predecessor; v0.18 — Readiness-Authorized Editorial Angle Initiation is its historical accepted predecessor;
   v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its historical accepted predecessor;
-  v0.20 — Readiness-Lineage-Preserving Script Initiation is its latest accepted implementation milestone;
-  v0.21 — Editorial Draft Package Foundation is locally implemented pending founder acceptance;
+  v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor;
+  v0.21 — Editorial Draft Package Foundation is its latest accepted implementation milestone;
   no milestone after v0.21 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade

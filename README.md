@@ -5,9 +5,9 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.20 —
-Readiness-Lineage-Preserving Script Initiation; v0.21 — Editorial Draft Package Foundation is selected, locally
-implemented and pending founder acceptance/push. Migration 16 is the latest canonical migration and Phase 2 remains
+SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.21 — Editorial Draft Package
+Foundation; v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor. Migration
+16 is the latest canonical migration and Phase 2 remains
 ACTIVE / INCOMPLETE. No successor after v0.21 is selected. Later workflow, research automation and production
 systems remain deferred.
 
@@ -48,7 +48,7 @@ canonical roadmap and must not redefine it.
 
 Phase 2 is now **ACTIVE / INCOMPLETE**. v0.20 Readiness-Lineage-Preserving Script Initiation is the latest
 accepted implementation milestone; v0.19 Editorial-Angle-Authorized ContentPiece Initiation is its historical
-accepted predecessor. v0.21 Editorial Draft Package Foundation is locally implemented pending founder acceptance.
+accepted predecessor. v0.21 Editorial Draft Package Foundation is the latest accepted implementation milestone.
 Migrations 1–16 are canonical, with migration 16 the latest canonical migration. No successor after v0.21 is
 selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
@@ -100,24 +100,26 @@ migration, duplicate assessment reference, workflow state, downstream editorial/
 acceptance covers commit `32812e6793d9b06632ebffd82504cd8810c2ab3d`, validated by Black 26.3.1, Ruff, 88 passing
 pytest tests and `git diff --check`. v0.20 is its accepted successor.
 
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation milestone. It
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the historical accepted predecessor to v0.21. It
 deliberately appends one complete immutable Script version from a ContentPiece only when its
 stored ContentPiece → EditorialAngle → exact Ready assessment → ResearchPack → Opportunity lineage is internally
 consistent. Conveyor derives the next version from Script history; low-level Script creation remains compatible.
 `POST /api/content-pieces/{content_piece_id}/scripts` accepts only Script ID, narration text and optional metadata.
 No migration, duplicate readiness provenance, Title/Hook, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan,
-production, publishing, analytics or orchestration is included. v0.21 is its locally implemented successor pending
-founder acceptance; no successor after v0.21 is selected.
+production, publishing, analytics or orchestration is included. v0.21 is its accepted successor; no successor after
+v0.21 is selected.
 Local validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff --check`.
 Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. Initial documentation commit:
 `4ddab9749c2159ad7a9801f0af1d5365046ac793`.
 
-**v0.21 — Editorial Draft Package Foundation** is selected and locally implemented, pending founder
-acceptance/push. It adds append-only TitleOption and HookOption alternatives and immutable
+**v0.21 — Editorial Draft Package Foundation** is the latest accepted implementation milestone. It adds append-only
+TitleOption and HookOption alternatives and immutable
 EditorialPackageSnapshots that explicitly join one TitleOption, HookOption and Script from one eligible
 ContentPiece. Migration 16 is additive and introduces only these durable records, restrictive foreign keys and
 history indexes. `working_title` remains unsynchronized compatibility data. No selection/current/latest or approval
-state, Script-to-Claim, QA/Gate, UI, production, publishing, analytics or orchestration is included.
+state, Script-to-Claim, QA/Gate, UI, production, publishing, analytics or orchestration is included. Founder
+acceptance covers implementation commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation
+commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and `git diff --check` passed.
 
 ## Technology baseline
 
@@ -436,7 +438,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.20 — Readiness-Lineage-Preserving Script Initiation is the latest accepted implementation checkpoint; v0.21 is
-locally implemented pending founder acceptance. Migrations 1–16 are canonical, with migration 16 the latest
+v0.21 — Editorial Draft Package Foundation is the latest accepted implementation checkpoint; v0.20 is its
+historical accepted predecessor. Migrations 1–16 are canonical, with migration 16 the latest
 canonical migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.21 is selected, and later Conveyor
 systems remain out of scope.

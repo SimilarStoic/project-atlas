@@ -6,14 +6,14 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.20 ACCEPTED; v0.21 PENDING FOUNDER ACCEPTANCE)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.21 ACCEPTED)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship; v0.20 — Readiness-Lineage-Preserving Script Initiation is the latest accepted
-implementation milestone and v0.21 — Editorial Draft Package Foundation is selected, locally implemented and pending
-founder acceptance/push. Migration 16 is canonical and migrations extend through 1–16. Remaining Phase 2 scope is
+design/implementation stewardship; v0.21 — Editorial Draft Package Foundation is the latest accepted implementation
+milestone and v0.20 is its historical accepted predecessor. Migration 16 is canonical and migrations extend through
+1–16. Remaining Phase 2 scope is
 unimplemented, later phases remain unactivated, and no milestone after v0.21 is selected. Atlas v0.1 through v0.7
 are complete and pushed.
 
@@ -124,8 +124,8 @@ publishing, analytics or orchestration is included. The API is
 - Founder + ChatGPT acceptance is granted for implementation commit
   `32812e6793d9b06632ebffd82504cd8810c2ab3d`.
 - Validation passed: Black 26.3.1 `--check`, Ruff, **88 pytest tests**, and `git diff --check`.
-- v0.20 remains the latest accepted implementation milestone; v0.21 is locally implemented pending founder
-  acceptance. Migration 16 is latest and no milestone after v0.21 is selected.
+- v0.21 is the latest accepted implementation milestone; no milestone after v0.21 is selected. Migration 16 is
+  latest and migration 17 is absent.
 
 ## v0.20 Accepted Checkpoint
 
@@ -140,14 +140,13 @@ existing versions, while low-level Script creation remains compatible.
 The narrow API is `POST /api/content-pieces/{content_piece_id}/scripts`, accepting only Script ID, narration text
 and optional metadata. It rejects caller version/readiness/lineage overrides and invalid provenance. No migration,
 Title/Hook, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan, production, publishing, analytics or orchestration
-is included. v0.21 is its selected, locally implemented successor pending founder acceptance; migration 16 is now
-latest. No successor after v0.21 is selected.
+is included. v0.21 is its accepted successor; migration 16 is now latest. No successor after v0.21 is selected.
 Validation passed: Black 26.3.1 `--check`, Ruff, **90 pytest tests**, and `git diff --check`.
 
 - Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`.
 - Initial documentation commit: `4ddab9749c2159ad7a9801f0af1d5365046ac793`.
 
-## v0.21 Local Implementation Pending Founder Acceptance
+## v0.21 Accepted Checkpoint
 
 **v0.21 — Editorial Draft Package Foundation** adds durable, append-only `TitleOption` and `HookOption` records
 for one eligible ContentPiece, plus immutable `EditorialPackageSnapshot` records that freeze one explicitly supplied
@@ -161,8 +160,11 @@ the new records. Migration 16 is additive only: it adds `title_options`, `hook_o
 state. The API exposes ContentPiece-scoped create/history routes and narrow record retrieval routes.
 
 v0.21 excludes package approval, current/latest/selected semantics, Script-to-Claim, editorial QA/Gate, workflow,
-UI, production, publishing, analytics, Learning and orchestration. It is locally implemented and validated pending
-founder acceptance/push. No successor after v0.21 is selected.
+UI, production, publishing, analytics, Learning and orchestration. It is accepted. No successor after v0.21 is
+selected. Validation passed: Black 26.3.1 `--check`, Ruff, **93 pytest tests**, and `git diff --check`.
+
+- Implementation commit: `4e36cf6cfabe7e6dbe99e54804653edeec277d9a`.
+- Initial documentation commit: `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`.
 
 ## Atlas v0.2 Checkpoint
 
@@ -1007,8 +1009,8 @@ ResearchPack and assessment → same ResearchPack lineage; it rejects missing, c
 Blocked input. No latest/current selection, consumption, readiness mutation, frozen Claim matching, ContentPiece,
 Script, `Opportunity.status` mutation, workflow entity, provider call, UI or Phase 5 automation is authorized.
 Migration 15 is canonical, limited to the nullable restrictive FK and lineage index. Migrations extend through
-1–16. v0.20 — Readiness-Lineage-Preserving Script Initiation is the latest accepted implementation milestone; v0.21
-is locally implemented pending founder acceptance, and no milestone after v0.21 is selected.
+1–16. v0.21 — Editorial Draft Package Foundation is the latest accepted implementation milestone; v0.20 is its
+historical accepted predecessor, and no milestone after v0.21 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -1027,10 +1029,10 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.20 — Readiness-Lineage-Preserving Script Initiation is the latest
-accepted implementation milestone; v0.21 — Editorial Draft Package Foundation is locally implemented pending founder
-acceptance. Migration 16 is canonical and migrations extend through 1–16. No milestone after v0.21 is selected. The
-exact immediate next action is founder + ChatGPT acceptance and push decision for v0.21.
+Phase 2 remains active and incomplete. v0.21 — Editorial Draft Package Foundation is the latest accepted
+implementation milestone; v0.20 is its historical accepted predecessor. Migration 16 is canonical and migrations
+extend through 1–16. No milestone after v0.21 is selected. The exact immediate next action is founder + ChatGPT
+design and selection of the next bounded milestone.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
