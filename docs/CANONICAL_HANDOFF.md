@@ -24,8 +24,9 @@ existing GitHub roadmap and specification remain authoritative.
 **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation milestone.
 **v0.18 — Readiness-Authorized Editorial Angle Initiation** is its historical accepted predecessor. Migration 15
 is canonical and migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain
-unactivated. No successor after v0.19 is selected: no v0.20, Editorial Draft Package slice or migration 16 is
-authorized. Its implementation was committed and pushed at
+unactivated. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is selected, locally implemented and
+pending founder acceptance/push. No successor after v0.20 is selected; migration 16 is absent. v0.19 implementation
+was committed and pushed at
 `32812e6793d9b06632ebffd82504cd8810c2ab3d` (`feat: initiate ContentPieces from Ready EditorialAngles`). Founder
 acceptance confirms Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed. A fresh
 session must verify the live GitHub checkpoint before acting.
@@ -58,10 +59,11 @@ continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
 unchanged. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation
-milestone; v0.18 is its historical accepted predecessor. **Phase 2 — Content Operating Model is the current
-ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.19 implementations and no selected successor**,
-under founder + ChatGPT design/implementation stewardship. This does not authorize all Phase 2 scope or later-phase
-engines.
+milestone; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is locally implemented pending founder
+acceptance/push. **Phase 2 — Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with
+accepted v0.15 through v0.19 implementations, v0.20 pending founder acceptance, and no selected successor after
+v0.20**, under founder + ChatGPT design/implementation stewardship. This does not authorize all Phase 2 scope or
+later-phase engines.
 
 ## Accepted end-to-end target operating model
 
@@ -283,7 +285,8 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the historical
 accepted predecessor to v0.19. v0.17 is its historical accepted predecessor; migration 15 is canonical and
-migrations extend through 1–15. No milestone after v0.19 is selected.
+migrations extend through 1–15. v0.20 is locally implemented pending founder acceptance/push; no milestone after
+v0.20 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -330,7 +333,8 @@ lineage validation, update immutability, Claim boundaries, API semantics or late
 
 **Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.19 is the latest accepted Phase 2 milestone. v0.18 is its
 historical accepted predecessor, migration 15 remains the latest canonical migration, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.19 is selected. Founder acceptance covers implementation commit
+INCOMPLETE, and v0.20 is its selected successor, locally implemented and pending founder acceptance/push. Founder
+acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Its purpose is the next smallest deliberate lifecycle edge:
@@ -375,7 +379,8 @@ v0.19 excludes a full editorial package; Title; Hook; Script creation; Script-to
 versioning, snapshots, revalidation, generation or ranking; provider/model calls; research automation; readiness
 evaluator; machine editorial QA; Editorial Gate; spend authorization; generic workflow/progression state; jobs,
 queues or UI; image/visual generation; automated reference selection or visual-consistency QA; production,
-publishing, analytics, Learning Gate implementation and orchestration. No milestone after v0.19 is selected.
+publishing, analytics, Learning Gate implementation and orchestration. v0.20 is a separate selected successor;
+v0.19's accepted boundary remains unchanged.
 
 The target second half is Editorial package → Editorial Gate approval + bounded spend authorization →
 production within the authorized envelope → machine production/brand/risk QA → publication readiness →
@@ -394,8 +399,27 @@ Phase 9. No placeholder entities are approved.
 
 The latest accepted Phase 2 implementation is **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation**.
 Its bounded persistence/API contract is accepted; **v0.18 — Readiness-Authorized Editorial Angle Initiation** is
-its historical accepted predecessor. No successor after v0.19 is selected. Material detail beyond its approved
-boundary returns to founder + ChatGPT.
+its historical accepted predecessor. v0.20 is locally implemented pending founder acceptance/push. Material detail
+beyond the approved boundaries returns to founder + ChatGPT.
+
+### v0.20 — Readiness-Lineage-Preserving Script Initiation
+
+**Status: SELECTED AND AUTHORIZED; LOCALLY IMPLEMENTED, PENDING FOUNDER ACCEPTANCE/PUSH.** v0.19 remains the
+latest accepted Phase 2 milestone. Migration 15 remains latest, migration 16 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.20 is selected.
+
+v0.20 adds one deliberate lifecycle edge: eligible ContentPiece → complete immutable Script version. Eligibility is
+derived only from durable ContentPiece → EditorialAngle → exact `Ready` ResearchReadinessAssessment → ResearchPack
+→ Opportunity lineage. The dedicated repository operation accepts ContentPiece ID, Script ID, narration text and
+optional existing Script metadata; it derives version 1 or maximum existing version plus one from immutable history.
+It neither accepts a caller version/readiness ID nor adds a lifecycle marker, current/latest state, duplicate
+readiness FK, revalidation, mutation or consumption. Existing low-level Script creation remains compatible.
+
+`POST /api/content-pieces/{content_piece_id}/scripts` accepts only `id`, `narration_text` and optional `metadata`.
+Missing caller ContentPiece is 404-style; broken or non-Ready stored lineage is 400-style. No migration, Title/Hook,
+editorial package, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan, production, publishing, analytics, Learning,
+orchestration, visual-canon or later-phase work is included.
+Local validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff --check`.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -712,9 +736,9 @@ specification, roadmap and milestone authority; Codex remains the bounded reposi
 
 **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation checkpoint.
 Its implementation was validated, committed and pushed at
-`32812e6793d9b06632ebffd82504cd8810c2ab3d`. No successor after v0.19 is selected; its immediate next action is
-founder + ChatGPT design and selection of the next bounded milestone. Any scope beyond v0.19 requires a new
-explicit founder + ChatGPT decision.
+`32812e6793d9b06632ebffd82504cd8810c2ab3d`. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is
+selected, locally implemented and pending founder acceptance/push. No successor after v0.20 is selected; any scope
+beyond v0.20 requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 

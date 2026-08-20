@@ -6,15 +6,16 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.19 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.19 ACCEPTED; v0.20 PENDING FOUNDER ACCEPTANCE)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
 design/implementation stewardship; v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the latest accepted
-implementation milestone and v0.18 is its historical accepted predecessor. Migration 15 is canonical and migrations
-extend through 1–15. Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and no milestone
-after v0.19 is selected. Atlas v0.1 through v0.7 are complete and pushed.
+implementation milestone and v0.20 — Readiness-Lineage-Preserving Script Initiation is locally implemented and
+pending founder acceptance/push. Migration 15 is canonical and migrations extend through 1–15. Remaining Phase 2
+scope is unimplemented, later phases remain unactivated, and no milestone after v0.20 is selected. Atlas v0.1 through
+v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -123,8 +124,23 @@ publishing, analytics or orchestration is included. The API is
 - Founder + ChatGPT acceptance is granted for implementation commit
   `32812e6793d9b06632ebffd82504cd8810c2ab3d`.
 - Validation passed: Black 26.3.1 `--check`, Ruff, **88 pytest tests**, and `git diff --check`.
-- The next action is founder + ChatGPT design and selection of the next bounded milestone. No successor after
-  v0.19 is selected: no v0.20, Editorial Draft Package slice or migration 16 is authorized.
+- v0.20 is the selected/authorized successor, locally implemented and pending founder acceptance/push; no milestone
+  after v0.20 is selected. Migration 16 remains absent.
+
+## v0.20 Local Implementation Pending Founder Acceptance
+
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** adds one deliberate lifecycle edge:
+an eligible ContentPiece → one complete immutable Script version. Eligibility is derived only from durable
+ContentPiece → EditorialAngle → exact `Ready` ResearchReadinessAssessment → ResearchPack → Opportunity lineage;
+it does not record a lifecycle marker, add readiness provenance to Script or ContentPiece, select another Ready
+assessment, or revalidate research. The repository allocates each new Script version as immutable history from
+existing versions, while low-level Script creation remains compatible.
+
+The narrow API is `POST /api/content-pieces/{content_piece_id}/scripts`, accepting only Script ID, narration text
+and optional metadata. It rejects caller version/readiness/lineage overrides and invalid provenance. No migration,
+Title/Hook, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan, production, publishing, analytics or orchestration
+is included. Migration 15 remains latest; migration 16 is absent. No successor after v0.20 is selected.
+Validation passed: Black 26.3.1 `--check`, Ruff, **90 pytest tests**, and `git diff --check`.
 
 ## Atlas v0.2 Checkpoint
 
@@ -969,7 +985,8 @@ Blocked input. No latest/current selection, consumption, readiness mutation, fro
 Script, `Opportunity.status` mutation, workflow entity, provider call, UI or Phase 5 automation is authorized.
 Migration 15 is canonical, limited to the nullable restrictive FK and lineage index. Migrations extend through
 1–15. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the latest accepted implementation milestone;
-no milestone after v0.19 is selected.
+v0.20 — Readiness-Lineage-Preserving Script Initiation is locally implemented pending founder acceptance/push, and
+no milestone after v0.20 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -990,8 +1007,9 @@ formally closed: the final production-ready SimilarStoic brand identity is **APP
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 remains active and incomplete. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the latest
 accepted implementation milestone; v0.18 is its historical accepted predecessor. Migration 15 is canonical and
-migrations extend through 1–15. No milestone after v0.19 is selected. The exact immediate next action is founder +
-ChatGPT design and selection of the next bounded milestone.
+migrations extend through 1–15. v0.20 — Readiness-Lineage-Preserving Script Initiation is locally implemented
+pending founder acceptance/push; no milestone after v0.20 is selected. The exact immediate next action is founder +
+ChatGPT review, acceptance and push decision for v0.20.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
