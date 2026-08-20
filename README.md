@@ -5,10 +5,11 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted
-implementation milestone; v0.23 — Deterministic Editorial Readiness Assessment is its historical accepted predecessor.
-Migration 19 is the latest canonical migration, migration 20 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No
-successor after v0.24 is selected. Later workflow, research automation and production systems remain deferred.
+SQLite foundation for SimilarStoic. v0.24 — Editorial Gate + Approved VisualPlan Initiation remains the latest accepted
+implementation milestone. v0.25 — Operational Visual Production Inputs is locally implemented and pending founder
+acceptance/push. Migration 20 is the latest canonical migration, migration 21 is absent, and Phase 2 remains ACTIVE /
+INCOMPLETE. No successor after v0.25 is selected. Later workflow, research automation and production systems remain
+deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -45,10 +46,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.24 Editorial Gate + Approved VisualPlan Initiation is the latest accepted
-implementation milestone; v0.23 Deterministic Editorial Readiness Assessment is its historical accepted predecessor.
-Migrations 1–19 are canonical, with migration 19 the latest canonical migration and migration 20 absent. No successor
-after v0.24 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.24 Editorial Gate + Approved VisualPlan Initiation remains the latest
+accepted implementation milestone; v0.25 Operational Visual Production Inputs is locally implemented and pending
+founder acceptance/push. Migrations 1–20 are canonical, with migration 20 latest and migration 21 absent. No successor
+after v0.25 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -178,6 +179,30 @@ Validation: Black 26.3.1 formatting equivalence passed across 10 repository Pyth
 check. The documented Black CLI command could not terminate in this Windows host because of a process-runtime hang;
 this is a host exception, not a formatting failure. Ruff passed, **102 pytest tests** passed, and `git diff --check`
 passed.
+
+## v0.25 Pending Founder Acceptance
+
+**v0.25 — Operational Visual Production Inputs** is selected and locally implemented, pending founder acceptance and
+push. v0.24 remains the latest accepted predecessor; migration 20 is latest, migration 21 is absent, Phase 2 remains
+ACTIVE / INCOMPLETE and no successor after v0.25 is selected.
+
+Gate-authorized VisualPlans now support dedicated ordered Scene and AssetSpec authoring while retaining their existing
+mutable models and compatibility low-level operations. Every dedicated path re-resolves exact `Approve` Editorial Gate
+lineage; no Scene or AssetSpec is snapped or moved. Managed manual import accepts bounded PNG, JPEG or WebP bytes and
+derives safe storage, version, `imported` source kind and SHA-256 server-side. Imported and generated managed image
+content remains retrievable only by registered Asset ID.
+
+Migration 20 adds only immutable additive `AssetSelection` history: one exact AssetSpec, one exact Asset and an optional
+exact CharacterReferenceSet. There is no current/latest/best/ranking state. Imported character selections require an
+explicit matching CharacterReferenceSet; imported non-character selections require none; generated selections preserve
+GenerationExecution provenance and reject manual reference overrides. Provider generation remains optional and unchanged.
+
+The API adds dedicated Scene/AssetSpec authoring, managed import, Asset history/content and AssetSelection create/list/get
+surfaces. v0.25 adds no narration, captions, timing, rendering, final-media artifact or manifest, QA, paid production,
+provider/spend/cost work, UI, publishing, analytics, Learning, workflow or successor scope. Implementation commit:
+`065e10bc6e36bf009f54fbce9a0135ef0cae9273`. Validation pending documentation synchronization: Ruff, **107 pytest tests**
+and `git diff --check` passed; Black 26.3.1 formatting equivalence across 10 repository Python files passed through the
+accepted in-process API check after the documented Windows CLI worker-process hang.
 
 ## Technology baseline
 
@@ -496,7 +521,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted implementation checkpoint; v0.23 —
-Deterministic Editorial Readiness Assessment is its historical accepted predecessor. Migrations 1–19 are canonical,
-with migration 19 latest and migration 20 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.24 is
-selected, and later Conveyor systems remain out of scope.
+v0.24 — Editorial Gate + Approved VisualPlan Initiation remains the latest accepted implementation checkpoint; v0.25
+— Operational Visual Production Inputs is locally implemented and pending founder acceptance/push. Migrations 1–20 are
+canonical, with migration 20 latest and migration 21 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.25
+is selected, and later Conveyor systems remain out of scope.

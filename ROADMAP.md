@@ -995,9 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.24 — Editorial Gate + Approved VisualPlan Initiation** is the latest accepted
-implementation milestone; **v0.23 — Deterministic Editorial Readiness Assessment** is its historical accepted
-predecessor. Migration 19 is canonical, migration 20 is absent, and no successor after v0.24 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.24 — Editorial Gate + Approved VisualPlan Initiation** remains the latest accepted
+implementation milestone; **v0.25 — Operational Visual Production Inputs** is locally implemented and pending founder
+acceptance/push. Migration 20 is canonical, migration 21 is absent, and no successor after v0.25 is selected.
 
 Implement:
 - Research
@@ -1016,10 +1016,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.24 — Editorial Gate + Approved VisualPlan Initiation** is the latest accepted implementation milestone; v0.23
-— Deterministic Editorial Readiness Assessment is its historical accepted predecessor. Migration 19 is canonical and
-migrations extend through 1–19; migration 20 is absent. Phase 2 remains ACTIVE / INCOMPLETE; all remaining Phase 2
-scope is unimplemented and no later phase is activated. No successor after v0.24 is selected.
+**v0.24 — Editorial Gate + Approved VisualPlan Initiation** remains the latest accepted implementation milestone;
+v0.25 — Operational Visual Production Inputs is locally implemented and pending founder acceptance/push. Migration 20
+is canonical and migrations extend through 1–20; migration 21 is absent. Phase 2 remains ACTIVE / INCOMPLETE; all
+remaining Phase 2 scope is unimplemented and no later phase is activated. No successor after v0.25 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1862,9 +1862,9 @@ implementation commit `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-sta
 
 ### v0.24 — Editorial Gate + Approved VisualPlan Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 is the latest accepted Phase 2 milestone; v0.23 is its
-historical accepted predecessor. Migration 19 is latest, migration 20 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.24 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 remains the latest accepted Phase 2 milestone and is the
+accepted predecessor to locally implemented v0.25; v0.23 is its historical accepted predecessor. Migration 20 is now
+latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE and no successor after v0.25 is selected.
 
 v0.24 adds one exact human-decision boundary: immutable, additive `EditorialGateDecision` history over one supplied
 immutable `EditorialPackageSnapshot` and one supplied exact `Ready` `EditorialReadinessAssessment`. Its only outcomes
@@ -1887,6 +1887,39 @@ analytics, Learning, orchestration or successor scope. Implementation commit:
 `ae993dae6732a2cb456f57e3d070cd315c77a30b`. Black 26.3.1 formatting equivalence passed across 10 repository Python
 files through the in-process API check; the documented CLI hangs in this Windows host as a process-runtime exception.
 Ruff passed, **102 pytest tests** passed, and `git diff --check` passed.
+
+### v0.25 — Operational Visual Production Inputs
+
+**Status: LOCALLY IMPLEMENTED / PENDING FOUNDER ACCEPTANCE AND PUSH.** v0.25 is selected and locally implemented;
+v0.24 is its latest accepted predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE and no successor after v0.25 is selected.
+
+This bounded milestone operationalizes the existing visual foundation only through the exact accepted chain:
+`Approve EditorialGateDecision → Gate-authorized VisualPlan → ordered editable Scene → editable AssetSpec → managed
+immutable Asset → immutable AssetSelection`. Dedicated Scene and AssetSpec authoring revalidates Gate provenance and
+preserves immutable ownership. Existing low-level/demo operations remain compatible without backfill; no Scene or
+AssetSpec snapshot, timing or video-editing model is introduced.
+
+Manual/no-cost Asset import is first-class. Bounded PNG, JPEG and WebP bytes are validated, copied below Conveyor's
+managed storage root, assigned server-derived immutable AssetSpec-local version, SHA-256 digest, relative managed path
+and `imported` source kind. Content is retrievable only from a registered safe managed Asset record; arbitrary external
+paths and caller-controlled path/version/digest/source fields are rejected. Provider generation remains optional and
+unchanged.
+
+Migration 20 adds only immutable additive `asset_selections` with exact AssetSpec and Asset FKs, nullable exact
+CharacterReferenceSet FK, created time and direct history/reverse lookup indexes. Multiple records are permitted; no
+current/latest/best/active/ranking/superseded state exists. Selection validates managed content and digest. Imported
+character Assets require an explicit exact CharacterReferenceSet matching the AssetSpec CharacterProfile; imported
+non-character Assets require none. Generated Assets retain their existing GenerationExecution provenance and reject a
+manual reference-set override. Reference-set membership is unchanged.
+
+The narrow API adds Gate-qualified Scene and AssetSpec create/list/update, raw managed import under an AssetSpec,
+Asset history/content retrieval and AssetSelection create/list/get. v0.25 adds no narration, captions, timing,
+timeline, renderer, MP4, final artifact or manifest, QA, paid provider/spend/cost work, UI, workflow, publishing,
+analytics, Learning or successor scope. Implementation commit: `065e10bc6e36bf009f54fbce9a0135ef0cae9273`. Validation
+pending documentation synchronization: Ruff passed, **107 pytest tests** passed and `git diff --check` passed; Black
+26.3.1 formatting equivalence passed for 10 repository Python files through the accepted in-process API check after the
+documented Windows CLI worker-process hang.
 
 ## Phase 3 — Technical Architecture
 
@@ -2046,7 +2079,7 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.23 ACCEPTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.25 locally implemented / pending founder acceptance):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
@@ -2056,9 +2089,10 @@ toward:
   v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its historical accepted predecessor;
   v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor;
   v0.21 — Editorial Draft Package Foundation is its historical accepted predecessor;
-  v0.24 — Editorial Gate + Approved VisualPlan Initiation is its latest accepted implementation milestone;
-  v0.23 — Deterministic Editorial Readiness Assessment is its historical accepted predecessor;
-  migration 19 is latest, migration 20 is absent, and no successor after v0.24 is selected;
+  v0.24 — Editorial Gate + Approved VisualPlan Initiation remains its latest accepted implementation milestone;
+  v0.25 — Operational Visual Production Inputs is locally implemented and pending founder acceptance/push;
+  v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
+  migration 20 is latest, migration 21 is absent, and no successor after v0.25 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

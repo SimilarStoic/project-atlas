@@ -6,16 +6,16 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.24 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.25 locally implemented / pending founder acceptance)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted
-implementation milestone and v0.23 — Deterministic Editorial Readiness Assessment is its historical accepted
-predecessor. Migration 19 is canonical and migrations extend through 1–19; migration 20 is absent. Remaining Phase 2
-scope is unimplemented, later phases remain unactivated, and no successor after v0.24 is selected. Atlas v0.1 through v0.7
-are complete and pushed.
+design/implementation stewardship. v0.24 — Editorial Gate + Approved VisualPlan Initiation remains the latest
+accepted implementation milestone. v0.25 — Operational Visual Production Inputs is selected, locally implemented and
+pending founder acceptance/push; no successor after v0.25 is selected. Migration 20 is canonical and migrations extend
+through 1–20; migration 21 is absent. Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and
+Atlas v0.1 through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -221,6 +221,38 @@ documentation commit `64e5da9183d9a0fe1492e6968f266f26abd4538c`. Validation pass
 **99 pytest tests**, and `git diff --check`. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the accepted
 successor; v0.23 is its historical accepted predecessor. Migration 19 is latest; migration 20 is absent. Phase 2
 remains ACTIVE / INCOMPLETE and no successor after v0.24 is selected.
+
+## v0.25 Pending Founder Acceptance
+
+**v0.25 — Operational Visual Production Inputs** is selected and locally implemented, pending founder acceptance and
+push. v0.24 remains the latest accepted predecessor; Phase 2 remains ACTIVE / INCOMPLETE; no successor after v0.25 is
+selected.
+
+The existing mutable Scene and AssetSpec models are reused, but dedicated authoring requires a VisualPlan whose
+immutable `visual_plan_gate_provenance` resolves through an exact `Approve` `EditorialGateDecision` and its exact
+`Ready` package lineage. Historical/demo low-level operations remain compatible and are not backfilled. Scenes and
+AssetSpecs remain editable until a later final-media milestone; v0.25 creates no production snapshot.
+
+Manual/no-cost image import is first-class. The server accepts bounded PNG, JPEG or WebP bytes, validates their
+declared format, writes a new managed copy, derives its immutable per-AssetSpec version and SHA-256 digest, and records
+server-derived `imported` provenance. Arbitrary external paths, caller versions, digests, managed paths and source kinds
+are not production inputs. Registered managed imported and generated image content remains safely retrievable only by
+Asset ID.
+
+Migration 20 adds only additive immutable `asset_selections`: exact AssetSpec, exact Asset, optional exact
+CharacterReferenceSet and creation time, with restrictive foreign keys and history/reverse lookup indexes. There is no
+current/latest/best/active/ranking state and multiple historical selections remain valid. Imported character Asset
+selections require a caller-supplied exact CharacterReferenceSet matching the AssetSpec CharacterProfile; imported
+non-character selections carry none. Generated Assets preserve their GenerationExecution provenance and cannot receive
+a manual reference-set override. No ReferenceSet membership is created or changed.
+
+The narrow API adds Gate-qualified Scene and AssetSpec create/list/update routes, raw managed Asset import under an
+AssetSpec, Asset history/content retrieval, and immutable AssetSelection create/list/get routes. v0.25 does not add
+narration, captions, timing, rendering, MP4 output, manifests, QA, provider changes, paid production, spend/cost,
+workflow, UI, publishing, analytics, Learning or successor scope. Implementation commit:
+`065e10bc6e36bf009f54fbce9a0135ef0cae9273`. Validation pending documentation synchronization: Ruff passed, **107
+pytest tests** passed and `git diff --check` passed; Black 26.3.1 formatting equivalence across the 10 repository Python
+files passed through the accepted in-process API check after the documented Windows CLI worker-process hang.
 
 ## v0.24 Accepted Checkpoint
 
@@ -1116,10 +1148,11 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted
-implementation milestone; v0.23 is its historical accepted predecessor. Migration 19 is canonical and migrations
-extend through 1–19; migration 20 is absent. No successor after v0.24 is selected. The exact immediate next action is
-founder + ChatGPT critical-path design for the operational visual-production bundle.
+Phase 2 remains active and incomplete. v0.24 — Editorial Gate + Approved VisualPlan Initiation remains the latest
+accepted implementation milestone; v0.25 — Operational Visual Production Inputs is locally implemented and pending
+founder acceptance/push. Migration 20 is canonical and migrations extend through 1–20; migration 21 is absent. No
+successor after v0.25 is selected. The exact immediate next action is founder review, acceptance and protected push
+authorization for v0.25.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
