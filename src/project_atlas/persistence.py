@@ -278,6 +278,19 @@ class EditorialReadinessAssessment:
 
 
 @dataclass(frozen=True)
+class EditorialGateDecision:
+    """An immutable human decision over one exact Ready editorial proposition."""
+
+    id: str
+    editorial_package_snapshot_id: str
+    editorial_readiness_assessment_id: str
+    outcome: str
+    actor: str
+    comment: str | None
+    created_at: str
+
+
+@dataclass(frozen=True)
 class VisualPlan:
     """A visual translation plan for one immutable Script version."""
 
@@ -288,6 +301,15 @@ class VisualPlan:
     metadata: dict[str, Any]
     created_at: str
     updated_at: str
+
+
+@dataclass(frozen=True)
+class VisualPlanGateProvenance:
+    """The exact approved Editorial Gate decision that initiated one VisualPlan."""
+
+    visual_plan_id: str
+    editorial_gate_decision_id: str
+    created_at: str
 
 
 @dataclass(frozen=True)
@@ -395,6 +417,7 @@ GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
 RESEARCH_READINESS_OUTCOMES = frozenset({"Ready", "NeedsMoreResearch", "Blocked"})
 EDITORIAL_READINESS_OUTCOMES = frozenset({"Ready", "NotReady"})
+EDITORIAL_GATE_DECISION_OUTCOMES = frozenset({"Approve", "Revise", "Reject"})
 EDITORIAL_READINESS_ASSESSMENT_SCHEMA_VERSION = 1
 EDITORIAL_READINESS_EVALUATOR_ID = "deterministic-editorial-readiness"
 EDITORIAL_READINESS_EVALUATOR_VERSION = "v1"
@@ -1009,6 +1032,48 @@ MIGRATIONS: tuple[Migration, ...] = (
             """
         CREATE INDEX idx_editorial_readiness_assessments_package_created
           ON editorial_readiness_assessments (editorial_package_snapshot_id, created_at, id)
+        """,
+        ),
+    ),
+    (
+        19,
+        (
+            """
+        CREATE TABLE editorial_gate_decisions (
+          id TEXT PRIMARY KEY,
+          editorial_package_snapshot_id TEXT NOT NULL,
+          editorial_readiness_assessment_id TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('Approve', 'Revise', 'Reject')),
+          actor TEXT NOT NULL CHECK (length(trim(actor)) > 0),
+          comment TEXT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (editorial_package_snapshot_id)
+            REFERENCES editorial_package_snapshots(id) ON DELETE RESTRICT,
+          FOREIGN KEY (editorial_readiness_assessment_id)
+            REFERENCES editorial_readiness_assessments(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE INDEX idx_editorial_gate_decisions_package_created
+          ON editorial_gate_decisions (editorial_package_snapshot_id, created_at, id)
+        """,
+            """
+        CREATE INDEX idx_editorial_gate_decisions_assessment
+          ON editorial_gate_decisions (editorial_readiness_assessment_id)
+        """,
+            """
+        CREATE TABLE visual_plan_gate_provenance (
+          visual_plan_id TEXT PRIMARY KEY,
+          editorial_gate_decision_id TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (visual_plan_id) REFERENCES visual_plans(id) ON DELETE RESTRICT,
+          FOREIGN KEY (editorial_gate_decision_id)
+            REFERENCES editorial_gate_decisions(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE INDEX idx_visual_plan_gate_provenance_decision
+          ON visual_plan_gate_provenance (editorial_gate_decision_id)
         """,
         ),
     ),
@@ -2349,6 +2414,146 @@ class AtlasRepository:
             ],
         }
 
+    def create_editorial_gate_decision(
+        self,
+        decision_id: str,
+        editorial_package_snapshot_id: str,
+        editorial_readiness_assessment_id: str,
+        outcome: str,
+        actor: str,
+        comment: str | None = None,
+    ) -> EditorialGateDecision:
+        """Append one immutable human decision over one exact Ready editorial package."""
+
+        if not isinstance(decision_id, str) or not decision_id.strip():
+            raise ValueError("Editorial Gate decision ID must be non-empty text.")
+        snapshot = self.get_editorial_package_snapshot(editorial_package_snapshot_id)
+        assessment = self.get_editorial_readiness_assessment(editorial_readiness_assessment_id)
+        self._validate_editorial_gate_decision_input(snapshot, assessment, outcome, actor, comment)
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO editorial_gate_decisions "
+                "(id, editorial_package_snapshot_id, editorial_readiness_assessment_id, outcome, "
+                "actor, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    decision_id.strip(),
+                    snapshot.id,
+                    assessment.id,
+                    outcome,
+                    actor.strip(),
+                    comment,
+                    now(),
+                ),
+            )
+        return self.get_editorial_gate_decision(decision_id.strip())
+
+    def get_editorial_gate_decision(self, decision_id: str) -> EditorialGateDecision:
+        row = self.connection.execute(
+            "SELECT * FROM editorial_gate_decisions WHERE id = ?", (decision_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(decision_id)
+        return self._editorial_gate_decision(row)
+
+    def list_editorial_gate_decisions(
+        self, editorial_package_snapshot_id: str
+    ) -> list[EditorialGateDecision]:
+        """Return immutable Editorial Gate decision history for one exact package."""
+
+        self.get_editorial_package_snapshot(editorial_package_snapshot_id)
+        rows = self.connection.execute(
+            "SELECT * FROM editorial_gate_decisions WHERE editorial_package_snapshot_id = ? "
+            "ORDER BY created_at, id",
+            (editorial_package_snapshot_id,),
+        )
+        return [self._editorial_gate_decision(row) for row in rows]
+
+    def editorial_gate_decision_payload(self, decision_id: str) -> dict[str, Any]:
+        return self._editorial_gate_decision_payload(self.get_editorial_gate_decision(decision_id))
+
+    def editorial_gate_decision_history_payload(
+        self, editorial_package_snapshot_id: str
+    ) -> dict[str, Any]:
+        return {
+            "editorial_package_snapshot_id": editorial_package_snapshot_id,
+            "decisions": [
+                self._editorial_gate_decision_payload(decision)
+                for decision in self.list_editorial_gate_decisions(editorial_package_snapshot_id)
+            ],
+        }
+
+    def create_visual_plan_under_editorial_gate(
+        self,
+        visual_plan_id: str,
+        editorial_gate_decision_id: str,
+        visual_direction: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> VisualPlan:
+        """Create one VisualPlan from the exact package and Script an Approve decision reviewed."""
+
+        decision = self.get_editorial_gate_decision(editorial_gate_decision_id)
+        snapshot, _assessment = self._validate_editorial_gate_decision_lineage(decision)
+        if decision.outcome != "Approve":
+            raise ValueError("Only an Approve EditorialGateDecision may initiate a VisualPlan.")
+        try:
+            self._validate_editorial_package_snapshot_integrity(snapshot)
+            script = self.get_script(snapshot.script_id)
+        except KeyError as error:
+            raise ValueError(
+                "The Editorial Gate package provenance must resolve its ContentPiece and Script."
+            ) from error
+        if script.content_piece_id != snapshot.content_piece_id:
+            raise ValueError(
+                "The Editorial Gate package Script must belong to its exact ContentPiece."
+            )
+        stamp = now()
+        with self.connection:
+            self._insert_visual_plan(
+                visual_plan_id,
+                snapshot.content_piece_id,
+                snapshot.script_id,
+                visual_direction,
+                metadata,
+                stamp,
+            )
+            self.connection.execute(
+                "INSERT INTO visual_plan_gate_provenance "
+                "(visual_plan_id, editorial_gate_decision_id, created_at) VALUES (?, ?, ?)",
+                (visual_plan_id, decision.id, stamp),
+            )
+        return self.get_visual_plan(visual_plan_id)
+
+    def get_visual_plan_gate_provenance(
+        self, visual_plan_id: str
+    ) -> VisualPlanGateProvenance | None:
+        """Return deliberate Editorial Gate lineage when a VisualPlan has it."""
+
+        self.get_visual_plan(visual_plan_id)
+        row = self.connection.execute(
+            "SELECT * FROM visual_plan_gate_provenance WHERE visual_plan_id = ?", (visual_plan_id,)
+        ).fetchone()
+        return self._visual_plan_gate_provenance(row) if row else None
+
+    def list_visual_plans_for_editorial_gate_decision(
+        self, editorial_gate_decision_id: str
+    ) -> list[VisualPlan]:
+        """Return all independently initiated VisualPlans from one Approve decision."""
+
+        self.get_editorial_gate_decision(editorial_gate_decision_id)
+        rows = self.connection.execute(
+            "SELECT visual_plans.* FROM visual_plans "
+            "JOIN visual_plan_gate_provenance "
+            "ON visual_plan_gate_provenance.visual_plan_id = visual_plans.id "
+            "WHERE visual_plan_gate_provenance.editorial_gate_decision_id = ? "
+            "ORDER BY visual_plans.created_at, visual_plans.id",
+            (editorial_gate_decision_id,),
+        )
+        return [self._visual_plan(row) for row in rows]
+
+    def visual_plan_gate_provenance_payload(self, visual_plan_id: str) -> dict[str, Any] | None:
+        provenance = self.get_visual_plan_gate_provenance(visual_plan_id)
+        return self._visual_plan_gate_provenance_payload(provenance) if provenance else None
+
     @staticmethod
     def title_option_payload(title_option: TitleOption) -> dict[str, Any]:
         return {
@@ -2397,6 +2602,28 @@ class AtlasRepository:
             "created_at": assessment.created_at,
         }
 
+    @staticmethod
+    def _editorial_gate_decision_payload(decision: EditorialGateDecision) -> dict[str, Any]:
+        return {
+            "id": decision.id,
+            "editorial_package_snapshot_id": decision.editorial_package_snapshot_id,
+            "editorial_readiness_assessment_id": decision.editorial_readiness_assessment_id,
+            "outcome": decision.outcome,
+            "actor": decision.actor,
+            "comment": decision.comment,
+            "created_at": decision.created_at,
+        }
+
+    @staticmethod
+    def _visual_plan_gate_provenance_payload(
+        provenance: VisualPlanGateProvenance,
+    ) -> dict[str, Any]:
+        return {
+            "visual_plan_id": provenance.visual_plan_id,
+            "editorial_gate_decision_id": provenance.editorial_gate_decision_id,
+            "created_at": provenance.created_at,
+        }
+
     def create_visual_plan(
         self,
         visual_plan_id: str,
@@ -2408,19 +2635,14 @@ class AtlasRepository:
         """Create a visual plan without detaching it from its exact Script version."""
 
         self._validate_visual_plan_script(content_piece_id, script_id)
-        stamp = now()
         with self.connection:
-            self.connection.execute(
-                "INSERT INTO visual_plans VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (
-                    visual_plan_id,
-                    content_piece_id,
-                    script_id,
-                    visual_direction,
-                    json.dumps(metadata or {}),
-                    stamp,
-                    stamp,
-                ),
+            self._insert_visual_plan(
+                visual_plan_id,
+                content_piece_id,
+                script_id,
+                visual_direction,
+                metadata,
+                now(),
             )
         return self.get_visual_plan(visual_plan_id)
 
@@ -3360,6 +3582,48 @@ class AtlasRepository:
         if script.content_piece_id != snapshot.content_piece_id:
             raise ValueError("A package Script must belong to the same ContentPiece.")
 
+    @staticmethod
+    def _validate_editorial_gate_decision_input(
+        snapshot: EditorialPackageSnapshot,
+        assessment: EditorialReadinessAssessment,
+        outcome: str,
+        actor: str,
+        comment: str | None,
+    ) -> None:
+        if assessment.editorial_package_snapshot_id != snapshot.id:
+            raise ValueError(
+                "An EditorialGateDecision assessment must belong to the exact "
+                "EditorialPackageSnapshot."
+            )
+        if assessment.outcome != "Ready":
+            raise ValueError("Only a Ready EditorialReadinessAssessment may enter Editorial Gate.")
+        if outcome not in EDITORIAL_GATE_DECISION_OUTCOMES:
+            raise ValueError("EditorialGateDecision outcome must be Approve, Revise, or Reject.")
+        if not isinstance(actor, str) or not actor.strip():
+            raise ValueError("EditorialGateDecision actor must be non-empty text.")
+        if comment is not None and not isinstance(comment, str):
+            raise ValueError("EditorialGateDecision comment must be text or null.")
+
+    def _validate_editorial_gate_decision_lineage(
+        self, decision: EditorialGateDecision
+    ) -> tuple[EditorialPackageSnapshot, EditorialReadinessAssessment]:
+        """Resolve an immutable decision only when its exact Ready input chain remains coherent."""
+
+        try:
+            snapshot = self.get_editorial_package_snapshot(decision.editorial_package_snapshot_id)
+            assessment = self.get_editorial_readiness_assessment(
+                decision.editorial_readiness_assessment_id
+            )
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialGateDecision provenance must reference existing package and "
+                "assessment records."
+            ) from error
+        self._validate_editorial_gate_decision_input(
+            snapshot, assessment, decision.outcome, decision.actor, decision.comment
+        )
+        return snapshot, assessment
+
     def _validate_script_claim_set_frozen_provenance(self, claim_set: ScriptClaimSet) -> None:
         """Require a closed set's memberships to resolve only against frozen Ready evidence."""
 
@@ -3468,6 +3732,28 @@ class AtlasRepository:
         script = self.get_script(script_id)
         if script.content_piece_id != content_piece_id:
             raise ValueError("A VisualPlan must use a Script from the same ContentPiece.")
+
+    def _insert_visual_plan(
+        self,
+        visual_plan_id: str,
+        content_piece_id: str,
+        script_id: str,
+        visual_direction: str,
+        metadata: dict[str, Any] | None,
+        stamp: str,
+    ) -> None:
+        self.connection.execute(
+            "INSERT INTO visual_plans VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                visual_plan_id,
+                content_piece_id,
+                script_id,
+                visual_direction,
+                json.dumps(metadata or {}),
+                stamp,
+                stamp,
+            ),
+        )
 
     def _insert_generation_execution(
         self,
@@ -5208,6 +5494,18 @@ class AtlasRepository:
         )
 
     @staticmethod
+    def _editorial_gate_decision(row: sqlite3.Row) -> EditorialGateDecision:
+        return EditorialGateDecision(
+            row["id"],
+            row["editorial_package_snapshot_id"],
+            row["editorial_readiness_assessment_id"],
+            row["outcome"],
+            row["actor"],
+            row["comment"],
+            row["created_at"],
+        )
+
+    @staticmethod
     def _visual_plan(row: sqlite3.Row) -> VisualPlan:
         return VisualPlan(
             row["id"],
@@ -5217,6 +5515,12 @@ class AtlasRepository:
             json.loads(row["metadata_json"]),
             row["created_at"],
             row["updated_at"],
+        )
+
+    @staticmethod
+    def _visual_plan_gate_provenance(row: sqlite3.Row) -> VisualPlanGateProvenance:
+        return VisualPlanGateProvenance(
+            row["visual_plan_id"], row["editorial_gate_decision_id"], row["created_at"]
         )
 
     @staticmethod

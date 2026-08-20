@@ -1146,6 +1146,346 @@ def test_editorial_readiness_assessment_api_is_server_derived_and_append_only(
         server.server_close()
 
 
+def test_editorial_gate_and_approved_visual_plan_api_preserve_exact_ready_lineage(
+    tmp_path: Path,
+) -> None:
+    """v0.24 exposes additive Gate decisions and derived approved VisualPlans."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request | str) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request | str) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid Editorial Gate request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    def post(path: str, payload: dict) -> tuple[dict, int]:
+        return request_json(
+            Request(
+                f"{base_url}{path}",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+
+    try:
+        repository = server.repository
+        opportunity_id = "http-gate-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack("http-gate-pack", opportunity_id, 1, "Research")
+        claim = repository.create_claim(
+            "http-gate-claim", pack.id, "Frozen claim.", "fact", "low", "stable", "reviewed", ""
+        )
+        research_ready = repository.create_research_readiness_assessment(
+            "http-gate-research-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready."},
+            "policy-v1",
+            "test",
+            "web-test",
+            "v1",
+        )
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "http-gate-angle",
+            opportunity_id,
+            pack.id,
+            research_ready.id,
+            "Angle",
+            "Thesis",
+            "Promise",
+            "Frame",
+            ["Takeaway"],
+        )
+        repository.link_claim_to_editorial_angle(angle.id, claim.id, "core")
+        piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-gate-piece", opportunity_id, angle.id, "video", "Working title"
+        )
+
+        def ready_package(prefix: str):
+            script = repository.create_script_under_content_piece_readiness(
+                f"{prefix}-script", piece.id, "Narration."
+            )
+            repository.create_script_claim_set(f"{prefix}-claim-set", script.id, [claim.id])
+            title = repository.create_title_option_under_content_piece_readiness(
+                f"{prefix}-title", piece.id, "Title"
+            )
+            hook = repository.create_hook_option_under_content_piece_readiness(
+                f"{prefix}-hook", piece.id, "Hook"
+            )
+            package = repository.create_editorial_package_snapshot(
+                f"{prefix}-package", piece.id, title.id, hook.id, script.id
+            )
+            assessment, status = post(
+                f"/api/editorial-package-snapshots/{package.id}/readiness-assessments",
+                {"id": f"{prefix}-assessment"},
+            )
+            assert status == 201
+            assert assessment["assessment"]["outcome"] == "Ready"
+            return package, script, assessment["assessment"]
+
+        package, script, assessment = ready_package("http-gate")
+        endpoint = f"/api/editorial-package-snapshots/{package.id}/gate-decisions"
+        approve, status = post(
+            endpoint,
+            {
+                "id": "http-gate-approve",
+                "editorial_readiness_assessment_id": assessment["id"],
+                "outcome": "Approve",
+                "actor": "founder",
+                "comment": "Proceed.",
+            },
+        )
+        assert status == 201
+        assert approve["decision"]["comment"] == "Proceed."
+        revise, status = post(
+            endpoint,
+            {
+                "id": "http-gate-revise",
+                "editorial_readiness_assessment_id": assessment["id"],
+                "outcome": "Revise",
+                "actor": "founder",
+            },
+        )
+        assert status == 201
+        reject, status = post(
+            endpoint,
+            {
+                "id": "http-gate-reject",
+                "editorial_readiness_assessment_id": assessment["id"],
+                "outcome": "Reject",
+                "actor": "founder",
+            },
+        )
+        assert status == 201
+        history, status = request_json(f"{base_url}{endpoint}")
+        assert status == 200
+        assert [item["id"] for item in history["decisions"]] == [
+            approve["decision"]["id"],
+            reject["decision"]["id"],
+            revise["decision"]["id"],
+        ]
+        fetched, status = request_json(
+            f"{base_url}/api/editorial-gate-decisions/{approve['decision']['id']}"
+        )
+        assert status == 200
+        assert fetched["decision"] == approve["decision"]
+
+        not_ready_script = repository.create_script_under_content_piece_readiness(
+            "http-gate-not-ready-script", piece.id, "Unclosed narration."
+        )
+        not_ready_title = repository.create_title_option_under_content_piece_readiness(
+            "http-gate-not-ready-title", piece.id, "Not ready title"
+        )
+        not_ready_hook = repository.create_hook_option_under_content_piece_readiness(
+            "http-gate-not-ready-hook", piece.id, "Not ready hook"
+        )
+        not_ready_package = repository.create_editorial_package_snapshot(
+            "http-gate-not-ready-package",
+            piece.id,
+            not_ready_title.id,
+            not_ready_hook.id,
+            not_ready_script.id,
+        )
+        not_ready_assessment, status = post(
+            f"/api/editorial-package-snapshots/{not_ready_package.id}/readiness-assessments",
+            {"id": "http-gate-not-ready-assessment"},
+        )
+        assert status == 201
+        assert not_ready_assessment["assessment"]["outcome"] == "NotReady"
+        not_ready_gate, status = request_error(
+            Request(
+                f"{base_url}/api/editorial-package-snapshots/{not_ready_package.id}/gate-decisions",
+                data=json.dumps(
+                    {
+                        "id": "http-gate-not-ready",
+                        "editorial_readiness_assessment_id": not_ready_assessment["assessment"][
+                            "id"
+                        ],
+                        "outcome": "Approve",
+                        "actor": "founder",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "Only a Ready" in not_ready_gate["error"]
+
+        other_package, _other_script, other_assessment = ready_package("http-gate-other")
+        wrong_package, status = request_error(
+            Request(
+                f"{base_url}{endpoint}",
+                data=json.dumps(
+                    {
+                        "id": "http-gate-wrong-package",
+                        "editorial_readiness_assessment_id": other_assessment["id"],
+                        "outcome": "Approve",
+                        "actor": "founder",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 400
+        assert "exact EditorialPackageSnapshot" in wrong_package["error"]
+        assert other_package.id != package.id
+        for invalid_payload in (
+            {
+                "id": "http-gate-invalid",
+                "editorial_readiness_assessment_id": assessment["id"],
+                "outcome": "SelectAlternative",
+                "actor": "founder",
+            },
+            {
+                "id": "http-gate-empty-actor",
+                "editorial_readiness_assessment_id": assessment["id"],
+                "outcome": "Approve",
+                "actor": "",
+            },
+            {
+                "id": "http-gate-spend",
+                "editorial_readiness_assessment_id": assessment["id"],
+                "outcome": "Approve",
+                "actor": "founder",
+                "spend_ceiling": 10,
+            },
+        ):
+            invalid, status = request_error(
+                Request(
+                    f"{base_url}{endpoint}",
+                    data=json.dumps(invalid_payload).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert invalid["error"]
+        missing_package, status = request_error(
+            Request(
+                f"{base_url}/api/editorial-package-snapshots/missing/gate-decisions",
+                data=json.dumps(
+                    {
+                        "id": "missing-package",
+                        "editorial_readiness_assessment_id": assessment["id"],
+                        "outcome": "Approve",
+                        "actor": "founder",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "EditorialPackageSnapshot" in missing_package["error"]
+        missing_assessment, status = request_error(
+            Request(
+                f"{base_url}{endpoint}",
+                data=json.dumps(
+                    {
+                        "id": "missing-assessment",
+                        "editorial_readiness_assessment_id": "missing",
+                        "outcome": "Approve",
+                        "actor": "founder",
+                    }
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "assessment not found" in missing_assessment["error"]
+
+        visual_endpoint = f"/api/editorial-gate-decisions/{approve['decision']['id']}/visual-plans"
+        visual_plan, status = post(
+            visual_endpoint,
+            {"id": "http-gate-plan", "visual_direction": "Illustrated direction"},
+        )
+        assert status == 201
+        assert visual_plan["visual_plan"]["content_piece_id"] == piece.id
+        assert visual_plan["visual_plan"]["script_id"] == script.id
+        assert (
+            visual_plan["gate_provenance"]["editorial_gate_decision_id"]
+            == approve["decision"]["id"]
+        )
+        second_plan, status = post(
+            visual_endpoint,
+            {"id": "http-gate-plan-second", "visual_direction": "Second direction"},
+        )
+        assert status == 201
+        assert second_plan["visual_plan"]["script_id"] == script.id
+        for decision in (revise, reject):
+            rejected, status = request_error(
+                Request(
+                    f"{base_url}/api/editorial-gate-decisions/{decision['decision']['id']}/visual-plans",
+                    data=json.dumps(
+                        {"id": f"{decision['decision']['id']}-plan", "visual_direction": "No"}
+                    ).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert "Approve" in rejected["error"]
+        for invalid_payload in (
+            {"id": "override-script", "visual_direction": "Direction", "script_id": "other"},
+            {"id": "override-piece", "visual_direction": "Direction", "content_piece_id": "other"},
+        ):
+            invalid, status = request_error(
+                Request(
+                    f"{base_url}{visual_endpoint}",
+                    data=json.dumps(invalid_payload).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert "unsupported fields" in invalid["error"]
+        missing_decision, status = request_error(
+            Request(
+                f"{base_url}/api/editorial-gate-decisions/missing/visual-plans",
+                data=json.dumps({"id": "missing-plan", "visual_direction": "Direction"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "decision not found" in missing_decision["error"]
+        assert repository.list_scenes_for_visual_plan("http-gate-plan") == []
+        assert repository.connection.execute("SELECT COUNT(*) FROM asset_specs").fetchone()[0] == 5
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM generation_executions").fetchone()[
+                0
+            ]
+            == 0
+        )
+        assert repository.connection.execute("SELECT COUNT(*) FROM assets").fetchone()[0] == 0
+    finally:
+        server.server_close()
+
+
 def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scenes(
     tmp_path: Path,
 ) -> None:

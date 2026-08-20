@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -1618,6 +1618,262 @@ def test_migration_18_adds_editorial_readiness_assessments_without_backfill(tmp_
         repository.close()
 
 
+def _create_ready_editorial_package(repository: AtlasRepository, prefix: str):
+    """Create one minimal exact Ready package for Editorial Gate tests."""
+
+    opportunity_id = f"{prefix}-opportunity"
+    repository.create_opportunity(
+        opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+    )
+    pack = repository.create_research_pack(f"{prefix}-pack", opportunity_id, 1, "Research")
+    claim = repository.create_claim(
+        f"{prefix}-claim", pack.id, "Frozen claim.", "fact", "low", "stable", "reviewed", ""
+    )
+    source = repository.create_source(
+        f"{prefix}-source",
+        "primary",
+        "Source",
+        "Publisher",
+        f"https://example.test/{prefix}",
+        "2026-08-20T00:00:00+00:00",
+    )
+    repository.link_claim_evidence(claim.id, source.id, "supports", "p. 1")
+    research_ready = repository.create_research_readiness_assessment(
+        f"{prefix}-research-ready",
+        pack.id,
+        "Ready",
+        {"summary": "Ready."},
+        "policy-v1",
+        "test",
+        "persistence-test",
+        "v1",
+    )
+    angle = repository.create_editorial_angle_under_research_readiness(
+        f"{prefix}-angle",
+        opportunity_id,
+        pack.id,
+        research_ready.id,
+        "Angle",
+        "Thesis",
+        "Promise",
+        "Frame",
+        ["Takeaway"],
+    )
+    repository.link_claim_to_editorial_angle(angle.id, claim.id, "core")
+    piece = repository.create_content_piece_under_editorial_angle_readiness(
+        f"{prefix}-piece", opportunity_id, angle.id, "video", "Working title"
+    )
+    script = repository.create_script_under_content_piece_readiness(
+        f"{prefix}-script", piece.id, "Narration."
+    )
+    repository.create_script_claim_set(f"{prefix}-claim-set", script.id, [claim.id])
+    title = repository.create_title_option_under_content_piece_readiness(
+        f"{prefix}-title", piece.id, "Title"
+    )
+    hook = repository.create_hook_option_under_content_piece_readiness(
+        f"{prefix}-hook", piece.id, "Hook"
+    )
+    package = repository.create_editorial_package_snapshot(
+        f"{prefix}-package", piece.id, title.id, hook.id, script.id
+    )
+    assessment = repository.create_editorial_readiness_assessment(
+        f"{prefix}-editorial-ready", package.id
+    )
+    assert assessment.outcome == "Ready"
+    return piece, script, package, assessment
+
+
+def test_editorial_gate_decisions_and_approved_visual_plans_are_exact_and_additive(
+    tmp_path,
+) -> None:
+    """v0.24 preserves exact Ready Gate inputs and approved VisualPlan provenance."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        piece, script, package, ready = _create_ready_editorial_package(repository, "gate")
+        comment = " Proceed with the exact proposition. "
+        approve = repository.create_editorial_gate_decision(
+            "gate-approve", package.id, ready.id, "Approve", "founder", comment
+        )
+        revise = repository.create_editorial_gate_decision(
+            "gate-revise", package.id, ready.id, "Revise", "founder", "Revise hook."
+        )
+        reject = repository.create_editorial_gate_decision(
+            "gate-reject", package.id, ready.id, "Reject", "founder", "Reject it."
+        )
+        repeated = repository.create_editorial_gate_decision(
+            "gate-approve-second", package.id, ready.id, "Approve", "founder"
+        )
+        assert approve.comment == comment
+        assert repository.get_editorial_gate_decision(approve.id) == approve
+        assert [
+            decision.id for decision in repository.list_editorial_gate_decisions(package.id)
+        ] == [
+            approve.id,
+            repeated.id,
+            reject.id,
+            revise.id,
+        ]
+
+        _other_piece, _other_script, other_package, other_ready = _create_ready_editorial_package(
+            repository, "gate-other"
+        )
+        other_decision = repository.create_editorial_gate_decision(
+            "gate-other-approve", other_package.id, other_ready.id, "Approve", "founder"
+        )
+        assert other_decision.editorial_package_snapshot_id == other_package.id
+        with pytest.raises(ValueError, match="exact EditorialPackageSnapshot"):
+            repository.create_editorial_gate_decision(
+                "gate-wrong-package", package.id, other_ready.id, "Approve", "founder"
+            )
+        with pytest.raises(KeyError):
+            repository.create_editorial_gate_decision(
+                "gate-missing-package", "missing-package", ready.id, "Approve", "founder"
+            )
+        with pytest.raises(KeyError):
+            repository.create_editorial_gate_decision(
+                "gate-missing-assessment", package.id, "missing-assessment", "Approve", "founder"
+            )
+        with pytest.raises(ValueError, match="Approve, Revise, or Reject"):
+            repository.create_editorial_gate_decision(
+                "gate-invalid-outcome", package.id, ready.id, "SelectAlternative", "founder"
+            )
+        with pytest.raises(ValueError, match="actor"):
+            repository.create_editorial_gate_decision(
+                "gate-empty-actor", package.id, ready.id, "Approve", ""
+            )
+
+        missing_script = repository.create_script_under_content_piece_readiness(
+            "gate-not-ready-script", piece.id, "Unclosed narration."
+        )
+        not_ready_package = repository.create_editorial_package_snapshot(
+            "gate-not-ready-package",
+            piece.id,
+            package.title_option_id,
+            package.hook_option_id,
+            missing_script.id,
+        )
+        not_ready = repository.create_editorial_readiness_assessment(
+            "gate-not-ready", not_ready_package.id
+        )
+        with pytest.raises(ValueError, match="Only a Ready"):
+            repository.create_editorial_gate_decision(
+                "gate-not-ready-decision", not_ready_package.id, not_ready.id, "Approve", "founder"
+            )
+
+        plan = repository.create_visual_plan_under_editorial_gate(
+            "gate-plan", approve.id, "Illustrated visual direction", {"variant": "one"}
+        )
+        assert (plan.content_piece_id, plan.script_id) == (piece.id, script.id)
+        assert (
+            repository.get_visual_plan_gate_provenance(plan.id).editorial_gate_decision_id
+            == approve.id
+        )
+        second_plan = repository.create_visual_plan_under_editorial_gate(
+            "gate-plan-second", approve.id, "Second visual direction"
+        )
+        assert [
+            item.id for item in repository.list_visual_plans_for_editorial_gate_decision(approve.id)
+        ] == [plan.id, second_plan.id]
+        for decision in (revise, reject):
+            with pytest.raises(ValueError, match="Only an Approve"):
+                repository.create_visual_plan_under_editorial_gate(
+                    f"gate-plan-{decision.outcome.lower()}", decision.id, "No plan"
+                )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute(
+                "INSERT INTO visual_plan_gate_provenance VALUES (?, ?, ?)",
+                (plan.id, repeated.id, "2026-08-20T00:00:00+00:00"),
+            )
+        legacy_plan = repository.create_visual_plan(
+            "gate-legacy-plan", piece.id, script.id, "Legacy compatibility"
+        )
+        assert repository.get_visual_plan_gate_provenance(legacy_plan.id) is None
+        assert (
+            repository.get_visual_plan_gate_provenance("visual-plan-isa-deadline-video-v1") is None
+        )
+
+        repository.connection.execute(
+            "CREATE TRIGGER gate_provenance_abort BEFORE INSERT ON visual_plan_gate_provenance "
+            "WHEN NEW.visual_plan_id = 'gate-atomic-plan' "
+            "BEGIN SELECT RAISE(ABORT, 'provenance failure'); END"
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="provenance failure"):
+            repository.create_visual_plan_under_editorial_gate(
+                "gate-atomic-plan", approve.id, "Atomic direction"
+            )
+        with pytest.raises(KeyError):
+            repository.get_visual_plan("gate-atomic-plan")
+
+        table_names = {
+            row[0]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        columns = {
+            row[1]
+            for row in repository.connection.execute("PRAGMA table_info(editorial_gate_decisions)")
+        }
+        assert {"editorial_gate_decisions", "visual_plan_gate_provenance"} <= table_names
+        assert {"current", "latest", "selected", "superseded", "spend", "budget"}.isdisjoint(
+            columns
+        )
+        assert not {"cost_ledgers", "generation_jobs", "production_artifacts"} & table_names
+    finally:
+        repository.close()
+
+
+def test_migration_19_adds_editorial_gate_tables_without_backfill(tmp_path) -> None:
+    """Migration 19 is additive over v0.23 and preserves historical VisualPlans."""
+
+    database = tmp_path / "atlas-v023.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:18]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-20T00:00:00+00:00')",
+                (version,),
+            )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        assert repository.connection.execute(
+            "SELECT version FROM schema_migrations WHERE version = 19"
+        ).fetchone()
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM editorial_gate_decisions"
+            ).fetchone()[0]
+            == 0
+        )
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM visual_plan_gate_provenance"
+            ).fetchone()[0]
+            == 0
+        )
+        assert repository.get_visual_plan("visual-plan-isa-deadline-video-v1")
+        assert (
+            repository.get_visual_plan_gate_provenance("visual-plan-isa-deadline-video-v1") is None
+        )
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute(
+                "INSERT INTO editorial_gate_decisions VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ("bad", "missing", "missing", "Approve", "founder", None, "now"),
+            )
+    finally:
+        repository.close()
+
+
 def test_script_claim_sets_close_explicit_frozen_claim_provenance(tmp_path) -> None:
     """v0.22 closes explicit Script Claim identity sets against exact frozen readiness evidence."""
 
@@ -1932,7 +2188,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -2353,7 +2609,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -2547,7 +2803,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -2692,7 +2948,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                19,
+                20,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -2714,7 +2970,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 19"
+                "SELECT version FROM schema_migrations WHERE version = 20"
             ).fetchone()
             is None
         )
@@ -4762,7 +5018,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

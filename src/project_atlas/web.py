@@ -200,6 +200,53 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                     {"error": "Editorial readiness assessment not found."}, HTTPStatus.NOT_FOUND
                 )
             return
+        editorial_gate_history_prefix = "/api/editorial-package-snapshots/"
+        editorial_gate_history_suffix = "/gate-decisions"
+        if parsed.path.startswith(editorial_gate_history_prefix) and parsed.path.endswith(
+            editorial_gate_history_suffix
+        ):
+            snapshot_id = unquote(
+                parsed.path[
+                    len(editorial_gate_history_prefix) : -len(editorial_gate_history_suffix)
+                ]
+            ).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "editorial_gate_decision_history",
+                        **self.server.repository.editorial_gate_decision_history_payload(
+                            snapshot_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "EditorialPackageSnapshot not found."}, HTTPStatus.NOT_FOUND
+                )
+            return
+        editorial_gate_decision_prefix = "/api/editorial-gate-decisions/"
+        if parsed.path.startswith(editorial_gate_decision_prefix):
+            decision_id = unquote(parsed.path[len(editorial_gate_decision_prefix) :]).strip("/")
+            if not decision_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "editorial_gate_decision",
+                        "decision": self.server.repository.editorial_gate_decision_payload(
+                            decision_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "Editorial Gate decision not found."}, HTTPStatus.NOT_FOUND
+                )
+            return
         content_piece_prefix = "/api/content-pieces/"
         editorial_history_routes = {
             "/title-options": (
@@ -442,6 +489,115 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                     "kind": "editorial_readiness_assessment",
                     "assessment": self.server.repository.editorial_readiness_assessment_payload(
                         assessment.id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        editorial_gate_prefix = "/api/editorial-package-snapshots/"
+        editorial_gate_suffix = "/gate-decisions"
+        if path.startswith(editorial_gate_prefix) and path.endswith(editorial_gate_suffix):
+            snapshot_id = unquote(
+                path[len(editorial_gate_prefix) : -len(editorial_gate_suffix)]
+            ).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("Editorial Gate decision payload must be an object.")
+                allowed_fields = {
+                    "id",
+                    "editorial_readiness_assessment_id",
+                    "outcome",
+                    "actor",
+                    "comment",
+                }
+                if set(payload) - allowed_fields:
+                    raise ValueError("Editorial Gate decision payload contains unsupported fields.")
+                decision_id = payload.get("id")
+                assessment_id = payload.get("editorial_readiness_assessment_id")
+                outcome = payload.get("outcome")
+                actor = payload.get("actor")
+                comment = payload.get("comment")
+                if not isinstance(decision_id, str) or not decision_id.strip():
+                    raise ValueError("Editorial Gate decision ID must be non-empty text.")
+                if not isinstance(assessment_id, str) or not assessment_id.strip():
+                    raise ValueError("Editorial readiness assessment ID must be non-empty text.")
+                if comment is not None and not isinstance(comment, str):
+                    raise ValueError("Editorial Gate decision comment must be text or null.")
+                decision = self.server.repository.create_editorial_gate_decision(
+                    decision_id.strip(),
+                    snapshot_id,
+                    assessment_id.strip(),
+                    outcome,
+                    actor,
+                    comment,
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError as error:
+                message = (
+                    "EditorialPackageSnapshot not found."
+                    if error.args and error.args[0] == snapshot_id
+                    else "Editorial readiness assessment not found."
+                )
+                self._send_json({"error": message}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "editorial_gate_decision",
+                    "decision": self.server.repository.editorial_gate_decision_payload(decision.id),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        editorial_gate_decision_prefix = "/api/editorial-gate-decisions/"
+        visual_plan_suffix = "/visual-plans"
+        if path.startswith(editorial_gate_decision_prefix) and path.endswith(visual_plan_suffix):
+            decision_id = unquote(
+                path[len(editorial_gate_decision_prefix) : -len(visual_plan_suffix)]
+            ).strip("/")
+            if not decision_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("Approved VisualPlan payload must be an object.")
+                allowed_fields = {"id", "visual_direction", "metadata"}
+                if set(payload) - allowed_fields:
+                    raise ValueError("Approved VisualPlan payload contains unsupported fields.")
+                visual_plan_id = payload.get("id")
+                visual_direction = payload.get("visual_direction")
+                metadata = payload.get("metadata")
+                if not isinstance(visual_plan_id, str) or not visual_plan_id.strip():
+                    raise ValueError("VisualPlan ID must be non-empty text.")
+                if not isinstance(visual_direction, str) or not visual_direction.strip():
+                    raise ValueError("VisualPlan visual_direction must be non-empty text.")
+                if metadata is not None and not isinstance(metadata, dict):
+                    raise ValueError("VisualPlan metadata must be an object or null.")
+                visual_plan = self.server.repository.create_visual_plan_under_editorial_gate(
+                    visual_plan_id.strip(), decision_id, visual_direction, metadata
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "Editorial Gate decision not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "visual_plan",
+                    "visual_plan": self.server.repository.visual_plan_payload(visual_plan.id),
+                    "gate_provenance": self.server.repository.visual_plan_gate_provenance_payload(
+                        visual_plan.id
                     ),
                 },
                 HTTPStatus.CREATED,
