@@ -5,12 +5,10 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.23 — Deterministic Editorial Readiness Assessment remains the latest accepted
-implementation milestone; v0.22 — Closed Script Claim Provenance Foundation is its historical accepted predecessor.
-v0.24 — Editorial Gate + Approved VisualPlan Initiation is selected, locally implemented and validated pending
-founder acceptance/push. Migration 19 is the latest canonical migration, migration 20 is absent, and Phase 2 remains
-ACTIVE / INCOMPLETE. No successor after v0.24 is selected. Later workflow, research automation and production
-systems remain deferred.
+SQLite foundation for SimilarStoic. v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted
+implementation milestone; v0.23 — Deterministic Editorial Readiness Assessment is its historical accepted predecessor.
+Migration 19 is the latest canonical migration, migration 20 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No
+successor after v0.24 is selected. Later workflow, research automation and production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -47,11 +45,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.23 Deterministic Editorial Readiness Assessment remains the latest
-accepted implementation milestone; v0.22 Closed Script Claim Provenance Foundation is its historical accepted
-predecessor. v0.24 Editorial Gate + Approved VisualPlan Initiation is selected, locally implemented and validated
-pending founder acceptance/push. Migrations 1–19 are canonical, with migration 19 the latest canonical migration and
-migration 20 absent. No successor after v0.24 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.24 Editorial Gate + Approved VisualPlan Initiation is the latest accepted
+implementation milestone; v0.23 Deterministic Editorial Readiness Assessment is its historical accepted predecessor.
+Migrations 1–19 are canonical, with migration 19 the latest canonical migration and migration 20 absent. No successor
+after v0.24 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -131,14 +128,14 @@ live mutable Claim data. Migration 17 adds only the two provenance tables, restr
 lookup index, without backfill or copied readiness/evidence provenance. The Script-scoped API is
 `POST`/`GET /api/scripts/{script_id}/claim-set`. v0.22 does not add ranges, segments, ClaimEvidence links, package
 changes, QA/Gate, workflow, UI, production, publishing, analytics, Learning or orchestration. v0.21 is its accepted
-historical predecessor; v0.23 remains the latest accepted milestone. v0.24 — Editorial Gate + Approved VisualPlan
-Initiation is selected, locally implemented and validated pending founder acceptance/push. Migration 19 is latest,
-migration 20 is absent, and no successor after v0.24 is selected. Acceptance covers
+historical predecessor; v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted milestone and
+v0.23 is its historical accepted predecessor. Migration 19 is latest, migration 20 is absent, and no successor after
+v0.24 is selected. Acceptance covers
 implementation commit `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`
 passed.
 
-**v0.23 — Deterministic Editorial Readiness Assessment** remains the latest accepted implementation milestone. It appends
+**v0.23 — Deterministic Editorial Readiness Assessment** is a historical accepted implementation milestone. It appends
 immutable deterministic `EditorialReadinessAssessment` history for one exact
 `EditorialPackageSnapshot`; package inputs and upstream frozen research provenance remain derivable by immutable
 references and are not copied. Server-only evaluator `deterministic-editorial-readiness` `v1` persists `Ready` or
@@ -151,33 +148,36 @@ plus `GET /api/editorial-readiness-assessments/{assessment_id}`. v0.23 adds no s
 production, publishing, analytics or orchestration. Black 26.3.1 `--check`, Ruff, 99 pytest tests and
 `git diff --check` passed. Founder acceptance covers implementation commit
 `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state documentation commit
-`64e5da9183d9a0fe1492e6968f266f26abd4538c`. v0.24 — Editorial Gate + Approved VisualPlan Initiation is selected,
-locally implemented and validated pending founder acceptance/push. Migration 19 is latest, migration 20 is absent,
-and no successor after v0.24 is selected.
+`64e5da9183d9a0fe1492e6968f266f26abd4538c`. v0.24 — Editorial Gate + Approved VisualPlan Initiation is accepted;
+v0.23 is its historical accepted predecessor. Migration 19 is latest, migration 20 is absent, and no successor after
+v0.24 is selected.
 
-## v0.24 Pending Acceptance Checkpoint
+## v0.24 Accepted Checkpoint
 
-**v0.24 — Editorial Gate + Approved VisualPlan Initiation** is selected, locally implemented and validated pending
-founder acceptance/push. `EditorialGateDecision` is immutable and additive, records one exact
+**v0.24 — Editorial Gate + Approved VisualPlan Initiation** is accepted. `EditorialGateDecision` is immutable and
+additive, records one exact
 `EditorialPackageSnapshot` plus one explicitly supplied exact `Ready` `EditorialReadinessAssessment`, and has only
 `Approve`, `Revise` and `Reject` outcomes. It has no current/latest/selected/superseded or workflow state; multiple
 decisions may be retained for the same package or assessment.
 
 Only an exact `Approve` decision may deliberately initiate a VisualPlan. That path derives the exact ContentPiece and
-Script from the approved package and atomically writes an additive `visual_plan_gate_provenance` record. Historical
-and low-level VisualPlans remain valid without Gate provenance; no backfill occurs. Migration 19 adds only the Gate
+Script from the approved package and atomically writes an additive `visual_plan_gate_provenance` record. It does not
+consume the Gate decision or automatically create Scenes, AssetSpecs, GenerationExecutions or Assets. Historical and
+low-level VisualPlans remain valid without Gate provenance; no backfill occurs. Migration 19 adds only the Gate
 decision and provenance tables, restrictive foreign keys and lookup indexes. Migration 20 is absent.
 
 The API is `POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/gate-decisions`,
 `GET /api/editorial-gate-decisions/{decision_id}`, and
 `POST /api/editorial-gate-decisions/{decision_id}/visual-plans`. v0.24 adds no new Title/Hook or Script-to-Claim
 lifecycle work, machine editorial QA, paid-production authorization, cost/spend schema, provider/generation operation,
-Scene/AssetSpec lifecycle, UI, production, publishing, analytics, workflow or successor scope. The implementation
-commit is `34acdcfc3b3d523a3eb4a00af6ae7d768669444b`.
+Scene/AssetSpec lifecycle, UI, production, publishing, analytics, workflow or successor scope. Gate approval
+authorizes visual planning only. The implementation commit is `34acdcfc3b3d523a3eb4a00af6ae7d768669444b`; the
+pending-state documentation commit is `ae993dae6732a2cb456f57e3d070cd315c77a30b`.
 
-Validation: Black 26.3.1 formatting equivalence passed through an in-process repository-wide API check. The
-documented Black CLI command could not terminate in this Windows host because of a process-runtime hang; this is a
-host exception, not a formatting failure. Ruff passed, **102 pytest tests** passed, and `git diff --check` passed.
+Validation: Black 26.3.1 formatting equivalence passed across 10 repository Python files through an in-process API
+check. The documented Black CLI command could not terminate in this Windows host because of a process-runtime hang;
+this is a host exception, not a formatting failure. Ruff passed, **102 pytest tests** passed, and `git diff --check`
+passed.
 
 ## Technology baseline
 
@@ -496,8 +496,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.23 — Deterministic Editorial Readiness Assessment remains the latest accepted implementation checkpoint; v0.22 —
-Closed Script Claim Provenance Foundation is its historical accepted predecessor. v0.24 — Editorial Gate + Approved
-VisualPlan Initiation is selected, locally implemented and validated pending founder acceptance/push. Migrations 1–19
-are canonical, with migration 19 latest and migration 20 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after
-v0.24 is selected, and later Conveyor systems remain out of scope.
+v0.24 — Editorial Gate + Approved VisualPlan Initiation is the latest accepted implementation checkpoint; v0.23 —
+Deterministic Editorial Readiness Assessment is its historical accepted predecessor. Migrations 1–19 are canonical,
+with migration 19 latest and migration 20 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.24 is
+selected, and later Conveyor systems remain out of scope.
