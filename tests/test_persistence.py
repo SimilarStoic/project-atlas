@@ -126,7 +126,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -1371,6 +1371,253 @@ def test_migration_17_adds_closed_script_claim_provenance_without_backfill(tmp_p
         repository.close()
 
 
+def test_editorial_readiness_assessments_are_append_only_and_server_derived(tmp_path) -> None:
+    """v0.23 assesses only exact immutable packages and frozen Script provenance."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity_id = "editorial-readiness-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack(
+            "editorial-readiness-pack", opportunity_id, 1, "Research pack"
+        )
+        claim = repository.create_claim(
+            "editorial-readiness-claim",
+            pack.id,
+            "Frozen Claim.",
+            "fact",
+            "high",
+            "current",
+            "reviewed",
+            "",
+        )
+        source = repository.create_source(
+            "editorial-readiness-source",
+            "primary",
+            "Source",
+            "Publisher",
+            "https://example.test/editorial-readiness",
+            "2026-08-20T00:00:00+00:00",
+        )
+        repository.link_claim_evidence(claim.id, source.id, "supports", "p. 1")
+        ready = repository.create_research_readiness_assessment(
+            "editorial-readiness-research-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready."},
+            "policy-v1",
+            "test",
+            "persistence-test",
+            "v1",
+        )
+        fields = ("Angle", "Thesis", "Promise", "Frame", ["Takeaway"])
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "editorial-readiness-angle", opportunity_id, pack.id, ready.id, *fields
+        )
+        repository.link_claim_to_editorial_angle(angle.id, claim.id, "core")
+        piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "editorial-readiness-piece", opportunity_id, angle.id, "video", "Working title"
+        )
+        original_piece = repository.get_content_piece(piece.id)
+
+        def package(script_id: str, suffix: str):
+            title = repository.create_title_option_under_content_piece_readiness(
+                f"editorial-readiness-title-{suffix}", piece.id, f"Title {suffix}"
+            )
+            hook = repository.create_hook_option_under_content_piece_readiness(
+                f"editorial-readiness-hook-{suffix}", piece.id, f"Hook {suffix}"
+            )
+            return repository.create_editorial_package_snapshot(
+                f"editorial-readiness-package-{suffix}", piece.id, title.id, hook.id, script_id
+            )
+
+        missing_script = repository.create_script_under_content_piece_readiness(
+            "editorial-readiness-missing-script", piece.id, "Missing set narration."
+        )
+        missing_package = package(missing_script.id, "missing")
+        not_ready = repository.create_editorial_readiness_assessment(
+            "editorial-readiness-not-ready", missing_package.id
+        )
+        assert not_ready.editorial_package_snapshot_id == missing_package.id
+        assert not_ready.outcome == "NotReady"
+        assert not_ready.findings == {
+            "findings": [
+                {
+                    "code": "SCRIPT_CLAIM_SET_MISSING",
+                    "severity": "error",
+                    "blocking": True,
+                    "message": "The package Script does not have a closed claim provenance set.",
+                }
+            ]
+        }
+        assert not_ready.schema_version == 1
+        assert not_ready.evaluator_id == "deterministic-editorial-readiness"
+        assert not_ready.evaluator_version == "v1"
+
+        empty_script = repository.create_script_under_content_piece_readiness(
+            "editorial-readiness-empty-script", piece.id, "Empty set narration."
+        )
+        empty_package = package(empty_script.id, "empty")
+        repository.create_script_claim_set("editorial-readiness-empty-set", empty_script.id, [])
+        ready_empty = repository.create_editorial_readiness_assessment(
+            "editorial-readiness-empty-ready", empty_package.id
+        )
+        assert ready_empty.outcome == "Ready"
+        assert ready_empty.findings == {"findings": []}
+
+        populated_script = repository.create_script_under_content_piece_readiness(
+            "editorial-readiness-populated-script", piece.id, "Populated set narration."
+        )
+        populated_package = package(populated_script.id, "populated")
+        repository.create_script_claim_set(
+            "editorial-readiness-populated-set", populated_script.id, [claim.id]
+        )
+        ready_populated = repository.create_editorial_readiness_assessment(
+            "editorial-readiness-populated-ready", populated_package.id
+        )
+        prior_payload = repository.editorial_readiness_assessment_payload(ready_populated.id)
+        prior_claim_set_payload = repository.script_claim_set_payload(populated_script.id)
+        repository.update_claim(replace(claim, text="Changed live Claim."))
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE sources SET title = ? WHERE id = ?", ("Changed live Source.", source.id)
+            )
+        assert (
+            repository.editorial_readiness_assessment_payload(ready_populated.id) == prior_payload
+        )
+        assert repository.script_claim_set_payload(populated_script.id) == prior_claim_set_payload
+
+        repeated = repository.create_editorial_readiness_assessment(
+            "editorial-readiness-populated-rerun", populated_package.id
+        )
+        assert [
+            assessment.id
+            for assessment in repository.list_editorial_readiness_assessments(populated_package.id)
+        ] == [ready_populated.id, repeated.id]
+        assert repository.get_editorial_readiness_assessment(ready_populated.id) == ready_populated
+        assert repository.get_content_piece(piece.id) == original_piece
+        assert repository.list_visual_plans_for_content_piece(piece.id) == []
+
+        with pytest.raises(sqlite3.IntegrityError), repository.connection:
+            repository.connection.execute(
+                "DELETE FROM editorial_package_snapshots WHERE id = ?", (populated_package.id,)
+            )
+
+        other_piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "editorial-readiness-other-piece", opportunity_id, angle.id, "video", "Other title"
+        )
+        other_title = repository.create_title_option_under_content_piece_readiness(
+            "editorial-readiness-other-title", other_piece.id, "Other Title"
+        )
+        with repository.connection:
+            repository.connection.execute(
+                "INSERT INTO editorial_package_snapshots VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    "editorial-readiness-corrupt-package",
+                    piece.id,
+                    other_title.id,
+                    repository.get_hook_option(empty_package.hook_option_id).id,
+                    empty_script.id,
+                    "2026-08-20T00:00:00+00:00",
+                ),
+            )
+        before_failed_integrity = repository.connection.execute(
+            "SELECT COUNT(*) FROM editorial_readiness_assessments"
+        ).fetchone()[0]
+        with pytest.raises(ValueError, match="TitleOption"):
+            repository.create_editorial_readiness_assessment(
+                "editorial-readiness-corrupt-package-assessment",
+                "editorial-readiness-corrupt-package",
+            )
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM editorial_readiness_assessments"
+            ).fetchone()[0]
+            == before_failed_integrity
+        )
+
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE research_readiness_assessments "
+                "SET frozen_evidence_state_json = ? WHERE id = ?",
+                ('{"claims":[],"claim_evidence":[],"sources":[]}', ready.id),
+            )
+        before_failed_frozen_integrity = repository.connection.execute(
+            "SELECT COUNT(*) FROM editorial_readiness_assessments"
+        ).fetchone()[0]
+        with pytest.raises(ValueError, match="frozen evidence"):
+            repository.create_editorial_readiness_assessment(
+                "editorial-readiness-corrupt", populated_package.id
+            )
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM editorial_readiness_assessments"
+            ).fetchone()[0]
+            == before_failed_frozen_integrity
+        )
+
+        table_names = {
+            row[0]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert "editorial_readiness_assessments" in table_names
+        assert {"editorial_gates", "editorial_readiness_findings", "cost_ledgers"}.isdisjoint(
+            table_names
+        )
+        columns = {
+            row[1]
+            for row in repository.connection.execute(
+                "PRAGMA table_info(editorial_readiness_assessments)"
+            )
+        }
+        assert {"current", "latest", "superseded", "score", "provider", "model"}.isdisjoint(columns)
+    finally:
+        repository.close()
+
+
+def test_migration_18_adds_editorial_readiness_assessments_without_backfill(tmp_path) -> None:
+    """Migration 18 is additive over v0.22 and preserves historical packages."""
+
+    database = tmp_path / "atlas-v022.db"
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute(
+            "CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
+        )
+        for version, statements in MIGRATIONS[:17]:
+            for statement in statements:
+                connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations VALUES (?, '2026-08-20T00:00:00+00:00')",
+                (version,),
+            )
+        connection.commit()
+    finally:
+        connection.close()
+
+    repository = AtlasRepository(database)
+    try:
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM editorial_readiness_assessments"
+            ).fetchone()[0]
+            == 0
+        )
+        assert repository.connection.execute(
+            "SELECT version FROM schema_migrations WHERE version = 18"
+        ).fetchone()
+        assert repository.connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'index' "
+            "AND name = 'idx_editorial_readiness_assessments_package_created'"
+        ).fetchone()
+    finally:
+        repository.close()
+
+
 def test_script_claim_sets_close_explicit_frozen_claim_provenance(tmp_path) -> None:
     """v0.22 closes explicit Script Claim identity sets against exact frozen readiness evidence."""
 
@@ -1685,7 +1932,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -2106,7 +2353,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -2300,7 +2547,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -2445,7 +2692,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                18,
+                19,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -2467,7 +2714,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 18"
+                "SELECT version FROM schema_migrations WHERE version = 19"
             ).fetchone()
             is None
         )
@@ -4515,7 +4762,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        ] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

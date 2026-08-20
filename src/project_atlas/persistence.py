@@ -264,6 +264,20 @@ class EditorialPackageSnapshot:
 
 
 @dataclass(frozen=True)
+class EditorialReadinessAssessment:
+    """An immutable deterministic readiness assessment of one exact editorial package."""
+
+    id: str
+    editorial_package_snapshot_id: str
+    schema_version: int
+    evaluator_id: str
+    evaluator_version: str
+    outcome: str
+    findings: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
 class VisualPlan:
     """A visual translation plan for one immutable Script version."""
 
@@ -380,6 +394,10 @@ EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
 RESEARCH_READINESS_OUTCOMES = frozenset({"Ready", "NeedsMoreResearch", "Blocked"})
+EDITORIAL_READINESS_OUTCOMES = frozenset({"Ready", "NotReady"})
+EDITORIAL_READINESS_ASSESSMENT_SCHEMA_VERSION = 1
+EDITORIAL_READINESS_EVALUATOR_ID = "deterministic-editorial-readiness"
+EDITORIAL_READINESS_EVALUATOR_VERSION = "v1"
 
 
 @dataclass(frozen=True)
@@ -969,6 +987,29 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
             "CREATE INDEX idx_script_claim_links_claim "
             "ON script_claim_links (claim_id, script_claim_set_id)",
+        ),
+    ),
+    (
+        18,
+        (
+            """
+        CREATE TABLE editorial_readiness_assessments (
+          id TEXT PRIMARY KEY,
+          editorial_package_snapshot_id TEXT NOT NULL,
+          assessment_schema_version INTEGER NOT NULL CHECK (assessment_schema_version >= 1),
+          evaluator_id TEXT NOT NULL,
+          evaluator_version TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('Ready', 'NotReady')),
+          findings_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (editorial_package_snapshot_id)
+            REFERENCES editorial_package_snapshots(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE INDEX idx_editorial_readiness_assessments_package_created
+          ON editorial_readiness_assessments (editorial_package_snapshot_id, created_at, id)
+        """,
         ),
     ),
 )
@@ -2231,6 +2272,83 @@ class AtlasRepository:
         )
         return [self._editorial_package_snapshot(row) for row in rows]
 
+    def create_editorial_readiness_assessment(
+        self,
+        assessment_id: str,
+        editorial_package_snapshot_id: str,
+    ) -> EditorialReadinessAssessment:
+        """Append one server-derived deterministic assessment of an exact package."""
+
+        if not isinstance(assessment_id, str) or not assessment_id.strip():
+            raise ValueError("Editorial readiness assessment ID must be non-empty text.")
+        snapshot = self.get_editorial_package_snapshot(editorial_package_snapshot_id)
+        if self.connection.execute(
+            "SELECT 1 FROM editorial_readiness_assessments WHERE id = ?", (assessment_id.strip(),)
+        ).fetchone():
+            raise ValueError("Editorial readiness assessment ID already exists.")
+
+        findings = self._evaluate_editorial_package_readiness(snapshot)
+        outcome = "NotReady" if any(finding["blocking"] for finding in findings) else "Ready"
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO editorial_readiness_assessments "
+                "(id, editorial_package_snapshot_id, assessment_schema_version, evaluator_id, "
+                "evaluator_version, outcome, findings_json, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    assessment_id.strip(),
+                    snapshot.id,
+                    EDITORIAL_READINESS_ASSESSMENT_SCHEMA_VERSION,
+                    EDITORIAL_READINESS_EVALUATOR_ID,
+                    EDITORIAL_READINESS_EVALUATOR_VERSION,
+                    outcome,
+                    json.dumps({"findings": findings}, sort_keys=True, separators=(",", ":")),
+                    now(),
+                ),
+            )
+        return self.get_editorial_readiness_assessment(assessment_id.strip())
+
+    def get_editorial_readiness_assessment(
+        self, assessment_id: str
+    ) -> EditorialReadinessAssessment:
+        row = self.connection.execute(
+            "SELECT * FROM editorial_readiness_assessments WHERE id = ?", (assessment_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(assessment_id)
+        return self._editorial_readiness_assessment(row)
+
+    def list_editorial_readiness_assessments(
+        self, editorial_package_snapshot_id: str
+    ) -> list[EditorialReadinessAssessment]:
+        """Return immutable package assessment history in deterministic creation order."""
+
+        self.get_editorial_package_snapshot(editorial_package_snapshot_id)
+        rows = self.connection.execute(
+            "SELECT * FROM editorial_readiness_assessments "
+            "WHERE editorial_package_snapshot_id = ? ORDER BY created_at, id",
+            (editorial_package_snapshot_id,),
+        )
+        return [self._editorial_readiness_assessment(row) for row in rows]
+
+    def editorial_readiness_assessment_payload(self, assessment_id: str) -> dict[str, Any]:
+        return self._editorial_readiness_assessment_payload(
+            self.get_editorial_readiness_assessment(assessment_id)
+        )
+
+    def editorial_readiness_assessment_history_payload(
+        self, editorial_package_snapshot_id: str
+    ) -> dict[str, Any]:
+        return {
+            "editorial_package_snapshot_id": editorial_package_snapshot_id,
+            "assessments": [
+                self._editorial_readiness_assessment_payload(assessment)
+                for assessment in self.list_editorial_readiness_assessments(
+                    editorial_package_snapshot_id
+                )
+            ],
+        }
+
     @staticmethod
     def title_option_payload(title_option: TitleOption) -> dict[str, Any]:
         return {
@@ -2262,6 +2380,21 @@ class AtlasRepository:
             "hook_option_id": snapshot.hook_option_id,
             "script_id": snapshot.script_id,
             "created_at": snapshot.created_at,
+        }
+
+    @staticmethod
+    def _editorial_readiness_assessment_payload(
+        assessment: EditorialReadinessAssessment,
+    ) -> dict[str, Any]:
+        return {
+            "id": assessment.id,
+            "editorial_package_snapshot_id": assessment.editorial_package_snapshot_id,
+            "schema_version": assessment.schema_version,
+            "evaluator_id": assessment.evaluator_id,
+            "evaluator_version": assessment.evaluator_version,
+            "outcome": assessment.outcome,
+            "findings": assessment.findings,
+            "created_at": assessment.created_at,
         }
 
     def create_visual_plan(
@@ -3186,6 +3319,88 @@ class AtlasRepository:
         if assessment_id is None:
             raise ValueError("A ScriptClaimSet requires EditorialAngle readiness provenance.")
         return self.get_research_readiness_assessment(assessment_id)
+
+    def _evaluate_editorial_package_readiness(
+        self, snapshot: EditorialPackageSnapshot
+    ) -> list[dict[str, Any]]:
+        """Evaluate only the approved deterministic package/provenance conditions."""
+
+        self._validate_editorial_package_snapshot_integrity(snapshot)
+        claim_set = self.get_script_claim_set_for_script(snapshot.script_id)
+        if claim_set is None:
+            return [
+                {
+                    "code": "SCRIPT_CLAIM_SET_MISSING",
+                    "severity": "error",
+                    "blocking": True,
+                    "message": "The package Script does not have a closed claim provenance set.",
+                }
+            ]
+        self._validate_script_claim_set_frozen_provenance(claim_set)
+        return []
+
+    def _validate_editorial_package_snapshot_integrity(
+        self, snapshot: EditorialPackageSnapshot
+    ) -> None:
+        """Validate the exact immutable package components before assessment."""
+
+        try:
+            self._validate_content_piece_readiness_lineage(snapshot.content_piece_id)
+            title_option = self.get_title_option(snapshot.title_option_id)
+            hook_option = self.get_hook_option(snapshot.hook_option_id)
+            script = self.get_script(snapshot.script_id)
+        except KeyError as error:
+            raise ValueError(
+                "An EditorialPackageSnapshot must reference existing ContentPiece components."
+            ) from error
+        if title_option.content_piece_id != snapshot.content_piece_id:
+            raise ValueError("A package TitleOption must belong to the same ContentPiece.")
+        if hook_option.content_piece_id != snapshot.content_piece_id:
+            raise ValueError("A package HookOption must belong to the same ContentPiece.")
+        if script.content_piece_id != snapshot.content_piece_id:
+            raise ValueError("A package Script must belong to the same ContentPiece.")
+
+    def _validate_script_claim_set_frozen_provenance(self, claim_set: ScriptClaimSet) -> None:
+        """Require a closed set's memberships to resolve only against frozen Ready evidence."""
+
+        try:
+            assessment = self._script_claim_set_readiness_assessment(claim_set)
+        except KeyError as error:
+            raise ValueError(
+                "A ScriptClaimSet must resolve exact Ready assessment provenance."
+            ) from error
+        frozen_claims = self._frozen_claims_by_id(assessment)
+        claim_ids = [link.claim_id for link in self.list_script_claim_links(claim_set.id)]
+        missing_claim_ids = [claim_id for claim_id in claim_ids if claim_id not in frozen_claims]
+        if missing_claim_ids:
+            raise ValueError(
+                "A ScriptClaimSet Claim must resolve in the exact Ready assessment frozen evidence."
+            )
+
+        frozen_evidence = assessment.frozen_evidence_state
+        sources = frozen_evidence.get("sources")
+        claim_evidence = frozen_evidence.get("claim_evidence")
+        if not isinstance(sources, list) or not isinstance(claim_evidence, list):
+            raise ValueError(
+                "Research readiness frozen evidence must resolve Sources and ClaimEvidence."
+            )
+        source_ids = {
+            source.get("id")
+            for source in sources
+            if isinstance(source, dict) and isinstance(source.get("id"), str)
+        }
+        linked_claim_ids = set(claim_ids)
+        for evidence in claim_evidence:
+            if not isinstance(evidence, dict):
+                raise ValueError(
+                    "Research readiness frozen ClaimEvidence must be structured records."
+                )
+            if evidence.get("claim_id") in linked_claim_ids:
+                source_id = evidence.get("source_id")
+                if not isinstance(source_id, str) or source_id not in source_ids:
+                    raise ValueError(
+                        "A ScriptClaimSet ClaimEvidence record must resolve its frozen Source."
+                    )
 
     @staticmethod
     def _frozen_claims_by_id(
@@ -4976,6 +5191,19 @@ class AtlasRepository:
             row["title_option_id"],
             row["hook_option_id"],
             row["script_id"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _editorial_readiness_assessment(row: sqlite3.Row) -> EditorialReadinessAssessment:
+        return EditorialReadinessAssessment(
+            row["id"],
+            row["editorial_package_snapshot_id"],
+            row["assessment_schema_version"],
+            row["evaluator_id"],
+            row["evaluator_version"],
+            row["outcome"],
+            json.loads(row["findings_json"]),
             row["created_at"],
         )
 

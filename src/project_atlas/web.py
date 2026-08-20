@@ -149,6 +149,57 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 }
             )
             return
+        editorial_readiness_history_prefix = "/api/editorial-package-snapshots/"
+        editorial_readiness_history_suffix = "/readiness-assessments"
+        if parsed.path.startswith(editorial_readiness_history_prefix) and parsed.path.endswith(
+            editorial_readiness_history_suffix
+        ):
+            snapshot_id = unquote(
+                parsed.path[
+                    len(editorial_readiness_history_prefix) : -len(
+                        editorial_readiness_history_suffix
+                    )
+                ]
+            ).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "editorial_readiness_assessment_history",
+                        **self.server.repository.editorial_readiness_assessment_history_payload(
+                            snapshot_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "EditorialPackageSnapshot not found."}, HTTPStatus.NOT_FOUND
+                )
+            return
+        editorial_readiness_assessment_prefix = "/api/editorial-readiness-assessments/"
+        if parsed.path.startswith(editorial_readiness_assessment_prefix):
+            assessment_id = unquote(
+                parsed.path[len(editorial_readiness_assessment_prefix) :]
+            ).strip("/")
+            if not assessment_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                self._send_json(
+                    {
+                        "kind": "editorial_readiness_assessment",
+                        "assessment": self.server.repository.editorial_readiness_assessment_payload(
+                            assessment_id
+                        ),
+                    }
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "Editorial readiness assessment not found."}, HTTPStatus.NOT_FOUND
+                )
+            return
         content_piece_prefix = "/api/content-pieces/"
         editorial_history_routes = {
             "/title-options": (
@@ -352,6 +403,50 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        editorial_readiness_prefix = "/api/editorial-package-snapshots/"
+        editorial_readiness_suffix = "/readiness-assessments"
+        if path.startswith(editorial_readiness_prefix) and path.endswith(
+            editorial_readiness_suffix
+        ):
+            snapshot_id = unquote(
+                path[len(editorial_readiness_prefix) : -len(editorial_readiness_suffix)]
+            ).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("Editorial readiness assessment payload must be an object.")
+                if set(payload) - {"id"}:
+                    raise ValueError(
+                        "Editorial readiness assessment payload contains unsupported fields."
+                    )
+                assessment_id = payload.get("id")
+                if not isinstance(assessment_id, str) or not assessment_id.strip():
+                    raise ValueError("Editorial readiness assessment ID must be non-empty text.")
+                assessment = self.server.repository.create_editorial_readiness_assessment(
+                    assessment_id.strip(), snapshot_id
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "EditorialPackageSnapshot not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "editorial_readiness_assessment",
+                    "assessment": self.server.repository.editorial_readiness_assessment_payload(
+                        assessment.id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         script_claim_set_prefix = "/api/scripts/"
         script_claim_set_suffix = "/claim-set"
         if path.startswith(script_claim_set_prefix) and path.endswith(script_claim_set_suffix):

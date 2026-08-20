@@ -961,6 +961,191 @@ def test_script_claim_set_api_closes_and_reads_exact_frozen_provenance(tmp_path:
         server.server_close()
 
 
+def test_editorial_readiness_assessment_api_is_server_derived_and_append_only(
+    tmp_path: Path,
+) -> None:
+    """v0.23 exposes immutable deterministic package readiness without a Gate."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+
+    def request_json(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        with urlopen(request) as response:
+            payload = json.load(response)
+            status = response.status
+        thread.join(timeout=2)
+        return payload, status
+
+    def request_error(request: Request) -> tuple[dict, int]:
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            urlopen(request)
+        except HTTPError as error:
+            payload = json.loads(error.read())
+            status = error.code
+        else:
+            raise AssertionError("The invalid editorial readiness request unexpectedly succeeded.")
+        thread.join(timeout=2)
+        return payload, status
+
+    def post(path: str, payload: dict) -> tuple[dict, int]:
+        return request_json(
+            Request(
+                f"{base_url}{path}",
+                data=json.dumps(payload).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+
+    try:
+        repository = server.repository
+        opportunity_id = "http-editorial-readiness-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        pack = repository.create_research_pack(
+            "http-editorial-readiness-pack", opportunity_id, 1, "Research pack"
+        )
+        claim = repository.create_claim(
+            "http-editorial-readiness-claim",
+            pack.id,
+            "Frozen Claim.",
+            "fact",
+            "low",
+            "stable",
+            "reviewed",
+            "",
+        )
+        ready = repository.create_research_readiness_assessment(
+            "http-editorial-readiness-research-ready",
+            pack.id,
+            "Ready",
+            {"summary": "Ready."},
+            "policy-v1",
+            "test",
+            "web-test",
+            "v1",
+        )
+        fields = ("Angle", "Thesis", "Promise", "Frame", ["Takeaway"])
+        angle = repository.create_editorial_angle_under_research_readiness(
+            "http-editorial-readiness-angle", opportunity_id, pack.id, ready.id, *fields
+        )
+        repository.link_claim_to_editorial_angle(angle.id, claim.id, "core")
+        piece = repository.create_content_piece_under_editorial_angle_readiness(
+            "http-editorial-readiness-piece", opportunity_id, angle.id, "video", "Working title"
+        )
+
+        def package(script_id: str, suffix: str):
+            title = repository.create_title_option_under_content_piece_readiness(
+                f"http-editorial-readiness-title-{suffix}", piece.id, f"Title {suffix}"
+            )
+            hook = repository.create_hook_option_under_content_piece_readiness(
+                f"http-editorial-readiness-hook-{suffix}", piece.id, f"Hook {suffix}"
+            )
+            return repository.create_editorial_package_snapshot(
+                f"http-editorial-readiness-package-{suffix}", piece.id, title.id, hook.id, script_id
+            )
+
+        missing_script = repository.create_script_under_content_piece_readiness(
+            "http-editorial-readiness-missing-script", piece.id, "Narration."
+        )
+        missing_package = package(missing_script.id, "missing")
+        endpoint = f"/api/editorial-package-snapshots/{missing_package.id}/readiness-assessments"
+        created, status = post(endpoint, {"id": "http-editorial-readiness-not-ready"})
+        assert status == 201
+        assessment = created["assessment"]
+        assert assessment["editorial_package_snapshot_id"] == missing_package.id
+        assert assessment["outcome"] == "NotReady"
+        assert assessment["findings"]["findings"][0]["code"] == "SCRIPT_CLAIM_SET_MISSING"
+        assert assessment["findings"]["findings"][0]["blocking"] is True
+        assert assessment["evaluator_id"] == "deterministic-editorial-readiness"
+        assert assessment["evaluator_version"] == "v1"
+        history, status = request_json(Request(f"{base_url}{endpoint}"))
+        assert status == 200
+        assert history["assessments"] == [assessment]
+        fetched, status = request_json(
+            Request(f"{base_url}/api/editorial-readiness-assessments/{assessment['id']}")
+        )
+        assert status == 200
+        assert fetched["assessment"] == assessment
+        rerun, status = post(endpoint, {"id": "http-editorial-readiness-not-ready-rerun"})
+        assert status == 201
+        assert [
+            record["id"]
+            for record in request_json(Request(f"{base_url}{endpoint}"))[0]["assessments"]
+        ] == [
+            assessment["id"],
+            rerun["assessment"]["id"],
+        ]
+
+        empty_script = repository.create_script_under_content_piece_readiness(
+            "http-editorial-readiness-empty-script", piece.id, "Empty narration."
+        )
+        empty_package = package(empty_script.id, "empty")
+        repository.create_script_claim_set(
+            "http-editorial-readiness-empty-set", empty_script.id, []
+        )
+        empty_created, status = post(
+            f"/api/editorial-package-snapshots/{empty_package.id}/readiness-assessments",
+            {"id": "http-editorial-readiness-ready"},
+        )
+        assert status == 201
+        assert empty_created["assessment"]["outcome"] == "Ready"
+        assert empty_created["assessment"]["findings"] == {"findings": []}
+
+        populated_script = repository.create_script_under_content_piece_readiness(
+            "http-editorial-readiness-populated-script", piece.id, "Populated narration."
+        )
+        populated_package = package(populated_script.id, "populated")
+        repository.create_script_claim_set(
+            "http-editorial-readiness-populated-set", populated_script.id, [claim.id]
+        )
+        populated_created, status = post(
+            f"/api/editorial-package-snapshots/{populated_package.id}/readiness-assessments",
+            {"id": "http-editorial-readiness-populated-ready"},
+        )
+        assert status == 201
+        assert populated_created["assessment"]["outcome"] == "Ready"
+
+        for invalid_payload in (
+            {},
+            {"id": "unsupported", "outcome": "Ready"},
+            {"id": "unsupported-findings", "findings": {"findings": []}},
+            {"id": "unsupported-evaluator", "evaluator_id": "caller"},
+        ):
+            rejected, status = request_error(
+                Request(
+                    f"{base_url}{endpoint}",
+                    data=json.dumps(invalid_payload).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+            )
+            assert status == 400
+            assert rejected["error"]
+        missing, status = request_error(
+            Request(
+                f"{base_url}/api/editorial-package-snapshots/missing/readiness-assessments",
+                data=json.dumps({"id": "missing"}).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+        )
+        assert status == 404
+        assert "EditorialPackageSnapshot" in missing["error"]
+        missing_get, status = request_error(
+            Request(f"{base_url}/api/editorial-readiness-assessments/missing")
+        )
+        assert status == 404
+        assert "assessment not found" in missing_get["error"]
+    finally:
+        server.server_close()
+
+
 def test_content_endpoint_adapts_persisted_research_angle_piece_script_and_scenes(
     tmp_path: Path,
 ) -> None:
