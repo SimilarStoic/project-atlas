@@ -6,15 +6,16 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.23 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.23 ACCEPTED; v0.24 PENDING ACCEPTANCE)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship. v0.23 — Deterministic Editorial Readiness Assessment is the latest accepted
-implementation milestone and v0.22 is its historical accepted predecessor. Migration 18 is canonical and migrations
-extend through 1–18; migration 19 is absent. Remaining Phase 2 scope is unimplemented, later phases remain
-unactivated, and no successor after v0.23 is selected. Atlas v0.1 through v0.7
+design/implementation stewardship. v0.23 — Deterministic Editorial Readiness Assessment remains the latest accepted
+implementation milestone and v0.22 is its historical accepted predecessor. v0.24 — Editorial Gate + Approved
+VisualPlan Initiation is selected, locally implemented and validated pending founder acceptance/push. Migration 19 is
+canonical and migrations extend through 1–19; migration 20 is absent. Remaining Phase 2 scope is unimplemented,
+later phases remain unactivated, and no successor after v0.24 is selected. Atlas v0.1 through v0.7
 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
@@ -124,8 +125,9 @@ publishing, analytics or orchestration is included. The API is
 - Founder + ChatGPT acceptance is granted for implementation commit
   `32812e6793d9b06632ebffd82504cd8810c2ab3d`.
 - Validation passed: Black 26.3.1 `--check`, Ruff, **88 pytest tests**, and `git diff --check`.
-- v0.23 is the latest accepted implementation milestone; v0.22 is its historical accepted predecessor. Migration 18
-  is latest and migration 19 is absent.
+- v0.23 remains the latest accepted implementation milestone; v0.22 is its historical accepted predecessor. v0.24 —
+  Editorial Gate + Approved VisualPlan Initiation is selected, locally implemented and validated pending founder
+  acceptance/push. Migration 19 is latest, migration 20 is absent, and no successor after v0.24 is selected.
 
 ## v0.20 Accepted Checkpoint
 
@@ -140,8 +142,9 @@ existing versions, while low-level Script creation remains compatible.
 The narrow API is `POST /api/content-pieces/{content_piece_id}/scripts`, accepting only Script ID, narration text
 and optional metadata. It rejects caller version/readiness/lineage overrides and invalid provenance. No migration,
 Title/Hook, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan, production, publishing, analytics or orchestration
-is included. v0.23 is the latest accepted successor; v0.22 is its historical accepted predecessor. Migration 18 is
-latest, migration 19 is absent, and no successor after v0.23 is selected.
+is included. v0.23 remains the latest accepted successor; v0.22 is its historical accepted predecessor. v0.24 —
+Editorial Gate + Approved VisualPlan Initiation is selected, locally implemented and validated pending founder
+acceptance/push. Migration 19 is latest, migration 20 is absent, and no successor after v0.24 is selected.
 Validation passed: Black 26.3.1 `--check`, Ruff, **90 pytest tests**, and `git diff --check`.
 
 - Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`.
@@ -188,8 +191,9 @@ approval/workflow, UI, production, publishing, analytics, Learning and orchestra
 
 v0.22 is accepted. v0.21 is its historical accepted predecessor. Acceptance covers implementation commit
 `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
-`3947ae34fb345a5cf6cb16423194a2b21d1d67c5`. Migration 18 is latest, migration 19 is absent, Phase 2 remains
-ACTIVE / INCOMPLETE, and v0.23 is the latest accepted milestone. Validation passed: Black 26.3.1 `--check`, Ruff,
+`3947ae34fb345a5cf6cb16423194a2b21d1d67c5`. v0.24 — Editorial Gate + Approved VisualPlan Initiation is selected,
+locally implemented and validated pending founder acceptance/push. Migration 19 is latest, migration 20 is absent,
+Phase 2 remains ACTIVE / INCOMPLETE, and v0.23 remains the latest accepted milestone. Validation passed: Black 26.3.1 `--check`, Ruff,
 **96 pytest tests**, and `git diff --check`.
 
 ## v0.23 Accepted Checkpoint
@@ -215,8 +219,35 @@ publishing, analytics, Learning, financial behavior or orchestration is included
 
 Founder acceptance covers implementation commit `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state
 documentation commit `64e5da9183d9a0fe1492e6968f266f26abd4538c`. Validation passed: Black 26.3.1 `--check`, Ruff,
-**99 pytest tests**, and `git diff --check`. Migration 18 is latest; migration 19 is absent. Phase 2 remains ACTIVE /
-INCOMPLETE and no successor after v0.23 is selected.
+**99 pytest tests**, and `git diff --check`. v0.24 — Editorial Gate + Approved VisualPlan Initiation is selected,
+locally implemented and validated pending founder acceptance/push. Migration 19 is latest; migration 20 is absent.
+Phase 2 remains ACTIVE / INCOMPLETE and no successor after v0.24 is selected.
+
+## v0.24 Pending Acceptance Checkpoint
+
+**v0.24 — Editorial Gate + Approved VisualPlan Initiation** is selected, locally implemented and validated pending
+founder acceptance/push. It adds immutable, additive `EditorialGateDecision` history over one exact immutable
+`EditorialPackageSnapshot` and one explicitly supplied exact `Ready` `EditorialReadinessAssessment`. The only
+outcomes are `Approve`, `Revise` and `Reject`; there is no current/latest/selected/superseded state. Multiple
+decisions may exist for a package or assessment.
+
+Only an exact `Approve` decision may deliberately initiate a VisualPlan. The dedicated path derives the exact
+ContentPiece and Script from the approved package, creates the VisualPlan and its additive
+`visual_plan_gate_provenance` record atomically, and accepts no caller lineage override. Historical/demo and
+low-level VisualPlans remain compatible without Gate provenance and are not backfilled.
+
+Migration 19 adds only `editorial_gate_decisions`, `visual_plan_gate_provenance`, restrictive foreign keys and
+history/reverse lookup indexes; migration 20 is absent. The narrow API is
+`POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/gate-decisions`,
+`GET /api/editorial-gate-decisions/{decision_id}`, and
+`POST /api/editorial-gate-decisions/{decision_id}/visual-plans`.
+
+The implementation commit is `34acdcfc3b3d523a3eb4a00af6ae7d768669444b`. Validation passed: Black 26.3.1
+formatting equivalence via an in-process repository-wide API check; the documented Black CLI could not terminate in
+this Windows host because of a process-runtime hang. Ruff passed, **102 pytest tests** passed, and `git diff --check`
+passed. v0.24 adds no new Title/Hook or Script-to-Claim lifecycle work, machine editorial QA, spend/cost
+authorization, provider/generation work, Scene/AssetSpec lifecycle expansion, production, publishing, UI, workflow,
+analytics or successor scope. Phase 2 remains ACTIVE / INCOMPLETE and no successor after v0.24 is selected.
 
 ## Atlas v0.2 Checkpoint
 
@@ -1060,9 +1091,11 @@ remains compatible, with no backfill or global readiness requirement. The lifecy
 ResearchPack and assessment → same ResearchPack lineage; it rejects missing, cross-lineage, NeedsMoreResearch and
 Blocked input. No latest/current selection, consumption, readiness mutation, frozen Claim matching, ContentPiece,
 Script, `Opportunity.status` mutation, workflow entity, provider call, UI or Phase 5 automation is authorized.
-Migration 15 remains canonical for the nullable restrictive FK and lineage index. Migrations extend through 1–17.
-v0.23 — Deterministic Editorial Readiness Assessment is the latest accepted implementation milestone; v0.22 — Closed
-Script Claim Provenance Foundation is its historical accepted predecessor, and no successor after v0.23 is selected.
+Migration 15 remains canonical for the nullable restrictive FK and lineage index. Migrations extend through 1–19.
+v0.23 — Deterministic Editorial Readiness Assessment remains the latest accepted implementation milestone; v0.22 —
+Closed Script Claim Provenance Foundation is its historical accepted predecessor. v0.24 — Editorial Gate + Approved
+VisualPlan Initiation is selected, locally implemented and validated pending founder acceptance/push; migration 20 is
+absent and no successor after v0.24 is selected.
 
 Phase 2 defers production/publication records to Phases 6/7, Learning Gate persistence to Phase 8, financial
 guardrail records to future financial implementation, and orchestration to Phase 9. No gate/readiness tables,
@@ -1081,10 +1114,11 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.23 — Deterministic Editorial Readiness Assessment is the latest accepted
-implementation milestone; v0.22 is its historical accepted predecessor. Migration 18 is canonical and migrations
-extend through 1–18; migration 19 is absent. No successor after v0.23 is selected. The exact immediate next action is
-founder + ChatGPT critical-path planning.
+Phase 2 remains active and incomplete. v0.23 — Deterministic Editorial Readiness Assessment remains the latest
+accepted implementation milestone; v0.22 is its historical accepted predecessor. v0.24 — Editorial Gate + Approved
+VisualPlan Initiation is selected, locally implemented and validated pending founder acceptance/push. Migration 19 is
+canonical and migrations extend through 1–19; migration 20 is absent. No successor after v0.24 is selected. The exact
+immediate next action is founder acceptance/push review for v0.24.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
