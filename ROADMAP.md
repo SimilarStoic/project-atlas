@@ -995,10 +995,10 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted
-implementation milestone; migration 15 is canonical. **v0.19 — Editorial-Angle-Authorized ContentPiece
-Initiation** is the next defined and authorized bounded milestone, but is not implemented or accepted; no successor
-after v0.19 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest
+accepted implementation milestone; v0.18 — Readiness-Authorized Editorial Angle Initiation is its historical
+accepted predecessor and migration 15 is canonical. No successor after v0.19 is selected: no v0.20, Editorial
+Draft Package slice or migration 16 is authorized.
 
 Implement:
 - Research
@@ -1017,11 +1017,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation milestone;
-v0.17 is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15.
+**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation milestone;
+v0.18 is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15.
 Phase 2 remains ACTIVE / INCOMPLETE; all remaining Phase 2 scope is unimplemented and no later phase is activated.
-v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the next defined and authorized bounded milestone,
-but is not implemented or accepted; no milestone after v0.19 is selected.
+No milestone after v0.19 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1375,11 +1374,10 @@ must return to founder + ChatGPT rather than be inferred.
 
 ### v0.18 — Readiness-Authorized Editorial Angle Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation milestone owned by
-**Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is canonical,
-and migrations extend through 1–15. This acceptance does not complete Phase 2 or activate a later phase. v0.19 is
-the next defined and authorized bounded milestone, but is not implemented or accepted; no milestone after v0.19 is
-selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the historical accepted predecessor to v0.19
+within **Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is
+canonical, and migrations extend through 1–15. This acceptance does not complete Phase 2 or activate a later phase.
+No milestone after v0.19 is selected.
 
 Purpose:
 
@@ -1488,9 +1486,10 @@ must return to founder + ChatGPT rather than be inferred.
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.19 is the next
-authorized Phase 2 milestone. v0.18 remains the latest accepted implementation milestone, migration 15 remains the
-latest canonical migration, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.19 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.19 is the latest accepted Phase 2 milestone. v0.18 is its
+historical accepted predecessor, migration 15 remains the latest canonical migration, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.19 is selected. Founder acceptance covers implementation commit
+`32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Purpose:
 
@@ -1516,21 +1515,20 @@ ResearchReadinessAssessment provenance.** It does not freeze mutable Angle text,
 perpetual editorial validity, select a current assessment, consume the Angle/assessment, make the ContentPiece
 production-ready, or pass Editorial Gate. This is explicit lineage, not generic workflow/progression state.
 
-The intended durable chain is ContentPiece → EditorialAngle → ResearchReadinessAssessment. The existing immutable
-ContentPiece → EditorialAngle provenance is expected to be sufficient. No duplicate
-`research_readiness_assessment_id` belongs on ContentPiece, and no migration 16 is authorized. If implementation
-inspection demonstrates a genuine schema requirement, it must return to founder + ChatGPT before code.
+The durable chain is ContentPiece → EditorialAngle → ResearchReadinessAssessment. The existing immutable
+ContentPiece → EditorialAngle provenance is sufficient. No duplicate
+`research_readiness_assessment_id` belongs on ContentPiece, and no migration 16 was added.
 
 One eligible EditorialAngle may initiate multiple ContentPieces. No consumption flag, current/latest ContentPiece,
 one-use progression or generic progressed state is authorized. Normal ContentPiece edits must preserve provenance
 and must not mutate/revalidate the Opportunity, ResearchPack, assessment, Angle or sibling ContentPieces. Later
 assessments must not rewrite existing ContentPiece lineage.
 
-The planned API boundary is `POST /api/opportunities/{opportunity_id}/content-pieces`, with
+The API boundary is `POST /api/opportunities/{opportunity_id}/content-pieces`, with
 `editorial_angle_id` and ordinary ContentPiece fields. Missing Opportunity or Angle follows existing 404 convention;
 wrong Opportunity/Angle lineage, null readiness provenance, invalid/mismatched upstream lineage and non-Ready
-provenance are 400-style failures. Success persists a ContentPiece under existing response conventions. This is a
-future bounded vertical API, not evidence that the endpoint exists; no UI is authorized.
+provenance are 400-style failures. Success persists a ContentPiece under existing response conventions. No UI is
+authorized.
 
 v0.19 does not include a full editorial package, Title, Hook, Script creation, Script-to-Claim relationships,
 EditorialAngle versioning/snapshots/revalidation/generation/ranking, provider/model calls, research automation,
@@ -1735,12 +1733,11 @@ operating costs later require per-item authorization remains a financial-control
 spend authorization must be attributable to the exact editorial/production lineage it governs, but no
 authorization, proposal, reservation, ledger or enforcement entity is approved here.
 
-v0.15 — Persistent Idea Gate, v0.16 — Authorized Research Initiation and **v0.17 — Persistent Research
-Readiness** are historical accepted implementation predecessors. **v0.18 — Readiness-Authorized Editorial Angle
-Initiation** is the latest accepted implementation milestone; migration 15 is canonical and migrations extend
-through 1–15. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the next defined and authorized
-bounded milestone, but is not implemented or accepted. Phase 2 remains ACTIVE / INCOMPLETE, and no milestone after
-v0.19 is selected.
+v0.15 — Persistent Idea Gate, v0.16 — Authorized Research Initiation, **v0.17 — Persistent Research Readiness**
+and **v0.18 — Readiness-Authorized Editorial Angle Initiation** are historical accepted implementation
+predecessors. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation
+milestone; migration 15 is canonical and migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE, and
+no milestone after v0.19 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
@@ -1909,9 +1906,9 @@ toward:
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
   v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
   is its historical accepted milestone; v0.17 — Persistent Research Readiness is its historical accepted
-  predecessor; v0.18 — Readiness-Authorized Editorial Angle Initiation is its latest accepted implementation
-  milestone; v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is defined and authorized for bounded
-  implementation but is not implemented or accepted; no milestone after v0.19 is selected;
+  predecessor; v0.18 — Readiness-Authorized Editorial Angle Initiation is its historical accepted predecessor;
+  v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its latest accepted implementation milestone; no
+  milestone after v0.19 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

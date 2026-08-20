@@ -21,13 +21,13 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation milestone.
-**v0.17 — Persistent Research Readiness** is its historical accepted predecessor. Migration 15 is canonical and
-migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain unactivated.
-**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the next defined and authorized bounded
-implementation milestone, but is not implemented or accepted; no successor after v0.19 is selected. At this
-synchronization checkpoint, canonical `main` and `origin/main` are
-`7f316353ad3e23776a45a8569193027d58ab0e22` (`docs: rename current product identity to Conveyor`). A fresh
+**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation milestone.
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is its historical accepted predecessor. Migration 15
+is canonical and migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE and later phases remain
+unactivated. No successor after v0.19 is selected: no v0.20, Editorial Draft Package slice or migration 16 is
+authorized. Its implementation was committed and pushed at
+`32812e6793d9b06632ebffd82504cd8810c2ab3d` (`feat: initiate ContentPieces from Ready EditorialAngles`). Founder
+acceptance confirms Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed. A fresh
 session must verify the live GitHub checkpoint before acting.
 
 ### Current product identity
@@ -57,11 +57,11 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains
-unchanged. **v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation
-milestone; v0.17 is its historical accepted predecessor. **Phase 2 — Content Operating Model is the current
-ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15, v0.16, v0.17 and v0.18 implementations and v0.19 defined
-and authorized for bounded implementation only**, under founder + ChatGPT design/implementation stewardship. This
-does not authorize all Phase 2 scope or later-phase engines.
+unchanged. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation
+milestone; v0.18 is its historical accepted predecessor. **Phase 2 — Content Operating Model is the current
+ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.19 implementations and no selected successor**,
+under founder + ChatGPT design/implementation stewardship. This does not authorize all Phase 2 scope or later-phase
+engines.
 
 ## Accepted end-to-end target operating model
 
@@ -281,10 +281,9 @@ publication, analytics/Learning, financial controls, Phase 4 research automation
 
 ### v0.18 — Readiness-Authorized Editorial Angle Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the latest accepted
-implementation milestone. v0.17 is its historical accepted predecessor; migration 15 is canonical, migrations
-extend through 1–15. v0.19 is the next defined and authorized bounded milestone, but is not implemented or
-accepted; no milestone after v0.19 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 belongs to Phase 2 and is the historical
+accepted predecessor to v0.19. v0.17 is its historical accepted predecessor; migration 15 is canonical and
+migrations extend through 1–15. No milestone after v0.19 is selected.
 
 Its purpose is deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable
 `Ready` ResearchReadinessAssessment. The durable fact is direct immutable Angle → assessment initiation
@@ -329,9 +328,10 @@ lineage validation, update immutability, Claim boundaries, API semantics or late
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: DEFINED AND AUTHORIZED FOR BOUNDED IMPLEMENTATION; NOT IMPLEMENTED OR ACCEPTED.** v0.19 is the next
-authorized Phase 2 milestone. v0.18 remains the latest accepted implementation milestone, migration 15 remains the
-latest canonical migration, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.19 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.19 is the latest accepted Phase 2 milestone. v0.18 is its
+historical accepted predecessor, migration 15 remains the latest canonical migration, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.19 is selected. Founder acceptance covers implementation commit
+`32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Its purpose is the next smallest deliberate lifecycle edge:
 
@@ -356,10 +356,9 @@ does not mean that the mutable Angle remains perpetually validated, Angle text i
 Angle passed editorial QA, a current assessment was selected, the Angle or assessment was consumed, the ContentPiece
 is production-ready, or an Editorial Gate passed. This is explicit lineage, not a generic workflow engine.
 
-The expected durable chain is ContentPiece → EditorialAngle → ResearchReadinessAssessment. The existing immutable
-ContentPiece → EditorialAngle provenance is expected to be sufficient: v0.19 must not canonize a duplicate
-`research_readiness_assessment_id` on ContentPiece, and no migration 16 is authorized. If bounded implementation
-inspection later proves a schema change genuinely necessary, that question returns to founder + ChatGPT before code.
+The durable chain is ContentPiece → EditorialAngle → ResearchReadinessAssessment. The existing immutable
+ContentPiece → EditorialAngle provenance is sufficient: v0.19 adds no duplicate
+`research_readiness_assessment_id` on ContentPiece and no migration 16.
 
 One eligible EditorialAngle may initiate multiple ContentPieces. No consumption flag, current/latest ContentPiece,
 one-use progression, generic progressed state or upstream revalidation is approved. Existing ContentPiece
@@ -367,11 +366,10 @@ Opportunity/Angle provenance remains immutable. Normal ContentPiece edits must n
 revalidate the Opportunity, ResearchPack, assessment, Angle or sibling ContentPieces; later assessments must not
 rewrite existing ContentPiece lineage.
 
-The planned vertical API is `POST /api/opportunities/{opportunity_id}/content-pieces`, with `editorial_angle_id` and
-the ordinary ContentPiece fields. Missing Opportunity and Angle use the existing 404 convention; wrong
+The vertical API is `POST /api/opportunities/{opportunity_id}/content-pieces`, with `editorial_angle_id` and the
+ordinary ContentPiece fields. Missing Opportunity and Angle use the existing 404 convention; wrong
 Opportunity/Angle lineage, null readiness provenance, invalid/mismatched upstream lineage and non-Ready provenance
-are 400-style failures. Success persists a ContentPiece under existing response conventions. This endpoint does not
-yet exist and no UI is authorized.
+are 400-style failures. Success persists a ContentPiece under existing response conventions. No UI is authorized.
 
 v0.19 excludes a full editorial package; Title; Hook; Script creation; Script-to-Claim relationships; EditorialAngle
 versioning, snapshots, revalidation, generation or ranking; provider/model calls; research automation; readiness
@@ -394,11 +392,10 @@ decision/readiness/revision provenance. Production/publication readiness records
 Learning records for Phase 8, financial guardrails for future financial implementation, and orchestration for
 Phase 9. No placeholder entities are approved.
 
-The latest accepted Phase 2 implementation is **v0.18 — Readiness-Authorized Editorial Angle Initiation**. Its
-bounded persistence/API contract is accepted; **v0.17 — Persistent Research Readiness** is its historical accepted
-predecessor. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is defined and authorized for bounded
-implementation only; it is not implemented or accepted, and no successor after v0.19 is selected. Material detail
-beyond its approved boundary returns to founder + ChatGPT.
+The latest accepted Phase 2 implementation is **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation**.
+Its bounded persistence/API contract is accepted; **v0.18 — Readiness-Authorized Editorial Angle Initiation** is
+its historical accepted predecessor. No successor after v0.19 is selected. Material detail beyond its approved
+boundary returns to founder + ChatGPT.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
@@ -669,11 +666,11 @@ design decision, not invention by a fresh chat or Codex.
 
 > DEFINE → DESIGN WITH FOUNDER / CHATGPT → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → FINAL ACCEPTANCE → COMMIT → PUSH → NEXT MILESTONE
 
-**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation checkpoint.
-**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the next defined and authorized bounded
-implementation milestone, not an implemented or accepted checkpoint. Its immediate next action is: bounded local
-v0.19 implementation → validation → founder + ChatGPT review → fixes if required → acceptance → commit → push.
-No successor after v0.19 is selected; any scope beyond v0.19 requires a new explicit founder + ChatGPT decision.
+**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation checkpoint.
+Its implementation was validated, committed and pushed at
+`32812e6793d9b06632ebffd82504cd8810c2ab3d`. No successor after v0.19 is selected; its immediate next action is
+founder + ChatGPT design and selection of the next bounded milestone. Any scope beyond v0.19 requires a new
+explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 

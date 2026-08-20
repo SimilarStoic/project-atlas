@@ -5,11 +5,11 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.18 —
-Readiness-Authorized Editorial Angle Initiation; migration 15 is the latest canonical migration and
-Phase 2 remains ACTIVE / INCOMPLETE. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the
-next defined and authorized bounded milestone, but is not implemented or accepted. Later workflow,
-research automation and production systems remain deferred.
+SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.19 —
+Editorial-Angle-Authorized ContentPiece Initiation; v0.18 — Readiness-Authorized Editorial Angle Initiation
+is its historical accepted predecessor. Migration 15 is the latest canonical migration and Phase 2 remains
+ACTIVE / INCOMPLETE. No successor after v0.19 is selected: no v0.20, Editorial Draft Package slice or migration
+16 is authorized; later workflow, research automation and production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -46,11 +46,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.18 Readiness-Authorized Editorial Angle Initiation is the latest
-accepted implementation milestone; v0.17 Persistent Research Readiness is its historical accepted predecessor.
-Migrations 1–15 are canonical, with migration 15 the latest canonical migration. v0.19 —
-Editorial-Angle-Authorized ContentPiece Initiation is the next defined and authorized bounded milestone, but is
-not implemented or accepted; no successor after v0.19 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.19 Editorial-Angle-Authorized ContentPiece Initiation is the latest
+accepted implementation milestone; v0.18 Readiness-Authorized Editorial Angle Initiation is its historical accepted predecessor.
+Migrations 1–15 are canonical, with migration 15 the latest canonical migration. No successor after v0.19 is
+selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -87,14 +86,18 @@ history but has no UI or evaluator. Ready, NeedsMoreResearch and Blocked are the
 current/latest readiness, backfill, ResearchPack status or automation is authorized; migration 14 remains its
 historical migration, and migrations now extend canonically through 15.
 
-**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the latest accepted implementation milestone. It
+**v0.18 — Readiness-Authorized Editorial Angle Initiation** is the historical accepted predecessor to v0.19. It
 provides deliberate creation of an Opportunity-owned EditorialAngle under one exact supplied immutable `Ready`
 assessment, preserving a direct immutable initiation-provenance reference. The reference is nullable for
 historical/demo/legacy Angles and required only by the new lifecycle path; no backfill, latest/current selection,
 readiness consumption, frozen Claim matching, workflow record, UI, provider call, Phase 5 generation, ContentPiece
 or Script behavior is included. Migration 15 is canonical for the nullable restrictive FK and assessment-lineage
-index. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the next defined and authorized bounded
-milestone, not an implemented or accepted checkpoint; no successor after v0.19 is selected.
+index. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation
+milestone: it deliberately creates a ContentPiece from one exact eligible Ready-authorized EditorialAngle while
+preserving the existing ContentPiece → EditorialAngle → ResearchReadinessAssessment provenance chain. It adds no
+migration, duplicate assessment reference, workflow state, downstream editorial/production behavior or UI. Founder
+acceptance covers commit `32812e6793d9b06632ebffd82504cd8810c2ab3d`, validated by Black 26.3.1, Ruff, 88 passing
+pytest tests and `git diff --check`. No successor after v0.19 is selected.
 
 ## Technology baseline
 
@@ -413,8 +416,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.18 — Readiness-Authorized Editorial Angle Initiation is the latest accepted implementation checkpoint; v0.17 is
-its historical accepted predecessor. Migrations 1–15 are canonical, with migration 15 the latest canonical
-migration. Phase 2 is ACTIVE / INCOMPLETE. v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is defined
-and authorized for bounded implementation, but is not implemented or accepted; no successor after v0.19 is selected,
-and later Conveyor systems remain out of scope.
+v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the latest accepted implementation checkpoint; v0.18
+is its historical accepted predecessor. Migrations 1–15 are canonical, with migration 15 the latest canonical
+migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.19 is selected, and later Conveyor systems remain
+out of scope.
