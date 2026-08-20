@@ -5,12 +5,11 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.19 —
-Editorial-Angle-Authorized ContentPiece Initiation; v0.18 — Readiness-Authorized Editorial Angle Initiation
-is its historical accepted predecessor. v0.20 — Readiness-Lineage-Preserving Script Initiation is selected,
-locally implemented and pending founder acceptance/push. Migration 15 is the latest canonical migration and Phase 2
-remains ACTIVE / INCOMPLETE. No successor after v0.20 is selected; migration 16 is absent. Later workflow,
-research automation and production systems remain deferred.
+SQLite foundation for SimilarStoic. Its latest accepted implementation milestone is v0.20 —
+Readiness-Lineage-Preserving Script Initiation; v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
+is its historical accepted predecessor. Migration 15 is the latest canonical migration and Phase 2 remains ACTIVE /
+INCOMPLETE. No successor after v0.20 is selected; migration 16 is absent. Later workflow, research automation and
+production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -47,10 +46,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.19 Editorial-Angle-Authorized ContentPiece Initiation is the latest
-accepted implementation milestone; v0.20 Readiness-Lineage-Preserving Script Initiation is locally implemented and
-pending founder acceptance/push. Migrations 1–15 are canonical, with migration 15 the latest canonical migration.
-No successor after v0.20 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.20 Readiness-Lineage-Preserving Script Initiation is the latest
+accepted implementation milestone; v0.19 Editorial-Angle-Authorized ContentPiece Initiation is its historical
+accepted predecessor. Migrations 1–15 are canonical, with migration 15 the latest canonical migration. No successor
+after v0.20 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -93,22 +92,23 @@ assessment, preserving a direct immutable initiation-provenance reference. The r
 historical/demo/legacy Angles and required only by the new lifecycle path; no backfill, latest/current selection,
 readiness consumption, frozen Claim matching, workflow record, UI, provider call, Phase 5 generation, ContentPiece
 or Script behavior is included. Migration 15 is canonical for the nullable restrictive FK and assessment-lineage
-index. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation
+index. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is a historical accepted implementation
 milestone: it deliberately creates a ContentPiece from one exact eligible Ready-authorized EditorialAngle while
 preserving the existing ContentPiece → EditorialAngle → ResearchReadinessAssessment provenance chain. It adds no
 migration, duplicate assessment reference, workflow state, downstream editorial/production behavior or UI. Founder
 acceptance covers commit `32812e6793d9b06632ebffd82504cd8810c2ab3d`, validated by Black 26.3.1, Ruff, 88 passing
-pytest tests and `git diff --check`. v0.20 is the selected successor, locally implemented and pending founder
-acceptance/push.
+pytest tests and `git diff --check`. v0.20 is its accepted successor.
 
-**v0.20 — Readiness-Lineage-Preserving Script Initiation** is selected and locally implemented, pending founder
-acceptance/push. It deliberately appends one complete immutable Script version from a ContentPiece only when its
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation milestone. It
+deliberately appends one complete immutable Script version from a ContentPiece only when its
 stored ContentPiece → EditorialAngle → exact Ready assessment → ResearchPack → Opportunity lineage is internally
 consistent. Conveyor derives the next version from Script history; low-level Script creation remains compatible.
 `POST /api/content-pieces/{content_piece_id}/scripts` accepts only Script ID, narration text and optional metadata.
 No migration, duplicate readiness provenance, Title/Hook, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan,
 production, publishing, analytics or orchestration is included. No successor after v0.20 is selected.
 Local validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff --check`.
+Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. Initial documentation commit:
+`4ddab9749c2159ad7a9801f0af1d5365046ac793`.
 
 ## Technology baseline
 
@@ -427,7 +427,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is the latest accepted implementation checkpoint; v0.20
-— Readiness-Lineage-Preserving Script Initiation is locally implemented pending founder acceptance/push. Migrations
-1–15 are canonical, with migration 15 the latest canonical migration. Phase 2 is ACTIVE / INCOMPLETE. No successor
-after v0.20 is selected, and later Conveyor systems remain out of scope.
+v0.20 — Readiness-Lineage-Preserving Script Initiation is the latest accepted implementation checkpoint; v0.19 is
+its historical accepted predecessor. Migrations 1–15 are canonical, with migration 15 the latest canonical
+migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.20 is selected, and later Conveyor systems remain
+out of scope.

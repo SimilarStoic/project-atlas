@@ -995,11 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest
-accepted implementation milestone; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is selected,
-locally implemented and pending founder acceptance/push. v0.18 — Readiness-Authorized Editorial Angle Initiation is
-the historical accepted predecessor and migration 15 is canonical. No successor after v0.20 is selected; migration
-16 is absent.
+Status: ACTIVE / INCOMPLETE. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the historical
+accepted predecessor. **v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted
+implementation milestone; migration 15 is canonical. No successor after v0.20 is selected; migration 16 is absent.
 
 Implement:
 - Research
@@ -1018,18 +1016,17 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation milestone;
-v0.20 — Readiness-Lineage-Preserving Script Initiation is locally implemented and pending founder acceptance/push;
-v0.18 is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15.
-Phase 2 remains ACTIVE / INCOMPLETE; all remaining Phase 2 scope is unimplemented and no later phase is activated.
-No milestone after v0.20 is selected.
+**v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation milestone; v0.19
+is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15. Phase 2
+remains ACTIVE / INCOMPLETE; all remaining Phase 2 scope is unimplemented and no later phase is activated. No
+milestone after v0.20 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation
-milestone; v0.17, v0.16 and v0.15 remain historical accepted predecessors. This is the
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted implementation
+milestone; v0.19, v0.18, v0.17, v0.16 and v0.15 remain historical accepted predecessors. This is the
 first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1121,8 +1118,8 @@ than infer it.
 
 ### v0.16 — Authorized Research Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation
-milestone; v0.17 and v0.16 remain historical accepted predecessors. Migrations are canonical through 1–15. v0.16
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted implementation
+milestone; v0.19, v0.18, v0.17 and v0.16 remain historical accepted predecessors. Migrations are canonical through 1–15. v0.16
 does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1233,8 +1230,8 @@ boundary.
 
 ### v0.17 — Persistent Research Readiness
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the latest accepted implementation milestone;
-v0.17 is its historical accepted predecessor. Migration 15 is canonical and migrations extend through 1–15.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted implementation milestone;
+v0.19, v0.18 and v0.17 are historical accepted predecessors. Migration 15 is canonical and migrations extend through 1–15.
 v0.17 did not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1379,7 +1376,7 @@ must return to founder + ChatGPT rather than be inferred.
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the historical accepted predecessor to v0.19
 within **Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is
 canonical, and migrations extend through 1–15. This acceptance does not complete Phase 2 or activate a later phase.
-v0.20 is locally implemented pending founder acceptance/push; no milestone after v0.20 is selected.
+v0.20 is the latest accepted implementation milestone; no milestone after v0.20 is selected.
 
 Purpose:
 
@@ -1488,10 +1485,9 @@ must return to founder + ChatGPT rather than be inferred.
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.19 is the latest accepted Phase 2 milestone. v0.18 is its
-historical accepted predecessor, migration 15 remains the latest canonical migration, Phase 2 remains ACTIVE /
-INCOMPLETE, and v0.20 is its selected successor, locally implemented and pending founder acceptance/push. Founder
-acceptance covers implementation commit
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted Phase 2 milestone. v0.19
+is its historical accepted predecessor; migration 15 remains the latest canonical migration, and Phase 2 remains ACTIVE /
+INCOMPLETE. Founder acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Purpose:
@@ -1537,7 +1533,7 @@ v0.19 does not include a full editorial package, Title, Hook, Script creation, S
 EditorialAngle versioning/snapshots/revalidation/generation/ranking, provider/model calls, research automation,
 readiness evaluator, machine editorial QA, Editorial Gate, spend authorization, generic workflow/progression,
 jobs, queues, UI, image/visual generation, automated visual-reference selection or consistency QA, production,
-publishing, analytics, Learning Gate implementation or orchestration. v0.20 is a separate selected successor;
+publishing, analytics, Learning Gate implementation or orchestration. v0.20 is a separate accepted successor;
 v0.19's accepted boundary remains unchanged.
 
 #### Sparse human gates, rich machine readiness
@@ -1739,18 +1735,18 @@ authorization, proposal, reservation, ledger or enforcement entity is approved h
 
 v0.15 — Persistent Idea Gate, v0.16 — Authorized Research Initiation, **v0.17 — Persistent Research Readiness**
 and **v0.18 — Readiness-Authorized Editorial Angle Initiation** are historical accepted implementation
-predecessors. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation
-milestone; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is locally implemented and pending founder
-acceptance/push. Migration 15 is canonical and migrations extend through 1–15. Phase 2 remains ACTIVE /
-INCOMPLETE, and no milestone after v0.20 is selected.
+predecessors. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is a historical accepted implementation
+predecessor; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is the latest accepted implementation
+milestone. Migration 15 is canonical and migrations extend through 1–15. Phase 2 remains ACTIVE / INCOMPLETE, and
+no milestone after v0.20 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
 
 ### v0.20 — Readiness-Lineage-Preserving Script Initiation
 
-**Status: SELECTED AND AUTHORIZED; LOCALLY IMPLEMENTED, PENDING FOUNDER ACCEPTANCE/PUSH.** v0.19 remains the
-latest accepted Phase 2 milestone. Migration 15 remains latest, migration 16 is absent, Phase 2 remains ACTIVE /
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.20 is the latest accepted Phase 2 milestone. v0.19 is its
+historical accepted predecessor. Migration 15 remains latest, migration 16 is absent, Phase 2 remains ACTIVE /
 INCOMPLETE, and no successor after v0.20 is selected.
 
 Purpose:
@@ -1775,6 +1771,8 @@ approval/revision workflows; spend/financial records; provider or AI generation;
 EditorialAngle versioning/revalidation; generic workflow; UI; VisualPlan/Scene/Asset lifecycle work; production,
 publishing, analytics, Learning Gate, orchestration, visual-canon changes and later-phase activation.
 Local validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff --check`.
+Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. Initial documentation commit:
+`4ddab9749c2159ad7a9801f0af1d5365046ac793`.
 
 ## Phase 3 — Technical Architecture
 
@@ -1941,8 +1939,8 @@ toward:
   v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
   is its historical accepted milestone; v0.17 — Persistent Research Readiness is its historical accepted
   predecessor; v0.18 — Readiness-Authorized Editorial Angle Initiation is its historical accepted predecessor;
-  v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its latest accepted implementation milestone;
-  v0.20 — Readiness-Lineage-Preserving Script Initiation is locally implemented pending founder acceptance/push;
+  v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its historical accepted predecessor;
+  v0.20 — Readiness-Lineage-Preserving Script Initiation is its latest accepted implementation milestone;
   no milestone after v0.20 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
