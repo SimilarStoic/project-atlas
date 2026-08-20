@@ -609,6 +609,244 @@ def test_editorial_angle_readiness_initiation_preserves_exact_immutable_provenan
         repository.close()
 
 
+def test_content_piece_readiness_initiation_preserves_exact_angle_lineage(tmp_path) -> None:
+    """v0.19 creates ContentPieces only from exact Ready-authorized Angle provenance."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        opportunity_id = "content-piece-readiness-opportunity"
+        other_opportunity_id = "content-piece-readiness-other-opportunity"
+        repository.create_opportunity(
+            opportunity_id, "Opportunity", "Summary", "Why now", 1, "proposed"
+        )
+        repository.create_opportunity(
+            other_opportunity_id, "Other", "Summary", "Why now", 1, "proposed"
+        )
+        research_pack = repository.create_research_pack(
+            "content-piece-readiness-pack", opportunity_id, 1, "Research pack"
+        )
+        other_research_pack = repository.create_research_pack(
+            "content-piece-readiness-other-pack", other_opportunity_id, 2, "Other pack"
+        )
+
+        def assessment(assessment_id: str, pack_id: str, outcome: str):
+            return repository.create_research_readiness_assessment(
+                assessment_id,
+                pack_id,
+                outcome,
+                {"summary": f"{outcome} assessment."},
+                "readiness-policy-v1",
+                "test",
+                "persistence-test",
+                "v1",
+            )
+
+        ready = assessment("content-piece-ready", research_pack.id, "Ready")
+        blocked = assessment("content-piece-blocked", research_pack.id, "Blocked")
+        other_ready = assessment("content-piece-other-ready", other_research_pack.id, "Ready")
+        angle_fields = (
+            "A readiness-authorized Angle",
+            "Exact lineage is retained.",
+            "Understand the provenance boundary.",
+            "A focused explainer.",
+            ["Ready provenance is exact."],
+        )
+        eligible_angle = repository.create_editorial_angle_under_research_readiness(
+            "content-piece-eligible-angle",
+            opportunity_id,
+            research_pack.id,
+            ready.id,
+            *angle_fields,
+        )
+        legacy_angle = repository.create_editorial_angle(
+            "content-piece-legacy-angle", opportunity_id, research_pack.id, *angle_fields
+        )
+        original_status = repository.get_opportunity(opportunity_id).status
+        assessment_count = repository.connection.execute(
+            "SELECT COUNT(*) FROM research_readiness_assessments"
+        ).fetchone()[0]
+
+        first = repository.create_content_piece_under_editorial_angle_readiness(
+            "content-piece-ready-first",
+            opportunity_id,
+            eligible_angle.id,
+            "video",
+            "A deliberately initiated ContentPiece.",
+            {"source": "v0.19-test"},
+        )
+        second = repository.create_content_piece_under_editorial_angle_readiness(
+            "content-piece-ready-second",
+            opportunity_id,
+            eligible_angle.id,
+            "article",
+            "A second deliberately initiated ContentPiece.",
+        )
+        assert first.opportunity_id == opportunity_id
+        assert first.editorial_angle_id == eligible_angle.id
+        assert (
+            repository.get_editorial_angle(
+                first.editorial_angle_id
+            ).research_readiness_assessment_id
+            == ready.id
+        )
+        assert second.editorial_angle_id == eligible_angle.id
+        assert len(repository.list_content_pieces_for_editorial_angle(eligible_angle.id)) == 2
+        assert repository.get_opportunity(opportunity_id).status == original_status
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM research_readiness_assessments"
+            ).fetchone()[0]
+            == assessment_count
+        )
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM scripts WHERE content_piece_id IN (?, ?)",
+                (first.id, second.id),
+            ).fetchone()[0]
+            == 0
+        )
+
+        with pytest.raises(ValueError, match="same Opportunity"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-wrong-opportunity",
+                other_opportunity_id,
+                eligible_angle.id,
+                "video",
+                "Wrong Opportunity.",
+            )
+        with pytest.raises(ValueError, match="readiness provenance"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-legacy-rejected",
+                opportunity_id,
+                legacy_angle.id,
+                "video",
+                "Legacy Angle.",
+            )
+        legacy_piece = repository.create_content_piece(
+            "content-piece-legacy-compatible",
+            opportunity_id,
+            legacy_angle.id,
+            "video",
+            "Low-level compatibility remains.",
+        )
+        assert legacy_piece.editorial_angle_id == legacy_angle.id
+
+        non_ready_angle = repository.create_editorial_angle(
+            "content-piece-non-ready-angle", opportunity_id, research_pack.id, *angle_fields
+        )
+        mismatched_angle = repository.create_editorial_angle(
+            "content-piece-mismatched-angle", opportunity_id, research_pack.id, *angle_fields
+        )
+        corrupted_pack_angle = repository.create_editorial_angle_under_research_readiness(
+            "content-piece-corrupted-pack-angle",
+            opportunity_id,
+            research_pack.id,
+            ready.id,
+            *angle_fields,
+        )
+        missing_assessment_angle = repository.create_editorial_angle(
+            "content-piece-missing-assessment-angle",
+            opportunity_id,
+            research_pack.id,
+            *angle_fields,
+        )
+        missing_pack_assessment = assessment(
+            "content-piece-missing-pack-assessment", research_pack.id, "Ready"
+        )
+        missing_pack_angle = repository.create_editorial_angle_under_research_readiness(
+            "content-piece-missing-pack-angle",
+            opportunity_id,
+            research_pack.id,
+            missing_pack_assessment.id,
+            *angle_fields,
+        )
+        repository.connection.execute("PRAGMA foreign_keys = OFF")
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                (blocked.id, non_ready_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                (other_ready.id, mismatched_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE research_packs SET opportunity_id = ? WHERE id = ?",
+                (other_opportunity_id, research_pack.id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_readiness_assessment_id = ? WHERE id = ?",
+                ("missing-assessment", missing_assessment_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE editorial_angles SET research_pack_id = ? WHERE id = ?",
+                ("missing-pack", missing_pack_angle.id),
+            )
+            repository.connection.execute(
+                "UPDATE research_readiness_assessments SET research_pack_id = ? WHERE id = ?",
+                ("missing-pack", missing_pack_assessment.id),
+            )
+        repository.connection.execute("PRAGMA foreign_keys = ON")
+        with pytest.raises(ValueError, match="Only a Ready"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-non-ready-rejected",
+                opportunity_id,
+                non_ready_angle.id,
+                "video",
+                "Non-Ready provenance.",
+            )
+        with pytest.raises(ValueError, match="ResearchReadinessAssessment"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-mismatched-rejected",
+                opportunity_id,
+                mismatched_angle.id,
+                "video",
+                "Mismatched provenance.",
+            )
+        with pytest.raises(ValueError, match="ResearchPack must belong"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-corrupted-pack-rejected",
+                opportunity_id,
+                corrupted_pack_angle.id,
+                "video",
+                "Corrupted Pack lineage.",
+            )
+        with pytest.raises(ValueError, match="existing ResearchReadinessAssessment"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-missing-assessment-rejected",
+                opportunity_id,
+                missing_assessment_angle.id,
+                "video",
+                "Missing assessment lineage.",
+            )
+        with pytest.raises(ValueError, match="existing ResearchPack"):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-missing-pack-rejected",
+                opportunity_id,
+                missing_pack_angle.id,
+                "video",
+                "Missing Pack lineage.",
+            )
+        with pytest.raises(KeyError):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-missing-opportunity",
+                "missing-opportunity",
+                eligible_angle.id,
+                "video",
+                "Missing Opportunity.",
+            )
+        with pytest.raises(KeyError):
+            repository.create_content_piece_under_editorial_angle_readiness(
+                "content-piece-missing-angle",
+                opportunity_id,
+                "missing-angle",
+                "video",
+                "Missing Angle.",
+            )
+    finally:
+        repository.close()
+
+
 def test_migration_15_adds_nullable_angle_readiness_lineage_without_backfill(tmp_path) -> None:
     """Migration 15 preserves pre-v0.18 Angles while adding restrictive provenance."""
 

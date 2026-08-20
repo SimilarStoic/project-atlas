@@ -323,6 +323,70 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                 HTTPStatus.CREATED,
             )
             return
+        content_piece_suffix = "/content-pieces"
+        if path.startswith(opportunity_prefix) and path.endswith(content_piece_suffix):
+            opportunity_id = unquote(
+                path[len(opportunity_prefix) : -len(content_piece_suffix)]
+            ).strip("/")
+            if not opportunity_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content_length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(content_length))
+                if not isinstance(payload, dict):
+                    raise ValueError("ContentPiece initiation payload must be an object.")
+                allowed_fields = {
+                    "id",
+                    "editorial_angle_id",
+                    "format_key",
+                    "working_title",
+                    "metadata",
+                }
+                unexpected_fields = set(payload) - allowed_fields
+                if unexpected_fields:
+                    raise ValueError("ContentPiece initiation payload contains unsupported fields.")
+                content_piece_id = payload.get("id")
+                editorial_angle_id = payload.get("editorial_angle_id")
+                format_key = payload.get("format_key")
+                working_title = payload.get("working_title")
+                metadata = payload.get("metadata")
+                if not isinstance(content_piece_id, str) or not content_piece_id.strip():
+                    raise ValueError("ContentPiece ID must be non-empty text.")
+                if not isinstance(editorial_angle_id, str) or not editorial_angle_id.strip():
+                    raise ValueError("EditorialAngle ID must be non-empty text.")
+                if not isinstance(format_key, str) or not format_key.strip():
+                    raise ValueError("ContentPiece format_key must be non-empty text.")
+                if not isinstance(working_title, str) or not working_title.strip():
+                    raise ValueError("ContentPiece working_title must be non-empty text.")
+                if metadata is not None and not isinstance(metadata, dict):
+                    raise ValueError("ContentPiece metadata must be an object or null.")
+                content_piece = (
+                    self.server.repository.create_content_piece_under_editorial_angle_readiness(
+                        content_piece_id.strip(),
+                        opportunity_id,
+                        editorial_angle_id.strip(),
+                        format_key,
+                        working_title,
+                        metadata,
+                    )
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "Opportunity or EditorialAngle not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "content_piece",
+                    "content_piece": self.server.repository.content_piece_payload(content_piece.id),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         editorial_angle_suffix = "/editorial-angles"
         if path.startswith(opportunity_prefix) and path.endswith(editorial_angle_suffix):
             opportunity_id = unquote(

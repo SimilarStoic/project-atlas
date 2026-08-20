@@ -1684,6 +1684,60 @@ class AtlasRepository:
             )
         return self.get_content_piece(content_piece_id)
 
+    def create_content_piece_under_editorial_angle_readiness(
+        self,
+        content_piece_id: str,
+        opportunity_id: str,
+        editorial_angle_id: str,
+        format_key: str,
+        working_title: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> ContentPiece:
+        """Deliberately create one ContentPiece from an exact Ready-authorized Angle."""
+
+        self.get_opportunity(opportunity_id)
+        editorial_angle = self.get_editorial_angle(editorial_angle_id)
+        if editorial_angle.opportunity_id != opportunity_id:
+            raise ValueError("A ContentPiece must use an EditorialAngle from the same Opportunity.")
+        assessment_id = editorial_angle.research_readiness_assessment_id
+        if assessment_id is None:
+            raise ValueError(
+                "A readiness-authorized ContentPiece requires EditorialAngle readiness provenance."
+            )
+        try:
+            assessment = self.get_research_readiness_assessment(assessment_id)
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialAngle readiness provenance must reference an existing "
+                "ResearchReadinessAssessment."
+            ) from error
+        if assessment.outcome != "Ready":
+            raise ValueError(
+                "Only a Ready ResearchReadinessAssessment may authorize ContentPiece creation."
+            )
+        if assessment.research_pack_id != editorial_angle.research_pack_id:
+            raise ValueError(
+                "The ResearchReadinessAssessment must belong to the EditorialAngle ResearchPack."
+            )
+        try:
+            research_pack = self.get_research_pack(editorial_angle.research_pack_id)
+        except KeyError as error:
+            raise ValueError(
+                "The EditorialAngle must reference an existing ResearchPack."
+            ) from error
+        if research_pack.opportunity_id != opportunity_id:
+            raise ValueError(
+                "The EditorialAngle ResearchPack must belong to the ContentPiece Opportunity."
+            )
+        return self.create_content_piece(
+            content_piece_id,
+            opportunity_id,
+            editorial_angle_id,
+            format_key,
+            working_title,
+            metadata,
+        )
+
     def get_content_piece(self, content_piece_id: str) -> ContentPiece:
         row = self.connection.execute(
             "SELECT * FROM content_pieces WHERE id = ?", (content_piece_id,)
