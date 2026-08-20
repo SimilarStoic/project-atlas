@@ -5,11 +5,10 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.22 — Closed Script Claim Provenance Foundation is the latest accepted
-implementation milestone; v0.23 — Deterministic Editorial Readiness Assessment is selected, locally implemented and
-validated pending founder acceptance/push. Migration 18 is the latest canonical migration, migration 19 is absent,
-and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.23 is selected. Later workflow, research automation
-and production systems remain deferred.
+SQLite foundation for SimilarStoic. v0.23 — Deterministic Editorial Readiness Assessment is the latest accepted
+implementation milestone; v0.22 — Closed Script Claim Provenance Foundation is its historical accepted predecessor.
+Migration 18 is the latest canonical migration, migration 19 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No
+successor after v0.23 is selected. Later workflow, research automation and production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -46,10 +45,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.22 Closed Script Claim Provenance Foundation is the latest accepted
-implementation milestone; v0.23 Deterministic Editorial Readiness Assessment is selected, locally implemented and
-validated pending founder acceptance/push. Migrations 1–18 are canonical, with migration 18 the latest canonical
-migration and migration 19 absent. No successor after v0.23 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.23 Deterministic Editorial Readiness Assessment is the latest accepted
+implementation milestone; v0.22 Closed Script Claim Provenance Foundation is its historical accepted predecessor.
+Migrations 1–18 are canonical, with migration 18 the latest canonical migration and migration 19 absent. No successor
+after v0.23 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -120,7 +119,7 @@ state, Script-to-Claim, QA/Gate, UI, production, publishing, analytics or orches
 acceptance covers implementation commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial documentation
 commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and `git diff --check` passed.
 
-**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone. It adds a
+**v0.22 — Closed Script Claim Provenance Foundation** is a historical accepted implementation milestone. It adds a
 single closed immutable ScriptClaimSet for an exact Script and zero or more
 immutable ScriptClaimLinks. An empty set is deliberate and distinct from no set; correction requires a new immutable
 Script version. Linked Claim identities are validated against the exact upstream Ready assessment's frozen evidence
@@ -129,14 +128,14 @@ live mutable Claim data. Migration 17 adds only the two provenance tables, restr
 lookup index, without backfill or copied readiness/evidence provenance. The Script-scoped API is
 `POST`/`GET /api/scripts/{script_id}/claim-set`. v0.22 does not add ranges, segments, ClaimEvidence links, package
 changes, QA/Gate, workflow, UI, production, publishing, analytics, Learning or orchestration. v0.21 is its accepted
-historical predecessor; v0.23 is selected, locally implemented and validated pending founder acceptance/push.
-Migration 18 is latest, migration 19 is absent, and no successor after v0.23 is selected. Acceptance covers
+historical predecessor; v0.23 is the latest accepted milestone. Migration 18 is latest, migration 19 is absent, and
+no successor after v0.23 is selected. Acceptance covers
 implementation commit `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff, 96 pytest tests and `git diff --check`
 passed.
 
-**v0.23 — Deterministic Editorial Readiness Assessment** is selected, locally implemented and validated pending
-founder acceptance/push. It appends immutable deterministic `EditorialReadinessAssessment` history for one exact
+**v0.23 — Deterministic Editorial Readiness Assessment** is the latest accepted implementation milestone. It appends
+immutable deterministic `EditorialReadinessAssessment` history for one exact
 `EditorialPackageSnapshot`; package inputs and upstream frozen research provenance remain derivable by immutable
 references and are not copied. Server-only evaluator `deterministic-editorial-readiness` `v1` persists `Ready` or
 `NotReady` and structured findings under assessment schema version 1. The sole blocking rule is
@@ -146,8 +145,10 @@ Migration 18 adds only the assessment table, restrictive package FK and history 
 current/latest pointer. The API is `POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/readiness-assessments`
 plus `GET /api/editorial-readiness-assessments/{assessment_id}`. v0.23 adds no subjective/model QA, Gate, UI, spend,
 production, publishing, analytics or orchestration. Black 26.3.1 `--check`, Ruff, 99 pytest tests and
-`git diff --check` passed locally. Migration 18 is latest, migration 19 is absent, and no successor after v0.23 is
-selected.
+`git diff --check` passed. Founder acceptance covers implementation commit
+`01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state documentation commit
+`64e5da9183d9a0fe1492e6968f266f26abd4538c`. Migration 18 is latest, migration 19 is absent, and no successor after
+v0.23 is selected.
 
 ## Technology baseline
 
@@ -466,7 +467,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.22 — Closed Script Claim Provenance Foundation is the latest accepted implementation checkpoint; v0.23 —
-Deterministic Editorial Readiness Assessment is selected, locally implemented and validated pending founder
-acceptance/push. Migrations 1–18 are canonical, with migration 18 latest and migration 19 absent. Phase 2 is ACTIVE /
-INCOMPLETE. No successor after v0.23 is selected, and later Conveyor systems remain out of scope.
+v0.23 — Deterministic Editorial Readiness Assessment is the latest accepted implementation checkpoint; v0.22 — Closed
+Script Claim Provenance Foundation is its historical accepted predecessor. Migrations 1–18 are canonical, with
+migration 18 latest and migration 19 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.23 is selected,
+and later Conveyor systems remain out of scope.

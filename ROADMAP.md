@@ -995,10 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted
-implementation milestone; **v0.23 — Deterministic Editorial Readiness Assessment** is selected, locally implemented
-and validated pending founder acceptance/push. Migration 18 is canonical, migration 19 is absent, and no successor
-after v0.23 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.23 — Deterministic Editorial Readiness Assessment** is the latest accepted
+implementation milestone; **v0.22 — Closed Script Claim Provenance Foundation** is its historical accepted
+predecessor. Migration 18 is canonical, migration 19 is absent, and no successor after v0.23 is selected.
 
 Implement:
 - Research
@@ -1017,19 +1016,18 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone; v0.23 —
-Deterministic Editorial Readiness Assessment is selected, locally implemented and validated pending founder
-acceptance/push. Migration 18 is canonical and migrations extend through 1–18; migration 19 is absent. Phase 2
-remains ACTIVE / INCOMPLETE; all remaining Phase 2 scope is unimplemented and no later phase is activated. No
-successor after v0.23 is selected.
+**v0.23 — Deterministic Editorial Readiness Assessment** is the latest accepted implementation milestone; v0.22 —
+Closed Script Claim Provenance Foundation is its historical accepted predecessor. Migration 18 is canonical and
+migrations extend through 1–18; migration 19 is absent. Phase 2 remains ACTIVE / INCOMPLETE; all remaining Phase 2
+scope is unimplemented and no later phase is activated. No successor after v0.23 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
 ### v0.15 — Persistent Idea Gate
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted implementation
-milestone; v0.21, v0.20, v0.19, v0.18, v0.17, v0.16 and v0.15 remain historical accepted predecessors. This is the
-first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted implementation
+milestone; v0.22, v0.21, v0.20, v0.19, v0.18, v0.17, v0.16 and v0.15 remain historical accepted predecessors. This
+is the first implementation milestone owned by Phase 2; it does not complete Phase 2 or activate a later phase.
 
 Purpose:
 
@@ -1120,9 +1118,9 @@ than infer it.
 
 ### v0.16 — Authorized Research Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted implementation
-milestone; v0.21, v0.20, v0.19, v0.18, v0.17 and v0.16 remain historical accepted predecessors. Migrations are
-canonical through 1–17. v0.16
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted implementation
+milestone; v0.22, v0.21, v0.20, v0.19, v0.18, v0.17 and v0.16 remain historical accepted predecessors. Migrations
+are canonical through 1–18. v0.16
 does not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1233,9 +1231,9 @@ boundary.
 
 ### v0.17 — Persistent Research Readiness
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted implementation milestone;
-v0.21, v0.20, v0.19, v0.18 and v0.17 are historical accepted predecessors. Migration 17 is canonical and migrations
-extend through 1–17.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted implementation milestone;
+v0.22, v0.21, v0.20, v0.19, v0.18 and v0.17 are historical accepted predecessors. Migration 18 is canonical and
+migrations extend through 1–18.
 v0.17 did not complete Phase 2 or activate a later phase.
 
 Purpose:
@@ -1380,8 +1378,8 @@ must return to founder + ChatGPT rather than be inferred.
 **Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the historical accepted predecessor to v0.19
 within **Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is
 canonical, and migrations extend through 1–15. This acceptance does not complete Phase 2 or activate a later phase.
-v0.22 is the latest accepted implementation milestone; v0.21 is its historical accepted predecessor; no successor
-after v0.22 is selected.
+v0.23 is the latest accepted implementation milestone; v0.22 is its historical accepted predecessor; no successor
+after v0.23 is selected.
 
 Purpose:
 
@@ -1490,9 +1488,9 @@ must return to founder + ChatGPT rather than be inferred.
 
 ### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
-is its historical accepted predecessor; migration 17 remains the latest canonical migration, and Phase 2 remains ACTIVE
-/ INCOMPLETE. Founder acceptance covers implementation commit
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted Phase 2 milestone. v0.22 is
+its historical accepted predecessor; migration 18 remains the latest canonical migration, and Phase 2 remains ACTIVE /
+INCOMPLETE. Founder acceptance covers implementation commit
 `32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
 
 Purpose:
@@ -1743,19 +1741,19 @@ and **v0.18 — Readiness-Authorized Editorial Angle Initiation** are historical
 predecessors. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is a historical accepted implementation
 predecessor; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is a historical accepted implementation
 predecessor; **v0.21 — Editorial Draft Package Foundation** is a historical accepted implementation predecessor;
-**v0.22 — Closed Script Claim Provenance Foundation** is the latest accepted implementation milestone. **v0.23 —
-Deterministic Editorial Readiness Assessment** is selected, locally implemented and validated pending founder
-acceptance/push. Migration 18 is canonical and migrations extend through 1–18; migration 19 is absent. Phase 2
-remains ACTIVE / INCOMPLETE, and no successor after v0.23 is selected.
+**v0.23 — Deterministic Editorial Readiness Assessment** is the latest accepted implementation milestone. **v0.22 —
+Closed Script Claim Provenance Foundation** is its historical accepted predecessor. Migration 18 is canonical and
+migrations extend through 1–18; migration 19 is absent. Phase 2 remains ACTIVE / INCOMPLETE, and no successor after
+v0.23 is selected.
 
 The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
 financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
 
 ### v0.20 — Readiness-Lineage-Preserving Script Initiation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
-is its historical accepted predecessor; migration 17 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.22 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted Phase 2 milestone. v0.22 is
+its historical accepted predecessor; migration 18 is latest, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
+after v0.23 is selected.
 
 Purpose:
 
@@ -1784,10 +1782,9 @@ Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. Initial docum
 
 ### v0.21 — Editorial Draft Package Foundation
 
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is the latest accepted Phase 2 milestone. v0.21
-is its historical accepted predecessor. v0.23 is selected, locally implemented and validated pending founder
-acceptance/push. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.23 is selected.
+**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted Phase 2 milestone. v0.22 is
+its historical accepted predecessor. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.23 is selected.
 
 v0.21 adds durable append-only TitleOption and HookOption alternatives owned by one eligible ContentPiece, and an
 immutable EditorialPackageSnapshot that explicitly records one TitleOption, HookOption and exact Script version from
@@ -1804,10 +1801,9 @@ documentation commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, R
 
 ### v0.22 — Closed Script Claim Provenance Foundation
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 remains the latest accepted Phase 2 milestone. v0.21 is its
-historical accepted predecessor. v0.23 is selected, locally implemented and validated pending founder
-acceptance/push. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.23 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is a historical accepted Phase 2 predecessor. v0.23 is the
+latest accepted Phase 2 milestone. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.23 is selected.
 
 v0.22 establishes one durable provenance boundary: exact immutable Script → one closed immutable ScriptClaimSet →
 zero or more immutable ScriptClaimLinks → Claim identities resolved through the Script's exact upstream Ready
@@ -1834,8 +1830,8 @@ commit `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff,
 
 ### v0.23 — Deterministic Editorial Readiness Assessment
 
-**Status: SELECTED / LOCALLY IMPLEMENTED AND VALIDATED / PENDING FOUNDER ACCEPTANCE AND PUSH.** v0.22 remains the
-latest accepted Phase 2 milestone. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE /
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is the latest accepted Phase 2 milestone; v0.22 is its
+historical accepted predecessor. Migration 18 is latest, migration 19 is absent, Phase 2 remains ACTIVE /
 INCOMPLETE, and no successor after v0.23 is selected.
 
 v0.23 adds one durable deterministic boundary: exact immutable EditorialPackageSnapshot → one immutable
@@ -1855,8 +1851,10 @@ Migration 18 adds only `editorial_readiness_assessments`, a restrictive Editoria
 history index, with no backfill, Gate/finding child table, score, provider/model or financial schema. The API is
 `POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/readiness-assessments` and
 `GET /api/editorial-readiness-assessments/{assessment_id}`. No subjective/model QA, Editorial Gate, approval,
-workflow, UI, production, publishing, analytics, Learning or orchestration is included. Local validation passed:
-Black 26.3.1 `--check`, Ruff, 99 pytest tests and `git diff --check`.
+workflow, UI, production, publishing, analytics, Learning or orchestration is included. Founder acceptance covers
+implementation commit `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state documentation commit
+`64e5da9183d9a0fe1492e6968f266f26abd4538c`. Validation passed: Black 26.3.1 `--check`, Ruff, 99 pytest tests and
+`git diff --check`.
 
 ## Phase 3 — Technical Architecture
 
@@ -2026,9 +2024,9 @@ toward:
   v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its historical accepted predecessor;
   v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor;
   v0.21 — Editorial Draft Package Foundation is its historical accepted predecessor;
-  v0.22 — Closed Script Claim Provenance Foundation is its latest accepted implementation milestone;
-  v0.23 — Deterministic Editorial Readiness Assessment is selected, locally implemented and validated pending founder
-  acceptance/push; no successor after v0.23 is selected;
+  v0.23 — Deterministic Editorial Readiness Assessment is its latest accepted implementation milestone;
+  v0.22 — Closed Script Claim Provenance Foundation is its historical accepted predecessor;
+  no successor after v0.23 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
