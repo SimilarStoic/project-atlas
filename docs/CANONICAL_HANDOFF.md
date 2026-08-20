@@ -662,9 +662,53 @@ operating model as authoritative current intent. It must not replace, reorder or
 because detailed future-phase implementation remains unspecified. Missing detail requires a founder + ChatGPT
 design decision, not invention by a fresh chat or Codex.
 
-## Required operating method
+## Required operating method — single-pass milestone execution
 
-> DEFINE → DESIGN WITH FOUNDER / CHATGPT → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → FINAL ACCEPTANCE → COMMIT → PUSH → NEXT MILESTONE
+> DEFINE → DESIGN WITH FOUNDER / CHATGPT → ONE BOUNDED CODEX EXECUTION PASS → FOUNDER / CHATGPT REVIEW → ACCEPTANCE / PUSH → NEXT DESIGN GATE
+
+### Design gate
+
+Founder + ChatGPT define and approve each milestone's purpose, product/domain semantics, consequential
+persistence or architecture decisions, important schema semantics, explicit inclusions/exclusions and acceptance
+boundary. Codex must not independently select a milestone, select a successor, or redefine those decisions.
+
+### One Codex execution pass
+
+Once that design is approved, one comprehensive Codex task authorizes routine local completion of the bounded
+milestone: fresh repository/GitHub grounding; source, documentation, test and migration inspection; implementation
+choices within the approved design; tests; an additive migration only where its already-authorized schema semantics
+make it directly necessary; routine implementation, test, formatting and tooling diagnosis/fixes; validation;
+canonical documentation that accurately records the locally completed work as pending founder acceptance/push where
+appropriate; complete-diff review; removal of unrelated scope Codex introduced; and logical local commits.
+
+Codex does not need a separate founder instruction for routine inspection, tests, Black/Ruff/pytest, formatting,
+ordinary tooling diagnosis, an in-boundary regression fix, required documentation synchronization, diff review or
+local commits.
+
+### Escalation conditions
+
+Codex must stop and return to founder + ChatGPT only for a genuine unresolved product/domain/design ambiguity;
+materially different architecture or persistence semantics; schema meaning not already authorized; scope beyond the
+milestone; a material canonical product-behaviour conflict; an unexpected dependency/repository/tooling problem
+that cannot be routinely resolved; a validation defect whose fix changes product or architecture decisions; a
+destructive/protected Git action; or remote divergence requiring merge, rebase or history decisions. Routine
+failures are for Codex to diagnose and fix within the approved boundary.
+
+### Founder review and push gate
+
+Codex returns one consolidated review package: repository checkpoint; implemented design; migrations; exact files;
+tests; validation; a complete or fully reviewable diff; local commits; Git state; deviations/risks; and explicit
+milestone-boundary confirmation. Founder + ChatGPT review that package. For a normal milestone without an
+unresolved design issue, founder interaction should normally reduce to explicit push authorization, which may also
+constitute final acceptance when the package states what is being accepted. Founder + ChatGPT may explicitly keep
+acceptance and push separate for a particular milestone.
+
+### Protected actions
+
+Codex must never independently push, force-push, rebase shared history, merge unexpected remote divergence, amend
+already-pushed commits, reset/clean away work, select the successor milestone or expand into a later phase. Founder
+remains final product, business, quality, scope and acceptance authority; founder + ChatGPT remain architecture,
+specification, roadmap and milestone authority; Codex remains the bounded repository inspection and execution agent.
 
 **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is the latest accepted implementation checkpoint.
 Its implementation was validated, committed and pushed at
