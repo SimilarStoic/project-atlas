@@ -5,9 +5,9 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable SQLite foundation for SimilarStoic.
-v0.26 — Narrated Final Media Production is the latest accepted implementation milestone; v0.27 — First-Run
-Operability Bridge is locally implemented and pending founder acceptance/push. Migration 21 is the latest canonical
-migration, migration 22 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.27 is selected.
+v0.27 — First-Run Operability Bridge is the latest accepted implementation milestone; v0.26 — Narrated Final Media
+Production is its accepted historical predecessor. Migration 21 is the latest canonical migration, migration 22 is
+absent, and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.27 is selected.
 Later workflow, research automation and production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
@@ -45,9 +45,9 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.26 Narrated Final Media Production is the latest accepted implementation
-milestone; v0.27 First-Run Operability Bridge is locally implemented and pending founder acceptance/push. Migrations
-1–21 are canonical, with migration 21 latest and migration 22 absent. No successor after v0.27 is selected. The
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.27 First-Run Operability Bridge is the latest accepted implementation
+milestone; v0.26 Narrated Final Media Production is its accepted historical predecessor. Migrations 1–21 are canonical,
+with migration 21 latest and migration 22 absent. No successor after v0.27 is selected. The
 remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
@@ -229,9 +229,11 @@ queues/workers, production UI, analytics/Learning, generic workflow or new found
 in-process equivalence across 12 Python files (`would_change=0`) passed; the Windows Black CLI worker/process
 completion behavior remains a host-runtime exception.
 
-## v0.27 First-Run Operability Bridge (Pending Founder Acceptance)
+## v0.27 First-Run Operability Bridge (Accepted Checkpoint)
 
-**v0.27 — First-Run Operability Bridge** is locally implemented and validated, pending founder acceptance/push. It
+**v0.27 — First-Run Operability Bridge** is **ACCEPTED**. Founder acceptance covers implementation commit
+`8dd10ef793ac44c25107f02ba4b6bb5c333cf500` and pending-state documentation commit
+`cb5fb1593827e6f7f0943973e86d992ea10dccf5`. v0.26 is its accepted historical predecessor. It
 adds narrow HTTP ingress over existing Opportunity, Claim, Source, ClaimEvidence and EditorialAngle–Claim repository
 operations, so legitimate first-run research/editorial initiation no longer needs direct repository scripting. The
 routes neither add workflow state nor automate discovery, research or writing.

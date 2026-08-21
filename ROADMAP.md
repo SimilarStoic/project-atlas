@@ -995,9 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.26 — Narrated Final Media Production** remains the latest accepted implementation
-milestone; **v0.27 — First-Run Operability Bridge** is locally implemented and pending founder acceptance/push.
-Migration 21 is canonical and latest, migration 22 is absent, and no successor after v0.27 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone;
+**v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Migration 21 is canonical and
+latest, migration 22 is absent, and no successor after v0.27 is selected.
 
 Implement:
 - Research
@@ -1016,10 +1016,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.27 — First-Run
-Operability Bridge** is locally implemented and pending founder acceptance/push. Migration 21 is canonical and latest,
-migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no
-later phase is activated. No successor after v0.27 is selected.
+**v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone; **v0.26 — Narrated Final
+Media Production** is its accepted historical predecessor. Migration 21 is canonical and latest, migration 22 is
+absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no later phase is
+activated. No successor after v0.27 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1961,8 +1961,10 @@ production UI, analytics/Learning, orchestration or successor scope.
 
 ### v0.27 — First-Run Operability Bridge
 
-**Status: LOCALLY IMPLEMENTED AND VALIDATED — PENDING FOUNDER ACCEPTANCE/PUSH.** v0.26 remains the latest accepted
-Phase 2 milestone. v0.27 is a no-migration, thin operability bridge: `POST /api/opportunities`,
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.27 is the latest accepted Phase 2 milestone; v0.26 is its accepted
+historical predecessor. Founder acceptance covers implementation commit `8dd10ef793ac44c25107f02ba4b6bb5c333cf500`
+and pending-state documentation commit `cb5fb1593827e6f7f0943973e86d992ea10dccf5`. v0.27 is a no-migration, thin
+operability bridge: `POST /api/opportunities`,
 `POST /api/research-packs/{id}/claims`, `POST /api/sources`, `POST /api/claims/{id}/evidence`, and
 `POST /api/editorial-angles/{id}/claims` expose existing repository semantics only. They preserve path-owned
 lineage, existing Source URL reuse and ClaimEvidence upsert behavior, and the server-built readiness-evidence freeze;
@@ -2138,7 +2140,7 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.26 ACCEPTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.27 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
@@ -2149,10 +2151,11 @@ toward:
   v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor;
   v0.21 — Editorial Draft Package Foundation is its historical accepted predecessor;
   v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical predecessor;
-  v0.26 — Narrated Final Media Production is its latest accepted implementation milestone;
+  v0.27 — First-Run Operability Bridge is its latest accepted implementation milestone;
+  v0.26 — Narrated Final Media Production is its accepted historical predecessor;
   v0.25 — Operational Visual Production Inputs is its accepted historical predecessor;
   v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
-  migration 21 is latest, migration 22 is absent, and no successor after v0.26 is selected;
+  migration 21 is latest, migration 22 is absent, and no successor after v0.27 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
