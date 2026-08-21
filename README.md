@@ -564,7 +564,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.26 — Narrated Final Media Production is the latest accepted implementation checkpoint; v0.25 — Operational Visual
-Production Inputs is its accepted historical predecessor. Migrations 1–21 are canonical, with migration 21 latest and
-migration 22 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.26 is selected, and later Conveyor systems
-remain out of scope.
+v0.27 — First-Run Operability Bridge is the latest accepted implementation checkpoint; v0.26 — Narrated Final Media
+Production is its accepted historical predecessor. Migrations 1–21 are canonical, with migration 21 latest and
+migration 22 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.27 is selected, and later Conveyor systems
+remain out of scope. The first genuine SimilarStoic production trial has not yet occurred.
