@@ -221,6 +221,18 @@ def request_bytes(server, request: Request | str) -> tuple[bytes, str, int]:
     return content, media_type, status
 
 
+def post_json(server, path: str, payload: dict) -> tuple[dict, int]:
+    """Post one JSON body to the local server under test."""
+
+    request = Request(
+        f"http://{server.server_address[0]}:{server.server_address[1]}{path}",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    return request_json(server, request)
+
+
 def media_runtime_or_skip() -> FfmpegRuntime:
     """HTTP media coverage requires the same local FFmpeg/FFprobe pair as media-core tests."""
 
@@ -298,6 +310,375 @@ def test_server_can_be_created_for_local_use(tmp_path: Path) -> None:
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
         assert server.server_address[1] > 0
+    finally:
+        server.server_close()
+
+
+def test_first_run_ingress_api_closes_research_and_editorial_authoring_gaps(tmp_path: Path) -> None:
+    """v0.27 drives a legitimate non-empty ScriptClaimSet without repository scripting."""
+
+    server = create_server(port=0, database_path=tmp_path / "atlas.db")
+    try:
+        opportunity, status = post_json(
+            server,
+            "/api/opportunities",
+            {
+                "id": "ingress-opportunity",
+                "title": "A real operator opportunity",
+                "summary": "Why this helps an audience.",
+                "why_now": "Timely context.",
+                "score": 4,
+                "status": "proposed",
+                "metadata": {
+                    "suggested_angle": "Explain the practical consequence.",
+                    "evidence_quality": "Human-reviewed primary source.",
+                    "risk": "Low risk with stated scope.",
+                    "portfolio_relevance": "Relevant to the intended audience.",
+                    "visual_potential": "A simple visual explanation.",
+                },
+            },
+        )
+        assert status == 201
+        assert opportunity["opportunity"]["id"] == "ingress-opportunity"
+        invalid_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}/api/opportunities",
+            data=json.dumps({"id": "bad", "research_pack_id": "not-allowed"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        error, status = request_error(server, invalid_request)
+        assert status == 400
+        assert "unsupported" in error["error"]
+
+        snapshot, status = post_json(
+            server, "/api/opportunities/ingress-opportunity/idea-gate-review-snapshots", {}
+        )
+        assert status == 201
+        decision, status = post_json(
+            server,
+            f"/api/idea-gate-review-snapshots/{snapshot['snapshot']['id']}/decisions",
+            {"outcome": "Proceed", "founder_actor": "founder"},
+        )
+        assert status == 201
+        research_pack, status = post_json(
+            server,
+            "/api/opportunities/ingress-opportunity/research-packs",
+            {
+                "id": "ingress-pack",
+                "idea_gate_decision_id": decision["decision"]["id"],
+                "version": 1,
+                "summary": "Human-authored research summary.",
+                "as_of_date": "2026-08-21",
+            },
+        )
+        assert status == 201
+        assert research_pack["research_pack"]["id"] == "ingress-pack"
+
+        claim, status = post_json(
+            server,
+            "/api/research-packs/ingress-pack/claims",
+            {
+                "id": "ingress-claim",
+                "text": "A real, sourced statement.",
+                "claim_type": "fact",
+                "risk_level": "low",
+                "freshness_type": "stable",
+                "verification_status": "reviewed",
+                "verification_notes": "Checked by the operator.",
+                "reviewed_at": "2026-08-21",
+            },
+        )
+        assert status == 201
+        assert claim["claim"]["research_pack_id"] == "ingress-pack"
+        invalid_claim_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}"
+            "/api/research-packs/ingress-pack/claims",
+            data=json.dumps(
+                {"id": "ingress-invalid-claim", "research_pack_id": "override-not-allowed"}
+            ).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        error, status = request_error(server, invalid_claim_request)
+        assert status == 400
+        assert "unsupported" in error["error"]
+        missing_pack_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}"
+            "/api/research-packs/missing-pack/claims",
+            data=json.dumps(
+                {
+                    "id": "ingress-missing-pack-claim",
+                    "text": "Text",
+                    "claim_type": "fact",
+                    "risk_level": "low",
+                    "freshness_type": "stable",
+                    "verification_status": "reviewed",
+                    "verification_notes": "",
+                }
+            ).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        _error, status = request_error(server, missing_pack_request)
+        assert status == 404
+        source, status = post_json(
+            server,
+            "/api/sources",
+            {
+                "id": "ingress-source",
+                "source_type": "primary",
+                "title": "Primary source",
+                "publisher": "Publisher",
+                "url": "https://example.test/ingress-source",
+                "accessed_at": "2026-08-21T00:00:00+00:00",
+            },
+        )
+        assert status == 201
+        duplicate_source, status = post_json(
+            server,
+            "/api/sources",
+            {
+                "id": "ingress-source-duplicate",
+                "source_type": "primary",
+                "title": "Changed title is ignored by existing URL reuse semantics.",
+                "publisher": "Publisher",
+                "url": "https://example.test/ingress-source",
+                "accessed_at": "2026-08-21T00:00:00+00:00",
+            },
+        )
+        assert status == 201
+        assert duplicate_source["source"]["id"] == source["source"]["id"]
+        evidence, status = post_json(
+            server,
+            "/api/claims/ingress-claim/evidence",
+            {"source_id": "ingress-source", "stance": "supports", "reference": "section 1"},
+        )
+        assert status == 201
+        assert evidence["claim_evidence"]["claim_id"] == "ingress-claim"
+        missing_source_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}"
+            "/api/claims/ingress-claim/evidence",
+            data=json.dumps({"source_id": "missing-source", "stance": "supports"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        _error, status = request_error(server, missing_source_request)
+        assert status == 404
+        updated_evidence, status = post_json(
+            server,
+            "/api/claims/ingress-claim/evidence",
+            {"source_id": "ingress-source", "stance": "supports", "notes": "Updated note."},
+        )
+        assert status == 201
+        assert updated_evidence["claim_evidence"]["notes"] == "Updated note."
+
+        readiness, status = post_json(
+            server,
+            "/api/research-packs/ingress-pack/readiness-assessments",
+            {
+                "id": "ingress-ready",
+                "outcome": "Ready",
+                "findings": {"summary": "Ready for a narrowly sourced first run."},
+                "policy_version": "first-run-v1",
+                "producer_kind": "human",
+                "producer_identifier": "founder",
+                "producer_implementation_version": "v1",
+            },
+        )
+        assert status == 201
+        angle, status = post_json(
+            server,
+            "/api/opportunities/ingress-opportunity/editorial-angles",
+            {
+                "id": "ingress-angle",
+                "research_pack_id": "ingress-pack",
+                "research_readiness_assessment_id": readiness["assessment"]["id"],
+                "working_title": "A practical angle",
+                "thesis": "Explain the important point.",
+                "audience_promise": "A useful explanation.",
+                "framing": "Direct and clear.",
+                "key_takeaways": ["One factual takeaway."],
+            },
+        )
+        assert status == 201
+        other_pack, status = post_json(
+            server,
+            "/api/opportunities/ingress-opportunity/research-packs",
+            {
+                "id": "ingress-other-pack",
+                "idea_gate_decision_id": decision["decision"]["id"],
+                "version": 2,
+                "summary": "Separate research pack.",
+            },
+        )
+        assert status == 201
+        _other_claim, status = post_json(
+            server,
+            f"/api/research-packs/{other_pack['research_pack']['id']}/claims",
+            {
+                "id": "ingress-other-claim",
+                "text": "A separate claim.",
+                "claim_type": "fact",
+                "risk_level": "low",
+                "freshness_type": "stable",
+                "verification_status": "reviewed",
+                "verification_notes": "Checked separately.",
+            },
+        )
+        assert status == 201
+        cross_pack_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}"
+            "/api/editorial-angles/ingress-angle/claims",
+            data=json.dumps({"claim_id": "ingress-other-claim", "role": "core"}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        _error, status = request_error(server, cross_pack_request)
+        assert status == 400
+        link, status = post_json(
+            server,
+            "/api/editorial-angles/ingress-angle/claims",
+            {"claim_id": "ingress-claim", "role": "core"},
+        )
+        assert status == 201
+        assert link["editorial_angle_claim"]["role"] == "core"
+
+        piece, status = post_json(
+            server,
+            "/api/opportunities/ingress-opportunity/content-pieces",
+            {
+                "id": "ingress-piece",
+                "editorial_angle_id": angle["editorial_angle"]["id"],
+                "format_key": "short-video",
+                "working_title": "Working title",
+            },
+        )
+        assert status == 201
+        script, status = post_json(
+            server,
+            "/api/content-pieces/ingress-piece/scripts",
+            {"id": "ingress-script", "narration_text": "A carefully sourced narration."},
+        )
+        assert status == 201
+        title, status = post_json(
+            server,
+            "/api/content-pieces/ingress-piece/title-options",
+            {"id": "ingress-title", "text": "A title"},
+        )
+        assert status == 201
+        hook, status = post_json(
+            server,
+            "/api/content-pieces/ingress-piece/hook-options",
+            {"id": "ingress-hook", "text": "A hook"},
+        )
+        assert status == 201
+        package, status = post_json(
+            server,
+            "/api/content-pieces/ingress-piece/editorial-package-snapshots",
+            {
+                "id": "ingress-package",
+                "title_option_id": title["title_option"]["id"],
+                "hook_option_id": hook["hook_option"]["id"],
+                "script_id": script["script"]["id"],
+            },
+        )
+        assert status == 201
+        claim_set, status = post_json(
+            server,
+            "/api/scripts/ingress-script/claim-set",
+            {"id": "ingress-claim-set", "claim_ids": ["ingress-claim"]},
+        )
+        assert status == 201
+        assert claim_set["script_claim_set"]["id"] == "ingress-claim-set"
+        assert package["editorial_package_snapshot"]["script_id"] == "ingress-script"
+    finally:
+        server.server_close()
+
+
+def test_imported_character_reference_bootstrap_http_is_explicit_and_selectable(
+    tmp_path: Path,
+) -> None:
+    """v0.27 permits the deliberate no-provider mascot-reference bootstrap path."""
+
+    storage_root = tmp_path / "assets"
+    server = create_server(
+        port=0, database_path=tmp_path / "atlas.db", asset_storage_root=storage_root
+    )
+    try:
+        plan = create_authorized_visual_plan(server, "imported-reference-http")
+        scene, status = post_json(
+            server,
+            f"/api/visual-plans/{plan.id}/scenes",
+            {
+                "id": "imported-reference-http-scene",
+                "sequence": 1,
+                "narration_excerpt": "Narration locator.",
+                "visual_intent": "Show the mascot.",
+            },
+        )
+        assert status == 201
+        profile_id = "character-profile-similarstoic-hamster-core-v1"
+        spec, status = post_json(
+            server,
+            f"/api/scenes/{scene['scene']['id']}/asset-specs",
+            {
+                "id": "imported-reference-http-spec",
+                "asset_type": "character",
+                "purpose": "Show the mascot.",
+                "description": "A manually supplied mascot still.",
+                "generation_prompt": "Not used for this managed import.",
+                "character_profile_id": profile_id,
+            },
+        )
+        assert status == 201
+        imported_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}"
+            f"/api/asset-specs/{spec['asset_spec']['id']}/assets/import",
+            data=MEDIA_PNG,
+            headers={"Content-Type": "image/png", "X-Asset-ID": "imported-reference-http-asset"},
+            method="POST",
+        )
+        imported, status = request_json(server, imported_request)
+        assert status == 201
+        reference_set, status = post_json(
+            server,
+            f"/api/character-profiles/{profile_id}/reference-sets/imported",
+            {"id": "imported-reference-http-set", "asset_ids": [imported["asset"]["id"]]},
+        )
+        assert status == 201
+        assert (
+            reference_set["reference_set"]["members"][0]["asset"]["id"] == imported["asset"]["id"]
+        )
+        selection, status = post_json(
+            server,
+            f"/api/asset-specs/{spec['asset_spec']['id']}/asset-selections",
+            {
+                "id": "imported-reference-http-selection",
+                "asset_id": imported["asset"]["id"],
+                "character_reference_set_id": reference_set["reference_set"]["id"],
+            },
+        )
+        assert status == 201
+        assert (
+            selection["asset_selection"]["character_reference_set_id"]
+            == reference_set["reference_set"]["id"]
+        )
+        invalid_request = Request(
+            f"http://{server.server_address[0]}:{server.server_address[1]}"
+            f"/api/character-profiles/{profile_id}/reference-sets/imported",
+            data=json.dumps(
+                {
+                    "id": "imported-reference-http-invalid",
+                    "asset_ids": [imported["asset"]["id"]],
+                    "character_profile_id": "override-not-allowed",
+                }
+            ).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        error, status = request_error(server, invalid_request)
+        assert status == 400
+        assert "unsupported" in error["error"]
     finally:
         server.server_close()
 

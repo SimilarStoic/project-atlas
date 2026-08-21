@@ -2107,6 +2107,121 @@ def test_asset_selection_enforces_managed_digest_and_explicit_character_referenc
         repository.close()
 
 
+def test_imported_character_reference_bootstrap_is_explicit_managed_and_compatible(
+    tmp_path,
+) -> None:
+    """v0.27 deliberately admits only qualifying imported mascot Assets as references."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        _piece, _script, package, ready = _create_ready_editorial_package(
+            repository, "imported-ref"
+        )
+        approve = repository.create_editorial_gate_decision(
+            "imported-ref-approve", package.id, ready.id, "Approve", "founder"
+        )
+        plan = repository.create_visual_plan_under_editorial_gate(
+            "imported-ref-plan", approve.id, "Direction"
+        )
+        scene = repository.create_scene_under_visual_plan_authorization(
+            "imported-ref-scene", plan.id, 1, "Locator", "Intent"
+        )
+        profile_id = "character-profile-similarstoic-hamster-core-v1"
+        character_spec = repository.create_asset_spec_under_scene_authorization(
+            "imported-ref-character-spec",
+            scene.id,
+            "character",
+            "Show the hamster.",
+            "A canonical hamster visual.",
+            "Illustrate the hamster.",
+            character_profile_id=profile_id,
+        )
+        storage = LocalAssetStorage(storage_root)
+        png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDRtest"
+        first = repository.import_asset_under_asset_spec_authorization(
+            "imported-ref-first", character_spec.id, png, "image/png", storage
+        )
+        second = repository.import_asset_under_asset_spec_authorization(
+            "imported-ref-second", character_spec.id, png + b"second", "image/png", storage
+        )
+
+        reference_set = repository.create_character_reference_set_from_imported_assets(
+            "imported-ref-set", profile_id, [second.id, first.id]
+        )
+        assert reference_set.character_profile_id == profile_id
+        assert reference_set.version == 1
+        assert [
+            member.asset_id
+            for member in repository.list_character_reference_set_members(reference_set.id)
+        ] == [second.id, first.id]
+        assert repository.get_asset(first.id) == first
+        assert first.generation_execution_id is None
+        assert repository.get_asset_spec(character_spec.id) == character_spec
+        selected = repository.create_asset_selection(
+            "imported-ref-selection", character_spec.id, first.id, reference_set.id
+        )
+        assert selected.character_reference_set_id == reference_set.id
+
+        graphic_spec = repository.create_asset_spec_under_scene_authorization(
+            "imported-ref-graphic-spec", scene.id, "graphic", "Purpose", "Description", "Prompt"
+        )
+        graphic = repository.import_asset_under_asset_spec_authorization(
+            "imported-ref-graphic", graphic_spec.id, png, "image/png", storage
+        )
+        with pytest.raises(ValueError, match="character AssetSpecs"):
+            repository.create_character_reference_set_from_imported_assets(
+                "imported-ref-non-character", profile_id, [graphic.id]
+            )
+        other_profile = repository.create_character_profile(
+            "imported-ref-other-profile",
+            "other-character",
+            1,
+            "Other Character",
+            "A separate identity.",
+            "Keep separate.",
+        )
+        other_spec = repository.create_asset_spec_under_scene_authorization(
+            "imported-ref-other-spec",
+            scene.id,
+            "character",
+            "Show another character.",
+            "A separate character visual.",
+            "Illustrate another character.",
+            character_profile_id=other_profile.id,
+        )
+        wrong_profile = repository.import_asset_under_asset_spec_authorization(
+            "imported-ref-other-asset", other_spec.id, png, "image/png", storage
+        )
+        with pytest.raises(ValueError, match="match its CharacterProfile"):
+            repository.create_character_reference_set_from_imported_assets(
+                "imported-ref-wrong-profile", profile_id, [wrong_profile.id]
+            )
+        historical = repository.create_asset(
+            "imported-ref-historical", character_spec.id, 99, "legacy.png", "image/png", "manual"
+        )
+        with pytest.raises(ValueError, match="imported managed Assets"):
+            repository.create_character_reference_set_from_imported_assets(
+                "imported-ref-unmanaged", profile_id, [historical.id]
+            )
+        with repository.connection:
+            repository.connection.execute(
+                "UPDATE assets SET content_digest = ? WHERE id = ?", ("0" * 64, second.id)
+            )
+        with pytest.raises(ValueError, match="do not match"):
+            repository.create_character_reference_set_from_imported_assets(
+                "imported-ref-digest-mismatch", profile_id, [second.id]
+            )
+        with pytest.raises(KeyError):
+            repository.create_character_reference_set_from_imported_assets(
+                "imported-ref-missing", profile_id, ["missing-imported-asset"]
+            )
+
+        assert repository.get_character_reference_set(reference_set.id) == reference_set
+    finally:
+        repository.close()
+
+
 def test_migration_19_adds_editorial_gate_tables_without_backfill(tmp_path) -> None:
     """Migration 19 is additive over v0.23 and preserves historical VisualPlans."""
 

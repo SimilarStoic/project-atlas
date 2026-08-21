@@ -715,6 +715,248 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        if path == "/api/opportunities":
+            try:
+                payload = self._read_json_object("Opportunity payload")
+                self._reject_unsupported_fields(
+                    payload,
+                    {"id", "title", "summary", "why_now", "score", "status", "metadata"},
+                    "Opportunity payload",
+                )
+                score = payload.get("score")
+                if not isinstance(score, int) or isinstance(score, bool):
+                    raise ValueError("Opportunity score must be an integer.")
+                opportunity = self.server.repository.create_opportunity(
+                    self._required_text(payload, "id", "Opportunity"),
+                    self._required_text(payload, "title", "Opportunity"),
+                    self._required_text(payload, "summary", "Opportunity"),
+                    self._required_text(payload, "why_now", "Opportunity"),
+                    score,
+                    self._required_text(payload, "status", "Opportunity"),
+                    self._optional_object(payload, "metadata", "Opportunity"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(
+                {"kind": "opportunity", "opportunity": self._opportunity_payload(opportunity)},
+                HTTPStatus.CREATED,
+            )
+            return
+        source_prefix = "/api/sources"
+        if path == source_prefix:
+            try:
+                payload = self._read_json_object("Source payload")
+                self._reject_unsupported_fields(
+                    payload,
+                    {
+                        "id",
+                        "source_type",
+                        "title",
+                        "publisher",
+                        "url",
+                        "accessed_at",
+                        "author",
+                        "publication_date",
+                        "jurisdiction",
+                        "metadata",
+                    },
+                    "Source payload",
+                )
+                source = self.server.repository.create_source(
+                    self._required_text(payload, "id", "Source"),
+                    self._required_text(payload, "source_type", "Source"),
+                    self._required_text(payload, "title", "Source"),
+                    self._required_text(payload, "publisher", "Source"),
+                    self._required_text(payload, "url", "Source"),
+                    self._required_text(payload, "accessed_at", "Source"),
+                    self._optional_text(payload, "author", "Source"),
+                    self._optional_text(payload, "publication_date", "Source"),
+                    self._optional_text(payload, "jurisdiction", "Source"),
+                    self._optional_object(payload, "metadata", "Source"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json(
+                {"kind": "source", "source": self._source_payload(source)}, HTTPStatus.CREATED
+            )
+            return
+        claim_prefix = "/api/claims/"
+        evidence_suffix = "/evidence"
+        if path.startswith(claim_prefix) and path.endswith(evidence_suffix):
+            claim_id = unquote(path[len(claim_prefix) : -len(evidence_suffix)]).strip("/")
+            if not claim_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("ClaimEvidence payload")
+                self._reject_unsupported_fields(
+                    payload, {"source_id", "stance", "reference", "notes"}, "ClaimEvidence payload"
+                )
+                self.server.repository.get_claim(claim_id)
+                source_id = self._required_text(payload, "source_id", "ClaimEvidence")
+                self.server.repository.get_source(source_id)
+                reference = payload.get("reference")
+                notes = payload.get("notes", "")
+                if reference is not None and not isinstance(reference, str):
+                    raise ValueError("ClaimEvidence reference must be text or null.")
+                if not isinstance(notes, str):
+                    raise ValueError("ClaimEvidence notes must be text.")
+                evidence = self.server.repository.link_claim_evidence(
+                    claim_id,
+                    source_id,
+                    self._required_text(payload, "stance", "ClaimEvidence"),
+                    reference,
+                    notes,
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "Claim or Source not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "claim_evidence",
+                    "claim_evidence": self._claim_evidence_payload(evidence),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        research_pack_prefix = "/api/research-packs/"
+        claim_suffix = "/claims"
+        if path.startswith(research_pack_prefix) and path.endswith(claim_suffix):
+            research_pack_id = unquote(path[len(research_pack_prefix) : -len(claim_suffix)]).strip(
+                "/"
+            )
+            if not research_pack_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("Claim payload")
+                self._reject_unsupported_fields(
+                    payload,
+                    {
+                        "id",
+                        "text",
+                        "claim_type",
+                        "risk_level",
+                        "freshness_type",
+                        "verification_status",
+                        "verification_notes",
+                        "reviewed_at",
+                        "metadata",
+                    },
+                    "Claim payload",
+                )
+                self.server.repository.get_research_pack(research_pack_id)
+                verification_notes = payload.get("verification_notes")
+                if not isinstance(verification_notes, str):
+                    raise ValueError("Claim verification_notes must be text.")
+                claim = self.server.repository.create_claim(
+                    self._required_text(payload, "id", "Claim"),
+                    research_pack_id,
+                    self._required_text(payload, "text", "Claim"),
+                    self._required_text(payload, "claim_type", "Claim"),
+                    self._required_text(payload, "risk_level", "Claim"),
+                    self._required_text(payload, "freshness_type", "Claim"),
+                    self._required_text(payload, "verification_status", "Claim"),
+                    verification_notes,
+                    self._optional_text(payload, "reviewed_at", "Claim"),
+                    self._optional_object(payload, "metadata", "Claim"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "ResearchPack not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {"kind": "claim", "claim": self._claim_payload(claim)}, HTTPStatus.CREATED
+            )
+            return
+        editorial_angle_prefix = "/api/editorial-angles/"
+        editorial_angle_claim_suffix = "/claims"
+        if path.startswith(editorial_angle_prefix) and path.endswith(editorial_angle_claim_suffix):
+            editorial_angle_id = unquote(
+                path[len(editorial_angle_prefix) : -len(editorial_angle_claim_suffix)]
+            ).strip("/")
+            if not editorial_angle_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("EditorialAngle Claim payload")
+                self._reject_unsupported_fields(
+                    payload, {"claim_id", "role"}, "EditorialAngle Claim payload"
+                )
+                self.server.repository.get_editorial_angle(editorial_angle_id)
+                claim_id = self._required_text(payload, "claim_id", "EditorialAngle Claim")
+                self.server.repository.get_claim(claim_id)
+                link = self.server.repository.link_claim_to_editorial_angle(
+                    editorial_angle_id,
+                    claim_id,
+                    self._required_text(payload, "role", "EditorialAngle Claim"),
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "EditorialAngle or Claim not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "editorial_angle_claim",
+                    "editorial_angle_claim": self._editorial_angle_claim_payload(link),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        imported_reference_suffix = "/reference-sets/imported"
+        reference_prefix = "/api/character-profiles/"
+        if path.startswith(reference_prefix) and path.endswith(imported_reference_suffix):
+            character_profile_id = unquote(
+                path[len(reference_prefix) : -len(imported_reference_suffix)]
+            ).strip("/")
+            if not character_profile_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("Imported CharacterReferenceSet payload")
+                self._reject_unsupported_fields(
+                    payload, {"id", "asset_ids"}, "Imported CharacterReferenceSet payload"
+                )
+                asset_ids = payload.get("asset_ids")
+                if not isinstance(asset_ids, list):
+                    raise ValueError("asset_ids must be an ordered list.")
+                create_reference_set = (
+                    self.server.repository.create_character_reference_set_from_imported_assets
+                )
+                reference_set = create_reference_set(
+                    self._required_text(payload, "id", "Imported CharacterReferenceSet"),
+                    character_profile_id,
+                    asset_ids,
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {"error": "CharacterProfile or Asset not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "character_reference_set",
+                    "reference_set": self.server.repository.character_reference_set_payload(
+                        reference_set.id
+                    ),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         narration_prefix = "/api/scripts/"
         narration_import_suffix = "/narration-assets/import"
         if path.startswith(narration_prefix) and path.endswith(narration_import_suffix):
@@ -1976,6 +2218,75 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         if "metadata" in payload:
             changes["metadata"] = self._optional_object(payload, "metadata", "AssetSpec") or {}
         return changes
+
+    @staticmethod
+    def _opportunity_payload(opportunity) -> dict:
+        return {
+            "id": opportunity.id,
+            "title": opportunity.title,
+            "summary": opportunity.summary,
+            "why_now": opportunity.why_now,
+            "score": opportunity.score,
+            "status": opportunity.status,
+            "metadata": opportunity.metadata,
+            "created_at": opportunity.created_at,
+            "updated_at": opportunity.updated_at,
+        }
+
+    @staticmethod
+    def _claim_payload(claim) -> dict:
+        return {
+            "id": claim.id,
+            "research_pack_id": claim.research_pack_id,
+            "text": claim.text,
+            "claim_type": claim.claim_type,
+            "risk_level": claim.risk_level,
+            "freshness_type": claim.freshness_type,
+            "verification_status": claim.verification_status,
+            "verification_notes": claim.verification_notes,
+            "reviewed_at": claim.reviewed_at,
+            "metadata": claim.metadata,
+            "created_at": claim.created_at,
+            "updated_at": claim.updated_at,
+        }
+
+    @staticmethod
+    def _source_payload(source) -> dict:
+        return {
+            "id": source.id,
+            "source_type": source.source_type,
+            "title": source.title,
+            "publisher": source.publisher,
+            "author": source.author,
+            "url": source.url,
+            "publication_date": source.publication_date,
+            "accessed_at": source.accessed_at,
+            "jurisdiction": source.jurisdiction,
+            "metadata": source.metadata,
+            "created_at": source.created_at,
+            "updated_at": source.updated_at,
+        }
+
+    @staticmethod
+    def _claim_evidence_payload(evidence) -> dict:
+        return {
+            "claim_id": evidence.claim_id,
+            "source_id": evidence.source_id,
+            "stance": evidence.stance,
+            "reference": evidence.reference,
+            "notes": evidence.notes,
+            "created_at": evidence.created_at,
+            "updated_at": evidence.updated_at,
+        }
+
+    @staticmethod
+    def _editorial_angle_claim_payload(link) -> dict:
+        return {
+            "editorial_angle_id": link.editorial_angle_id,
+            "claim_id": link.claim_id,
+            "role": link.role,
+            "created_at": link.created_at,
+        }
 
     @staticmethod
     def _scene_payload(scene) -> dict:

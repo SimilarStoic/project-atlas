@@ -3877,6 +3877,43 @@ class AtlasRepository:
                 )
         return self.get_character_reference_set(reference_set_id)
 
+    def create_character_reference_set_from_imported_assets(
+        self,
+        reference_set_id: str,
+        character_profile_id: str,
+        asset_ids: list[str],
+    ) -> CharacterReferenceSet:
+        """Deliberately freeze qualifying managed imported character Assets as references."""
+
+        if not isinstance(reference_set_id, str) or not reference_set_id.strip():
+            raise ValueError("CharacterReferenceSet ID must be non-empty text.")
+        if not isinstance(asset_ids, list) or not asset_ids:
+            raise ValueError("A CharacterReferenceSet must include one or more Asset IDs.")
+        if not all(isinstance(asset_id, str) and asset_id.strip() for asset_id in asset_ids):
+            raise ValueError("CharacterReferenceSet Asset IDs must be non-empty text.")
+        if len(set(asset_ids)) != len(asset_ids):
+            raise ValueError("An Asset cannot appear more than once in one CharacterReferenceSet.")
+        self.get_character_profile(character_profile_id)
+        for asset_id in asset_ids:
+            self._validate_imported_character_reference_asset(asset_id, character_profile_id)
+        with self.connection:
+            self.connection.execute("BEGIN IMMEDIATE")
+            version = self.connection.execute(
+                "SELECT COALESCE(MAX(version), 0) + 1 FROM character_reference_sets "
+                "WHERE character_profile_id = ?",
+                (character_profile_id,),
+            ).fetchone()[0]
+            self.connection.execute(
+                "INSERT INTO character_reference_sets VALUES (?, ?, ?, ?)",
+                (reference_set_id.strip(), character_profile_id, version, now()),
+            )
+            for position, asset_id in enumerate(asset_ids, start=1):
+                self.connection.execute(
+                    "INSERT INTO character_reference_set_members VALUES (?, ?, ?, ?)",
+                    (reference_set_id.strip(), asset_id, position, now()),
+                )
+        return self.get_character_reference_set(reference_set_id.strip())
+
     def get_character_reference_set(self, reference_set_id: str) -> CharacterReferenceSet:
         row = self.connection.execute(
             "SELECT * FROM character_reference_sets WHERE id = ?", (reference_set_id,)
@@ -4050,19 +4087,30 @@ class AtlasRepository:
         }
 
     def _character_reference_asset_payload(self, asset: Asset) -> dict[str, Any]:
-        execution = self.get_generation_execution(asset.generation_execution_id or "")
+        execution = (
+            self.get_generation_execution(asset.generation_execution_id)
+            if asset.generation_execution_id is not None
+            else None
+        )
         return {
             "id": asset.id,
             "version": asset.version,
             "media_type": asset.media_type,
+            "source_kind": asset.source_kind,
             "content_digest": asset.content_digest,
             "asset_spec_id": asset.asset_spec_id,
-            "generation_execution": {
-                "id": execution.id,
-                "provider_key": execution.provider_key,
-                "model_key": execution.model_key,
-                "character_profile": self.character_profile_summary(execution.character_profile_id),
-            },
+            "generation_execution": (
+                {
+                    "id": execution.id,
+                    "provider_key": execution.provider_key,
+                    "model_key": execution.model_key,
+                    "character_profile": self.character_profile_summary(
+                        execution.character_profile_id
+                    ),
+                }
+                if execution is not None
+                else None
+            ),
         }
 
     def _character_reference_member_payload(
@@ -4096,6 +4144,26 @@ class AtlasRepository:
         managed_path = self.managed_asset_path(asset.id)
         if sha256(managed_path.read_bytes()).hexdigest() != asset.content_digest:
             raise ValueError("Managed Asset bytes do not match the stored content digest.")
+        return asset
+
+    def _validate_imported_character_reference_asset(
+        self, asset_id: str, character_profile_id: str
+    ) -> Asset:
+        """Require the explicit imported-reference bootstrap eligibility contract."""
+
+        asset = self.get_asset(asset_id)
+        if asset.source_kind != "imported":
+            raise ValueError("Imported character references must use imported managed Assets.")
+        asset_spec = self._require_gate_authorized_asset_spec(asset.asset_spec_id)
+        if asset_spec.asset_type != "character":
+            raise ValueError(
+                "Imported character references must originate from character AssetSpecs."
+            )
+        if asset_spec.character_profile_id != character_profile_id:
+            raise ValueError(
+                "Imported character reference identity lineage must match its CharacterProfile."
+            )
+        self._validate_selectable_managed_asset(asset)
         return asset
 
     def load_verified_character_reference_asset(
