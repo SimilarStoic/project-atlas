@@ -995,10 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.25 — Operational Visual Production Inputs** remains the latest accepted
-implementation milestone. **v0.26 — Narrated Final Media Production** is selected, locally implemented and validated,
-and pending founder acceptance/push. Migration 21 is canonical and latest, migration 22 is absent, and no successor
-after v0.26 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.26 — Narrated Final Media Production** is the latest accepted implementation
+milestone; **v0.25 — Operational Visual Production Inputs** is its accepted historical predecessor. Migration 21 is
+canonical and latest, migration 22 is absent, and no successor after v0.26 is selected.
 
 Implement:
 - Research
@@ -1017,10 +1016,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.25 — Operational Visual Production Inputs** remains the latest accepted implementation milestone. **v0.26 —
-Narrated Final Media Production** is locally implemented and validated pending founder acceptance/push. Migration 21
-is canonical and latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is
-unimplemented and no later phase is activated. No successor after v0.26 is selected.
+**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.25 — Operational
+Visual Production Inputs** is its accepted historical predecessor. Migration 21 is canonical and latest, migration 22
+is absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no later phase is
+activated. No successor after v0.26 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1924,9 +1923,11 @@ after the documented Windows CLI worker-process hang.
 
 ### v0.26 — Narrated Final Media Production
 
-**Status: LOCALLY IMPLEMENTED AND VALIDATED; PENDING FOUNDER ACCEPTANCE/PUSH.** v0.25 remains the latest accepted
-Phase 2 milestone. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.26 is selected.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.26 is the latest accepted Phase 2 milestone; v0.25 is its accepted
+historical predecessor. Founder acceptance covers implementation commit
+`deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
+`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.26 is selected.
 
 v0.26 extends the accepted visual-production chain only through: `Approve EditorialGateDecision → Gate-authorized
 VisualPlan → exact Script → managed NarrationAsset → immutable FinalMediaInputSnapshot → terminal RenderExecution →
@@ -1946,6 +1947,10 @@ source extension is internal and the final output remains capped to the frozen n
 is immutable terminal `succeeded` or `failed`; multiple explicit attempts are allowed, failed attempts create no
 artifact, and a successful artifact has one managed MP4, SHA-256 and frozen FFprobe technical validation retrievable
 only through its registered ID.
+
+The operational runtime dependency is a usable local FFmpeg/FFprobe pair resolved from `PATH` or explicit
+`ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`; it is neither a bundled repository binary nor provider, paid-production
+or cost/spend integration.
 
 The narrow API adds narration import/list/get/content, final-media snapshot create/get, synchronous render create/get
 and artifact get/content routes. Validation passed: Ruff, **114 pytest tests**, `git diff --check`, real two-Scene
@@ -2112,7 +2117,7 @@ toward:
 - **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
   territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
   not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.25 ACCEPTED):** is the current phase defining the
+- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.26 ACCEPTED):** is the current phase defining the
   human-led executable
   lifecycle over existing records, including idea review, research readiness, editorial progression,
   title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
@@ -2123,9 +2128,10 @@ toward:
   v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor;
   v0.21 — Editorial Draft Package Foundation is its historical accepted predecessor;
   v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical predecessor;
-  v0.25 — Operational Visual Production Inputs is its latest accepted implementation milestone;
+  v0.26 — Narrated Final Media Production is its latest accepted implementation milestone;
+  v0.25 — Operational Visual Production Inputs is its accepted historical predecessor;
   v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
-  migration 20 is latest, migration 21 is absent, and no successor after v0.25 is selected;
+  migration 21 is latest, migration 22 is absent, and no successor after v0.26 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

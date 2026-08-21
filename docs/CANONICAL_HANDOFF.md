@@ -21,14 +21,13 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.25 — Operational Visual Production Inputs** remains the latest accepted implementation milestone. **v0.26 —
-Narrated Final Media Production** is selected, locally implemented and validated, and pending founder acceptance/push.
-Migration 21 is canonical and latest; migration 22 is absent. Phase 2 remains ACTIVE / INCOMPLETE and later phases
-remain unactivated. No successor after v0.26 is selected. v0.25 acceptance covers implementation commit
-`065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
-`67500b338ecb959177b131ece2f59b9b11fb327c`; v0.26 validation passed with Black 26.3.1 in-process equivalence across
-12 Python files, Ruff, 114 pytest tests, real FFmpeg/FFprobe proof and `git diff --check`. A fresh session must verify
-the live GitHub checkpoint before acting.
+**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.25 — Operational
+Visual Production Inputs** is its accepted historical predecessor. Founder acceptance covers implementation commit
+`deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
+`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Migration 21 is canonical and latest; migration 22 is absent. Phase 2
+remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after v0.26 is selected. Validation
+passed with Black 26.3.1 in-process equivalence across 12 Python files, Ruff, 114 pytest tests, real FFmpeg/FFprobe
+proof and `git diff --check`. A fresh session must verify the live GitHub checkpoint before acting.
 Founder acceptance for v0.22 covers implementation commit
 `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
@@ -61,11 +60,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
-**v0.25 — Operational Visual Production Inputs** remains the latest accepted implementation milestone. **v0.26 —
-Narrated Final Media Production** is locally implemented and validated pending founder acceptance/push. **Phase 2 —
-Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.25
-implementations and no selected successor after v0.26**, under founder + ChatGPT design/implementation stewardship.
-This does not authorize
+**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.25 — Operational
+Visual Production Inputs** is its accepted historical predecessor. **Phase 2 — Content Operating Model is the current
+ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.26 implementations and no selected successor after
+v0.26**, under founder + ChatGPT design/implementation stewardship. This does not authorize
 all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
@@ -565,9 +563,11 @@ after the documented Windows CLI worker-process hang.
 
 ### v0.26 — Narrated Final Media Production
 
-**Status: LOCALLY IMPLEMENTED AND VALIDATED; PENDING FOUNDER ACCEPTANCE/PUSH.** v0.25 remains the latest accepted
-Phase 2 predecessor. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE and no
-successor after v0.26 is selected. This is not acceptance, publication authorization or successor selection.
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.26 is the latest accepted Phase 2 milestone; v0.25 is its accepted
+historical predecessor. Founder acceptance covers implementation commit
+`deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
+`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE and no successor after v0.26 is selected. This does not authorize a successor milestone.
 
 The bounded lifecycle is `Approve EditorialGateDecision → Gate-authorized VisualPlan → exact Script → manual managed
 NarrationAsset → FinalMediaInputSnapshot → RenderExecution → FinalMediaArtifact → delegated manual production QA /
@@ -583,6 +583,10 @@ and output is trimmed/capped to the frozen final duration. `RenderExecution` is 
 `failed`), with multiple explicit attempts allowed; failed attempts retain bounded error facts and no artifact. Each
 successful execution has at most one immutable safe managed `FinalMediaArtifact`, whose SHA-256 and FFprobe technical
 validation are preserved and whose content resolves only by registered artifact ID.
+
+The operational runtime dependency is a usable local FFmpeg/FFprobe pair resolved from `PATH` or explicit
+`ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`. It is not a bundled repository binary, provider integration,
+paid-production authorization or cost/spend implementation.
 
 The narrow HTTP surface provides narration import/list/get/content; snapshot create/get; synchronous render create/get;
 and artifact get/content. It accepts no caller filesystem path, digest, duration, source kind, caption content, render
@@ -905,9 +909,9 @@ already-pushed commits, reset/clean away work, select the successor milestone or
 remains final product, business, quality, scope and acceptance authority; founder + ChatGPT remain architecture,
 specification, roadmap and milestone authority; Codex remains the bounded repository inspection and execution agent.
 
-**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation checkpoint. **v0.24 — Editorial
-Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. No successor after v0.25 is selected;
-any scope beyond v0.25 requires a new explicit founder + ChatGPT decision.
+**v0.26 — Narrated Final Media Production** is the latest accepted implementation checkpoint. **v0.25 — Operational
+Visual Production Inputs** is its accepted historical predecessor. No successor after v0.26 is selected; any scope
+beyond v0.26 requires a new explicit founder + ChatGPT decision.
 
 The governing principle is **CHANGE WITHOUT REBUILD**.
 

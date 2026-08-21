@@ -5,10 +5,10 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.25 — Operational Visual Production Inputs remains the latest accepted
-implementation milestone. v0.26 — Narrated Final Media Production is locally implemented and validated pending
-founder acceptance/push. Migration 21 is the latest canonical migration, migration 22 is absent, and Phase 2 remains
-ACTIVE / INCOMPLETE. No successor after v0.26 is selected. Later workflow, research automation and production systems
+SQLite foundation for SimilarStoic. v0.26 — Narrated Final Media Production is the latest accepted implementation
+milestone; v0.25 — Operational Visual Production Inputs is its accepted historical predecessor. Migration 21 is the
+latest canonical migration, migration 22 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.26
+is selected. Later workflow, research automation and production systems
 remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
@@ -46,10 +46,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.25 Operational Visual Production Inputs remains the latest accepted
-implementation milestone; v0.26 Narrated Final Media Production is locally implemented and validated pending founder
-acceptance/push. Migrations 1–21 are canonical, with migration 21 latest and migration 22 absent. No successor after
-v0.26 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.26 Narrated Final Media Production is the latest accepted implementation
+milestone; v0.25 Operational Visual Production Inputs is its historical predecessor. Migrations 1–21 are canonical,
+with migration 21 latest and migration 22 absent. No successor after v0.26 is selected. The remaining Phase 2 scope is
+unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -204,10 +204,11 @@ implementation commit `065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-sta
 formatting equivalence across 10 repository Python files passed through the accepted in-process API check after the
 documented Windows CLI worker-process hang.
 
-## v0.26 Pending Acceptance Checkpoint
+## v0.26 Accepted Checkpoint
 
-**v0.26 — Narrated Final Media Production** is locally implemented and validated, **PENDING founder acceptance and
-push**. v0.25 remains the latest accepted predecessor; Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
+**v0.26 — Narrated Final Media Production** is **ACCEPTED**. v0.25 is its accepted historical predecessor. Founder
+acceptance covers implementation commit `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation
+commit `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
 migration 22 is absent, and no successor after v0.26 is selected.
 
 The bounded lifecycle extends accepted v0.25 visual inputs through managed manual Script-owned WAV/MP3/M4A
@@ -217,6 +218,9 @@ VisualPlan/Script/NarrationAsset lineage, ordered Scene-to-AssetSelection mappin
 provenance, timing, deterministic captions and fixed settings. Local FFmpeg/FFprobe produces 1080×1920, 30fps video
 with static/slow-zoom motion, cuts/fixed 250ms crossfades and burned captions while preserving frozen final duration.
 Failures retain no artifact; successful artifacts retain SHA-256 and probe validation for exact safe retrieval.
+The operational runtime dependency is a usable local FFmpeg/FFprobe pair resolved from `PATH` or explicit
+`ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`; this is not a bundled binary, provider integration or paid-production
+authorization.
 
 The narrow API exposes narration import/list/get/content, final-media snapshot create/get, synchronous render
 create/get and final-artifact get/content. It accepts no caller filesystem paths, digests, duration, render profile,
@@ -543,7 +547,7 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.25 — Operational Visual Production Inputs is the latest accepted implementation checkpoint; v0.24 — Editorial Gate
-+ Approved VisualPlan Initiation is its accepted historical predecessor. Migrations 1–20 are canonical, with migration
-20 latest and migration 21 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.25
-is selected, and later Conveyor systems remain out of scope.
+v0.26 — Narrated Final Media Production is the latest accepted implementation checkpoint; v0.25 — Operational Visual
+Production Inputs is its accepted historical predecessor. Migrations 1–21 are canonical, with migration 21 latest and
+migration 22 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.26 is selected, and later Conveyor systems
+remain out of scope.

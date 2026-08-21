@@ -6,14 +6,14 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.25 ACCEPTED; v0.26 PENDING ACCEPTANCE)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.26 ACCEPTED)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship. v0.25 — Operational Visual Production Inputs remains the latest accepted
-implementation milestone. v0.26 — Narrated Final Media Production is selected, locally implemented and validated,
-and pending founder acceptance/push; no successor after v0.26 is selected. Migration 21 is canonical and latest;
+design/implementation stewardship. v0.26 — Narrated Final Media Production is the latest accepted implementation
+milestone; v0.25 — Operational Visual Production Inputs is its accepted historical predecessor, and no successor after
+v0.26 is selected. Migration 21 is canonical and latest;
 migration 22 is absent. Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and Atlas v0.1
 through v0.7 are complete and pushed.
 
@@ -1141,10 +1141,11 @@ revenue outcomes where available, without allowing profit signals to silently re
 This spend direction concerns paid external spend only; remaining accounting, reservation, thresholds,
 enforcement, proposal schema and negligible/internal-cost treatment remain unspecified.
 
-## v0.26 Pending Acceptance Checkpoint
+## v0.26 Accepted Checkpoint
 
-**v0.26 — Narrated Final Media Production** is locally implemented and validated, **PENDING founder acceptance and
-push**. v0.25 remains the latest accepted predecessor. Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
+**v0.26 — Narrated Final Media Production** is **ACCEPTED**. v0.25 is its accepted historical predecessor. Founder
+acceptance covers implementation commit `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation
+commit `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
 migration 22 is absent, and no successor after v0.26 is selected.
 
 The implemented durable lifecycle is: exact accepted v0.25 visual-production lineage → immutable Script-owned managed
@@ -1175,10 +1176,10 @@ analytics/Learning, generic workflow engine or new founder Gate.
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.25 — Operational Visual Production Inputs remains the latest accepted
-implementation milestone. v0.26 — Narrated Final Media Production is locally implemented and validated pending
-founder acceptance/push; migration 21 is latest, migration 22 is absent, and no successor after v0.26 is selected.
-The exact immediate next action is founder review/acceptance of v0.26.
+Phase 2 remains active and incomplete. v0.26 — Narrated Final Media Production is the latest accepted implementation
+milestone; v0.25 — Operational Visual Production Inputs is its accepted historical predecessor; migration 21 is latest,
+migration 22 is absent, and no successor after v0.26 is selected. The exact
+immediate next action is founder + ChatGPT repository-grounded design/selection of a new bounded milestone.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
