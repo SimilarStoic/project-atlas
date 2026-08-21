@@ -26,10 +26,12 @@ from project_atlas.generation import (
     OpenAIImageGenerator,
     UnsupportedGenerationType,
 )
+from project_atlas.media import FfmpegRuntime, LocalMediaStorage, MediaRuntimeError, MediaService
 from project_atlas.persistence import AtlasRepository
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
 MAX_IMPORTED_ASSET_BYTES = 10 * 1024 * 1024
+MAX_IMPORTED_NARRATION_BYTES = 100 * 1024 * 1024
 
 
 class AtlasRequestHandler(BaseHTTPRequestHandler):
@@ -539,6 +541,143 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             message = parse_qs(parsed.query).get("message", [""])[0]
             self._send_json({"kind": "demo", "reply": chat_reply(message)})
             return
+        narration_history_prefix = "/api/scripts/"
+        narration_history_suffix = "/narration-assets"
+        if parsed.path.startswith(narration_history_prefix) and parsed.path.endswith(
+            narration_history_suffix
+        ):
+            script_id = unquote(
+                parsed.path[len(narration_history_prefix) : -len(narration_history_suffix)]
+            ).strip("/")
+            if not script_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                narration_assets = self.server.repository.list_narration_assets_for_script(
+                    script_id
+                )
+            except KeyError:
+                self._send_json({"error": "Script not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "narration_asset_history",
+                    "script_id": script_id,
+                    "narration_assets": [
+                        self._narration_asset_payload(item) for item in narration_assets
+                    ],
+                }
+            )
+            return
+        narration_asset_prefix = "/api/narration-assets/"
+        narration_content_suffix = "/content"
+        if parsed.path.startswith(narration_asset_prefix) and parsed.path.endswith(
+            narration_content_suffix
+        ):
+            narration_asset_id = unquote(
+                parsed.path[len(narration_asset_prefix) : -len(narration_content_suffix)]
+            ).strip("/")
+            if not narration_asset_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                narration = self.server.repository.get_narration_asset(narration_asset_id)
+                content = self.server.media_service.narration_content(narration_asset_id)
+            except (KeyError, MediaRuntimeError, OSError):
+                self.send_error(HTTPStatus.NOT_FOUND, "NarrationAsset content not found")
+                return
+            self._send_binary(content, narration.media_type)
+            return
+        if parsed.path.startswith(narration_asset_prefix):
+            narration_asset_id = unquote(parsed.path[len(narration_asset_prefix) :]).strip("/")
+            if not narration_asset_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                narration = self.server.repository.get_narration_asset(narration_asset_id)
+            except KeyError:
+                self._send_json({"error": "NarrationAsset not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "narration_asset",
+                    "narration_asset": self._narration_asset_payload(narration),
+                }
+            )
+            return
+        snapshot_prefix = "/api/final-media-input-snapshots/"
+        if parsed.path.startswith(snapshot_prefix):
+            snapshot_id = unquote(parsed.path[len(snapshot_prefix) :]).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                snapshot = self.server.repository.get_final_media_input_snapshot(snapshot_id)
+            except KeyError:
+                self._send_json(
+                    {"error": "FinalMediaInputSnapshot not found."}, HTTPStatus.NOT_FOUND
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "final_media_input_snapshot",
+                    "final_media_input_snapshot": self._snapshot_payload(snapshot),
+                }
+            )
+            return
+        execution_prefix = "/api/render-executions/"
+        if parsed.path.startswith(execution_prefix):
+            execution_id = unquote(parsed.path[len(execution_prefix) :]).strip("/")
+            if not execution_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                execution = self.server.repository.get_render_execution(execution_id)
+            except KeyError:
+                self._send_json({"error": "RenderExecution not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "render_execution",
+                    "render_execution": self._render_execution_payload(execution),
+                }
+            )
+            return
+        artifact_prefix = "/api/final-media-artifacts/"
+        artifact_content_suffix = "/content"
+        if parsed.path.startswith(artifact_prefix) and parsed.path.endswith(
+            artifact_content_suffix
+        ):
+            artifact_id = unquote(
+                parsed.path[len(artifact_prefix) : -len(artifact_content_suffix)]
+            ).strip("/")
+            if not artifact_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                content = self.server.media_service.artifact_content(artifact_id)
+            except (KeyError, MediaRuntimeError, OSError):
+                self.send_error(HTTPStatus.NOT_FOUND, "FinalMediaArtifact content not found")
+                return
+            self._send_binary(content, "video/mp4")
+            return
+        if parsed.path.startswith(artifact_prefix):
+            artifact_id = unquote(parsed.path[len(artifact_prefix) :]).strip("/")
+            if not artifact_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                artifact = self.server.repository.get_final_media_artifact(artifact_id)
+            except KeyError:
+                self._send_json({"error": "FinalMediaArtifact not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "final_media_artifact",
+                    "final_media_artifact": self._artifact_payload(artifact),
+                }
+            )
+            return
         asset_prefix = "/api/assets/"
         asset_suffix = "/content"
         if parsed.path.startswith(asset_prefix) and parsed.path.endswith(asset_suffix):
@@ -576,6 +715,154 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        narration_prefix = "/api/scripts/"
+        narration_import_suffix = "/narration-assets/import"
+        if path.startswith(narration_prefix) and path.endswith(narration_import_suffix):
+            script_id = unquote(path[len(narration_prefix) : -len(narration_import_suffix)]).strip(
+                "/"
+            )
+            if not script_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                forbidden_headers = {
+                    "X-Narration-Digest",
+                    "X-Narration-Duration",
+                    "X-Narration-Storage-Path",
+                    "X-Narration-Source-Kind",
+                }
+                content = self._read_imported_narration_content()
+                if any(header in self.headers for header in forbidden_headers):
+                    raise ValueError(
+                        "NarrationAsset digest, duration, storage path, and source kind are "
+                        "server-derived."
+                    )
+                media_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip()
+                narration_asset_id = self.headers.get("X-Narration-Asset-ID") or (
+                    f"narration-import-{uuid.uuid4().hex}"
+                )
+                narration = self.server.media_service.import_narration(
+                    narration_asset_id, script_id, content, media_type
+                )
+            except (ValueError, MediaRuntimeError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json({"error": "Script not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "kind": "narration_asset",
+                    "narration_asset": self._narration_asset_payload(narration),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        final_media_snapshot_prefix = "/api/visual-plans/"
+        final_media_snapshot_suffix = "/final-media-input-snapshots"
+        if path.startswith(final_media_snapshot_prefix) and path.endswith(
+            final_media_snapshot_suffix
+        ):
+            visual_plan_id = unquote(
+                path[len(final_media_snapshot_prefix) : -len(final_media_snapshot_suffix)]
+            ).strip("/")
+            if not visual_plan_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("FinalMediaInputSnapshot payload")
+                self._reject_unsupported_fields(
+                    payload,
+                    {"id", "narration_asset_id", "scene_inputs"},
+                    "FinalMediaInputSnapshot payload",
+                )
+                scene_inputs = payload.get("scene_inputs")
+                if not isinstance(scene_inputs, list):
+                    raise ValueError("FinalMediaInputSnapshot scene_inputs must be a list.")
+                snapshot = self.server.media_service.create_snapshot(
+                    self._required_text(payload, "id", "FinalMediaInputSnapshot"),
+                    visual_plan_id,
+                    self._required_text(payload, "narration_asset_id", "FinalMediaInputSnapshot"),
+                    scene_inputs,
+                )
+            except (json.JSONDecodeError, ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError:
+                self._send_json(
+                    {
+                        "error": (
+                            "VisualPlan, NarrationAsset, AssetSelection, AssetSpec, or Asset "
+                            "not found."
+                        )
+                    },
+                    HTTPStatus.NOT_FOUND,
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "final_media_input_snapshot",
+                    "final_media_input_snapshot": self._snapshot_payload(snapshot),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
+        render_prefix = "/api/final-media-input-snapshots/"
+        render_suffix = "/render-executions"
+        if path.startswith(render_prefix) and path.endswith(render_suffix):
+            snapshot_id = unquote(path[len(render_prefix) : -len(render_suffix)]).strip("/")
+            if not snapshot_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                payload = self._read_json_object("RenderExecution payload")
+                self._reject_unsupported_fields(
+                    payload, {"id", "artifact_id"}, "RenderExecution payload"
+                )
+                execution_id = self._required_text(payload, "id", "RenderExecution")
+                artifact_id = self._required_text(payload, "artifact_id", "RenderExecution")
+                artifact = self.server.media_service.render(execution_id, artifact_id, snapshot_id)
+                execution = self.server.repository.get_render_execution(execution_id)
+            except json.JSONDecodeError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except KeyError as error:
+                if error.args and error.args[0] == snapshot_id:
+                    self._send_json(
+                        {"error": "FinalMediaInputSnapshot not found."}, HTTPStatus.NOT_FOUND
+                    )
+                else:
+                    self._send_json(
+                        {"error": "Render lifecycle input not found."}, HTTPStatus.NOT_FOUND
+                    )
+                return
+            except (ValueError, sqlite3.IntegrityError) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except MediaRuntimeError as error:
+                try:
+                    execution = self.server.repository.get_render_execution(execution_id)
+                except KeyError:
+                    self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                    return
+                self._send_json(
+                    {
+                        "kind": "render_execution",
+                        "render_execution": self._render_execution_payload(execution),
+                        "final_media_artifact": None,
+                    },
+                    HTTPStatus.CREATED,
+                )
+                return
+            self._send_json(
+                {
+                    "kind": "render_execution",
+                    "render_execution": self._render_execution_payload(execution),
+                    "final_media_artifact": self._artifact_payload(artifact),
+                },
+                HTTPStatus.CREATED,
+            )
+            return
         visual_plan_prefix = "/api/visual-plans/"
         scene_suffix = "/scenes"
         if path.startswith(visual_plan_prefix) and path.endswith(scene_suffix):
@@ -1612,6 +1899,23 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             )
         return content
 
+    def _read_imported_narration_content(self) -> bytes:
+        try:
+            content_length = int(self.headers.get("Content-Length", ""))
+        except ValueError as error:
+            raise ValueError("NarrationAsset Content-Length must be an integer.") from error
+        if content_length < 1 or content_length > MAX_IMPORTED_NARRATION_BYTES:
+            raise ValueError(
+                "NarrationAsset content must be between 1 and "
+                f"{MAX_IMPORTED_NARRATION_BYTES} bytes."
+            )
+        content = self.rfile.read(content_length)
+        if len(content) != content_length:
+            raise ValueError(
+                "NarrationAsset request body ended before Content-Length bytes arrived."
+            )
+        return content
+
     @staticmethod
     def _reject_unsupported_fields(payload: dict, allowed_fields: set[str], label: str) -> None:
         if set(payload) - allowed_fields:
@@ -1699,6 +2003,68 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             "content_digest": asset.content_digest,
         }
 
+    @staticmethod
+    def _narration_asset_payload(narration) -> dict:
+        return {
+            "id": narration.id,
+            "script_id": narration.script_id,
+            "media_type": narration.media_type,
+            "source_kind": narration.source_kind,
+            "content_digest": narration.content_digest,
+            "duration_ms": narration.duration_ms,
+            "created_at": narration.created_at,
+        }
+
+    @staticmethod
+    def _snapshot_payload(snapshot) -> dict:
+        return {
+            "id": snapshot.id,
+            "visual_plan_id": snapshot.visual_plan_id,
+            "script_id": snapshot.script_id,
+            "narration_asset_id": snapshot.narration_asset_id,
+            "snapshot_schema_version": snapshot.snapshot_schema_version,
+            "scene_inputs": snapshot.scene_inputs,
+            "caption_cues": snapshot.caption_cues,
+            "render_settings": snapshot.render_settings,
+            "created_at": snapshot.created_at,
+        }
+
+    @staticmethod
+    def _render_execution_payload(execution) -> dict:
+        return {
+            "id": execution.id,
+            "final_media_input_snapshot_id": execution.final_media_input_snapshot_id,
+            "renderer_key": execution.renderer_key,
+            "renderer_version": execution.renderer_version,
+            "probe_version": execution.probe_version,
+            "outcome": execution.outcome,
+            "error_code": execution.error_code,
+            "error_message": execution.error_message,
+            "execution_metadata": execution.execution_metadata,
+            "created_at": execution.created_at,
+        }
+
+    @staticmethod
+    def _artifact_payload(artifact) -> dict:
+        return {
+            "id": artifact.id,
+            "render_execution_id": artifact.render_execution_id,
+            "media_type": artifact.media_type,
+            "content_digest": artifact.content_digest,
+            "duration_ms": artifact.duration_ms,
+            "width": artifact.width,
+            "height": artifact.height,
+            "technical_validation": artifact.technical_validation,
+            "created_at": artifact.created_at,
+        }
+
+    def _send_binary(self, content: bytes, media_type: str) -> None:
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", media_type)
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(content)
+
     def _send_json(self, payload: object, status: HTTPStatus = HTTPStatus.OK) -> None:
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
@@ -1721,10 +2087,24 @@ class AtlasHTTPServer(HTTPServer):
         address: tuple[str, int],
         repository: AtlasRepository,
         generation_service: GenerationService,
+        media_runtime: FfmpegRuntime | None = None,
+        media_storage_root: Path | None = None,
     ) -> None:
         super().__init__(address, AtlasRequestHandler)
         self.repository = repository
         self.generation_service = generation_service
+        self.media_runtime = media_runtime
+        self.media_storage_root = media_storage_root
+
+    @property
+    def media_service(self) -> MediaService:
+        """Resolve local FFmpeg only when an approved media lifecycle route needs it."""
+
+        return MediaService(
+            self.repository,
+            self.media_runtime or FfmpegRuntime(),
+            LocalMediaStorage(self.media_storage_root),
+        )
 
     def server_close(self) -> None:
         super().server_close()
@@ -1737,6 +2117,8 @@ def create_server(
     database_path: Path | None = None,
     generator: AssetGenerator | None = None,
     asset_storage_root: Path | None = None,
+    media_runtime: FfmpegRuntime | None = None,
+    media_storage_root: Path | None = None,
 ) -> AtlasHTTPServer:
     """Create the MVP server without starting it, for testability."""
 
@@ -1749,6 +2131,8 @@ def create_server(
             generator or OpenAIImageGenerator(),
             LocalAssetStorage(asset_storage_root),
         ),
+        media_runtime,
+        media_storage_root,
     )
 
 

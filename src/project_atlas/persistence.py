@@ -374,6 +374,67 @@ class AssetSelection:
 
 
 @dataclass(frozen=True)
+class NarrationAsset:
+    """One immutable managed imported narration take for one exact Script."""
+
+    id: str
+    script_id: str
+    storage_path: str
+    media_type: str
+    source_kind: str
+    content_digest: str
+    duration_ms: int
+    created_at: str
+
+
+@dataclass(frozen=True)
+class FinalMediaInputSnapshot:
+    """The immutable, exact input contract for one local final-media render."""
+
+    id: str
+    visual_plan_id: str
+    script_id: str
+    narration_asset_id: str
+    snapshot_schema_version: str
+    scene_inputs: list[dict[str, Any]]
+    caption_cues: list[dict[str, Any]]
+    render_settings: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class RenderExecution:
+    """One immutable terminal local render attempt."""
+
+    id: str
+    final_media_input_snapshot_id: str
+    renderer_key: str
+    renderer_version: str
+    probe_version: str
+    outcome: str
+    error_code: str | None
+    error_message: str | None
+    execution_metadata: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class FinalMediaArtifact:
+    """One immutable managed, technically validated MP4 output."""
+
+    id: str
+    render_execution_id: str
+    storage_path: str
+    media_type: str
+    content_digest: str
+    duration_ms: int
+    width: int
+    height: int
+    technical_validation: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
 class VisualStyleProfile:
     """An immutable, versioned visual-language configuration for generation."""
 
@@ -425,6 +486,7 @@ class CharacterReferenceSetMember:
 Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
+RENDER_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
 RESEARCH_READINESS_OUTCOMES = frozenset({"Ready", "NeedsMoreResearch", "Blocked"})
 EDITORIAL_READINESS_OUTCOMES = frozenset({"Ready", "NotReady"})
@@ -1109,6 +1171,81 @@ MIGRATIONS: tuple[Migration, ...] = (
             "CREATE INDEX idx_asset_selections_asset ON asset_selections (asset_id)",
             "CREATE INDEX idx_asset_selections_character_reference_set "
             "ON asset_selections (character_reference_set_id)",
+        ),
+    ),
+    (
+        21,
+        (
+            """
+        CREATE TABLE narration_assets (
+          id TEXT PRIMARY KEY,
+          script_id TEXT NOT NULL,
+          storage_path TEXT NOT NULL CHECK (length(storage_path) > 0),
+          media_type TEXT NOT NULL CHECK (length(media_type) > 0),
+          source_kind TEXT NOT NULL CHECK (source_kind = 'imported'),
+          content_digest TEXT NOT NULL CHECK (length(content_digest) = 64),
+          duration_ms INTEGER NOT NULL CHECK (duration_ms > 0),
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE final_media_input_snapshots (
+          id TEXT PRIMARY KEY,
+          visual_plan_id TEXT NOT NULL,
+          script_id TEXT NOT NULL,
+          narration_asset_id TEXT NOT NULL,
+          snapshot_schema_version TEXT NOT NULL,
+          scene_inputs_json TEXT NOT NULL,
+          caption_cues_json TEXT NOT NULL,
+          render_settings_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (visual_plan_id) REFERENCES visual_plans(id) ON DELETE RESTRICT,
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT,
+          FOREIGN KEY (narration_asset_id) REFERENCES narration_assets(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE render_executions (
+          id TEXT PRIMARY KEY,
+          final_media_input_snapshot_id TEXT NOT NULL,
+          renderer_key TEXT NOT NULL,
+          renderer_version TEXT NOT NULL,
+          probe_version TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('succeeded', 'failed')),
+          error_code TEXT NULL,
+          error_message TEXT NULL,
+          execution_metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (final_media_input_snapshot_id)
+            REFERENCES final_media_input_snapshots(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE final_media_artifacts (
+          id TEXT PRIMARY KEY,
+          render_execution_id TEXT NOT NULL UNIQUE,
+          storage_path TEXT NOT NULL CHECK (length(storage_path) > 0),
+          media_type TEXT NOT NULL CHECK (media_type = 'video/mp4'),
+          content_digest TEXT NOT NULL CHECK (length(content_digest) = 64),
+          duration_ms INTEGER NOT NULL CHECK (duration_ms > 0),
+          width INTEGER NOT NULL CHECK (width > 0),
+          height INTEGER NOT NULL CHECK (height > 0),
+          technical_validation_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (render_execution_id) REFERENCES render_executions(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_narration_assets_script_created "
+            "ON narration_assets (script_id, created_at, id)",
+            "CREATE INDEX idx_final_media_snapshots_visual_plan_created "
+            "ON final_media_input_snapshots (visual_plan_id, created_at, id)",
+            "CREATE INDEX idx_final_media_snapshots_narration "
+            "ON final_media_input_snapshots (narration_asset_id)",
+            "CREATE INDEX idx_render_executions_snapshot_created "
+            "ON render_executions (final_media_input_snapshot_id, created_at, id)",
+            "CREATE INDEX idx_final_media_artifacts_execution "
+            "ON final_media_artifacts (render_execution_id)",
         ),
     ),
 )
@@ -3398,6 +3535,275 @@ class AtlasRepository:
             (asset_spec_id,),
         )
         return [self._asset_selection(row) for row in rows]
+
+    def create_narration_asset(
+        self,
+        narration_asset_id: str,
+        script_id: str,
+        storage_path: str,
+        media_type: str,
+        content_digest: str,
+        duration_ms: int,
+    ) -> NarrationAsset:
+        """Register one already-managed, probe-verified imported narration take."""
+        self.get_script(script_id)
+        self._validate_content_digest(content_digest)
+        if not narration_asset_id.strip() or not storage_path or not media_type or duration_ms <= 0:
+            raise ValueError(
+                "NarrationAsset requires ID, managed path, media type, and positive duration."
+            )
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO narration_assets "
+                "(id, script_id, storage_path, media_type, source_kind, content_digest, "
+                "duration_ms, created_at) VALUES (?, ?, ?, ?, 'imported', ?, ?, ?)",
+                (
+                    narration_asset_id.strip(),
+                    script_id,
+                    storage_path,
+                    media_type,
+                    content_digest,
+                    duration_ms,
+                    now(),
+                ),
+            )
+        return self.get_narration_asset(narration_asset_id.strip())
+
+    def get_narration_asset(self, narration_asset_id: str) -> NarrationAsset:
+        row = self.connection.execute(
+            "SELECT * FROM narration_assets WHERE id = ?", (narration_asset_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(narration_asset_id)
+        return self._narration_asset(row)
+
+    def list_narration_assets_for_script(self, script_id: str) -> list[NarrationAsset]:
+        self.get_script(script_id)
+        return [
+            self._narration_asset(row)
+            for row in self.connection.execute(
+                "SELECT * FROM narration_assets WHERE script_id = ? ORDER BY created_at, id",
+                (script_id,),
+            )
+        ]
+
+    def get_final_media_input_snapshot(self, snapshot_id: str) -> FinalMediaInputSnapshot:
+        row = self.connection.execute(
+            "SELECT * FROM final_media_input_snapshots WHERE id = ?", (snapshot_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(snapshot_id)
+        return self._final_media_input_snapshot(row)
+
+    def create_final_media_input_snapshot(
+        self,
+        snapshot_id: str,
+        visual_plan_id: str,
+        narration_asset_id: str,
+        scene_inputs: list[dict[str, Any]],
+        caption_cues: list[dict[str, Any]],
+        render_settings: dict[str, Any],
+    ) -> FinalMediaInputSnapshot:
+        """Persist an already-derived immutable render contract below an approved VisualPlan."""
+        plan = self._require_gate_authorized_visual_plan(visual_plan_id)
+        narration = self.get_narration_asset(narration_asset_id)
+        if narration.script_id != plan.script_id:
+            raise ValueError("NarrationAsset must belong to the VisualPlan's exact Script.")
+        if not snapshot_id.strip() or not scene_inputs or not caption_cues:
+            raise ValueError(
+                "FinalMediaInputSnapshot requires an ID, complete scene inputs, and captions."
+            )
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO final_media_input_snapshots "
+                "(id, visual_plan_id, script_id, narration_asset_id, snapshot_schema_version, "
+                "scene_inputs_json, caption_cues_json, render_settings_json, created_at) "
+                "VALUES (?, ?, ?, ?, 'v1', ?, ?, ?, ?)",
+                (
+                    snapshot_id.strip(),
+                    plan.id,
+                    plan.script_id,
+                    narration.id,
+                    json.dumps(scene_inputs, sort_keys=True, separators=(",", ":")),
+                    json.dumps(caption_cues, sort_keys=True, separators=(",", ":")),
+                    json.dumps(render_settings, sort_keys=True, separators=(",", ":")),
+                    now(),
+                ),
+            )
+        return self.get_final_media_input_snapshot(snapshot_id.strip())
+
+    def create_render_execution(
+        self,
+        execution_id: str,
+        snapshot_id: str,
+        renderer_version: str,
+        probe_version: str,
+        outcome: str,
+        metadata: dict[str, Any],
+        error_code: str | None = None,
+        error_message: str | None = None,
+    ) -> RenderExecution:
+        self.get_final_media_input_snapshot(snapshot_id)
+        if outcome not in RENDER_EXECUTION_OUTCOMES:
+            raise ValueError("RenderExecution outcome must be succeeded or failed.")
+        if not execution_id.strip() or not renderer_version.strip() or not probe_version.strip():
+            raise ValueError("RenderExecution requires an ID and renderer/probe versions.")
+        if not isinstance(metadata, dict):
+            raise ValueError("RenderExecution metadata must be an object.")
+        if outcome == "succeeded" and (error_code is not None or error_message is not None):
+            raise ValueError("A succeeded RenderExecution cannot carry error information.")
+        if error_code is not None and (not error_code.strip() or len(error_code) > 128):
+            raise ValueError("RenderExecution error code must be non-empty and bounded.")
+        if error_message is not None and len(error_message) > 1000:
+            raise ValueError("RenderExecution error message must be bounded.")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO render_executions "
+                "(id, final_media_input_snapshot_id, renderer_key, renderer_version, "
+                "probe_version, outcome, error_code, error_message, execution_metadata_json, "
+                "created_at) VALUES (?, ?, 'ffmpeg-local', ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    execution_id,
+                    snapshot_id,
+                    renderer_version,
+                    probe_version,
+                    outcome,
+                    error_code,
+                    error_message,
+                    json.dumps(metadata, sort_keys=True, separators=(",", ":")),
+                    now(),
+                ),
+            )
+        return self.get_render_execution(execution_id)
+
+    def list_render_executions_for_snapshot(self, snapshot_id: str) -> list[RenderExecution]:
+        """Return each explicit immutable terminal attempt for one frozen snapshot."""
+
+        self.get_final_media_input_snapshot(snapshot_id)
+        rows = self.connection.execute(
+            "SELECT * FROM render_executions WHERE final_media_input_snapshot_id = ? "
+            "ORDER BY created_at, id",
+            (snapshot_id,),
+        )
+        return [self._render_execution(row) for row in rows]
+
+    def get_render_execution(self, execution_id: str) -> RenderExecution:
+        row = self.connection.execute(
+            "SELECT * FROM render_executions WHERE id = ?", (execution_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(execution_id)
+        return self._render_execution(row)
+
+    def get_final_media_artifact(self, artifact_id: str) -> FinalMediaArtifact:
+        row = self.connection.execute(
+            "SELECT * FROM final_media_artifacts WHERE id = ?", (artifact_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(artifact_id)
+        return self._final_media_artifact(row)
+
+    def create_final_media_artifact(
+        self,
+        artifact_id: str,
+        execution_id: str,
+        storage_path: str,
+        content_digest: str,
+        duration_ms: int,
+        width: int,
+        height: int,
+        technical_validation: dict[str, Any],
+    ) -> FinalMediaArtifact:
+        execution = self.get_render_execution(execution_id)
+        if execution.outcome != "succeeded":
+            raise ValueError("FinalMediaArtifact requires a succeeded RenderExecution.")
+        self._validate_content_digest(content_digest)
+        if not storage_path or duration_ms <= 0 or width <= 0 or height <= 0:
+            raise ValueError("FinalMediaArtifact requires managed output and positive media facts.")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO final_media_artifacts "
+                "(id, render_execution_id, storage_path, media_type, content_digest, duration_ms, "
+                "width, height, technical_validation_json, created_at) "
+                "VALUES (?, ?, ?, 'video/mp4', ?, ?, ?, ?, ?, ?)",
+                (
+                    artifact_id,
+                    execution_id,
+                    storage_path,
+                    content_digest,
+                    duration_ms,
+                    width,
+                    height,
+                    json.dumps(technical_validation, sort_keys=True, separators=(",", ":")),
+                    now(),
+                ),
+            )
+        return self.get_final_media_artifact(artifact_id)
+
+    def record_successful_render(
+        self,
+        execution_id: str,
+        snapshot_id: str,
+        renderer_version: str,
+        probe_version: str,
+        execution_metadata: dict[str, Any],
+        artifact_id: str,
+        storage_path: str,
+        content_digest: str,
+        duration_ms: int,
+        width: int,
+        height: int,
+        technical_validation: dict[str, Any],
+    ) -> FinalMediaArtifact:
+        """Atomically register one terminal successful attempt and its sole artifact."""
+
+        self.get_final_media_input_snapshot(snapshot_id)
+        self._validate_content_digest(content_digest)
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (execution_id, renderer_version, probe_version, artifact_id, storage_path)
+        ):
+            raise ValueError(
+                "Successful render registration requires non-empty identifiers and paths."
+            )
+        if duration_ms <= 0 or width <= 0 or height <= 0:
+            raise ValueError("Successful render registration requires positive technical facts.")
+        if not isinstance(execution_metadata, dict) or not isinstance(technical_validation, dict):
+            raise ValueError("Successful render metadata must be objects.")
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO render_executions "
+                "(id, final_media_input_snapshot_id, renderer_key, renderer_version, "
+                "probe_version, outcome, error_code, error_message, execution_metadata_json, "
+                "created_at) VALUES (?, ?, 'ffmpeg-local', ?, ?, 'succeeded', NULL, NULL, ?, ?)",
+                (
+                    execution_id,
+                    snapshot_id,
+                    renderer_version,
+                    probe_version,
+                    json.dumps(execution_metadata, sort_keys=True, separators=(",", ":")),
+                    stamp,
+                ),
+            )
+            self.connection.execute(
+                "INSERT INTO final_media_artifacts "
+                "(id, render_execution_id, storage_path, media_type, content_digest, duration_ms, "
+                "width, height, technical_validation_json, created_at) "
+                "VALUES (?, ?, ?, 'video/mp4', ?, ?, ?, ?, ?, ?)",
+                (
+                    artifact_id,
+                    execution_id,
+                    storage_path,
+                    content_digest,
+                    duration_ms,
+                    width,
+                    height,
+                    json.dumps(technical_validation, sort_keys=True, separators=(",", ":")),
+                    stamp,
+                ),
+            )
+        return self.get_final_media_artifact(artifact_id)
 
     def asset_selection_payload(self, selection_id: str) -> dict[str, Any]:
         selection = self.get_asset_selection(selection_id)
@@ -5941,6 +6347,63 @@ class AtlasRepository:
             row["asset_spec_id"],
             row["asset_id"],
             row["character_reference_set_id"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _narration_asset(row: sqlite3.Row) -> NarrationAsset:
+        return NarrationAsset(
+            row["id"],
+            row["script_id"],
+            row["storage_path"],
+            row["media_type"],
+            row["source_kind"],
+            row["content_digest"],
+            row["duration_ms"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _final_media_input_snapshot(row: sqlite3.Row) -> FinalMediaInputSnapshot:
+        return FinalMediaInputSnapshot(
+            row["id"],
+            row["visual_plan_id"],
+            row["script_id"],
+            row["narration_asset_id"],
+            row["snapshot_schema_version"],
+            json.loads(row["scene_inputs_json"]),
+            json.loads(row["caption_cues_json"]),
+            json.loads(row["render_settings_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _render_execution(row: sqlite3.Row) -> RenderExecution:
+        return RenderExecution(
+            row["id"],
+            row["final_media_input_snapshot_id"],
+            row["renderer_key"],
+            row["renderer_version"],
+            row["probe_version"],
+            row["outcome"],
+            row["error_code"],
+            row["error_message"],
+            json.loads(row["execution_metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _final_media_artifact(row: sqlite3.Row) -> FinalMediaArtifact:
+        return FinalMediaArtifact(
+            row["id"],
+            row["render_execution_id"],
+            row["storage_path"],
+            row["media_type"],
+            row["content_digest"],
+            row["duration_ms"],
+            row["width"],
+            row["height"],
+            json.loads(row["technical_validation_json"]),
             row["created_at"],
         )
 

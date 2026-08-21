@@ -2,12 +2,15 @@
 
 import json
 import os
+import shutil
 import threading
 from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+
+import pytest
 
 from project_atlas.demo_data import chat_reply, content_payload, opportunity_payload
 from project_atlas.generation import (
@@ -17,7 +20,14 @@ from project_atlas.generation import (
     PromptComposer,
     asset_spec_snapshot,
 )
+from project_atlas.media import FfmpegRuntime, MediaRuntimeError
 from project_atlas.web import create_server
+
+MEDIA_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x04\x00\x00\x00\xb5\x1c\x0c\x02\x00\x00\x00\x0bIDATx\xdacd\xf8\x0f"
+    b"\x00\x01\x05\x01\x01'\x18\xe3f\x00\x00\x00\x00IEND\xaeB`\x82"
+)
 
 
 class FakeImageGenerator:
@@ -183,6 +193,92 @@ def request_error(server, request: Request) -> tuple[dict, int]:
     return payload, status
 
 
+def request_status(server, request: Request) -> int:
+    """Serve one expected non-JSON error response and return its HTTP status."""
+
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+    try:
+        urlopen(request)
+    except HTTPError as error:
+        status = error.code
+    else:
+        raise AssertionError("The invalid request unexpectedly succeeded.")
+    thread.join(timeout=2)
+    return status
+
+
+def request_bytes(server, request: Request | str) -> tuple[bytes, str, int]:
+    """Serve one managed-content request and return exact bytes plus media type."""
+
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+    with urlopen(request) as response:
+        content = response.read()
+        media_type = response.headers["Content-Type"]
+        status = response.status
+    thread.join(timeout=2)
+    return content, media_type, status
+
+
+def media_runtime_or_skip() -> FfmpegRuntime:
+    """HTTP media coverage requires the same local FFmpeg/FFprobe pair as media-core tests."""
+
+    root = Path(__file__).parents[1]
+    tool_bin = next(root.glob(".tools/ffmpeg-*/bin"), None)
+    if tool_bin and (tool_bin / "ffmpeg.exe").is_file() and (tool_bin / "ffprobe.exe").is_file():
+        return FfmpegRuntime(str(tool_bin / "ffmpeg.exe"), str(tool_bin / "ffprobe.exe"))
+    if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+        return FfmpegRuntime()
+    pytest.skip("real FFmpeg/FFprobe runtime is unavailable")
+
+
+def create_media_http_inputs(server, runtime: FfmpegRuntime, tmp_path: Path, prefix: str):
+    """Prepare an approved two-Scene selected-asset plan and exact WAV body for API tests."""
+
+    repository = server.repository
+    plan = create_authorized_visual_plan(server, prefix)
+    storage = LocalAssetStorage(tmp_path / "assets")
+    scene_payloads = []
+    for sequence in (1, 2):
+        scene = repository.create_scene_under_visual_plan_authorization(
+            f"{prefix}-scene-{sequence}", plan.id, sequence, f"Locator {sequence}", "Intent"
+        )
+        spec = repository.create_asset_spec_under_scene_authorization(
+            f"{prefix}-spec-{sequence}", scene.id, "graphic", "Support", "Visual", "Draw"
+        )
+        asset = repository.import_asset_under_asset_spec_authorization(
+            f"{prefix}-asset-{sequence}", spec.id, MEDIA_PNG, "image/png", storage
+        )
+        selection = repository.create_asset_selection(
+            f"{prefix}-selection-{sequence}", spec.id, asset.id
+        )
+        scene_payloads.append(
+            {
+                "scene_id": scene.id,
+                "asset_selection_id": selection.id,
+                "duration_ms": 1000,
+                "motion": "static" if sequence == 1 else "slow_zoom_out",
+                "transition_to_next": "crossfade" if sequence == 1 else None,
+            }
+        )
+    wav = tmp_path / f"{prefix}.wav"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000:duration=2",
+            "-c:a",
+            "pcm_s16le",
+            str(wav),
+        ]
+    )
+    return plan, scene_payloads, wav.read_bytes()
+
+
 def test_demo_data_represents_future_content_concepts() -> None:
     """Demo data keeps opportunities and content-package concepts separate."""
 
@@ -202,6 +298,280 @@ def test_server_can_be_created_for_local_use(tmp_path: Path) -> None:
     server = create_server(port=0, database_path=tmp_path / "atlas.db")
     try:
         assert server.server_address[1] > 0
+    finally:
+        server.server_close()
+
+
+def test_narrated_final_media_http_lifecycle_is_server_derived_and_retrievable(tmp_path) -> None:
+    """v0.26 exposes only exact managed narration, frozen inputs, terminal renders, and MP4s."""
+
+    runtime = media_runtime_or_skip()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=FakeImageGenerator(),
+        asset_storage_root=tmp_path / "assets",
+        media_runtime=runtime,
+        media_storage_root=tmp_path / "media",
+    )
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        plan, scene_inputs, wav = create_media_http_inputs(server, runtime, tmp_path, "http-media")
+        script_id = server.repository.get_visual_plan(plan.id).script_id
+        narration_endpoint = f"{base_url}/api/scripts/{script_id}/narration-assets/import"
+        created, status = request_json(
+            server,
+            Request(
+                narration_endpoint,
+                data=wav,
+                headers={
+                    "Content-Type": "audio/wav",
+                    "X-Narration-Asset-ID": "http-media-narration",
+                },
+                method="POST",
+            ),
+        )
+        assert status == 201
+        narration = created["narration_asset"]
+        assert narration["script_id"] == script_id
+        assert narration["duration_ms"] == 2000
+        assert "storage_path" not in narration
+        history, status = request_json(
+            server, f"{base_url}/api/scripts/{script_id}/narration-assets"
+        )
+        assert status == 200
+        assert [item["id"] for item in history["narration_assets"]] == [narration["id"]]
+        fetched, status = request_json(server, f"{base_url}/api/narration-assets/{narration['id']}")
+        assert status == 200
+        assert fetched["narration_asset"] == narration
+        narration_bytes, narration_type, status = request_bytes(
+            server, f"{base_url}/api/narration-assets/{narration['id']}/content"
+        )
+        assert (status, narration_type, narration_bytes) == (200, "audio/wav", wav)
+
+        snapshot_endpoint = f"{base_url}/api/visual-plans/{plan.id}/final-media-input-snapshots"
+        snapshot_request = {
+            "id": "http-media-snapshot",
+            "narration_asset_id": narration["id"],
+            "scene_inputs": scene_inputs,
+        }
+        snapshot_response, status = request_json(
+            server,
+            Request(
+                snapshot_endpoint,
+                data=json.dumps(snapshot_request).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        snapshot = snapshot_response["final_media_input_snapshot"]
+        assert snapshot["script_id"] == script_id
+        assert len(snapshot["caption_cues"]) == 1
+        fetched_snapshot, status = request_json(
+            server, f"{base_url}/api/final-media-input-snapshots/{snapshot['id']}"
+        )
+        assert status == 200
+        assert fetched_snapshot["final_media_input_snapshot"] == snapshot
+
+        render_response, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/final-media-input-snapshots/{snapshot['id']}/render-executions",
+                data=json.dumps(
+                    {"id": "http-media-execution", "artifact_id": "http-media-artifact"}
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        execution = render_response["render_execution"]
+        artifact = render_response["final_media_artifact"]
+        assert execution["outcome"] == "succeeded"
+        assert artifact["render_execution_id"] == execution["id"]
+        assert (artifact["width"], artifact["height"], artifact["duration_ms"]) == (
+            1080,
+            1920,
+            2000,
+        )
+        fetched_execution, status = request_json(
+            server, f"{base_url}/api/render-executions/{execution['id']}"
+        )
+        assert status == 200
+        assert fetched_execution["render_execution"] == execution
+        fetched_artifact, status = request_json(
+            server, f"{base_url}/api/final-media-artifacts/{artifact['id']}"
+        )
+        assert status == 200
+        assert fetched_artifact["final_media_artifact"] == artifact
+        mp4, media_type, status = request_bytes(
+            server, f"{base_url}/api/final-media-artifacts/{artifact['id']}/content"
+        )
+        assert (status, media_type) == (200, "video/mp4")
+        assert sha256(mp4).hexdigest() == artifact["content_digest"]
+        assert mp4 == server.media_service.artifact_content(artifact["id"])
+    finally:
+        server.server_close()
+
+
+def test_final_media_http_rejects_overrides_bad_inputs_and_retains_failed_attempts(
+    tmp_path,
+) -> None:
+    """HTTP preserves server authority and exposes a terminal failed render suitable for retry."""
+
+    runtime = media_runtime_or_skip()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "atlas.db",
+        generator=FakeImageGenerator(),
+        asset_storage_root=tmp_path / "assets",
+        media_runtime=runtime,
+        media_storage_root=tmp_path / "media",
+    )
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        plan, scene_inputs, wav = create_media_http_inputs(server, runtime, tmp_path, "http-errors")
+        script_id = server.repository.get_visual_plan(plan.id).script_id
+        narration_endpoint = f"{base_url}/api/scripts/{script_id}/narration-assets/import"
+        for body, content_type, headers in (
+            (b"not audio", "audio/wav", {}),
+            (wav, "application/octet-stream", {}),
+            (wav, "audio/wav", {"X-Narration-Digest": "caller-owned"}),
+        ):
+            rejected, status = request_error(
+                server,
+                Request(
+                    narration_endpoint,
+                    data=body,
+                    headers={"Content-Type": content_type} | headers,
+                    method="POST",
+                ),
+            )
+            assert status == 400
+            assert rejected["error"]
+        missing, status = request_error(
+            server,
+            Request(
+                f"{base_url}/api/scripts/missing/narration-assets/import",
+                data=wav,
+                headers={"Content-Type": "audio/wav"},
+                method="POST",
+            ),
+        )
+        assert status == 404
+        assert "Script" in missing["error"]
+
+        narration_response, status = request_json(
+            server,
+            Request(
+                narration_endpoint,
+                data=wav,
+                headers={
+                    "Content-Type": "audio/wav",
+                    "X-Narration-Asset-ID": "http-errors-narration",
+                },
+                method="POST",
+            ),
+        )
+        assert status == 201
+        narration_id = narration_response["narration_asset"]["id"]
+        snapshot_endpoint = f"{base_url}/api/visual-plans/{plan.id}/final-media-input-snapshots"
+        valid = {
+            "id": "http-errors-snapshot",
+            "narration_asset_id": narration_id,
+            "scene_inputs": scene_inputs,
+        }
+        invalid_payloads = [
+            valid | {"id": "bad-extra", "render_settings": {}},
+            valid | {"id": "bad-incomplete", "scene_inputs": scene_inputs[:1]},
+            valid | {"id": "bad-duplicate", "scene_inputs": [scene_inputs[0], scene_inputs[0]]},
+            valid
+            | {"id": "bad-selection-owner", "scene_inputs": [scene_inputs[1], scene_inputs[0]]},
+            valid
+            | {
+                "id": "bad-timing",
+                "scene_inputs": [scene_inputs[0] | {"duration_ms": 900}, scene_inputs[1]],
+            },
+            valid
+            | {
+                "id": "bad-motion",
+                "scene_inputs": [scene_inputs[0] | {"motion": "pan"}, scene_inputs[1]],
+            },
+            valid
+            | {
+                "id": "bad-transition",
+                "scene_inputs": [scene_inputs[0] | {"transition_to_next": "wipe"}, scene_inputs[1]],
+            },
+        ]
+        for payload in invalid_payloads:
+            rejected, status = request_error(
+                server,
+                Request(
+                    snapshot_endpoint,
+                    data=json.dumps(payload).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                ),
+            )
+            assert status == 400
+            assert rejected["error"]
+
+        snapshot_response, status = request_json(
+            server,
+            Request(
+                snapshot_endpoint,
+                data=json.dumps(valid).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        snapshot_id = snapshot_response["final_media_input_snapshot"]["id"]
+
+        class FailingRuntime:
+            def assert_capabilities(self):
+                raise MediaRuntimeError("controlled renderer failure")
+
+        server.media_runtime = FailingRuntime()
+        failure, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/final-media-input-snapshots/{snapshot_id}/render-executions",
+                data=json.dumps(
+                    {"id": "http-errors-failed", "artifact_id": "http-errors-no-artifact"}
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert failure["render_execution"]["outcome"] == "failed"
+        assert failure["final_media_artifact"] is None
+        _missing_artifact, status = request_error(
+            server, Request(f"{base_url}/api/final-media-artifacts/http-errors-no-artifact")
+        )
+        assert status == 404
+
+        server.media_runtime = runtime
+        retry, status = request_json(
+            server,
+            Request(
+                f"{base_url}/api/final-media-input-snapshots/{snapshot_id}/render-executions",
+                data=json.dumps(
+                    {"id": "http-errors-retry", "artifact_id": "http-errors-artifact"}
+                ).encode(),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            ),
+        )
+        assert status == 201
+        assert retry["render_execution"]["outcome"] == "succeeded"
+        for path in (
+            "/api/final-media-artifacts/missing",
+            "/api/final-media-artifacts/%2e%2e%2foutside/content",
+        ):
+            assert request_status(server, Request(f"{base_url}{path}")) == 404
     finally:
         server.server_close()
 
