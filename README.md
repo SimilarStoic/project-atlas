@@ -5,12 +5,11 @@ SimilarStoic is its outward-facing channel, editorial brand and mascot world: **
 Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.25 — Operational Visual Production Inputs is the latest accepted
-implementation milestone; v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical
-predecessor. Migration 20 is the latest canonical
-migration, migration 21 is absent, and Phase 2 remains ACTIVE /
-INCOMPLETE. No successor after v0.25 is selected. Later workflow, research automation and production systems remain
-deferred.
+SQLite foundation for SimilarStoic. v0.25 — Operational Visual Production Inputs remains the latest accepted
+implementation milestone. v0.26 — Narrated Final Media Production is locally implemented and validated pending
+founder acceptance/push. Migration 21 is the latest canonical migration, migration 22 is absent, and Phase 2 remains
+ACTIVE / INCOMPLETE. No successor after v0.26 is selected. Later workflow, research automation and production systems
+remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -47,10 +46,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.25 Operational Visual Production Inputs is the latest accepted
-implementation milestone; v0.24 Editorial Gate + Approved VisualPlan Initiation is its accepted historical
-predecessor. Migrations 1–20 are canonical, with migration 20 latest and migration 21 absent. No successor
-after v0.25 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is now **ACTIVE / INCOMPLETE**. v0.25 Operational Visual Production Inputs remains the latest accepted
+implementation milestone; v0.26 Narrated Final Media Production is locally implemented and validated pending founder
+acceptance/push. Migrations 1–21 are canonical, with migration 21 latest and migration 22 absent. No successor after
+v0.26 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -204,6 +203,28 @@ implementation commit `065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-sta
 `67500b338ecb959177b131ece2f59b9b11fb327c`. Ruff, **107 pytest tests** and `git diff --check` passed; Black 26.3.1
 formatting equivalence across 10 repository Python files passed through the accepted in-process API check after the
 documented Windows CLI worker-process hang.
+
+## v0.26 Pending Acceptance Checkpoint
+
+**v0.26 — Narrated Final Media Production** is locally implemented and validated, **PENDING founder acceptance and
+push**. v0.25 remains the latest accepted predecessor; Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
+migration 22 is absent, and no successor after v0.26 is selected.
+
+The bounded lifecycle extends accepted v0.25 visual inputs through managed manual Script-owned WAV/MP3/M4A
+`NarrationAsset` takes, immutable `FinalMediaInputSnapshot` freezes, synchronous terminal `RenderExecution` attempts
+and immutable safe managed H.264/AAC MP4 `FinalMediaArtifact` records. Snapshots freeze exact Gate-authorized
+VisualPlan/Script/NarrationAsset lineage, ordered Scene-to-AssetSelection mappings, managed Asset digests/reference
+provenance, timing, deterministic captions and fixed settings. Local FFmpeg/FFprobe produces 1080×1920, 30fps video
+with static/slow-zoom motion, cuts/fixed 250ms crossfades and burned captions while preserving frozen final duration.
+Failures retain no artifact; successful artifacts retain SHA-256 and probe validation for exact safe retrieval.
+
+The narrow API exposes narration import/list/get/content, final-media snapshot create/get, synchronous render
+create/get and final-artifact get/content. It accepts no caller filesystem paths, digests, duration, render profile,
+codec or FFmpeg arguments. No TTS, paid-provider activation, cost/spend, automated publishing/publication records,
+queues/workers, production UI, analytics/Learning, generic workflow or new founder Gate is included. Ruff,
+**114 pytest tests**, `git diff --check`, a real FFmpeg/FFprobe two-Scene crossfade/caption proof and Black 26.3.1
+in-process equivalence across 12 Python files (`would_change=0`) passed; the Windows Black CLI worker/process
+completion behavior remains a host-runtime exception.
 
 ## Technology baseline
 

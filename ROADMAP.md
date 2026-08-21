@@ -995,10 +995,10 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.25 — Operational Visual Production Inputs** is the latest accepted implementation
-milestone; **v0.24 — Editorial Gate + Approved VisualPlan Initiation** is its accepted historical predecessor.
-Migration 20 is canonical, migration 21 is
-absent, and no successor after v0.25 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.25 — Operational Visual Production Inputs** remains the latest accepted
+implementation milestone. **v0.26 — Narrated Final Media Production** is selected, locally implemented and validated,
+and pending founder acceptance/push. Migration 21 is canonical and latest, migration 22 is absent, and no successor
+after v0.26 is selected.
 
 Implement:
 - Research
@@ -1017,10 +1017,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation milestone; **v0.24 — Editorial
-Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. Migration 20 is canonical and
-migrations extend through 1–20; migration 21 is absent. Phase 2 remains ACTIVE / INCOMPLETE; all
-remaining Phase 2 scope is unimplemented and no later phase is activated. No successor after v0.25 is selected.
+**v0.25 — Operational Visual Production Inputs** remains the latest accepted implementation milestone. **v0.26 —
+Narrated Final Media Production** is locally implemented and validated pending founder acceptance/push. Migration 21
+is canonical and latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is
+unimplemented and no later phase is activated. No successor after v0.26 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1921,6 +1921,38 @@ analytics, Learning or successor scope. Founder acceptance covers implementation
 `67500b338ecb959177b131ece2f59b9b11fb327c`. Ruff passed, **107 pytest tests** passed and `git diff --check` passed;
 Black 26.3.1 formatting equivalence passed for 10 repository Python files through the accepted in-process API check
 after the documented Windows CLI worker-process hang.
+
+### v0.26 — Narrated Final Media Production
+
+**Status: LOCALLY IMPLEMENTED AND VALIDATED; PENDING FOUNDER ACCEPTANCE/PUSH.** v0.25 remains the latest accepted
+Phase 2 milestone. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.26 is selected.
+
+v0.26 extends the accepted visual-production chain only through: `Approve EditorialGateDecision → Gate-authorized
+VisualPlan → exact Script → managed NarrationAsset → immutable FinalMediaInputSnapshot → terminal RenderExecution →
+immutable FinalMediaArtifact → delegated manual production QA/manual publication handoff`. It introduces no new human
+Gate, generic workflow or current/latest/best artifact state.
+
+Narration is manual bounded WAV, MP3 or M4A import. Each immutable take belongs to one exact Script, has
+server-derived managed storage, SHA-256 and probe duration, and remains append-only with no TTS. A snapshot freezes the
+exact Gate-authorized VisualPlan, Script and NarrationAsset; every ordered current Scene exactly once; one exact
+AssetSelection per Scene; frozen mutable Scene/AssetSpec values; managed Asset digest/reference provenance; timing;
+deterministic captions; and fixed render settings. Callers cannot supply paths, digest, duration, captions, codec,
+dimensions, renderer arguments or output locations.
+
+The synchronous local FFmpeg/FFprobe renderer produces 1080×1920, 30fps H.264/AAC MP4 with static,
+slow-zoom-in/slow-zoom-out motion, cuts and fixed 250ms crossfades, plus burned deterministic captions. Crossfade
+source extension is internal and the final output remains capped to the frozen narration/Scene duration. Every attempt
+is immutable terminal `succeeded` or `failed`; multiple explicit attempts are allowed, failed attempts create no
+artifact, and a successful artifact has one managed MP4, SHA-256 and frozen FFprobe technical validation retrievable
+only through its registered ID.
+
+The narrow API adds narration import/list/get/content, final-media snapshot create/get, synchronous render create/get
+and artifact get/content routes. Validation passed: Ruff, **114 pytest tests**, `git diff --check`, real two-Scene
+crossfade/caption FFmpeg/FFprobe proof, and Black 26.3.1 in-process equivalence across 12 Python files with
+`would_change=0`; the documented Windows Black CLI worker/process completion behavior remains a host-runtime
+exception. v0.26 adds no paid provider activation, cost/spend, publishing/publication records, queues/workers,
+production UI, analytics/Learning, orchestration or successor scope.
 
 ## Phase 3 — Technical Architecture
 

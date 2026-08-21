@@ -6,17 +6,16 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.25 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.25 ACCEPTED; v0.26 PENDING ACCEPTANCE)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship. v0.25 — Operational Visual Production Inputs is the latest accepted
-implementation milestone; v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical
-predecessor. No successor after v0.25 is selected.
-Migration 20 is canonical and migrations extend
-through 1–20; migration 21 is absent. Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and
-Atlas v0.1 through v0.7 are complete and pushed.
+design/implementation stewardship. v0.25 — Operational Visual Production Inputs remains the latest accepted
+implementation milestone. v0.26 — Narrated Final Media Production is selected, locally implemented and validated,
+and pending founder acceptance/push; no successor after v0.26 is selected. Migration 21 is canonical and latest;
+migration 22 is absent. Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and Atlas v0.1
+through v0.7 are complete and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -1142,16 +1141,44 @@ revenue outcomes where available, without allowing profit signals to silently re
 This spend direction concerns paid external spend only; remaining accounting, reservation, thresholds,
 enforcement, proposal schema and negligible/internal-cost treatment remain unspecified.
 
+## v0.26 Pending Acceptance Checkpoint
+
+**v0.26 — Narrated Final Media Production** is locally implemented and validated, **PENDING founder acceptance and
+push**. v0.25 remains the latest accepted predecessor. Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
+migration 22 is absent, and no successor after v0.26 is selected.
+
+The implemented durable lifecycle is: exact accepted v0.25 visual-production lineage → immutable Script-owned managed
+`NarrationAsset` → immutable `FinalMediaInputSnapshot` → terminal `RenderExecution` → immutable managed
+`FinalMediaArtifact` → delegated manual production QA and manual publication handoff. Narration is bounded manual WAV,
+MP3 or M4A import only; multiple takes are retained with no current/latest take and no TTS. A snapshot requires the
+exact Gate-authorized VisualPlan, exact Script and NarrationAsset, every ordered current Scene exactly once, one exact
+AssetSelection per Scene, frozen managed Asset SHA-256/reference provenance, exact timing, deterministic captions and
+fixed render settings.
+
+Local FFmpeg/FFprobe render synchronously to 1080×1920, 30fps H.264/AAC MP4 with static, slow-zoom-in or
+slow-zoom-out motion, cuts or fixed 250ms crossfades, and burned deterministic captions. Crossfade overlap is internal
+and never changes the caller-facing frozen duration. Each attempt is terminal `succeeded` or `failed`; multiple
+explicit attempts are retained, failures create no artifact, and successful artifacts retain managed bytes, SHA-256
+and FFprobe technical validation for safe exact retrieval. The narrow API provides narration import/list/get/content,
+snapshot create/get, synchronous render create/get, and artifact get/content routes without caller-controlled paths,
+digests, duration, render profile or FFmpeg arguments.
+
+Validation: Ruff passed, **114 pytest tests** passed, `git diff --check` passed, and real repository-domain FFmpeg /
+FFprobe proof exercised a two-Scene crossfade/caption render at 1080×1920, 30/1 fps, H.264/AAC and exact 2000ms
+duration with matching retrieved SHA-256 bytes. Black 26.3.1 in-process equivalence checked 12 Python files with
+`would_change=0`; the Windows CLI worker/process completion behavior remains a host-runtime exception. v0.26 adds no
+TTS, paid-provider activation, cost/spend, publishing or publication records, queues/workers, production UI,
+analytics/Learning, generic workflow engine or new founder Gate.
+
 # Next Step
 
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.25 — Operational Visual Production Inputs is the latest accepted
-implementation milestone; v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical
-predecessor. Migration 20 is canonical and migrations extend through 1–20; migration 21 is absent. No successor after
-v0.25 is selected. The exact immediate next action is founder + ChatGPT design of the final-media critical-path
-bundle.
+Phase 2 remains active and incomplete. v0.25 — Operational Visual Production Inputs remains the latest accepted
+implementation milestone. v0.26 — Narrated Final Media Production is locally implemented and validated pending
+founder acceptance/push; migration 21 is latest, migration 22 is absent, and no successor after v0.26 is selected.
+The exact immediate next action is founder review/acceptance of v0.26.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

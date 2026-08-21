@@ -21,12 +21,14 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation milestone; **v0.24 — Editorial
-Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. Migration 20 is canonical and
-migrations extend through 1–20; migration 21 is absent. Phase 2 remains ACTIVE / INCOMPLETE and
-later phases remain unactivated. No successor after v0.25 is selected. Founder acceptance covers v0.25 implementation
-commit `065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
-`67500b338ecb959177b131ece2f59b9b11fb327c`; Black 26.3.1, Ruff, 107 pytest tests and `git diff --check` passed.
+**v0.25 — Operational Visual Production Inputs** remains the latest accepted implementation milestone. **v0.26 —
+Narrated Final Media Production** is selected, locally implemented and validated, and pending founder acceptance/push.
+Migration 21 is canonical and latest; migration 22 is absent. Phase 2 remains ACTIVE / INCOMPLETE and later phases
+remain unactivated. No successor after v0.26 is selected. v0.25 acceptance covers implementation commit
+`065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
+`67500b338ecb959177b131ece2f59b9b11fb327c`; v0.26 validation passed with Black 26.3.1 in-process equivalence across
+12 Python files, Ruff, 114 pytest tests, real FFmpeg/FFprobe proof and `git diff --check`. A fresh session must verify
+the live GitHub checkpoint before acting.
 Founder acceptance for v0.22 covers implementation commit
 `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
@@ -59,11 +61,11 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
-**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation milestone; **v0.24 — Editorial
-Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. **Phase 2 — Content Operating Model is
-the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.25 implementations and no selected
-successor after v0.25**, under founder + ChatGPT design/implementation
-stewardship. This does not authorize
+**v0.25 — Operational Visual Production Inputs** remains the latest accepted implementation milestone. **v0.26 —
+Narrated Final Media Production** is locally implemented and validated pending founder acceptance/push. **Phase 2 —
+Content Operating Model is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.25
+implementations and no selected successor after v0.26**, under founder + ChatGPT design/implementation stewardship.
+This does not authorize
 all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
@@ -560,6 +562,35 @@ UI, workflow, publishing, analytics, Learning or successor work. Founder accepta
 `67500b338ecb959177b131ece2f59b9b11fb327c`. Ruff passed, **107 pytest tests** passed and `git diff --check` passed;
 Black 26.3.1 formatting equivalence passed for 10 repository Python files through the accepted in-process API check
 after the documented Windows CLI worker-process hang.
+
+### v0.26 — Narrated Final Media Production
+
+**Status: LOCALLY IMPLEMENTED AND VALIDATED; PENDING FOUNDER ACCEPTANCE/PUSH.** v0.25 remains the latest accepted
+Phase 2 predecessor. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE and no
+successor after v0.26 is selected. This is not acceptance, publication authorization or successor selection.
+
+The bounded lifecycle is `Approve EditorialGateDecision → Gate-authorized VisualPlan → exact Script → manual managed
+NarrationAsset → FinalMediaInputSnapshot → RenderExecution → FinalMediaArtifact → delegated manual production QA /
+manual publication handoff`. `NarrationAsset` supports managed manual WAV, MP3 and M4A import, one exact Script,
+server-derived safe path/SHA-256/probed duration and immutable append-only history without current/latest semantics or
+TTS. `FinalMediaInputSnapshot` freezes one exact approved VisualPlan/Script/NarrationAsset, every ordered current
+Scene exactly once, one exact AssetSelection per Scene, current mutable Scene/AssetSpec render facts, managed Asset
+digest/reference lineage, timing, deterministic caption cues and fixed settings.
+
+Local FFmpeg/FFprobe synchronously renders vertical 1080×1920, 30fps H.264/AAC MP4 with static, slow-zoom-in and
+slow-zoom-out motion, cuts, fixed 250ms crossfades and burned captions. Each crossfade extends only its internal source
+and output is trimmed/capped to the frozen final duration. `RenderExecution` is immutable and terminal (`succeeded` or
+`failed`), with multiple explicit attempts allowed; failed attempts retain bounded error facts and no artifact. Each
+successful execution has at most one immutable safe managed `FinalMediaArtifact`, whose SHA-256 and FFprobe technical
+validation are preserved and whose content resolves only by registered artifact ID.
+
+The narrow HTTP surface provides narration import/list/get/content; snapshot create/get; synchronous render create/get;
+and artifact get/content. It accepts no caller filesystem path, digest, duration, source kind, caption content, render
+profile, codec, output path or FFmpeg argument. No provider TTS, paid production, cost/spend, publication record or
+automation, queue/worker, production UI, analytics/Learning, generic workflow engine or new founder Gate is included.
+Validation passed: Ruff, **114 pytest tests**, `git diff --check`, real repository-domain two-Scene crossfade/caption
+FFmpeg/FFprobe proof and Black 26.3.1 in-process equivalence across 12 Python files (`would_change=0`). The documented
+Windows Black CLI worker/process completion behavior remains a host-runtime exception.
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate
