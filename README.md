@@ -4,12 +4,11 @@ Conveyor is a scalable Python application platform and editorial operating syste
 SimilarStoic is its outward-facing channel, editorial brand and mascot world: **SimilarStoic by Conveyor**.
 Project Atlas is the legacy project name.
 
-Conveyor is a local, dependency-free editorial control interface and durable
-SQLite foundation for SimilarStoic. v0.26 — Narrated Final Media Production is the latest accepted implementation
-milestone; v0.25 — Operational Visual Production Inputs is its accepted historical predecessor. Migration 21 is the
-latest canonical migration, migration 22 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.26
-is selected. Later workflow, research automation and production systems
-remain deferred.
+Conveyor is a local, dependency-free editorial control interface and durable SQLite foundation for SimilarStoic.
+v0.26 — Narrated Final Media Production is the latest accepted implementation milestone; v0.27 — First-Run
+Operability Bridge is locally implemented and pending founder acceptance/push. Migration 21 is the latest canonical
+migration, migration 22 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.27 is selected.
+Later workflow, research automation and production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -47,9 +46,9 @@ revenue/economics, learning and future content decisions. Implementation milesto
 canonical roadmap and must not redefine it.
 
 Phase 2 is now **ACTIVE / INCOMPLETE**. v0.26 Narrated Final Media Production is the latest accepted implementation
-milestone; v0.25 Operational Visual Production Inputs is its historical predecessor. Migrations 1–21 are canonical,
-with migration 21 latest and migration 22 absent. No successor after v0.26 is selected. The remaining Phase 2 scope is
-unimplemented. Its approved
+milestone; v0.27 First-Run Operability Bridge is locally implemented and pending founder acceptance/push. Migrations
+1–21 are canonical, with migration 21 latest and migration 22 absent. No successor after v0.27 is selected. The
+remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -229,6 +228,22 @@ queues/workers, production UI, analytics/Learning, generic workflow or new found
 **114 pytest tests**, `git diff --check`, a real FFmpeg/FFprobe two-Scene crossfade/caption proof and Black 26.3.1
 in-process equivalence across 12 Python files (`would_change=0`) passed; the Windows Black CLI worker/process
 completion behavior remains a host-runtime exception.
+
+## v0.27 First-Run Operability Bridge (Pending Founder Acceptance)
+
+**v0.27 — First-Run Operability Bridge** is locally implemented and validated, pending founder acceptance/push. It
+adds narrow HTTP ingress over existing Opportunity, Claim, Source, ClaimEvidence and EditorialAngle–Claim repository
+operations, so legitimate first-run research/editorial initiation no longer needs direct repository scripting. The
+routes neither add workflow state nor automate discovery, research or writing.
+
+An explicit CharacterProfile-scoped imported-reference route may deliberately create an immutable ordered
+`CharacterReferenceSet` from qualifying managed imported character Assets. Each Asset must resolve below managed
+storage, retain a matching SHA-256, originate from a Gate-authorized character AssetSpec, and carry the exact
+CharacterProfile. The set itself is the immutable bootstrap declaration; no prior AssetSelection, GenerationExecution,
+provider activation, current/latest/best reference state or visual-QA state is added. Existing generated-reference
+provenance remains unchanged. Migration 21 remains latest, migration 22 is absent, Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**,
+`git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files (`would_change=0`).
 
 ## Technology baseline
 

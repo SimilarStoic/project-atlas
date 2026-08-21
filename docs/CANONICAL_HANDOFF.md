@@ -21,13 +21,13 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current implementation state
 
-**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.25 — Operational
-Visual Production Inputs** is its accepted historical predecessor. Founder acceptance covers implementation commit
+**v0.26 — Narrated Final Media Production** remains the latest accepted implementation milestone; **v0.27 — First-Run
+Operability Bridge** is locally implemented and pending founder acceptance/push. v0.26 founder acceptance covers implementation commit
 `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
 `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Migration 21 is canonical and latest; migration 22 is absent. Phase 2
-remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after v0.26 is selected. Validation
-passed with Black 26.3.1 in-process equivalence across 12 Python files, Ruff, 114 pytest tests, real FFmpeg/FFprobe
-proof and `git diff --check`. A fresh session must verify the live GitHub checkpoint before acting.
+remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after v0.27 is selected. v0.27
+validation passed with Black 26.3.1 in-process equivalence across 12 Python files, Ruff, 117 pytest tests and
+`git diff --check`. A fresh session must verify the live GitHub checkpoint before acting.
 Founder acceptance for v0.22 covers implementation commit
 `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
@@ -60,10 +60,10 @@ alter the approved hamster identity, colours, sling-bag treatment, proportions o
 continuity.
 
 SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
-**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.25 — Operational
-Visual Production Inputs** is its accepted historical predecessor. **Phase 2 — Content Operating Model is the current
-ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.26 implementations and no selected successor after
-v0.26**, under founder + ChatGPT design/implementation stewardship. This does not authorize
+**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.27 — First-Run
+Operability Bridge** is locally implemented and pending founder acceptance/push. **Phase 2 — Content Operating Model
+is the current ACTIVE / INCOMPLETE roadmap phase, with accepted v0.15 through v0.26 implementations and no selected
+successor after v0.27**, under founder + ChatGPT design/implementation stewardship. This does not authorize
 all Phase 2 scope or later-phase engines.
 
 ## Accepted end-to-end target operating model
@@ -595,6 +595,25 @@ automation, queue/worker, production UI, analytics/Learning, generic workflow en
 Validation passed: Ruff, **114 pytest tests**, `git diff --check`, real repository-domain two-Scene crossfade/caption
 FFmpeg/FFprobe proof and Black 26.3.1 in-process equivalence across 12 Python files (`would_change=0`). The documented
 Windows Black CLI worker/process completion behavior remains a host-runtime exception.
+
+### v0.27 — First-Run Operability Bridge
+
+**Status: LOCALLY IMPLEMENTED AND VALIDATED — PENDING FOUNDER ACCEPTANCE/PUSH.** v0.26 remains the latest accepted
+milestone. v0.27 adds only narrow HTTP ingress over existing repository operations: Opportunity creation,
+ResearchPack-scoped Claim creation, reusable Source creation, ClaimEvidence link/upsert and eligible
+EditorialAngle–Claim linking. HTTP preserves server-owned path lineage, existing Source URL identity and current
+server-built frozen research-readiness evidence; it does not introduce workflow state, generic CRUD, research
+automation or writing generation.
+
+The explicit `POST /api/character-profiles/{id}/reference-sets/imported` operation deliberately freezes an immutable
+ordered CharacterReferenceSet from qualifying managed imported character Assets. Every member must match the exact
+CharacterProfile, originate from a Gate-authorized character AssetSpec, be source kind `imported`, safely resolve below
+managed storage and match its stored SHA-256. It requires no prior AssetSelection, creates no GenerationExecution or
+provider call, and leaves generated-reference provenance intact. No current/latest/best reference state, visual QA,
+paid provider, cost/spend, production trial, UI, renderer, publishing, analytics/Learning or successor scope is
+added. Migration 21 remains latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
+after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
+in-process equivalence across 12 Python files (`would_change=0`).
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;
 analytics remains separate and immutable GenerationExecution history cannot carry later-changing aggregate

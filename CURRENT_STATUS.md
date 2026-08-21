@@ -6,16 +6,16 @@
 
 ## Current Phase
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.26 ACCEPTED)**
+**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.26 ACCEPTED; v0.27 PENDING ACCEPTANCE)**
 
 ## Overall Status
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship. v0.26 — Narrated Final Media Production is the latest accepted implementation
-milestone; v0.25 — Operational Visual Production Inputs is its accepted historical predecessor, and no successor after
-v0.26 is selected. Migration 21 is canonical and latest;
-migration 22 is absent. Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and Atlas v0.1
-through v0.7 are complete and pushed.
+design/implementation stewardship. v0.26 — Narrated Final Media Production remains the latest accepted implementation
+milestone; v0.27 — First-Run Operability Bridge is selected, locally implemented and validated pending founder
+acceptance/push. Migration 21 is canonical and latest; migration 22 is absent. No successor after v0.27 is selected.
+Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and Atlas v0.1 through v0.7 are complete
+and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
 
@@ -1171,15 +1171,34 @@ duration with matching retrieved SHA-256 bytes. Black 26.3.1 in-process equivale
 TTS, paid-provider activation, cost/spend, publishing or publication records, queues/workers, production UI,
 analytics/Learning, generic workflow engine or new founder Gate.
 
+## v0.27 — First-Run Operability Bridge (Pending Founder Acceptance)
+
+v0.27 is locally implemented and validated, pending founder acceptance/push. It adds only thin HTTP ingress over
+existing repository semantics: Opportunity creation; ResearchPack-scoped Claim creation; reusable Source creation;
+ClaimEvidence linking/upsert; and eligible EditorialAngle–Claim linking. This closes the early first-run research and
+editorial ingress gaps without workflow state, research automation or generic CRUD.
+
+It also adds one deliberate imported-reference lifecycle: qualifying managed imported character Assets may form an
+immutable ordered `CharacterReferenceSet` through an explicit CharacterProfile-scoped route. Every member must be an
+imported managed Asset from a Gate-authorized character AssetSpec with the exact CharacterProfile and verified
+SHA-256 bytes. No AssetSelection is required before bootstrap; the resulting set can then satisfy existing imported
+character AssetSelection provenance. Generated-reference requirements remain unchanged, no current/latest/best
+reference state exists, and no provider, cost/spend, production trial or visual-canon change is introduced.
+
+Migration 21 remains latest and migration 22 is absent. Phase 2 remains ACTIVE / INCOMPLETE. Validation passed: Ruff,
+**117 pytest tests**, `git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files with
+`would_change=0`; the Windows Black CLI worker/process completion behavior remains a host-runtime exception. No
+successor after v0.27 is selected.
+
 # Next Step
 
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 remains active and incomplete. v0.26 — Narrated Final Media Production is the latest accepted implementation
-milestone; v0.25 — Operational Visual Production Inputs is its accepted historical predecessor; migration 21 is latest,
-migration 22 is absent, and no successor after v0.26 is selected. The exact
-immediate next action is founder + ChatGPT repository-grounded design/selection of a new bounded milestone.
+milestone; v0.27 — First-Run Operability Bridge is locally implemented and pending founder acceptance/push; migration
+21 is latest, migration 22 is absent, and no successor after v0.27 is selected. The exact immediate next action is
+founder acceptance review of v0.27.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

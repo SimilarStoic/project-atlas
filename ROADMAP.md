@@ -995,9 +995,9 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.26 — Narrated Final Media Production** is the latest accepted implementation
-milestone; **v0.25 — Operational Visual Production Inputs** is its accepted historical predecessor. Migration 21 is
-canonical and latest, migration 22 is absent, and no successor after v0.26 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.26 — Narrated Final Media Production** remains the latest accepted implementation
+milestone; **v0.27 — First-Run Operability Bridge** is locally implemented and pending founder acceptance/push.
+Migration 21 is canonical and latest, migration 22 is absent, and no successor after v0.27 is selected.
 
 Implement:
 - Research
@@ -1016,10 +1016,10 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.25 — Operational
-Visual Production Inputs** is its accepted historical predecessor. Migration 21 is canonical and latest, migration 22
-is absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no later phase is
-activated. No successor after v0.26 is selected.
+**v0.26 — Narrated Final Media Production** is the latest accepted implementation milestone; **v0.27 — First-Run
+Operability Bridge** is locally implemented and pending founder acceptance/push. Migration 21 is canonical and latest,
+migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no
+later phase is activated. No successor after v0.27 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1958,6 +1958,27 @@ crossfade/caption FFmpeg/FFprobe proof, and Black 26.3.1 in-process equivalence 
 `would_change=0`; the documented Windows Black CLI worker/process completion behavior remains a host-runtime
 exception. v0.26 adds no paid provider activation, cost/spend, publishing/publication records, queues/workers,
 production UI, analytics/Learning, orchestration or successor scope.
+
+### v0.27 — First-Run Operability Bridge
+
+**Status: LOCALLY IMPLEMENTED AND VALIDATED — PENDING FOUNDER ACCEPTANCE/PUSH.** v0.26 remains the latest accepted
+Phase 2 milestone. v0.27 is a no-migration, thin operability bridge: `POST /api/opportunities`,
+`POST /api/research-packs/{id}/claims`, `POST /api/sources`, `POST /api/claims/{id}/evidence`, and
+`POST /api/editorial-angles/{id}/claims` expose existing repository semantics only. They preserve path-owned
+lineage, existing Source URL reuse and ClaimEvidence upsert behavior, and the server-built readiness-evidence freeze;
+they add no generic CRUD, workflow state, discovery/research automation or writing generation.
+
+The explicit `POST /api/character-profiles/{id}/reference-sets/imported` lifecycle deliberately freezes an immutable
+ordered `CharacterReferenceSet` from qualifying managed imported character Assets. Eligibility requires exact
+CharacterProfile matching, a Gate-authorized character AssetSpec, source kind `imported`, safe managed storage and a
+matching SHA-256. It does not require an AssetSelection before bootstrap, creates no GenerationExecution or provider
+call, does not weaken the existing generated-reference path, and introduces no current/latest/best reference state.
+
+Migration 21 remains latest, migration 22 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. Validation passed:
+Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files with
+`would_change=0`; the documented Windows Black CLI worker/process completion behavior remains a host-runtime
+exception. No production trial, paid provider, cost/spend, renderer, UI, publishing, analytics/Learning, queue/worker
+or successor scope is added. No successor after v0.27 is selected.
 
 ## Phase 3 — Technical Architecture
 
