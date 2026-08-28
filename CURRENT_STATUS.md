@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-20 August 2026
+28 August 2026
 
 ## Current Phase
 
@@ -18,6 +18,24 @@ Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and A
 and pushed.
 
 The technical foundation is complete and the repository is safely stored on GitHub.
+
+## Persistent Runtime Checkpoint
+
+The current workstation keeps persistent operating data outside the repository at `D:\ConveyorRuntime`:
+`conveyor.db`, `assets\`, and `media\`. `D:\ProjectAtlas` remains the source, Git, migrations, tests, canonical
+documentation and reinstallable local-tooling workspace. This is an operational convention, not a hardcoded product
+path: portable locations continue to be supplied through `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`,
+`ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`.
+
+At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite integrity verification, has contiguous migrations
+1–21 with 21 latest and 22 absent, and has zero `narration_assets`, `final_media_input_snapshots`,
+`render_executions` and `final_media_artifacts`. No genuine SimilarStoic production has yet been completed. The first
+genuine mascot-led SimilarStoic production through the existing lifecycle is the next product action; this
+reconciliation is not a milestone or successor selection.
+
+`D:\ProjectAtlas\data\atlas.db` remains untouched legacy/local historical state and is not the selected persistent
+database for the first genuine production run. Its SHA-256 at this checkpoint was
+`5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded

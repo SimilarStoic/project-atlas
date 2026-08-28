@@ -34,6 +34,53 @@ Founder acceptance for v0.22 covers implementation commit
 `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
 fresh session must verify the live GitHub checkpoint before acting.
 
+## Persistent runtime continuity checkpoint
+
+The current workstation has intentionally established persistent live operating data outside Git at
+`D:\ConveyorRuntime`: `conveyor.db`, `assets\`, and `media\`. `D:\ProjectAtlas` remains source, Git, migrations,
+tests, canonical documents and reinstallable local tooling. The runtime directory and its contents must not be
+committed. `D:\ConveyorRuntime` is a current workstation convention, not a hardcoded domain requirement: the portable
+configuration interface remains `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`, `ATLAS_MEDIA_STORAGE_ROOT`,
+`ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`.
+
+The current PowerShell-session configuration is:
+
+```powershell
+$env:ATLAS_DB_PATH = 'D:\ConveyorRuntime\conveyor.db'
+$env:ATLAS_ASSET_STORAGE_ROOT = 'D:\ConveyorRuntime\assets'
+$env:ATLAS_MEDIA_STORAGE_ROOT = 'D:\ConveyorRuntime\media'
+$env:ATLAS_FFMPEG_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\bin\ffmpeg.exe'
+$env:ATLAS_FFPROBE_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\bin\ffprobe.exe'
+
+& 'D:\ProjectAtlas\.venv\Scripts\python.exe' -m project_atlas --host 127.0.0.1 --port 8000
+```
+
+Set these values before server startup. A future machine may use different absolute paths while preserving the same
+configuration contract. The legacy default compatibility behavior remains available when variables are unset; do not
+hardcode this workstation path in source or change the existing defaults.
+
+At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; schema migrations 1–21 are
+complete and contiguous, 21 is latest, and 22 is absent. It survives application restart. Genuine final-media counts
+remain zero: `narration_assets`, `final_media_input_snapshots`, `render_executions` and `final_media_artifacts` are all
+zero. No genuine SimilarStoic production has been completed. The next product action is the first genuine mascot-led
+SimilarStoic production through the existing lifecycle; this operational reconciliation is not a milestone or a
+successor selection.
+
+`D:\ProjectAtlas\data\atlas.db` is preserved legacy/local historical state and is not the persistent database selected
+for the first genuine production run. It must not be migrated, overwritten, moved, deleted or repurposed. Its
+checkpoint verification SHA-256 is `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`; this is
+verification evidence, not a permanent product invariant.
+
+Post-runtime-change validation passed: Git `HEAD`, `origin/main` and remote `main` were synchronized; 117 pytest tests
+and focused media tests passed; Ruff, Black 26.3.1 (12 unchanged files) and Git diff checks passed; FFmpeg/FFprobe
+9.0.1 operated with libx264, AAC, zoompan, xfade and subtitles support; persistent startup/restart and `GET /`,
+`GET /api/demo/opportunities` and `GET /api/demo/content` returned 200; and the legacy DB remained untouched.
+
+GitHub protects tracked project material, not live runtime data. Once real production begins, back up
+`D:\ConveyorRuntime\conveyor.db`, `D:\ConveyorRuntime\assets\`, and `D:\ConveyorRuntime\media\`, plus any
+irreplaceable original/master SimilarStoic artwork held elsewhere. `.tools/` is reinstallable and is not irreplaceable
+production data. Do not implement backup tooling unless separately authorized.
+
 ### Current product identity
 
 **Conveyor** is the current engine, project and operating-system identity. **Project Atlas** is the historical/legacy
@@ -845,10 +892,11 @@ authorized.
 
 ### Runtime DB / CharacterReferenceSet reconciliation
 
-`data/atlas.db` is ignored local/runtime/demo state, not canonical GitHub truth. A current local runtime DB may
-contain zero CharacterReferenceSets, Assets or GenerationExecutions; that does not rewrite accepted canonical
-history. The canonically accepted `character-reference-set-similarstoic-hamster-core-v1` version `1` contains the
-founder-approved Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` version `9`, SHA-256
+`D:\ProjectAtlas\data\atlas.db` is ignored legacy/local historical/demo state, not canonical GitHub truth and not the
+persistent database selected for the first genuine production run. A current local runtime DB may contain zero
+CharacterReferenceSets, Assets or GenerationExecutions; that does not rewrite accepted canonical history. The
+canonically accepted `character-reference-set-similarstoic-hamster-core-v1` version `1` contains the founder-approved
+Asset `asset-9a02b4cb416744a994965e2e1f2f0c33` version `9`, SHA-256
 `eaf0af82fe98120613793465f94029a72ae13a79f8e3e258d265e88fa47c450b`.
 
 Current migrations/schema do not seed or restore that accepted set automatically, and current bootstrap does not

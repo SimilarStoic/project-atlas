@@ -307,6 +307,27 @@ Start the local, dependency-free demo interface:
 Then open http://127.0.0.1:8000 in a browser. The MVP uses local demo data only;
 it does not call AI services, research sources, publishing platforms, or analytics services.
 
+## Persistent-runtime pre-flight
+
+The default compatibility paths remain `data/atlas.db`, `data/assets` and `data/media`, but the current workstation
+uses a persistent runtime outside the repository for the first genuine production run. Set the configuration before
+starting Conveyor:
+
+```powershell
+$env:ATLAS_DB_PATH = 'D:\ConveyorRuntime\conveyor.db'
+$env:ATLAS_ASSET_STORAGE_ROOT = 'D:\ConveyorRuntime\assets'
+$env:ATLAS_MEDIA_STORAGE_ROOT = 'D:\ConveyorRuntime\media'
+$env:ATLAS_FFMPEG_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\bin\ffmpeg.exe'
+$env:ATLAS_FFPROBE_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\bin\ffprobe.exe'
+
+& 'D:\ProjectAtlas\.venv\Scripts\python.exe' -m project_atlas --host 127.0.0.1 --port 8000
+```
+
+`D:\ConveyorRuntime` is a current workstation convention, not a hardcoded requirement; another machine can use its
+own absolute locations through the same `ATLAS_*` contract. These PowerShell environment variables are session-scoped.
+Do not commit the runtime directory or its contents. Back up its database, managed assets and media once real
+production begins. `.tools/` is reinstallable local tooling, not irreplaceable production data.
+
 ## Local persistence
 
 Conveyor stores its persistent application data in SQLite at the legacy compatibility path
@@ -314,6 +335,9 @@ Conveyor stores its persistent application data in SQLite at the legacy compatib
 
     $env:ATLAS_DB_PATH = 'C:\path\to\atlas.db'
     uv run python -m project_atlas
+
+`D:\ProjectAtlas\data\atlas.db` is preserved legacy/local historical state on the current workstation; it is not the
+persistent database selected above for the first genuine production run.
 
 On startup, Conveyor applies recorded SQLite schema migrations and then idempotently
 seeds the six existing Discover opportunities. Existing local changes are never
