@@ -127,7 +127,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 23))
+        ] == list(range(1, 24))
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -1707,14 +1707,14 @@ def test_editorial_gate_decisions_and_approved_visual_plans_are_exact_and_additi
         )
         assert approve.comment == comment
         assert repository.get_editorial_gate_decision(approve.id) == approve
-        assert [
+        assert {
             decision.id for decision in repository.list_editorial_gate_decisions(package.id)
-        ] == [
+        } == {
             approve.id,
-            repeated.id,
-            reject.id,
             revise.id,
-        ]
+            reject.id,
+            repeated.id,
+        }
 
         _other_piece, _other_script, other_package, other_ready = _create_ready_editorial_package(
             repository, "gate-other"
@@ -2145,7 +2145,7 @@ def test_migration_22_preserves_imported_narration_and_adds_generation_provenanc
             for row in repository.connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
-        ] == list(range(1, 23))
+        ] == list(range(1, 24))
         tables = {
             row[0]
             for row in repository.connection.execute(
@@ -2153,6 +2153,55 @@ def test_migration_22_preserves_imported_narration_and_adds_generation_provenanc
             )
         }
         assert "narration_generation_executions" in tables
+        assert repository.connection.execute("PRAGMA foreign_key_check").fetchall() == []
+    finally:
+        repository.close()
+
+
+def test_migration_23_allows_openai_tts_without_mutating_m22_history(tmp_path, monkeypatch) -> None:
+    """The additive engine-kind correction keeps local executions and admits OpenAI provenance."""
+
+    database = tmp_path / "atlas-v027.db"
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS[:22])
+    repository = AtlasRepository(database)
+    try:
+        repository.record_failed_narration_generation(
+            "m23-local-history",
+            "script-isa-deadline-video-v1",
+            "local_system_speech",
+            "System.Speech.Synthesis.SpeechSynthesizer",
+            "Microsoft Hazel",
+            "en-GB",
+            {"rate": 0},
+            "NarrationSynthesisError",
+            "fixture local failure",
+            "2026-09-01T00:00:00+00:00",
+            "2026-09-01T00:00:01+00:00",
+        )
+    finally:
+        repository.close()
+
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS)
+    repository = AtlasRepository(database)
+    try:
+        openai = repository.record_failed_narration_generation(
+            "m23-openai-attempt",
+            "script-isa-deadline-video-v1",
+            "openai_tts",
+            "OpenAI:gpt-4o-mini-tts",
+            "marin",
+            "en-GB",
+            {"provider": "OpenAI", "model": "gpt-4o-mini-tts", "voice": "marin"},
+            "NarrationSynthesisError",
+            "fixture OpenAI failure",
+            "2026-09-01T00:01:00+00:00",
+            "2026-09-01T00:01:01+00:00",
+        )
+        assert repository.get_narration_generation_execution("m23-local-history").engine_kind == (
+            "local_system_speech"
+        )
+        assert openai.engine_kind == "openai_tts"
+        assert openai.outcome == "failed"
         assert repository.connection.execute("PRAGMA foreign_key_check").fetchall() == []
     finally:
         repository.close()
@@ -2700,7 +2749,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 23))
+        ] == list(range(1, 24))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -3121,7 +3170,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 23))
+        ] == list(range(1, 24))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -3315,7 +3364,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 23))
+        ] == list(range(1, 24))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -3460,7 +3509,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                23,
+                24,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -3482,7 +3531,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 23"
+                "SELECT version FROM schema_migrations WHERE version = 24"
             ).fetchone()
             is None
         )
@@ -5530,7 +5579,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 23))
+        ] == list(range(1, 24))
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

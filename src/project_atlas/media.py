@@ -8,6 +8,8 @@ import re
 import shutil
 import subprocess
 import tempfile
+import urllib.error
+import urllib.request
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -352,6 +354,72 @@ finally {
         )
 
 
+class OpenAINarrationSynthesizer:
+    """Generate one WAV through OpenAI's authorized speech endpoint."""
+
+    engine_kind = "openai_tts"
+    engine_identity = "OpenAI:gpt-4o-mini-tts"
+    voice_identity = "marin"
+    locale = "en-GB"
+    instructions = (
+        "Warm, calm, conversational, natural and intelligent. Lightly personable short-form "
+        "pacing with restrained emphasis; no robotic cadence, announcer voice, dramatic pauses, "
+        "or motivational-speaker delivery."
+    )
+
+    @property
+    def settings(self) -> dict[str, Any]:
+        return {
+            "provider": "OpenAI",
+            "model": "gpt-4o-mini-tts",
+            "voice": "marin",
+            "instructions": self.instructions,
+            "response_format": "wav",
+            "speed": 1.0,
+        }
+
+    def __init__(self, api_key: str | None = None) -> None:
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+
+    def synthesize(self, text: str) -> NarrationSynthesis:
+        if not self.api_key:
+            raise NarrationSynthesisError(
+                "OPENAI_API_KEY is required for authorized neural narration."
+            )
+        payload = json.dumps(
+            {
+                "model": "gpt-4o-mini-tts",
+                "voice": "marin",
+                "input": text,
+                "instructions": self.instructions,
+                "response_format": "wav",
+                "speed": 1.0,
+            }
+        ).encode("utf-8")
+        request = urllib.request.Request(
+            "https://api.openai.com/v1/audio/speech",
+            payload,
+            {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response:
+                content = response.read()
+        except (OSError, urllib.error.URLError) as error:
+            raise NarrationSynthesisError(f"OpenAI speech synthesis failed: {error}") from error
+        if not content:
+            raise NarrationSynthesisError("OpenAI speech synthesis returned no audio bytes.")
+        return NarrationSynthesis(
+            content,
+            "audio/wav",
+            self.engine_kind,
+            self.engine_identity,
+            self.voice_identity,
+            self.locale,
+            self.settings,
+        )
+
+
 class MediaService:
     """Small v0.26 lifecycle service; all public inputs are opaque IDs or content bytes."""
 
@@ -447,12 +515,7 @@ class MediaService:
                     engine.engine_identity,
                     engine.voice_identity,
                     engine.locale,
-                    {
-                        "rate": engine.rate,
-                        "volume": engine.volume,
-                        "output_format": "wav",
-                        "text_transport": "local_utf8_file",
-                    },
+                    getattr(engine, "settings", {}),
                 )
             execution = self.repository.record_failed_narration_generation(
                 execution_id,
@@ -471,7 +534,8 @@ class MediaService:
 
     @staticmethod
     def caption_cues(text: str, duration_ms: int) -> list[dict[str, Any]]:
-        chunks = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text.strip()) if part.strip()]
+        words = text.split()
+        chunks = [" ".join(words[index : index + 5]) for index in range(0, len(words), 5)]
         if not chunks:
             raise ValueError("Script narration must produce captions.")
         weights = [max(1, len(chunk.split())) for chunk in chunks]

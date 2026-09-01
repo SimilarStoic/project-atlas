@@ -508,6 +508,7 @@ EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 RENDER_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 NARRATION_SOURCE_KINDS = frozenset({"imported", "generated"})
+NARRATION_GENERATION_ENGINE_KINDS = frozenset({"local_system_speech", "openai_tts"})
 NARRATION_GENERATION_OUTCOMES = frozenset({"succeeded", "failed"})
 IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
 RESEARCH_READINESS_OUTCOMES = frozenset({"Ready", "NeedsMoreResearch", "Blocked"})
@@ -1329,10 +1330,46 @@ MIGRATIONS: tuple[Migration, ...] = (
             "ON narration_generation_executions (script_id, created_at, id)",
         ),
     ),
+    (
+        23,
+        (
+            "ALTER TABLE narration_generation_executions "
+            "RENAME TO narration_generation_executions_v22",
+            """
+        CREATE TABLE narration_generation_executions (
+          id TEXT PRIMARY KEY, script_id TEXT NOT NULL, narration_asset_id TEXT NULL UNIQUE,
+          engine_kind TEXT NOT NULL CHECK (engine_kind IN ('local_system_speech', 'openai_tts')),
+          engine_identity TEXT NOT NULL CHECK (length(trim(engine_identity)) > 0),
+          voice_identity TEXT NOT NULL CHECK (length(trim(voice_identity)) > 0),
+          locale TEXT NOT NULL CHECK (length(trim(locale)) > 0), settings_json TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('succeeded', 'failed')),
+          error_code TEXT NULL, error_message TEXT NULL, started_at TEXT NOT NULL,
+          completed_at TEXT NOT NULL, created_at TEXT NOT NULL,
+          CHECK (
+            (outcome = 'succeeded' AND narration_asset_id IS NOT NULL
+              AND error_code IS NULL AND error_message IS NULL)
+            OR (outcome = 'failed' AND narration_asset_id IS NULL AND error_code IS NOT NULL)
+          ),
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT,
+          FOREIGN KEY (narration_asset_id) REFERENCES narration_assets(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        INSERT INTO narration_generation_executions
+        SELECT id, script_id, narration_asset_id, engine_kind, engine_identity, voice_identity,
+               locale, settings_json, outcome, error_code, error_message, started_at,
+               completed_at, created_at
+        FROM narration_generation_executions_v22
+        """,
+            "DROP TABLE narration_generation_executions_v22",
+            "CREATE INDEX idx_narration_generation_executions_script_created "
+            "ON narration_generation_executions (script_id, created_at, id)",
+        ),
+    ),
 )
 
 
-MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22})
+MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23})
 
 
 class AtlasRepository:
@@ -3688,8 +3725,8 @@ class AtlasRepository:
         locale: str,
         settings: dict[str, Any],
     ) -> None:
-        if engine_kind != "local_system_speech":
-            raise ValueError("Narration generation engine_kind must be local_system_speech.")
+        if engine_kind not in NARRATION_GENERATION_ENGINE_KINDS:
+            raise ValueError("Narration generation engine_kind is unsupported.")
         if not all(
             isinstance(value, str) and value.strip()
             for value in (engine_identity, voice_identity, locale)

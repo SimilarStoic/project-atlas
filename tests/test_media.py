@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import shutil
 import sqlite3
 import subprocess
@@ -19,6 +20,7 @@ from project_atlas.media import (
     MediaRuntimeError,
     MediaService,
     NarrationSynthesis,
+    OpenAINarrationSynthesizer,
 )
 from project_atlas.persistence import AtlasRepository
 
@@ -60,6 +62,65 @@ def test_local_system_speech_uses_profileless_interactive_host(monkeypatch) -> N
     assert "-NoProfile" in observed
     assert "-NonInteractive" not in observed
     assert synthesis.content == b"fixture wav bytes"
+
+
+def test_openai_narration_uses_only_exact_script_and_truthful_settings(monkeypatch) -> None:
+    """The OpenAI adapter sends only its explicit TTS payload and records its true settings."""
+
+    observed: dict[str, object] = {}
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def read(self):
+            return b"fixture neural wav"
+
+    def fake_urlopen(request, timeout):
+        observed["url"] = request.full_url
+        observed["headers"] = dict(request.header_items())
+        observed["payload"] = json.loads(request.data)
+        observed["timeout"] = timeout
+        return Response()
+
+    monkeypatch.setattr("project_atlas.media.urllib.request.urlopen", fake_urlopen)
+    engine = OpenAINarrationSynthesizer(api_key="test-key")
+    script = "Exact approved narration script."
+
+    synthesis = engine.synthesize(script)
+
+    assert observed["url"] == "https://api.openai.com/v1/audio/speech"
+    assert observed["payload"] == {
+        "model": "gpt-4o-mini-tts",
+        "voice": "marin",
+        "input": script,
+        "instructions": engine.instructions,
+        "response_format": "wav",
+        "speed": 1.0,
+    }
+    assert "mascot" not in json.dumps(observed["payload"]).lower()
+    assert synthesis.content == b"fixture neural wav"
+    assert synthesis.engine_kind == "openai_tts"
+    assert synthesis.settings == engine.settings
+
+
+def test_caption_cues_are_short_phrase_level_segments() -> None:
+    """Refinement captions turn over quickly without rewriting the supplied script."""
+
+    text = "one two three four five six seven eight nine ten eleven twelve"
+    cues = MediaService.caption_cues(text, 1200)
+
+    assert [cue["text"] for cue in cues] == [
+        "one two three four five",
+        "six seven eight nine ten",
+        "eleven twelve",
+    ]
+    assert all(len(cue["text"].split()) <= 5 for cue in cues)
+    assert cues[0]["start_ms"] == 0
+    assert cues[-1]["end_ms"] == 1200
 
 
 def _ready_visual_plan(repository: AtlasRepository, prefix: str):
