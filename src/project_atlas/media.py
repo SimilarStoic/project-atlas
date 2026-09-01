@@ -10,15 +10,29 @@ import subprocess
 import tempfile
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from project_atlas.persistence import AtlasRepository, FinalMediaInputSnapshot
+from project_atlas.persistence import (
+    AtlasRepository,
+    FinalMediaInputSnapshot,
+    NarrationAsset,
+    NarrationGenerationExecution,
+)
 
 
 class MediaRuntimeError(RuntimeError):
     """Raised when the configured local media runtime cannot meet the fixed profile."""
+
+
+class NarrationSynthesisError(MediaRuntimeError):
+    """Raised when the configured local narration engine cannot create a usable take."""
+
+
+def _utc_timestamp() -> str:
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
 def _configured_executable(environment_name: str, fallback: str) -> str:
@@ -124,6 +138,28 @@ class FfmpegRuntime:
             payload,
         )
 
+    def assert_audible(self, path: Path) -> None:
+        """Reject a technically valid but silent audio file using FFmpeg's local detector."""
+
+        result = self._run(
+            [
+                self.ffmpeg_path,
+                "-hide_banner",
+                "-i",
+                str(path),
+                "-af",
+                "volumedetect",
+                "-f",
+                "null",
+                "-",
+            ]
+        )
+        detected = re.search(r"max_volume:\s+(-?inf|[-0-9.]+) dB", result.stderr)
+        if detected is None or detected.group(1) == "-inf":
+            raise NarrationSynthesisError("Narration audio is silent or could not be measured.")
+        if float(detected.group(1)) <= -70:
+            raise NarrationSynthesisError("Narration audio is too quiet for production use.")
+
 
 class LocalMediaStorage:
     """Store new narration and MP4 files under a traversal-safe configured root."""
@@ -178,6 +214,145 @@ class LocalMediaStorage:
         return content
 
 
+@dataclass(frozen=True)
+class NarrationSynthesis:
+    """One local synthesis payload plus the exact stable engine configuration used."""
+
+    content: bytes
+    media_type: str
+    engine_kind: str
+    engine_identity: str
+    voice_identity: str
+    locale: str
+    settings: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class NarrationGenerationResult:
+    """One terminal generated-narration attempt and its optional successful take."""
+
+    execution: NarrationGenerationExecution
+    narration_asset: NarrationAsset | None
+
+
+class LocalSystemSpeechSynthesizer:
+    """Use the already-installed Windows System.Speech engine without network access."""
+
+    engine_kind = "local_system_speech"
+    engine_identity = "System.Speech.Synthesis.SpeechSynthesizer"
+
+    def __init__(
+        self,
+        voice_identity: str = "Microsoft Hazel",
+        locale: str = "en-GB",
+        rate: int = 0,
+        volume: int = 100,
+        powershell_path: str | None = None,
+    ) -> None:
+        self.voice_identity = voice_identity
+        self.locale = locale
+        self.rate = rate
+        self.volume = volume
+        self.powershell_path = powershell_path or shutil.which("powershell")
+
+    def synthesize(self, text: str) -> NarrationSynthesis:
+        """Produce one WAV from exact local text using a fixed installed voice."""
+
+        if not self.powershell_path:
+            raise NarrationSynthesisError(
+                "Windows PowerShell is unavailable for local narration synthesis."
+            )
+        if not isinstance(text, str) or not text.strip():
+            raise NarrationSynthesisError(
+                "Narration synthesis requires non-empty exact Script text."
+            )
+        if not -10 <= self.rate <= 10 or not 0 <= self.volume <= 100:
+            raise NarrationSynthesisError("System.Speech rate or volume is out of range.")
+        with tempfile.TemporaryDirectory(prefix="atlas-narration-") as temporary:
+            root = Path(temporary)
+            text_path = root / "script.txt"
+            output_path = root / "narration.wav"
+            command_path = root / "synthesize.ps1"
+            text_path.write_text(text, encoding="utf-8")
+            command_path.write_text(
+                """param(
+  [string]$TextPath,
+  [string]$OutputPath,
+  [string]$Voice,
+  [int]$Rate,
+  [int]$Volume
+)
+Add-Type -AssemblyName System.Speech
+$synthesizer = [System.Speech.Synthesis.SpeechSynthesizer]::new()
+try {
+  $voiceNames = $synthesizer.GetInstalledVoices() | ForEach-Object { $_.VoiceInfo.Name }
+  if (-not ($voiceNames | Where-Object { $_ -eq $Voice })) {
+    throw "Requested local voice is not installed: $Voice"
+  }
+  $synthesizer.SelectVoice($Voice)
+  $synthesizer.Rate = $Rate
+  $synthesizer.Volume = $Volume
+  $synthesizer.SetOutputToWaveFile($OutputPath)
+  $synthesizer.Speak([System.IO.File]::ReadAllText($TextPath, [System.Text.Encoding]::UTF8))
+}
+finally {
+  $synthesizer.Dispose()
+}
+""",
+                encoding="utf-8",
+            )
+            try:
+                subprocess.run(
+                    [
+                        self.powershell_path,
+                        "-NoLogo",
+                        "-NoProfile",
+                        "-NonInteractive",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(command_path),
+                        "-TextPath",
+                        str(text_path),
+                        "-OutputPath",
+                        str(output_path),
+                        "-Voice",
+                        self.voice_identity,
+                        "-Rate",
+                        str(self.rate),
+                        "-Volume",
+                        str(self.volume),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+            except (OSError, subprocess.SubprocessError) as error:
+                raise NarrationSynthesisError(
+                    f"Local System.Speech synthesis failed: {error}"
+                ) from error
+            if not output_path.is_file() or not output_path.stat().st_size:
+                raise NarrationSynthesisError(
+                    "Local System.Speech did not create WAV narration bytes."
+                )
+            content = output_path.read_bytes()
+        return NarrationSynthesis(
+            content,
+            "audio/wav",
+            self.engine_kind,
+            self.engine_identity,
+            self.voice_identity,
+            self.locale,
+            {
+                "rate": self.rate,
+                "volume": self.volume,
+                "output_format": "wav",
+                "text_transport": "local_utf8_file",
+            },
+        )
+
+
 class MediaService:
     """Small v0.26 lifecycle service; all public inputs are opaque IDs or content bytes."""
 
@@ -217,6 +392,83 @@ class MediaService:
         except Exception:
             self.storage.remove(path)
             raise
+
+    def generate_local_narration(
+        self,
+        execution_id: str,
+        narration_id: str,
+        script_id: str,
+        synthesizer: LocalSystemSpeechSynthesizer | None = None,
+    ) -> NarrationGenerationResult:
+        """Synthesize exact Script text locally and record one immutable terminal attempt."""
+
+        script = self.repository.get_script(script_id)
+        engine = synthesizer or LocalSystemSpeechSynthesizer()
+        started_at = _utc_timestamp()
+        path: str | None = None
+        synthesis: NarrationSynthesis | None = None
+        try:
+            synthesis = engine.synthesize(script.narration_text)
+            if synthesis.media_type != "audio/wav":
+                raise NarrationSynthesisError("Local generated narration must be managed as WAV.")
+            path, digest = self.storage.write(
+                "narration", narration_id, synthesis.content, synthesis.media_type
+            )
+            probe = self.runtime.probe(self.storage.path(path))
+            if probe.media_type != "audio" or probe.duration_ms <= 0:
+                raise NarrationSynthesisError(
+                    "Generated narration is not usable audio without video."
+                )
+            self.runtime.assert_audible(self.storage.path(path))
+            execution, asset = self.repository.record_successful_generated_narration(
+                execution_id,
+                narration_id,
+                script.id,
+                path,
+                synthesis.media_type,
+                digest,
+                probe.duration_ms,
+                synthesis.engine_kind,
+                synthesis.engine_identity,
+                synthesis.voice_identity,
+                synthesis.locale,
+                synthesis.settings,
+                started_at,
+                _utc_timestamp(),
+            )
+            return NarrationGenerationResult(execution, asset)
+        except Exception as error:
+            if path is not None:
+                self.storage.remove(path)
+            if synthesis is None:
+                synthesis = NarrationSynthesis(
+                    b"",
+                    "audio/wav",
+                    engine.engine_kind,
+                    engine.engine_identity,
+                    engine.voice_identity,
+                    engine.locale,
+                    {
+                        "rate": engine.rate,
+                        "volume": engine.volume,
+                        "output_format": "wav",
+                        "text_transport": "local_utf8_file",
+                    },
+                )
+            execution = self.repository.record_failed_narration_generation(
+                execution_id,
+                script.id,
+                synthesis.engine_kind,
+                synthesis.engine_identity,
+                synthesis.voice_identity,
+                synthesis.locale,
+                synthesis.settings,
+                type(error).__name__,
+                str(error)[:1000],
+                started_at,
+                _utc_timestamp(),
+            )
+            return NarrationGenerationResult(execution, None)
 
     @staticmethod
     def caption_cues(text: str, duration_ms: int) -> list[dict[str, Any]]:

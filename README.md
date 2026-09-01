@@ -6,8 +6,8 @@ Project Atlas is the legacy project name.
 
 Conveyor is a local, dependency-free editorial control interface and durable SQLite foundation for SimilarStoic.
 v0.27 — First-Run Operability Bridge is the latest accepted implementation milestone; v0.26 — Narrated Final Media
-Production is its accepted historical predecessor. Migration 21 is the latest canonical migration, migration 22 is
-absent, and Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.27 is selected.
+Production is its accepted historical predecessor. Migration 22 is the latest implemented provenance migration, and
+Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.27 is selected.
 Later workflow, research automation and production systems remain deferred.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
@@ -46,8 +46,8 @@ revenue/economics, learning and future content decisions. Implementation milesto
 canonical roadmap and must not redefine it.
 
 Phase 2 is now **ACTIVE / INCOMPLETE**. v0.27 First-Run Operability Bridge is the latest accepted implementation
-milestone; v0.26 Narrated Final Media Production is its accepted historical predecessor. Migrations 1–21 are canonical,
-with migration 21 latest and migration 22 absent. No successor after v0.27 is selected. The
+milestone; v0.26 Narrated Final Media Production is its accepted historical predecessor. Migrations 1–22 are
+contiguous, with migration 22 the latest implemented provenance migration. No successor after v0.27 is selected. The
 remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
@@ -243,9 +243,19 @@ An explicit CharacterProfile-scoped imported-reference route may deliberately cr
 storage, retain a matching SHA-256, originate from a Gate-authorized character AssetSpec, and carry the exact
 CharacterProfile. The set itself is the immutable bootstrap declaration; no prior AssetSelection, GenerationExecution,
 provider activation, current/latest/best reference state or visual-QA state is added. Existing generated-reference
-provenance remains unchanged. Migration 21 remains latest, migration 22 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**,
+provenance remains unchanged. Migration 22 adds only the separate narration provenance described below; Phase 2
+remains ACTIVE / INCOMPLETE, and no successor after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**,
 `git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files (`would_change=0`).
+
+## Production #1 local narration provenance
+
+Migration 22 is the narrow Production #1 unblocker for local narration generation. Immutable NarrationAssets may be
+`imported` (including existing manual/imported ingestion) or `generated`; imported behavior is unchanged. A generated
+take is linked to its own immutable terminal `NarrationGenerationExecution`, which records the exact Script, local
+`System.Speech.Synthesis.SpeechSynthesizer` engine, voice, locale, deterministic settings, timestamps and terminal
+result/error. A successful execution links one exact generated take; failed attempts and retries remain distinct
+history. There is no latest/current/best narration pointer. This provenance correction is not v0.28 and does not
+select a successor milestone.
 
 ## Technology baseline
 
@@ -589,6 +599,6 @@ production-ready SimilarStoic brand identity is **APPROVED**, while visual accep
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
 v0.27 — First-Run Operability Bridge is the latest accepted implementation checkpoint; v0.26 — Narrated Final Media
-Production is its accepted historical predecessor. Migrations 1–21 are canonical, with migration 21 latest and
-migration 22 absent. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.27 is selected, and later Conveyor systems
+Production is its accepted historical predecessor. Migrations 1–22 are contiguous, with migration 22 the latest
+implemented provenance migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.27 is selected, and later Conveyor systems
 remain out of scope. The first genuine SimilarStoic production trial has not yet occurred.

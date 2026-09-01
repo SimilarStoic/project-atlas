@@ -24,7 +24,7 @@ existing GitHub roadmap and specification remain authoritative.
 **v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone; **v0.26 — Narrated Final
 Media Production** is its accepted historical predecessor. Founder acceptance covers v0.27 implementation commit
 `8dd10ef793ac44c25107f02ba4b6bb5c333cf500` and pending-state documentation commit
-`cb5fb1593827e6f7f0943973e86d992ea10dccf5`. Migration 21 is canonical and latest; migration 22 is absent. Phase 2
+`cb5fb1593827e6f7f0943973e86d992ea10dccf5`. Migration 22 is the latest implemented provenance migration. Phase 2
 remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after v0.27 is selected. v0.27
 validation passed with Black 26.3.1 in-process equivalence across 12 Python files, Ruff, 117 pytest tests and
 `git diff --check`. The first genuine SimilarStoic production trial has not yet occurred. A fresh session must verify
@@ -59,12 +59,25 @@ Set these values before server startup. A future machine may use different absol
 configuration contract. The legacy default compatibility behavior remains available when variables are unset; do not
 hardcode this workstation path in source or change the existing defaults.
 
-At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; schema migrations 1–21 are
-complete and contiguous, 21 is latest, and 22 is absent. It survives application restart. Genuine final-media counts
-remain zero: `narration_assets`, `final_media_input_snapshots`, `render_executions` and `final_media_artifacts` are all
-zero. No genuine SimilarStoic production has been completed. The next product action is the first genuine mascot-led
-SimilarStoic production through the existing lifecycle; this operational reconciliation is not a milestone or a
-successor selection.
+At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; schema migrations 1–22 are
+complete and contiguous, with 22 latest. It survives application restart. Two failed Microsoft Hazel local-synthesis
+attempts remain durable `narration_generation_executions`; no audio bytes or NarrationAsset were created. Genuine
+final-media counts remain zero: `narration_assets`, `final_media_input_snapshots`, `render_executions` and
+`final_media_artifacts` are all zero. No genuine SimilarStoic production has been completed. Restoring a working local
+System.Speech engine is required before the first mascot-led SimilarStoic production can continue; this operational
+reconciliation is not a milestone or a successor selection.
+
+### Production #1 narration provenance correction
+
+Migration 22 is the narrow Production #1 unblocker for truthful local narration generation. It preserves all existing
+manual/imported NarrationAsset behavior while allowing immutable `source_kind` values `imported` and `generated`. It
+adds a dedicated immutable terminal `NarrationGenerationExecution` for each local
+`System.Speech.Synthesis.SpeechSynthesizer` attempt, recording exact Script ownership, engine identity, voice, locale,
+deterministic settings, timestamps, outcome/error and the exact generated NarrationAsset on success. Failed attempts
+and explicit retries remain independent history; no latest/current/best narration pointer exists. This is neither
+v0.28 nor a selected successor milestone. The workstation convention and portable `ATLAS_*` configuration contract
+above remain unchanged. Migration 22 is applied to the live runtime, but the workstation's currently registered Hazel
+engine must produce valid WAV bytes before a generated take, snapshot or MP4 can exist.
 
 `D:\ProjectAtlas\data\atlas.db` is preserved legacy/local historical state and is not the persistent database selected
 for the first genuine production run. It must not be migrated, overwritten, moved, deleted or repurposed. Its
@@ -661,8 +674,8 @@ CharacterProfile, originate from a Gate-authorized character AssetSpec, be sourc
 managed storage and match its stored SHA-256. It requires no prior AssetSelection, creates no GenerationExecution or
 provider call, and leaves generated-reference provenance intact. No current/latest/best reference state, visual QA,
 paid provider, cost/spend, production trial, UI, renderer, publishing, analytics/Learning or successor scope is
-added. Migration 21 remains latest, migration 22 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
-after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
+added. Migration 22 separately adds only generated-narration provenance, Phase 2 remains ACTIVE / INCOMPLETE, and no
+successor after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
 in-process equivalence across 12 Python files (`would_change=0`).
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;

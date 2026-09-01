@@ -375,7 +375,7 @@ class AssetSelection:
 
 @dataclass(frozen=True)
 class NarrationAsset:
-    """One immutable managed imported narration take for one exact Script."""
+    """One immutable managed imported or generated narration take for one exact Script."""
 
     id: str
     script_id: str
@@ -384,6 +384,26 @@ class NarrationAsset:
     source_kind: str
     content_digest: str
     duration_ms: int
+    created_at: str
+
+
+@dataclass(frozen=True)
+class NarrationGenerationExecution:
+    """One immutable terminal local narration-synthesis attempt."""
+
+    id: str
+    script_id: str
+    narration_asset_id: str | None
+    engine_kind: str
+    engine_identity: str
+    voice_identity: str
+    locale: str
+    settings: dict[str, Any]
+    outcome: str
+    error_code: str | None
+    error_message: str | None
+    started_at: str
+    completed_at: str
     created_at: str
 
 
@@ -487,6 +507,8 @@ Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
 RENDER_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
+NARRATION_SOURCE_KINDS = frozenset({"imported", "generated"})
+NARRATION_GENERATION_OUTCOMES = frozenset({"succeeded", "failed"})
 IDEA_GATE_DECISION_OUTCOMES = frozenset({"Proceed", "Reject", "Steer"})
 RESEARCH_READINESS_OUTCOMES = frozenset({"Ready", "NeedsMoreResearch", "Blocked"})
 EDITORIAL_READINESS_OUTCOMES = frozenset({"Ready", "NotReady"})
@@ -1248,7 +1270,69 @@ MIGRATIONS: tuple[Migration, ...] = (
             "ON final_media_artifacts (render_execution_id)",
         ),
     ),
+    (
+        22,
+        (
+            "ALTER TABLE narration_assets RENAME TO narration_assets_v21",
+            """
+        CREATE TABLE narration_assets (
+          id TEXT PRIMARY KEY,
+          script_id TEXT NOT NULL,
+          storage_path TEXT NOT NULL CHECK (length(storage_path) > 0),
+          media_type TEXT NOT NULL CHECK (length(media_type) > 0),
+          source_kind TEXT NOT NULL CHECK (source_kind IN ('imported', 'generated')),
+          content_digest TEXT NOT NULL CHECK (length(content_digest) = 64),
+          duration_ms INTEGER NOT NULL CHECK (duration_ms > 0),
+          created_at TEXT NOT NULL,
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        INSERT INTO narration_assets
+          (id, script_id, storage_path, media_type, source_kind, content_digest,
+           duration_ms, created_at)
+        SELECT id, script_id, storage_path, media_type, source_kind, content_digest,
+               duration_ms, created_at
+        FROM narration_assets_v21
+        """,
+            "DROP TABLE narration_assets_v21",
+            "CREATE INDEX idx_narration_assets_script_created "
+            "ON narration_assets (script_id, created_at, id)",
+            """
+        CREATE TABLE narration_generation_executions (
+          id TEXT PRIMARY KEY,
+          script_id TEXT NOT NULL,
+          narration_asset_id TEXT NULL UNIQUE,
+          engine_kind TEXT NOT NULL CHECK (engine_kind = 'local_system_speech'),
+          engine_identity TEXT NOT NULL CHECK (length(trim(engine_identity)) > 0),
+          voice_identity TEXT NOT NULL CHECK (length(trim(voice_identity)) > 0),
+          locale TEXT NOT NULL CHECK (length(trim(locale)) > 0),
+          settings_json TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (outcome IN ('succeeded', 'failed')),
+          error_code TEXT NULL,
+          error_message TEXT NULL,
+          started_at TEXT NOT NULL,
+          completed_at TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          CHECK (
+            (outcome = 'succeeded' AND narration_asset_id IS NOT NULL
+              AND error_code IS NULL AND error_message IS NULL)
+            OR
+            (outcome = 'failed' AND narration_asset_id IS NULL
+              AND error_code IS NOT NULL)
+          ),
+          FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE RESTRICT,
+          FOREIGN KEY (narration_asset_id) REFERENCES narration_assets(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_narration_generation_executions_script_created "
+            "ON narration_generation_executions (script_id, created_at, id)",
+        ),
+    ),
 )
+
+
+MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22})
 
 
 class AtlasRepository:
@@ -1286,6 +1370,15 @@ class AtlasRepository:
         }
         for version, statements in migrations or MIGRATIONS:
             if version not in applied:
+                rebuilds_foreign_key_target = version in MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD
+                foreign_keys = legacy_alter_table = None
+                if rebuilds_foreign_key_target:
+                    foreign_keys = self.connection.execute("PRAGMA foreign_keys").fetchone()[0]
+                    legacy_alter_table = self.connection.execute(
+                        "PRAGMA legacy_alter_table"
+                    ).fetchone()[0]
+                    self.connection.execute("PRAGMA foreign_keys = OFF")
+                    self.connection.execute("PRAGMA legacy_alter_table = ON")
                 try:
                     self.connection.execute("BEGIN")
                     for statement in statements:
@@ -1298,6 +1391,10 @@ class AtlasRepository:
                 except sqlite3.DatabaseError:
                     self.connection.rollback()
                     raise
+                finally:
+                    if rebuilds_foreign_key_target:
+                        self.connection.execute(f"PRAGMA legacy_alter_table = {legacy_alter_table}")
+                        self.connection.execute(f"PRAGMA foreign_keys = {foreign_keys}")
 
     def create_subject(self, subject_id: str, slug: str, name: str, description: str) -> Subject:
         stamp = now()
@@ -3554,10 +3651,13 @@ class AtlasRepository:
         media_type: str,
         content_digest: str,
         duration_ms: int,
+        source_kind: str = "imported",
     ) -> NarrationAsset:
-        """Register one already-managed, probe-verified imported narration take."""
+        """Register one already-managed, probe-verified immutable narration take."""
         self.get_script(script_id)
         self._validate_content_digest(content_digest)
+        if source_kind not in NARRATION_SOURCE_KINDS:
+            raise ValueError("NarrationAsset source_kind must be imported or generated.")
         if not narration_asset_id.strip() or not storage_path or not media_type or duration_ms <= 0:
             raise ValueError(
                 "NarrationAsset requires ID, managed path, media type, and positive duration."
@@ -3566,7 +3666,80 @@ class AtlasRepository:
             self.connection.execute(
                 "INSERT INTO narration_assets "
                 "(id, script_id, storage_path, media_type, source_kind, content_digest, "
-                "duration_ms, created_at) VALUES (?, ?, ?, ?, 'imported', ?, ?, ?)",
+                "duration_ms, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    narration_asset_id.strip(),
+                    script_id,
+                    storage_path,
+                    media_type,
+                    source_kind,
+                    content_digest,
+                    duration_ms,
+                    now(),
+                ),
+            )
+        return self.get_narration_asset(narration_asset_id.strip())
+
+    @staticmethod
+    def _validate_narration_generation_details(
+        engine_kind: str,
+        engine_identity: str,
+        voice_identity: str,
+        locale: str,
+        settings: dict[str, Any],
+    ) -> None:
+        if engine_kind != "local_system_speech":
+            raise ValueError("Narration generation engine_kind must be local_system_speech.")
+        if not all(
+            isinstance(value, str) and value.strip()
+            for value in (engine_identity, voice_identity, locale)
+        ):
+            raise ValueError(
+                "Narration generation engine, voice, and locale must be non-empty text."
+            )
+        if not isinstance(settings, dict):
+            raise ValueError("Narration generation settings must be an object.")
+
+    def record_successful_generated_narration(
+        self,
+        execution_id: str,
+        narration_asset_id: str,
+        script_id: str,
+        storage_path: str,
+        media_type: str,
+        content_digest: str,
+        duration_ms: int,
+        engine_kind: str,
+        engine_identity: str,
+        voice_identity: str,
+        locale: str,
+        settings: dict[str, Any],
+        started_at: str,
+        completed_at: str,
+    ) -> tuple[NarrationGenerationExecution, NarrationAsset]:
+        """Atomically persist one successful local synthesis and its generated take."""
+
+        self.get_script(script_id)
+        self._validate_content_digest(content_digest)
+        self._validate_narration_generation_details(
+            engine_kind, engine_identity, voice_identity, locale, settings
+        )
+        if (
+            not execution_id.strip()
+            or not narration_asset_id.strip()
+            or not storage_path
+            or not media_type
+            or duration_ms <= 0
+            or not started_at
+            or not completed_at
+        ):
+            raise ValueError("Successful generated narration requires complete immutable details.")
+        stamp = now()
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO narration_assets "
+                "(id, script_id, storage_path, media_type, source_kind, content_digest, "
+                "duration_ms, created_at) VALUES (?, ?, ?, ?, 'generated', ?, ?, ?)",
                 (
                     narration_asset_id.strip(),
                     script_id,
@@ -3574,10 +3747,88 @@ class AtlasRepository:
                     media_type,
                     content_digest,
                     duration_ms,
+                    stamp,
+                ),
+            )
+            self.connection.execute(
+                "INSERT INTO narration_generation_executions "
+                "(id, script_id, narration_asset_id, engine_kind, engine_identity, voice_identity, "
+                "locale, settings_json, outcome, error_code, error_message, started_at, "
+                "completed_at, "
+                "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'succeeded', NULL, NULL, ?, ?, ?)",
+                (
+                    execution_id.strip(),
+                    script_id,
+                    narration_asset_id.strip(),
+                    engine_kind,
+                    engine_identity,
+                    voice_identity,
+                    locale,
+                    json.dumps(settings, sort_keys=True, separators=(",", ":")),
+                    started_at,
+                    completed_at,
+                    stamp,
+                ),
+            )
+        return (
+            self.get_narration_generation_execution(execution_id.strip()),
+            self.get_narration_asset(narration_asset_id.strip()),
+        )
+
+    def record_failed_narration_generation(
+        self,
+        execution_id: str,
+        script_id: str,
+        engine_kind: str,
+        engine_identity: str,
+        voice_identity: str,
+        locale: str,
+        settings: dict[str, Any],
+        error_code: str,
+        error_message: str,
+        started_at: str,
+        completed_at: str,
+    ) -> NarrationGenerationExecution:
+        """Persist one failed local synthesis attempt without creating a narration take."""
+
+        self.get_script(script_id)
+        self._validate_narration_generation_details(
+            engine_kind, engine_identity, voice_identity, locale, settings
+        )
+        if (
+            not execution_id.strip()
+            or not isinstance(error_code, str)
+            or not error_code.strip()
+            or len(error_code) > 128
+            or not isinstance(error_message, str)
+            or len(error_message) > 1000
+            or not started_at
+            or not completed_at
+        ):
+            raise ValueError("Failed narration generation requires bounded error details.")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO narration_generation_executions "
+                "(id, script_id, narration_asset_id, engine_kind, engine_identity, voice_identity, "
+                "locale, settings_json, outcome, error_code, error_message, started_at, "
+                "completed_at, "
+                "created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?, 'failed', ?, ?, ?, ?, ?)",
+                (
+                    execution_id.strip(),
+                    script_id,
+                    engine_kind,
+                    engine_identity,
+                    voice_identity,
+                    locale,
+                    json.dumps(settings, sort_keys=True, separators=(",", ":")),
+                    error_code.strip(),
+                    error_message,
+                    started_at,
+                    completed_at,
                     now(),
                 ),
             )
-        return self.get_narration_asset(narration_asset_id.strip())
+        return self.get_narration_generation_execution(execution_id.strip())
 
     def get_narration_asset(self, narration_asset_id: str) -> NarrationAsset:
         row = self.connection.execute(
@@ -3596,6 +3847,25 @@ class AtlasRepository:
                 (script_id,),
             )
         ]
+
+    def get_narration_generation_execution(self, execution_id: str) -> NarrationGenerationExecution:
+        row = self.connection.execute(
+            "SELECT * FROM narration_generation_executions WHERE id = ?", (execution_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(execution_id)
+        return self._narration_generation_execution(row)
+
+    def list_narration_generation_executions_for_script(
+        self, script_id: str
+    ) -> list[NarrationGenerationExecution]:
+        self.get_script(script_id)
+        rows = self.connection.execute(
+            "SELECT * FROM narration_generation_executions WHERE script_id = ? "
+            "ORDER BY created_at, id",
+            (script_id,),
+        )
+        return [self._narration_generation_execution(row) for row in rows]
 
     def get_final_media_input_snapshot(self, snapshot_id: str) -> FinalMediaInputSnapshot:
         row = self.connection.execute(
@@ -6438,6 +6708,25 @@ class AtlasRepository:
             row["source_kind"],
             row["content_digest"],
             row["duration_ms"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _narration_generation_execution(row: sqlite3.Row) -> NarrationGenerationExecution:
+        return NarrationGenerationExecution(
+            row["id"],
+            row["script_id"],
+            row["narration_asset_id"],
+            row["engine_kind"],
+            row["engine_identity"],
+            row["voice_identity"],
+            row["locale"],
+            json.loads(row["settings_json"]),
+            row["outcome"],
+            row["error_code"],
+            row["error_message"],
+            row["started_at"],
+            row["completed_at"],
             row["created_at"],
         )
 

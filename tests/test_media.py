@@ -11,7 +11,13 @@ from pathlib import Path
 import pytest
 
 from project_atlas.generation import LocalAssetStorage
-from project_atlas.media import FfmpegRuntime, LocalMediaStorage, MediaRuntimeError, MediaService
+from project_atlas.media import (
+    FfmpegRuntime,
+    LocalMediaStorage,
+    MediaRuntimeError,
+    MediaService,
+    NarrationSynthesis,
+)
 from project_atlas.persistence import AtlasRepository
 
 PNG = base64.b64decode(
@@ -113,6 +119,7 @@ def _create_snapshot(
     motions: tuple[str, ...] = ("static", "slow_zoom_in"),
     transitions: tuple[str | None, ...] = ("crossfade", None),
     duration_ms: int = 1000,
+    generated_narration: bool = False,
 ):
     """Freeze selected imported visuals and narration of exactly their intended timeline."""
 
@@ -156,9 +163,40 @@ def _create_snapshot(
             str(audio_path),
         ]
     )
-    narration = service.import_narration(
-        f"{prefix}-narration", script.id, audio_path.read_bytes(), "audio/wav"
-    )
+    if generated_narration:
+
+        class FixtureLocalSynthesizer:
+            engine_kind = "local_system_speech"
+            engine_identity = "System.Speech.Synthesis.SpeechSynthesizer"
+            voice_identity = "Microsoft Hazel"
+            locale = "en-GB"
+            rate = 0
+            volume = 100
+
+            def synthesize(self, text: str) -> NarrationSynthesis:
+                assert text == script.narration_text
+                return NarrationSynthesis(
+                    audio_path.read_bytes(),
+                    "audio/wav",
+                    self.engine_kind,
+                    self.engine_identity,
+                    self.voice_identity,
+                    self.locale,
+                    {"rate": self.rate, "volume": self.volume, "output_format": "wav"},
+                )
+
+        result = service.generate_local_narration(
+            f"{prefix}-narration-execution",
+            f"{prefix}-narration",
+            script.id,
+            FixtureLocalSynthesizer(),
+        )
+        assert result.narration_asset is not None
+        narration = result.narration_asset
+    else:
+        narration = service.import_narration(
+            f"{prefix}-narration", script.id, audio_path.read_bytes(), "audio/wav"
+        )
     return service.create_snapshot(f"{prefix}-snapshot", plan.id, narration.id, scene_inputs)
 
 
@@ -205,6 +243,26 @@ def test_real_final_media_lifecycle_preserves_frozen_lineage_and_bytes(tmp_path)
                 artifact.height,
                 artifact.technical_validation,
             )
+    finally:
+        repository.close()
+
+
+def test_final_media_lifecycle_accepts_generated_narration(tmp_path) -> None:
+    """A generated narration take remains a valid frozen input to the v0.26 renderer."""
+
+    runtime = _runtime_or_skip()
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=tmp_path / "assets")
+    try:
+        service = MediaService(repository, runtime, LocalMediaStorage(tmp_path / "media"))
+        snapshot = _create_snapshot(
+            service, repository, tmp_path, "generated", generated_narration=True
+        )
+        artifact = service.render("generated-execution", "generated-artifact", snapshot.id)
+
+        narration = repository.get_narration_asset(snapshot.narration_asset_id)
+        assert narration.source_kind == "generated"
+        assert repository.get_render_execution("generated-execution").outcome == "succeeded"
+        assert artifact.media_type == "video/mp4"
     finally:
         repository.close()
 

@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-28 August 2026
+1 September 2026
 
 ## Current Phase
 
@@ -12,8 +12,8 @@
 
 🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
 design/implementation stewardship. v0.27 — First-Run Operability Bridge is the latest accepted implementation
-milestone; v0.26 — Narrated Final Media Production is its accepted historical predecessor. Migration 21 is canonical
-and latest; migration 22 is absent. No successor after v0.27 is selected.
+milestone; v0.26 — Narrated Final Media Production is its accepted historical predecessor. Migration 22 is the latest
+implemented provenance migration. No successor after v0.27 is selected.
 Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and Atlas v0.1 through v0.7 are complete
 and pushed.
 
@@ -27,15 +27,27 @@ documentation and reinstallable local-tooling workspace. This is an operational 
 path: portable locations continue to be supplied through `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`,
 `ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`.
 
-At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite integrity verification, has contiguous migrations
-1–21 with 21 latest and 22 absent, and has zero `narration_assets`, `final_media_input_snapshots`,
-`render_executions` and `final_media_artifacts`. No genuine SimilarStoic production has yet been completed. The first
-genuine mascot-led SimilarStoic production through the existing lifecycle is the next product action; this
-reconciliation is not a milestone or successor selection.
+At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite integrity verification and has contiguous migrations
+1–22 with 22 latest. It retains two failed local Hazel synthesis attempts as immutable
+`narration_generation_executions`; no narration bytes or generated NarrationAsset were created. Counts remain zero for
+`narration_assets`, `final_media_input_snapshots`, `render_executions` and `final_media_artifacts`. No genuine
+SimilarStoic production has yet been completed. Repairing the local System.Speech engine is the next required
+production action; this reconciliation is not a milestone or successor selection.
 
 `D:\ProjectAtlas\data\atlas.db` remains untouched legacy/local historical state and is not the selected persistent
 database for the first genuine production run. Its SHA-256 at this checkpoint was
 `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
+
+## Production #1 Narration Provenance Checkpoint
+
+Migration 22 is the narrow Production #1 unblocker for truthful locally generated narration provenance. It expands
+immutable `NarrationAsset.source_kind` from imported-only to `imported` or `generated`, preserving imported/manual
+ingestion unchanged. It adds immutable terminal `NarrationGenerationExecution` records for local
+`System.Speech.Synthesis.SpeechSynthesizer` attempts: exact Script, engine and voice identity, locale, deterministic
+settings, timestamps, terminal outcome/error and, on success, one exact generated NarrationAsset. Failed attempts and
+later retries remain separate history; there is no latest/current/best narration pointer. This is not v0.28 and does
+not select a successor milestone. The live runtime has applied Migration 22; successful production remains blocked on
+the workstation's local System.Speech engine producing valid WAV bytes.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded
@@ -1205,7 +1217,7 @@ SHA-256 bytes. No AssetSelection is required before bootstrap; the resulting set
 character AssetSelection provenance. Generated-reference requirements remain unchanged, no current/latest/best
 reference state exists, and no provider, cost/spend, production trial or visual-canon change is introduced.
 
-Migration 21 remains latest and migration 22 is absent. Phase 2 remains ACTIVE / INCOMPLETE. Validation passed: Ruff,
+Migration 22 adds only generated-narration provenance; Phase 2 remains ACTIVE / INCOMPLETE. Validation passed: Ruff,
 **117 pytest tests**, `git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files with
 `would_change=0`; the Windows Black CLI worker/process completion behavior remains a host-runtime exception. No
 successor after v0.27 is selected.
@@ -1216,8 +1228,8 @@ Reference-grounded generation and explicit first-reference bootstrap are complet
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
 Phase 2 remains active and incomplete. v0.27 — First-Run Operability Bridge is the latest accepted implementation
-milestone; v0.26 — Narrated Final Media Production is its accepted historical predecessor; migration 21 is latest,
-migration 22 is absent, and no successor after v0.27 is selected. The exact immediate next action is the first
+milestone; v0.26 — Narrated Final Media Production is its accepted historical predecessor; migration 22 is the latest
+implemented provenance migration, and no successor after v0.27 is selected. The exact immediate next action is the first
 genuine SimilarStoic production trial.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
