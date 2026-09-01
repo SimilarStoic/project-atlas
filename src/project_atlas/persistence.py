@@ -3442,11 +3442,20 @@ class AtlasRepository:
         content: bytes,
         media_type: str,
         storage: Any,
+        *,
+        metadata: dict[str, Any] | None = None,
     ) -> Asset:
-        """Copy one verified image into managed storage and register an immutable import."""
+        """Copy one verified image into managed storage and register an immutable import.
+
+        ``metadata`` records caller-known, non-derived provenance (for example a
+        deterministic local transformation's source digest).  Storage paths,
+        versions, content digests, and source kind remain server-derived.
+        """
 
         if not isinstance(asset_id, str) or not asset_id.strip():
             raise ValueError("Imported Asset ID must be non-empty text.")
+        if metadata is not None and not isinstance(metadata, dict):
+            raise ValueError("Imported Asset metadata must be an object or null.")
         self._require_gate_authorized_asset_spec(asset_spec_id)
         self._validate_imported_asset_content(content, media_type)
         content_digest = sha256(content).hexdigest()
@@ -3464,13 +3473,14 @@ class AtlasRepository:
                     "INSERT INTO assets (id, asset_spec_id, version, storage_path, media_type, "
                     "source_kind, metadata_json, created_at, generation_execution_id, "
                     "content_digest) "
-                    "VALUES (?, ?, ?, ?, ?, 'imported', '{}', ?, NULL, ?)",
+                    "VALUES (?, ?, ?, ?, ?, 'imported', ?, ?, NULL, ?)",
                     (
                         asset_id.strip(),
                         asset_spec_id,
                         version,
                         storage_path,
                         media_type,
+                        json.dumps(metadata or {}),
                         now(),
                         content_digest,
                     ),

@@ -379,12 +379,14 @@ class OpenAIImageGenerator:
         *,
         api_key: str | None = None,
         model: str | None = None,
+        image_size: str | None = None,
         timeout_seconds: float = 120,
         opener: Callable[..., Any] = urlopen,
         supported_asset_types: frozenset[str] | None = None,
     ) -> None:
         self.api_key = api_key if api_key is not None else os.environ.get("OPENAI_API_KEY")
         self.model = model or os.environ.get("ATLAS_OPENAI_IMAGE_MODEL", "gpt-image-2")
+        self.image_size = image_size or os.environ.get("ATLAS_OPENAI_IMAGE_SIZE")
         self.timeout_seconds = timeout_seconds
         self.opener = opener
         self.supported_asset_types = supported_asset_types or frozenset(
@@ -409,14 +411,15 @@ class OpenAIImageGenerator:
             payload, content_type = self._reference_edit_payload(generation_input)
         else:
             endpoint = "https://api.openai.com/v1/images/generations"
-            payload = json.dumps(
-                {
-                    "model": self.model,
-                    "prompt": generation_input.prompt,
-                    "n": 1,
-                    "output_format": "png",
-                }
-            ).encode("utf-8")
+            request_payload = {
+                "model": self.model,
+                "prompt": generation_input.prompt,
+                "n": 1,
+                "output_format": "png",
+            }
+            if self.image_size:
+                request_payload["size"] = self.image_size
+            payload = json.dumps(request_payload).encode("utf-8")
             content_type = "application/json"
         request = Request(
             endpoint,

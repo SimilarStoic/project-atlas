@@ -1866,11 +1866,20 @@ def test_operational_visual_authoring_and_managed_import_require_gate_lineage(tm
             "visual-input-historical", asset_spec.id, 4, "legacy.png", "image/png", "manual"
         )
         imported = repository.import_asset_under_asset_spec_authorization(
-            "visual-input-imported", asset_spec.id, png, "image/png", storage
+            "visual-input-imported",
+            asset_spec.id,
+            png,
+            "image/png",
+            storage,
+            metadata={"derivation": "deterministic-local-transform", "source_sha256": "a" * 64},
         )
         assert (historical.version, imported.version) == (4, 5)
         assert imported.source_kind == "imported"
         assert imported.content_digest == sha256(png).hexdigest()
+        assert imported.metadata == {
+            "derivation": "deterministic-local-transform",
+            "source_sha256": "a" * 64,
+        }
         assert repository.managed_asset_path(imported.id).read_bytes() == png
         selection = repository.create_asset_selection(
             "visual-input-selection", asset_spec.id, imported.id
@@ -5716,6 +5725,37 @@ def test_character_reference_bootstrap_uses_the_non_reference_openai_request(tmp
         assert result.execution.character_reference_set_id is None
     finally:
         repository.close()
+
+
+def test_openai_generator_can_request_an_explicit_configured_image_size() -> None:
+    """An opt-in image size supports vertical environment-only production assets."""
+
+    captured = {}
+
+    class Response:
+        headers = {"x-request-id": "sized-openai-request"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        @staticmethod
+        def read() -> bytes:
+            return b'{"created": 1, "data": [{"b64_json": "b3V0cHV0"}]}'
+
+    def opener(request, timeout):
+        assert timeout == 120
+        captured["request"] = request
+        return Response()
+
+    artifact = OpenAIImageGenerator(
+        api_key="test-key", image_size="1024x1536", opener=opener
+    ).generate(GenerationInput("environment", "Generate an empty rainy background.", None, {}))
+
+    assert artifact.content == b"output"
+    assert json.loads(captured["request"].data)["size"] == "1024x1536"
 
 
 def test_character_reference_bootstrap_rejects_ineligible_specs_and_existing_sets(tmp_path) -> None:
