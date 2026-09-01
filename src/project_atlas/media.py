@@ -243,7 +243,7 @@ class LocalSystemSpeechSynthesizer:
 
     def __init__(
         self,
-        voice_identity: str = "Microsoft Hazel",
+        voice_identity: str = "Microsoft Hazel Desktop",
         locale: str = "en-GB",
         rate: int = 0,
         volume: int = 100,
@@ -307,7 +307,6 @@ finally {
                         self.powershell_path,
                         "-NoLogo",
                         "-NoProfile",
-                        "-NonInteractive",
                         "-ExecutionPolicy",
                         "Bypass",
                         "-File",

@@ -60,12 +60,11 @@ configuration contract. The legacy default compatibility behavior remains availa
 hardcode this workstation path in source or change the existing defaults.
 
 At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; schema migrations 1–22 are
-complete and contiguous, with 22 latest. It survives application restart. Two failed Microsoft Hazel local-synthesis
-attempts remain durable `narration_generation_executions`; no audio bytes or NarrationAsset were created. Genuine
-final-media counts remain zero: `narration_assets`, `final_media_input_snapshots`, `render_executions` and
-`final_media_artifacts` are all zero. No genuine SimilarStoic production has been completed. Restoring a working local
-System.Speech engine is required before the first mascot-led SimilarStoic production can continue; this operational
-reconciliation is not a milestone or a successor selection.
+complete and contiguous, with 22 latest. It survives application restart. Three failed OneCore `Microsoft Hazel`
+attempts remain durable `narration_generation_executions`; a succeeding `Microsoft Hazel Desktop` en-GB local SAPI
+execution created one generated WAV take. Genuine final-media counts are one each for `narration_assets`,
+`final_media_input_snapshots`, `render_executions` and `final_media_artifacts`: the persistent MP4 is ready for
+founder review. This first production does not select a milestone or a successor.
 
 ### Production #1 narration provenance correction
 
@@ -76,8 +75,9 @@ adds a dedicated immutable terminal `NarrationGenerationExecution` for each loca
 deterministic settings, timestamps, outcome/error and the exact generated NarrationAsset on success. Failed attempts
 and explicit retries remain independent history; no latest/current/best narration pointer exists. This is neither
 v0.28 nor a selected successor milestone. The workstation convention and portable `ATLAS_*` configuration contract
-above remain unchanged. Migration 22 is applied to the live runtime, but the workstation's currently registered Hazel
-engine must produce valid WAV bytes before a generated take, snapshot or MP4 can exist.
+above remain unchanged. Migration 22 is applied to the live runtime. The profileless file-based System.Speech adapter
+uses the visible healthy `Microsoft Hazel Desktop` en-GB SAPI registration; the OneCore `Microsoft Hazel` identity
+remains historical failed provenance rather than a mutable narrator selection.
 
 `D:\ProjectAtlas\data\atlas.db` is preserved legacy/local historical state and is not the persistent database selected
 for the first genuine production run. It must not be migrated, overwritten, moved, deleted or repurposed. Its

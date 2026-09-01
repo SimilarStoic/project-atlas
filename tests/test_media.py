@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import shutil
 import sqlite3
+import subprocess
 from hashlib import sha256
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from project_atlas.generation import LocalAssetStorage
 from project_atlas.media import (
     FfmpegRuntime,
     LocalMediaStorage,
+    LocalSystemSpeechSynthesizer,
     MediaRuntimeError,
     MediaService,
     NarrationSynthesis,
@@ -37,6 +39,27 @@ def _runtime_or_skip() -> FfmpegRuntime:
     if shutil.which("ffmpeg") and shutil.which("ffprobe"):
         return FfmpegRuntime()
     pytest.skip("real FFmpeg/FFprobe runtime is unavailable")
+
+
+def test_local_system_speech_uses_profileless_interactive_host(monkeypatch) -> None:
+    """Windows System.Speech voices remain unavailable to PowerShell's non-interactive host."""
+
+    observed: list[str] = []
+
+    def fake_run(command, **_kwargs):
+        observed.extend(command)
+        output = Path(command[command.index("-OutputPath") + 1])
+        output.write_bytes(b"fixture wav bytes")
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr("project_atlas.media.subprocess.run", fake_run)
+    engine = LocalSystemSpeechSynthesizer(powershell_path="powershell.exe")
+    synthesis = engine.synthesize("Exact local fixture text.")
+
+    assert engine.voice_identity == "Microsoft Hazel Desktop"
+    assert "-NoProfile" in observed
+    assert "-NonInteractive" not in observed
+    assert synthesis.content == b"fixture wav bytes"
 
 
 def _ready_visual_plan(repository: AtlasRepository, prefix: str):

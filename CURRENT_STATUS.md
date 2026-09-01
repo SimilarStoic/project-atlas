@@ -28,11 +28,11 @@ path: portable locations continue to be supplied through `ATLAS_DB_PATH`, `ATLAS
 `ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`.
 
 At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite integrity verification and has contiguous migrations
-1–22 with 22 latest. It retains two failed local Hazel synthesis attempts as immutable
-`narration_generation_executions`; no narration bytes or generated NarrationAsset were created. Counts remain zero for
-`narration_assets`, `final_media_input_snapshots`, `render_executions` and `final_media_artifacts`. No genuine
-SimilarStoic production has yet been completed. Repairing the local System.Speech engine is the next required
-production action; this reconciliation is not a milestone or successor selection.
+1–22 with 22 latest. Three failed OneCore `Microsoft Hazel` attempts remain immutable
+`narration_generation_executions`; the healthy local `Microsoft Hazel Desktop` en-GB SAPI registration then produced
+one generated WAV take and the first genuine SimilarStoic production artifact. Counts are one each for
+`narration_assets`, `final_media_input_snapshots`, `render_executions` and `final_media_artifacts`. This first
+production is ready for founder review; it does not select a milestone or successor.
 
 `D:\ProjectAtlas\data\atlas.db` remains untouched legacy/local historical state and is not the selected persistent
 database for the first genuine production run. Its SHA-256 at this checkpoint was
@@ -46,8 +46,9 @@ ingestion unchanged. It adds immutable terminal `NarrationGenerationExecution` r
 `System.Speech.Synthesis.SpeechSynthesizer` attempts: exact Script, engine and voice identity, locale, deterministic
 settings, timestamps, terminal outcome/error and, on success, one exact generated NarrationAsset. Failed attempts and
 later retries remain separate history; there is no latest/current/best narration pointer. This is not v0.28 and does
-not select a successor milestone. The live runtime has applied Migration 22; successful production remains blocked on
-the workstation's local System.Speech engine producing valid WAV bytes.
+not select a successor milestone. The live runtime has applied Migration 22. The production adapter deliberately uses
+the actual visible `Microsoft Hazel Desktop` en-GB voice: its profileless file host exposes the healthy Desktop SAPI
+registration, while the OneCore `Microsoft Hazel` identity remains failed historical provenance.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded
