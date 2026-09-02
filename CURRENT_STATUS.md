@@ -2,13 +2,14 @@
 
 ## Last Updated
 
-2 September 2026 — local canonical-synchronisation checkpoint; **not pushed**.
+2 September 2026 — canonical continuity synchronisation verified at
+`f44f65b46929d584125342e8528a585cfd0b2fc0`.
 
 ## Current State — Read This First
 
-Conveyor is intentionally **paused for founder review of the reconciled project state**. No product development is
-authorized from this checkpoint: no successor milestone, v0.28, Migration 24, Production #2, mascot-rig work, or
-further visual-production experimentation is selected or authorized.
+Canonical reconciliation and its founder-authorized push are complete. No successor milestone or product-development
+work is selected or authorized from this checkpoint: no v0.28, Migration 24, Production #2, mascot-rig work, or further
+visual-production experimentation. The next product design/milestone decision requires new founder + ChatGPT approval.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
 migrations and tests; (4) verified persistent runtime; (5) continuity handoff; (6) chat recollection.** Founder is
@@ -16,14 +17,18 @@ final authority for product direction, architecture, quality acceptance, milesto
 push. ChatGPT is product architect, specification steward and anti-drift reviewer; Codex is the bounded inspection,
 implementation, testing and validation agent. Governing principle: **CHANGE WITHOUT REBUILD**.
 
-### Remote Canon versus local verified candidate state
+### Current canonical state and historical pre-reconciliation context
 
-- **Remote canonical baseline:** `origin/main` is `5220320ef81e422dec338b8410ad80b5491c0f31`. At that remote
-  checkpoint, v0.27 is the latest accepted milestone, Phase 2 is ACTIVE / INCOMPLETE, Migration 21 is latest remotely
-  canonical, and no successor is remotely selected.
-- **Local verified implementation candidate state before this reconciliation:** `HEAD` was
-  `2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind `origin/main`. These commits have
-  **not** been pushed and are not remote canonical history:
+- **Current canonical GitHub state:** fetched `origin/main` is
+  `f44f65b46929d584125342e8528a585cfd0b2fc0`. Immediately before this documentation-synchronization commit, local
+  `main` and fetched `origin/main` were synchronised at that SHA with ahead/behind `0 / 0`. Phase 2 is ACTIVE /
+  INCOMPLETE; v0.27 remains the latest named accepted implementation milestone; source and verified runtime migrations
+  are contiguous through 23; and Migration 24 is absent. The post-v0.27 changes are canonical repository history but
+  do not imply acceptance of v0.28 or a successor milestone.
+- **Historical pre-reconciliation context:** remote `origin/main` was
+  `5220320ef81e422dec338b8410ad80b5491c0f31`, with Migration 21 then latest. Local `HEAD` was
+  `2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind, before founder review and the
+  authorized push. That candidate history comprised:
   `5396247` deterministic static mascot production path; `c1b2638` generated narration provenance; `cf3b1a4` local
   narration recovery; `2358f24` OpenAI narration refinement / Migration 23.
 
@@ -38,8 +43,8 @@ The selected persistent runtime is outside Git at `D:\ConveyorRuntime\conveyor.d
 
 SQLite `integrity_check` is `ok`; migrations 1–23 are contiguous. Migration 22 adds generated narration provenance
 and immutable terminal `NarrationGenerationExecution` history. Migration 23 truthfully permits `openai_tts` alongside
-`local_system_speech`. Both are local post-v0.27 candidate work; remote main remains at 21. Migration 24 does not
-exist.
+`local_system_speech`. Both are canonical post-v0.27 repository changes; they do not create a v0.28 milestone.
+Migration 24 does not exist.
 
 **Production #1 did occur through the persistent Conveyor lifecycle.** Its technical/end-to-end trial is completed,
 but its production-quality acceptance is **FAILED / NOT ACCEPTED**. The approved Script/content was broadly
@@ -73,8 +78,9 @@ SHA-256 `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
 
 ## Exact Next Action
 
-**FOUNDER REVIEW OF THE RECONCILED PROJECT STATE.** Only after that review may the next milestone or product action
-be selected. Do not push this local documentation checkpoint.
+**RECONCILIATION COMPLETE — NEW FOUNDER + CHATGPT DECISION REQUIRED.** The reconciliation review and authorized push
+are complete. This does not select or authorize a successor milestone, Production #2, v0.28, Migration 24, or further
+product work.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded
@@ -1202,8 +1208,8 @@ enforcement, proposal schema and negligible/internal-cost treatment remain unspe
 
 **v0.26 — Narrated Final Media Production** is **ACCEPTED**. v0.25 is its accepted historical predecessor. Founder
 acceptance covers implementation commit `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation
-commit `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
-migration 22 is absent, and no successor after v0.26 is selected.
+commit `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. At the v0.26 acceptance checkpoint, Migration 21 was latest and
+Migration 22 was absent. Phase 2 remains ACTIVE / INCOMPLETE; no successor after v0.26 was selected at that checkpoint.
 
 The implemented durable lifecycle is: exact accepted v0.25 visual-production lineage → immutable Script-owned managed
 `NarrationAsset` → immutable `FinalMediaInputSnapshot` → terminal `RenderExecution` → immutable managed
@@ -1244,7 +1250,7 @@ SHA-256 bytes. No AssetSelection is required before bootstrap; the resulting set
 character AssetSelection provenance. Generated-reference requirements remain unchanged, no current/latest/best
 reference state exists, and no provider, cost/spend, production trial or visual-canon change is introduced.
 
-Migration 22 adds only generated-narration provenance; Phase 2 remains ACTIVE / INCOMPLETE. Validation passed: Ruff,
+Later canonical Migration 22 adds only generated-narration provenance; Phase 2 remains ACTIVE / INCOMPLETE. Validation passed: Ruff,
 **117 pytest tests**, `git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files with
 `would_change=0`; the Windows Black CLI worker/process completion behavior remains a host-runtime exception. No
 successor after v0.27 is selected.
@@ -1254,10 +1260,10 @@ successor after v0.27 is selected.
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. At remote canonical `origin/main`, v0.27 — First-Run Operability Bridge is the
-latest accepted implementation milestone and migration 21 is latest. Local verified candidate source/runtime are
-through migration 23, unpushed. Production #1 has occurred as a technical/end-to-end trial but is not accepted final
-quality. The exact immediate next action is **FOUNDER REVIEW OF THE RECONCILED PROJECT STATE**.
+Phase 2 remains active and incomplete. v0.27 — First-Run Operability Bridge is the latest named accepted implementation
+milestone; current canonical source/runtime migrations are through 23. Production #1 has occurred as a
+technical/end-to-end trial but is not accepted final quality. Reconciliation is complete; the next product action
+requires a new founder + ChatGPT decision.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

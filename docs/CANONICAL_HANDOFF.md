@@ -24,7 +24,7 @@ existing GitHub roadmap and specification remain authoritative.
 ### Fresh-chat instruction
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
-chat recollection to override repository evidence. **Do not push.**
+chat recollection to override repository evidence. Do not push without explicit current founder authorization.
 
 ### Source of truth and authority
 
@@ -35,16 +35,21 @@ and final push. ChatGPT is product architect, roadmap/specification steward, ant
 task author/reviewer. Codex is the bounded local inspection, implementation, testing and validation agent. Governing
 principle: **CHANGE WITHOUT REBUILD**.
 
-### Remote canon and local candidate history
+### Current canon and pre-reconciliation history
 
-**Remote GitHub canonical baseline:** `origin/main` is
-`5220320ef81e422dec338b8410ad80b5491c0f31`. At that checkpoint, v0.27 — First-Run Operability Bridge is the latest
-remotely accepted milestone, v0.26 is its accepted predecessor, Phase 2 is ACTIVE / INCOMPLETE, Migration 21 is the
-latest remotely canonical migration, and no successor milestone is remotely selected.
+**Current GitHub canonical state:** fetched `origin/main` is
+`f44f65b46929d584125342e8528a585cfd0b2fc0`. Immediately before this documentation-synchronization commit, local
+`main` and fetched `origin/main` were synchronised at that SHA with ahead/behind `0 / 0`. Phase 2 is ACTIVE /
+INCOMPLETE; v0.27 — First-Run Operability Bridge remains the latest named accepted implementation milestone, v0.26 is
+its accepted predecessor, and no successor milestone is selected. Source and verified runtime migrations are contiguous
+through 23: Migration 22 adds generated-narration provenance and `local_system_speech` execution support; Migration 23
+adds truthful `openai_tts` support. Migration 24 is absent and unauthorized. These post-v0.27 canonical repository
+changes do not constitute an accepted v0.28 milestone.
 
-**Verified local implementation candidate state before this reconciliation:** local `HEAD` was
-`2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind `origin/main`. These are verified
-local candidate history, **not pushed and not remote canonical**:
+**Historical pre-reconciliation context:** `origin/main` was
+`5220320ef81e422dec338b8410ad80b5491c0f31`, where Migration 21 was latest. Local `HEAD` was
+`2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind, before founder review and the
+authorized push. That local candidate history comprised:
 
 1. `539624751f8de9317c01d3b32a2c5f4211459bd2` — deterministic static mascot production path.
 2. `c1b26381ddf7d92ef7d3c4b0449c7f3e6e5eb0cb` — generated narration provenance / Migration 22.
@@ -60,8 +65,8 @@ requirement; portable configuration remains `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAG
 
 `D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; migrations 1–23 are contiguous. Migration 22 adds
 generated narration provenance and immutable `NarrationGenerationExecution` records. Migration 23 adds truthful
-`openai_tts` support alongside `local_system_speech`. Migrations 22–23 are post-v0.27 local candidate work; remote
-main remains at 21. Migration 24 does not exist.
+`openai_tts` support alongside `local_system_speech`. Migrations 22–23 are canonical post-v0.27 repository history;
+they do not create a v0.28 milestone. Migration 24 does not exist.
 
 `D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, separate from the runtime. It must not be
 migrated, overwritten, moved, deleted or repurposed. Its verified SHA-256 is
@@ -100,13 +105,13 @@ narration, render or persistent final artifact.
 
 ### Hard stop and next action
 
-The project is intentionally paused for canonical reconciliation and founder review. No new product development is
-authorized: no successor milestone, v0.28, Migration 24, Production #2, mascot-rig work or visual-production
-experimentation. The exact next action is **FOUNDER REVIEW OF THE RECONCILED PROJECT STATE**. Only after that review
-may the next milestone/product action be selected. **Do not push.**
+Canonical reconciliation and its founder-authorized push are complete. No new product development is selected or
+authorized: no successor milestone, v0.28, Migration 24, Production #2, mascot-rig work, or visual-production
+experimentation. The next product design/milestone decision requires new founder + ChatGPT approval; synchronization
+does not itself authorize any product action.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
-remote/local reconciliation.
+canonical state.
 
 ### Current product identity
 
@@ -638,11 +643,12 @@ after the documented Windows CLI worker-process hang.
 
 ### v0.26 — Narrated Final Media Production
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.26 is the latest accepted Phase 2 milestone; v0.25 is its accepted
-historical predecessor. Founder acceptance covers implementation commit
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** At its acceptance, v0.26 was the latest accepted Phase 2 milestone;
+v0.25 is its accepted historical predecessor. Founder acceptance covers implementation commit
 `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
-`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE and no successor after v0.26 is selected. This does not authorize a successor milestone.
+`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. At the v0.26 acceptance checkpoint, Migration 21 was latest and
+Migration 22 was absent. Phase 2 remains ACTIVE / INCOMPLETE and no successor after v0.26 was selected at that
+checkpoint. This does not authorize a successor milestone.
 
 The bounded lifecycle is `Approve EditorialGateDecision → Gate-authorized VisualPlan → exact Script → manual managed
 NarrationAsset → FinalMediaInputSnapshot → RenderExecution → FinalMediaArtifact → delegated manual production QA /
@@ -688,8 +694,8 @@ CharacterProfile, originate from a Gate-authorized character AssetSpec, be sourc
 managed storage and match its stored SHA-256. It requires no prior AssetSelection, creates no GenerationExecution or
 provider call, and leaves generated-reference provenance intact. No current/latest/best reference state, visual QA,
 paid provider, cost/spend, production trial, UI, renderer, publishing, analytics/Learning or successor scope is
-added. Migration 22 separately adds only generated-narration provenance, Phase 2 remains ACTIVE / INCOMPLETE, and no
-successor after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
+added. Later canonical Migration 22 separately adds only generated-narration provenance; Phase 2 remains ACTIVE /
+INCOMPLETE, and no successor after v0.27 is selected. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
 in-process equivalence across 12 Python files (`would_change=0`).
 
 Future financial control retains the Cost Ledger, Revenue Ledger and Economics / Control Centre boundary;

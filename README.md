@@ -6,18 +6,22 @@ Project Atlas is the legacy project name.
 
 ## Current reconciliation state
 
-This repository has a deliberate remote/local distinction. **Remote canonical `origin/main`** is
-`5220320ef81e422dec338b8410ad80b5491c0f31`: v0.27 is the latest remotely accepted milestone, Phase 2 is
-ACTIVE / INCOMPLETE, Migration 21 is latest remotely canonical, and no successor is selected. **Local verified HEAD**
-was `2358f244b48db9cae49e0a0bc8b1ec9ce0525811` before this documentation reconciliation, four commits ahead and
-unpushed; it includes local candidate
-Migrations 22–23 and verified Production #1 runtime history. It is not remote canonical history.
+At the canonical-continuity verification on 2 September 2026, GitHub `main`, local `main`, and `origin/main` are
+synchronised at `f44f65b46929d584125342e8528a585cfd0b2fc0` (ahead/behind `0 / 0`). Phase 2 is ACTIVE / INCOMPLETE;
+v0.27 remains the latest named accepted implementation milestone, and no successor is selected. Source and verified
+runtime migrations are contiguous through 23: Migration 22 adds generated-narration provenance and
+`local_system_speech` execution support, while Migration 23 adds truthful `openai_tts` support. Migration 24 is absent
+and unauthorized. These canonical post-v0.27 repository changes do not constitute an accepted v0.28 milestone.
+
+The former remote `5220320ef81e422dec338b8410ad80b5491c0f31` and local candidate
+`2358f244b48db9cae49e0a0bc8b1ec9ce0525811` describe the historical pre-reconciliation state. The founder completed
+the reconciliation review and authorized the subsequent push; that history is retained in the canonical handoff.
 
 Production #1 completed as a technical/end-to-end trial, but failed founder production-quality acceptance. The Hazel
 baseline was technically valid but robotic/static/caption-heavy; the OpenAI Marin refinement was more natural but did
 not establish an accepted SimilarStoic voice or presentation identity. Production #2 has not started. No successor,
-v0.28, or Migration 24 is selected. Conveyor is paused for **founder review of the reconciled project state**; do not
-push this local reconciliation.
+v0.28, or Migration 24 is selected. Reconciliation is complete, but it does not authorize a new milestone, Production
+#2, or product-development work; the next product design/milestone decision requires new founder + ChatGPT approval.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -54,11 +58,10 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is **ACTIVE / INCOMPLETE**. At remote canonical `origin/main`, v0.27 is the latest accepted implementation
-milestone, v0.26 its accepted predecessor, and migrations are canonical through 21. Locally verified candidate source
-and runtime are contiguous through migration 23: 22 adds generated-narration provenance and 23 adds truthful
-`openai_tts` support alongside `local_system_speech`. Neither is pushed or remotely canonical; no successor after
-v0.27 is selected. The remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is **ACTIVE / INCOMPLETE**. v0.27 is the latest named accepted implementation milestone and v0.26 its accepted
+predecessor. Current canonical source and runtime migrations are contiguous through 23: 22 adds generated-narration
+provenance and 23 adds truthful `openai_tts` support alongside `local_system_speech`. No successor after v0.27 is
+selected, and the remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -217,8 +220,8 @@ documented Windows CLI worker-process hang.
 
 **v0.26 — Narrated Final Media Production** is **ACCEPTED**. v0.25 is its accepted historical predecessor. Founder
 acceptance covers implementation commit `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation
-commit `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Phase 2 remains ACTIVE / INCOMPLETE; migration 21 is latest,
-migration 22 is absent, and no successor after v0.26 is selected.
+commit `18c9fe5154154e90aedeff81199a94cc85f6a6dd`. At the v0.26 acceptance checkpoint, Migration 21 was latest and
+Migration 22 was absent. Phase 2 remains ACTIVE / INCOMPLETE; no successor after v0.26 was selected at that checkpoint.
 
 The bounded lifecycle extends accepted v0.25 visual inputs through managed manual Script-owned WAV/MP3/M4A
 `NarrationAsset` takes, immutable `FinalMediaInputSnapshot` freezes, synchronous terminal `RenderExecution` attempts
@@ -266,8 +269,9 @@ take is linked to its own immutable terminal `NarrationGenerationExecution`, whi
 result/error. A successful execution links one exact generated take; failed attempts and retries remain distinct
 history. There is no latest/current/best narration pointer. Migration 23 extends only the execution engine-kind check
 to admit truthful `openai_tts` provenance beside `local_system_speech`; it does not invent a new narrator architecture.
-The local runtime contains the successful OpenAI `gpt-4o-mini-tts` / `marin` take, but that voice is not accepted as a
-permanent SimilarStoic identity. These local changes are not v0.28 and do not select a successor milestone.
+The verified runtime contains the successful OpenAI `gpt-4o-mini-tts` / `marin` take, but that voice is not accepted as
+a permanent SimilarStoic identity. These canonical post-v0.27 changes are not v0.28 and do not select a successor
+milestone.
 
 ## Technology baseline
 
@@ -609,8 +613,8 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-At remote canonical `origin/main`, v0.27 — First-Run Operability Bridge is the latest accepted implementation
-checkpoint, v0.26 is its accepted historical predecessor, and migrations are canonical through 21. Local verified
-candidate source/runtime are through 23. Production #1 has occurred as a completed technical/end-to-end trial but is
-not founder-accepted production quality. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.27, v0.28, Migration
-24, or Production #2 is selected or started.
+v0.27 — First-Run Operability Bridge remains the latest named accepted implementation checkpoint, with v0.26 its
+accepted historical predecessor. Current canonical source/runtime migrations are through 23. Production #1 has occurred
+as a completed technical/end-to-end trial but is not founder-accepted production quality. Phase 2 is ACTIVE /
+INCOMPLETE. No successor after v0.27 is selected; v0.28, Migration 24, and Production #2 are neither selected nor
+started.

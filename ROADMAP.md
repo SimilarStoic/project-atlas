@@ -995,9 +995,11 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 ## Phase 2 — Content Operating Model
 
-Status: ACTIVE / INCOMPLETE. **v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone;
-**v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Migration 21 is canonical and
-latest, migration 22 is absent, and no successor after v0.27 is selected.
+Status: ACTIVE / INCOMPLETE. **v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation
+milestone; **v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Current canonical source
+and verified runtime migrations are contiguous through 23: Migration 22 adds generated-narration provenance and
+Migration 23 adds OpenAI TTS provenance/support. These post-v0.27 changes do not accept v0.28 or select a successor;
+Migration 24 is absent and unauthorized.
 
 Implement:
 - Research
@@ -1016,10 +1018,11 @@ Implement:
 ### Approved Phase 2 operating-model specification
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone; **v0.26 — Narrated Final
-Media Production** is its accepted historical predecessor. Migration 21 is canonical and latest, migration 22 is
-absent, Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no later phase is
-activated. No successor after v0.27 is selected.
+**v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation milestone; **v0.26 —
+Narrated Final Media Production** is its accepted historical predecessor. Current canonical source and verified runtime
+migrations are contiguous through 23; Migrations 22–23 are post-v0.27 narration-provenance/support changes, not a
+v0.28 acceptance. Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no later phase
+is activated. No successor after v0.27 is selected; Migration 24 is absent and unauthorized.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -1923,11 +1926,12 @@ after the documented Windows CLI worker-process hang.
 
 ### v0.26 — Narrated Final Media Production
 
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.26 is the latest accepted Phase 2 milestone; v0.25 is its accepted
-historical predecessor. Founder acceptance covers implementation commit
+**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** At its acceptance, v0.26 was the latest accepted Phase 2 milestone;
+v0.25 is its accepted historical predecessor. Founder acceptance covers implementation commit
 `deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
-`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. Migration 21 is latest, migration 22 is absent, Phase 2 remains ACTIVE /
-INCOMPLETE, and no successor after v0.26 is selected.
+`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. At the v0.26 acceptance checkpoint, Migration 21 was latest and
+Migration 22 was absent. Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.26 was selected at that
+checkpoint.
 
 v0.26 extends the accepted visual-production chain only through: `Approve EditorialGateDecision → Gate-authorized
 VisualPlan → exact Script → managed NarrationAsset → immutable FinalMediaInputSnapshot → terminal RenderExecution →
@@ -1976,11 +1980,12 @@ CharacterProfile matching, a Gate-authorized character AssetSpec, source kind `i
 matching SHA-256. It does not require an AssetSelection before bootstrap, creates no GenerationExecution or provider
 call, does not weaken the existing generated-reference path, and introduces no current/latest/best reference state.
 
-Migration 21 remains latest, migration 22 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. Validation passed:
-Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1 in-process equivalence across 12 Python files with
-`would_change=0`; the documented Windows Black CLI worker/process completion behavior remains a host-runtime
-exception. No production trial, paid provider, cost/spend, renderer, UI, publishing, analytics/Learning, queue/worker
-or successor scope is added. No successor after v0.27 is selected.
+At the v0.27 acceptance checkpoint, Migration 21 was latest and Migration 22 was absent. Later canonical Migrations
+22–23 add narration provenance/support only; they do not accept a v0.28 milestone or select a successor. Phase 2
+remains ACTIVE / INCOMPLETE. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
+in-process equivalence across 12 Python files with `would_change=0`; the documented Windows Black CLI worker/process
+completion behavior remains a host-runtime exception. No production trial, paid provider, cost/spend, renderer, UI,
+publishing, analytics/Learning, queue/worker or successor scope is added. Migration 24 is absent and unauthorized.
 
 ## Phase 3 — Technical Architecture
 
@@ -2155,7 +2160,9 @@ toward:
   v0.26 — Narrated Final Media Production is its accepted historical predecessor;
   v0.25 — Operational Visual Production Inputs is its accepted historical predecessor;
   v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
-  migration 21 is latest, migration 22 is absent, and no successor after v0.27 is selected;
+  at v0.27 acceptance, migration 21 was latest and migration 22 was absent; current canonical source/runtime
+  migrations are through 23, with Migrations 22–23 adding narration provenance/support only; no successor after
+  v0.27 is selected and Migration 24 is absent;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus

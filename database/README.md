@@ -1,5 +1,9 @@
 # Database
 
-This directory is reserved for database documentation, schema assets, and migration history. Choose the persistence technology and migration framework when the first persistence requirement is defined.
+This directory is reserved for database documentation, schema assets, and migration history. Conveyor currently uses
+governed SQLite persistence with source-defined, transactionally applied migrations in
+`src/project_atlas/persistence.py`; the canonical source and verified runtime are contiguous through Migration 23.
+Migration 24 is absent and unauthorized.
 
-Migration files belong in `database/migrations/`; do not modify migrations that have been deployed to a shared environment.
+`database/migrations/` is retained for documentation or future migration assets; the current migration implementation is
+source-defined. Do not modify migrations that have been deployed to a shared environment.
