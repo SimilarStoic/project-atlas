@@ -19,80 +19,94 @@ ChatGPT, it is explicitly identified as such a change, canonical GitHub document
 updated, the change is reviewed and accepted, and that update is committed and pushed. Until then, the
 existing GitHub roadmap and specification remain authoritative.
 
-## Current implementation state
+## Current canonical synchronisation state
 
-**v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone; **v0.26 — Narrated Final
-Media Production** is its accepted historical predecessor. Founder acceptance covers v0.27 implementation commit
-`8dd10ef793ac44c25107f02ba4b6bb5c333cf500` and pending-state documentation commit
-`cb5fb1593827e6f7f0943973e86d992ea10dccf5`. Migration 22 is the latest implemented provenance migration. Phase 2
-remains ACTIVE / INCOMPLETE and later phases remain unactivated. No successor after v0.27 is selected. v0.27
-validation passed with Black 26.3.1 in-process equivalence across 12 Python files, Ruff, 117 pytest tests and
-`git diff --check`. The first genuine SimilarStoic production trial has not yet occurred. A fresh session must verify
-the live GitHub checkpoint before acting.
-Founder acceptance for v0.22 covers implementation commit
-`346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation commit
-`3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1, Ruff, 96 pytest tests and `git diff --check` passed. A
-fresh session must verify the live GitHub checkpoint before acting.
+### Fresh-chat instruction
 
-## Persistent runtime continuity checkpoint
+Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
+chat recollection to override repository evidence. **Do not push.**
 
-The current workstation has intentionally established persistent live operating data outside Git at
-`D:\ConveyorRuntime`: `conveyor.db`, `assets\`, and `media\`. `D:\ProjectAtlas` remains source, Git, migrations,
-tests, canonical documents and reinstallable local tooling. The runtime directory and its contents must not be
-committed. `D:\ConveyorRuntime` is a current workstation convention, not a hardcoded domain requirement: the portable
-configuration interface remains `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`, `ATLAS_MEDIA_STORAGE_ROOT`,
-`ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`.
+### Source of truth and authority
 
-The current PowerShell-session configuration is:
+Use this precedence order: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source, migrations
+and tests; (4) verified persistent runtime; (5) this continuity handoff; (6) chat recollection.** Founder is final
+authority for product direction, architecture, editorial/quality acceptance, milestone selection, destructive actions
+and final push. ChatGPT is product architect, roadmap/specification steward, anti-drift reviewer and bounded Codex
+task author/reviewer. Codex is the bounded local inspection, implementation, testing and validation agent. Governing
+principle: **CHANGE WITHOUT REBUILD**.
 
-```powershell
-$env:ATLAS_DB_PATH = 'D:\ConveyorRuntime\conveyor.db'
-$env:ATLAS_ASSET_STORAGE_ROOT = 'D:\ConveyorRuntime\assets'
-$env:ATLAS_MEDIA_STORAGE_ROOT = 'D:\ConveyorRuntime\media'
-$env:ATLAS_FFMPEG_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\bin\ffmpeg.exe'
-$env:ATLAS_FFPROBE_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\bin\ffprobe.exe'
+### Remote canon and local candidate history
 
-& 'D:\ProjectAtlas\.venv\Scripts\python.exe' -m project_atlas --host 127.0.0.1 --port 8000
-```
+**Remote GitHub canonical baseline:** `origin/main` is
+`5220320ef81e422dec338b8410ad80b5491c0f31`. At that checkpoint, v0.27 — First-Run Operability Bridge is the latest
+remotely accepted milestone, v0.26 is its accepted predecessor, Phase 2 is ACTIVE / INCOMPLETE, Migration 21 is the
+latest remotely canonical migration, and no successor milestone is remotely selected.
 
-Set these values before server startup. A future machine may use different absolute paths while preserving the same
-configuration contract. The legacy default compatibility behavior remains available when variables are unset; do not
-hardcode this workstation path in source or change the existing defaults.
+**Verified local implementation candidate state before this reconciliation:** local `HEAD` was
+`2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind `origin/main`. These are verified
+local candidate history, **not pushed and not remote canonical**:
 
-At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; schema migrations 1–22 are
-complete and contiguous, with 22 latest. It survives application restart. Three failed OneCore `Microsoft Hazel`
-attempts remain durable `narration_generation_executions`; a succeeding `Microsoft Hazel Desktop` en-GB local SAPI
-execution created one generated WAV take. Genuine final-media counts are one each for `narration_assets`,
-`final_media_input_snapshots`, `render_executions` and `final_media_artifacts`: the persistent MP4 is ready for
-founder review. This first production does not select a milestone or a successor.
+1. `539624751f8de9317c01d3b32a2c5f4211459bd2` — deterministic static mascot production path.
+2. `c1b26381ddf7d92ef7d3c4b0449c7f3e6e5eb0cb` — generated narration provenance / Migration 22.
+3. `cf3b1a4cedc6ddfb5f405a8a82d9147b5f56d11e` — local narration production recovery.
+4. `2358f244b48db9cae49e0a0bc8b1ec9ce0525811` — OpenAI narration refinement / Migration 23.
 
-### Production #1 narration provenance correction
+### Persistent runtime and migration distinction
 
-Migration 22 is the narrow Production #1 unblocker for truthful local narration generation. It preserves all existing
-manual/imported NarrationAsset behavior while allowing immutable `source_kind` values `imported` and `generated`. It
-adds a dedicated immutable terminal `NarrationGenerationExecution` for each local
-`System.Speech.Synthesis.SpeechSynthesizer` attempt, recording exact Script ownership, engine identity, voice, locale,
-deterministic settings, timestamps, outcome/error and the exact generated NarrationAsset on success. Failed attempts
-and explicit retries remain independent history; no latest/current/best narration pointer exists. This is neither
-v0.28 nor a selected successor milestone. The workstation convention and portable `ATLAS_*` configuration contract
-above remain unchanged. Migration 22 is applied to the live runtime. The profileless file-based System.Speech adapter
-uses the visible healthy `Microsoft Hazel Desktop` en-GB SAPI registration; the OneCore `Microsoft Hazel` identity
-remains historical failed provenance rather than a mutable narrator selection.
+The current persistent runtime is outside Git at `D:\ConveyorRuntime`: `conveyor.db`, `assets\`, and `media\`.
+The runtime directory and its contents must not be committed. This is a workstation convention, not a hardcoded domain
+requirement; portable configuration remains `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`,
+`ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH`, and `ATLAS_FFPROBE_PATH`.
 
-`D:\ProjectAtlas\data\atlas.db` is preserved legacy/local historical state and is not the persistent database selected
-for the first genuine production run. It must not be migrated, overwritten, moved, deleted or repurposed. Its
-checkpoint verification SHA-256 is `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`; this is
-verification evidence, not a permanent product invariant.
+`D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; migrations 1–23 are contiguous. Migration 22 adds
+generated narration provenance and immutable `NarrationGenerationExecution` records. Migration 23 adds truthful
+`openai_tts` support alongside `local_system_speech`. Migrations 22–23 are post-v0.27 local candidate work; remote
+main remains at 21. Migration 24 does not exist.
 
-Post-runtime-change validation passed: Git `HEAD`, `origin/main` and remote `main` were synchronized; 117 pytest tests
-and focused media tests passed; Ruff, Black 26.3.1 (12 unchanged files) and Git diff checks passed; FFmpeg/FFprobe
-9.0.1 operated with libx264, AAC, zoompan, xfade and subtitles support; persistent startup/restart and `GET /`,
-`GET /api/demo/opportunities` and `GET /api/demo/content` returned 200; and the legacy DB remained untouched.
+`D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, separate from the runtime. It must not be
+migrated, overwritten, moved, deleted or repurposed. Its verified SHA-256 is
+`5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
 
-GitHub protects tracked project material, not live runtime data. Once real production begins, back up
-`D:\ConveyorRuntime\conveyor.db`, `D:\ConveyorRuntime\assets\`, and `D:\ConveyorRuntime\media\`, plus any
-irreplaceable original/master SimilarStoic artwork held elsewhere. `.tools/` is reinstallable and is not irreplaceable
-production data. Do not implement backup tooling unless separately authorized.
+### Production #1 exact status
+
+Production #1 **did occur** through the persistent Conveyor lifecycle. Its technical/end-to-end trial is completed;
+its production-quality acceptance is **FAILED / NOT ACCEPTED**. The Script/content was broadly acceptable, but neither
+artifact is accepted as final SimilarStoic channel quality.
+
+- Hazel baseline: `final-media-artifact-similarstoic-control-v1-hazel-desktop-v1`, SHA-256
+  `ae326e5722f5d361d6cf0b382e454639cdcca2ec7899439af0839e92cba621ef`, duration 45.168 s. It was technically valid,
+  but founder found narration robotic, visuals too static, captions too dominant and engagement weak.
+- OpenAI/Marin refinement: `final-media-artifact-similarstoic-control-v1-refined-openai-marin-v2`, SHA-256
+  `e26f386e10d4a443247f98801ed48592876ca67a4af0e180864fdc392956ec7e`, duration 34.400 s. Narration was materially
+  more natural, but not accepted as a unique permanent SimilarStoic voice; the static mascot, typography/captions and
+  scenes/backgrounds did not produce an accepted presentation identity.
+
+`Microsoft Hazel Desktop` is technically functional but founder-rejected for robotic quality. OpenAI
+`gpt-4o-mini-tts` / `marin` produced successful immutable execution
+`narration-generation-similarstoic-control-v1-openai-marin-attempt-1` and narration SHA-256
+`648c1be676cd6a68731844a9fc9676116b32f23f316ac7e6d0379af005e74486`. OpenAI custom-voice capability was inspected
+read-only and was unavailable through the configured endpoint/account at that time. No consent recording or founder
+voice recording was uploaded, and no custom voice was created.
+
+### v0.28 and Production #2
+
+The flattened mascot source was used for Production #1. Later facial-overlay, deterministic motion, layered
+reconstruction and animation-ready rig experiments were non-canonical and founder-rejected; the flattened source was
+insufficient for high-quality programmatic reconstruction. No canonical rig exists, and the static-character
+presentation is not accepted as the final SimilarStoic identity standard. No v0.28 milestone or Migration 24 exists.
+
+Production #2 has not started. There is no verified Production #2 Opportunity, gate, research, Script, VisualPlan,
+narration, render or persistent final artifact.
+
+### Hard stop and next action
+
+The project is intentionally paused for canonical reconciliation and founder review. No new product development is
+authorized: no successor milestone, v0.28, Migration 24, Production #2, mascot-rig work or visual-production
+experimentation. The exact next action is **FOUNDER REVIEW OF THE RECONCILED PROJECT STATE**. Only after that review
+may the next milestone/product action be selected. **Do not push.**
+
+Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
+remote/local reconciliation.
 
 ### Current product identity
 

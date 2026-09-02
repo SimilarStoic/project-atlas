@@ -2,53 +2,79 @@
 
 ## Last Updated
 
-1 September 2026
+2 September 2026 — local canonical-synchronisation checkpoint; **not pushed**.
 
-## Current Phase
+## Current State — Read This First
 
-**Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.27 ACCEPTED)**
+Conveyor is intentionally **paused for founder review of the reconciled project state**. No product development is
+authorized from this checkpoint: no successor milestone, v0.28, Migration 24, Production #2, mascot-rig work, or
+further visual-production experimentation is selected or authorized.
 
-## Overall Status
+The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
+migrations and tests; (4) verified persistent runtime; (5) continuity handoff; (6) chat recollection.** Founder is
+final authority for product direction, architecture, quality acceptance, milestone selection, destructive actions and
+push. ChatGPT is product architect, specification steward and anti-drift reviewer; Codex is the bounded inspection,
+implementation, testing and validation agent. Governing principle: **CHANGE WITHOUT REBUILD**.
 
-🟢 Phase 1 is formally closed. Phase 2 remains the active, incomplete roadmap phase under founder + ChatGPT
-design/implementation stewardship. v0.27 — First-Run Operability Bridge is the latest accepted implementation
-milestone; v0.26 — Narrated Final Media Production is its accepted historical predecessor. Migration 22 is the latest
-implemented provenance migration. No successor after v0.27 is selected.
-Remaining Phase 2 scope is unimplemented, later phases remain unactivated, and Atlas v0.1 through v0.7 are complete
-and pushed.
+### Remote Canon versus local verified candidate state
 
-The technical foundation is complete and the repository is safely stored on GitHub.
+- **Remote canonical baseline:** `origin/main` is `5220320ef81e422dec338b8410ad80b5491c0f31`. At that remote
+  checkpoint, v0.27 is the latest accepted milestone, Phase 2 is ACTIVE / INCOMPLETE, Migration 21 is latest remotely
+  canonical, and no successor is remotely selected.
+- **Local verified implementation candidate state before this reconciliation:** `HEAD` was
+  `2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind `origin/main`. These commits have
+  **not** been pushed and are not remote canonical history:
+  `5396247` deterministic static mascot production path; `c1b2638` generated narration provenance; `cf3b1a4` local
+  narration recovery; `2358f24` OpenAI narration refinement / Migration 23.
 
-## Persistent Runtime Checkpoint
+Historical accepted-checkpoint text below remains historical context. It does not override this current reconciliation.
 
-The current workstation keeps persistent operating data outside the repository at `D:\ConveyorRuntime`:
-`conveyor.db`, `assets\`, and `media\`. `D:\ProjectAtlas` remains the source, Git, migrations, tests, canonical
-documentation and reinstallable local-tooling workspace. This is an operational convention, not a hardcoded product
-path: portable locations continue to be supplied through `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`,
-`ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`.
+## Persistent Runtime and Production #1
 
-At this checkpoint, `D:\ConveyorRuntime\conveyor.db` passed SQLite integrity verification and has contiguous migrations
-1–22 with 22 latest. Three failed OneCore `Microsoft Hazel` attempts remain immutable
-`narration_generation_executions`; the healthy local `Microsoft Hazel Desktop` en-GB SAPI registration then produced
-one generated WAV take and the first genuine SimilarStoic production artifact. Counts are one each for
-`narration_assets`, `final_media_input_snapshots`, `render_executions` and `final_media_artifacts`. This first
-production is ready for founder review; it does not select a milestone or successor.
+The selected persistent runtime is outside Git at `D:\ConveyorRuntime\conveyor.db`, `assets\`, and `media\`.
+`D:\ConveyorRuntime` is a workstation convention, not a hardcoded requirement; the portable contract remains
+`ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`, `ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH`, and
+`ATLAS_FFPROBE_PATH`. No runtime data is tracked.
 
-`D:\ProjectAtlas\data\atlas.db` remains untouched legacy/local historical state and is not the selected persistent
-database for the first genuine production run. Its SHA-256 at this checkpoint was
-`5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
+SQLite `integrity_check` is `ok`; migrations 1–23 are contiguous. Migration 22 adds generated narration provenance
+and immutable terminal `NarrationGenerationExecution` history. Migration 23 truthfully permits `openai_tts` alongside
+`local_system_speech`. Both are local post-v0.27 candidate work; remote main remains at 21. Migration 24 does not
+exist.
 
-## Production #1 Narration Provenance Checkpoint
+**Production #1 did occur through the persistent Conveyor lifecycle.** Its technical/end-to-end trial is completed,
+but its production-quality acceptance is **FAILED / NOT ACCEPTED**. The approved Script/content was broadly
+acceptable; neither media artifact is accepted as final SimilarStoic channel quality.
 
-Migration 22 is the narrow Production #1 unblocker for truthful locally generated narration provenance. It expands
-immutable `NarrationAsset.source_kind` from imported-only to `imported` or `generated`, preserving imported/manual
-ingestion unchanged. It adds immutable terminal `NarrationGenerationExecution` records for local
-`System.Speech.Synthesis.SpeechSynthesizer` attempts: exact Script, engine and voice identity, locale, deterministic
-settings, timestamps, terminal outcome/error and, on success, one exact generated NarrationAsset. Failed attempts and
-later retries remain separate history; there is no latest/current/best narration pointer. This is not v0.28 and does
-not select a successor milestone. The live runtime has applied Migration 22. The production adapter deliberately uses
-the actual visible `Microsoft Hazel Desktop` en-GB voice: its profileless file host exposes the healthy Desktop SAPI
-registration, while the OneCore `Microsoft Hazel` identity remains failed historical provenance.
+- Hazel baseline `final-media-artifact-similarstoic-control-v1-hazel-desktop-v1`: SHA-256
+  `ae326e5722f5d361d6cf0b382e454639cdcca2ec7899439af0839e92cba621ef`, 45.168 s. It worked technically, but founder
+  found the narration robotic, visuals static, captions dominant, and engagement weak.
+- OpenAI/Marin refinement `final-media-artifact-similarstoic-control-v1-refined-openai-marin-v2`: SHA-256
+  `e26f386e10d4a443247f98801ed48592876ca67a4af0e180864fdc392956ec7e`, 34.400 s. Its narration was materially more
+  natural, but it was not accepted as a unique permanent SimilarStoic voice; the mascot remained too static and the
+  typography, captions, scenes and backgrounds were not engaging enough.
+
+`Microsoft Hazel Desktop` is technically functional but founder-rejected for robotic quality. OpenAI
+`gpt-4o-mini-tts` / `marin` created the immutable narration execution
+`narration-generation-similarstoic-control-v1-openai-marin-attempt-1` and narration SHA-256
+`648c1be676cd6a68731844a9fc9676116b32f23f316ac7e6d0379af005e74486`. Custom-voice capability was inspected
+read-only and was unavailable through the configured endpoint/account; no consent recording or founder voice was
+uploaded, and no custom voice was created.
+
+The flattened mascot was the Production #1 visual reference. Later facial-overlay, deterministic motion, layered
+reconstruction and rig experiments were founder-rejected/non-canonical: no canonical rig exists, the flattened source
+proved insufficient for high-quality programmatic reconstruction, and the static-character presentation is not the
+accepted final SimilarStoic identity standard. No v0.28 milestone is selected.
+
+Production #2 has **not** started: there is no verified opportunity, gate, research, script, visual plan, narration,
+render, or persistent artifact for it.
+
+`D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, distinct from the runtime, with verified
+SHA-256 `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
+
+## Exact Next Action
+
+**FOUNDER REVIEW OF THE RECONCILED PROJECT STATE.** Only after that review may the next milestone or product action
+be selected. Do not push this local documentation checkpoint.
 
 The bounded Atlas v0.9 Visual Style Control Foundation, v0.10 Visual Style Fidelity Refinement, v0.11
 Character Continuity Foundation, v0.12 Canonical Character Reference Foundation, v0.13 Reference-Grounded
@@ -1228,10 +1254,10 @@ successor after v0.27 is selected.
 Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
 formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
 decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.27 — First-Run Operability Bridge is the latest accepted implementation
-milestone; v0.26 — Narrated Final Media Production is its accepted historical predecessor; migration 22 is the latest
-implemented provenance migration, and no successor after v0.27 is selected. The exact immediate next action is the first
-genuine SimilarStoic production trial.
+Phase 2 remains active and incomplete. At remote canonical `origin/main`, v0.27 — First-Run Operability Bridge is the
+latest accepted implementation milestone and migration 21 is latest. Local verified candidate source/runtime are
+through migration 23, unpushed. Production #1 has occurred as a technical/end-to-end trial but is not accepted final
+quality. The exact immediate next action is **FOUNDER REVIEW OF THE RECONCILED PROJECT STATE**.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

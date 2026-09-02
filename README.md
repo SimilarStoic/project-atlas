@@ -4,11 +4,20 @@ Conveyor is a scalable Python application platform and editorial operating syste
 SimilarStoic is its outward-facing channel, editorial brand and mascot world: **SimilarStoic by Conveyor**.
 Project Atlas is the legacy project name.
 
-Conveyor is a local, dependency-free editorial control interface and durable SQLite foundation for SimilarStoic.
-v0.27 — First-Run Operability Bridge is the latest accepted implementation milestone; v0.26 — Narrated Final Media
-Production is its accepted historical predecessor. Migration 22 is the latest implemented provenance migration, and
-Phase 2 remains ACTIVE / INCOMPLETE. No successor after v0.27 is selected.
-Later workflow, research automation and production systems remain deferred.
+## Current reconciliation state
+
+This repository has a deliberate remote/local distinction. **Remote canonical `origin/main`** is
+`5220320ef81e422dec338b8410ad80b5491c0f31`: v0.27 is the latest remotely accepted milestone, Phase 2 is
+ACTIVE / INCOMPLETE, Migration 21 is latest remotely canonical, and no successor is selected. **Local verified HEAD**
+was `2358f244b48db9cae49e0a0bc8b1ec9ce0525811` before this documentation reconciliation, four commits ahead and
+unpushed; it includes local candidate
+Migrations 22–23 and verified Production #1 runtime history. It is not remote canonical history.
+
+Production #1 completed as a technical/end-to-end trial, but failed founder production-quality acceptance. The Hazel
+baseline was technically valid but robotic/static/caption-heavy; the OpenAI Marin refinement was more natural but did
+not establish an accepted SimilarStoic voice or presentation identity. Production #2 has not started. No successor,
+v0.28, or Migration 24 is selected. Conveyor is paused for **founder review of the reconciled project state**; do not
+push this local reconciliation.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default
@@ -45,10 +54,11 @@ publication, platform performance, analytics,
 revenue/economics, learning and future content decisions. Implementation milestones remain subordinate to the
 canonical roadmap and must not redefine it.
 
-Phase 2 is now **ACTIVE / INCOMPLETE**. v0.27 First-Run Operability Bridge is the latest accepted implementation
-milestone; v0.26 Narrated Final Media Production is its accepted historical predecessor. Migrations 1–22 are
-contiguous, with migration 22 the latest implemented provenance migration. No successor after v0.27 is selected. The
-remaining Phase 2 scope is unimplemented. Its approved
+Phase 2 is **ACTIVE / INCOMPLETE**. At remote canonical `origin/main`, v0.27 is the latest accepted implementation
+milestone, v0.26 its accepted predecessor, and migrations are canonical through 21. Locally verified candidate source
+and runtime are contiguous through migration 23: 22 adds generated-narration provenance and 23 adds truthful
+`openai_tts` support alongside `local_system_speech`. Neither is pushed or remotely canonical; no successor after
+v0.27 is selected. The remaining Phase 2 scope is unimplemented. Its approved
 operating-model direction keeps sparse version-specific founder gates (Idea, Editorial and Learning) distinct from rich machine readiness
 evidence. The editorial chain should
 progress automatically only when explicit quality, evidence and provenance requirements pass; exceptions,
@@ -254,8 +264,10 @@ Migration 22 is the narrow Production #1 unblocker for local narration generatio
 take is linked to its own immutable terminal `NarrationGenerationExecution`, which records the exact Script, local
 `System.Speech.Synthesis.SpeechSynthesizer` engine, voice, locale, deterministic settings, timestamps and terminal
 result/error. A successful execution links one exact generated take; failed attempts and retries remain distinct
-history. There is no latest/current/best narration pointer. This provenance correction is not v0.28 and does not
-select a successor milestone.
+history. There is no latest/current/best narration pointer. Migration 23 extends only the execution engine-kind check
+to admit truthful `openai_tts` provenance beside `local_system_speech`; it does not invent a new narrator architecture.
+The local runtime contains the successful OpenAI `gpt-4o-mini-tts` / `marin` take, but that voice is not accepted as a
+permanent SimilarStoic identity. These local changes are not v0.28 and do not select a successor milestone.
 
 ## Technology baseline
 
@@ -320,8 +332,7 @@ it does not call AI services, research sources, publishing platforms, or analyti
 ## Persistent-runtime pre-flight
 
 The default compatibility paths remain `data/atlas.db`, `data/assets` and `data/media`, but the current workstation
-uses a persistent runtime outside the repository for the first genuine production run. Set the configuration before
-starting Conveyor:
+uses a persistent runtime outside the repository. Set the configuration before starting Conveyor:
 
 ```powershell
 $env:ATLAS_DB_PATH = 'D:\ConveyorRuntime\conveyor.db'
@@ -335,8 +346,8 @@ $env:ATLAS_FFPROBE_PATH = 'D:\ProjectAtlas\.tools\ffmpeg-9.0.1-essentials_build\
 
 `D:\ConveyorRuntime` is a current workstation convention, not a hardcoded requirement; another machine can use its
 own absolute locations through the same `ATLAS_*` contract. These PowerShell environment variables are session-scoped.
-Do not commit the runtime directory or its contents. Back up its database, managed assets and media once real
-production begins. `.tools/` is reinstallable local tooling, not irreplaceable production data.
+Do not commit the runtime directory or its contents. Back up its database, managed assets and media. `.tools/` is
+reinstallable local tooling, not irreplaceable production data.
 
 ## Local persistence
 
@@ -598,7 +609,8 @@ handoff records the formal closure of **Phase 1 — Product & Business Definitio
 production-ready SimilarStoic brand identity is **APPROVED**, while visual acceptance remains **PASS WITH
 DEFERRED VISUAL REFINEMENT**. The residual AI-clean/overly professional finish is non-blocking and preserves
 the approved hamster identity, colours, sling-bag treatment, proportions and reference continuity.
-v0.27 — First-Run Operability Bridge is the latest accepted implementation checkpoint; v0.26 — Narrated Final Media
-Production is its accepted historical predecessor. Migrations 1–22 are contiguous, with migration 22 the latest
-implemented provenance migration. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.27 is selected, and later Conveyor systems
-remain out of scope. The first genuine SimilarStoic production trial has not yet occurred.
+At remote canonical `origin/main`, v0.27 — First-Run Operability Bridge is the latest accepted implementation
+checkpoint, v0.26 is its accepted historical predecessor, and migrations are canonical through 21. Local verified
+candidate source/runtime are through 23. Production #1 has occurred as a completed technical/end-to-end trial but is
+not founder-accepted production quality. Phase 2 is ACTIVE / INCOMPLETE. No successor after v0.27, v0.28, Migration
+24, or Production #2 is selected or started.
