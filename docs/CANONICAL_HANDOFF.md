@@ -23,13 +23,19 @@ existing GitHub roadmap and specification remain authoritative.
 
 ### Fresh-chat instruction
 
+For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
+and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
+actual alignment, Cedar's relative preference/rejection, image-method failure, Leonardo boundaries, qualified spend
+and reference-set provenance. The local rejected implementation is excluded from this documentation candidate.
+
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.
 
 ### Source of truth and authority
 
 Use this precedence order: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source, migrations
-and tests; (4) verified persistent runtime; (5) this continuity handoff; (6) chat recollection.** Founder is final
+and tests; (4) verified persistent runtime; (5) verified local experimental/review evidence;
+(6) this continuity handoff; (7) chat recollection.** Founder is final
 authority for product direction, architecture, editorial/quality acceptance, milestone selection, destructive actions
 and final push. ChatGPT is product architect, roadmap/specification steward, anti-drift reviewer and bounded Codex
 task author/reviewer. Codex is the bounded local inspection, implementation, testing and validation agent. Governing
@@ -37,9 +43,12 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Current GitHub canonical state:** fetched `origin/main` is
-`f44f65b46929d584125342e8528a585cfd0b2fc0`. Immediately before this documentation-synchronization commit, local
-`main` and fetched `origin/main` were synchronised at that SHA with ahead/behind `0 / 0`. Phase 2 is ACTIVE /
+**Base before the 8 September continuity candidate:** freshly fetched `origin/main` is
+`8a81175c857466161d687b54eeb9a1d7d839b96d`. Primary local `main` remains at founder-rejected experimental
+`ad52ab38ad32f97b933099ef98a32dc8fd268662`, ahead/behind `1 / 0`. Do not push that primary main. The separate
+documentation candidate starts from `8a81175` and must not descend from `ad52ab3`. The earlier 2 September
+synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is historical context.
+Phase 2 is ACTIVE /
 INCOMPLETE; v0.27 — First-Run Operability Bridge remains the latest named accepted implementation milestone, v0.26 is
 its accepted predecessor, and no successor milestone is selected. Source and verified runtime migrations are contiguous
 through 23: Migration 22 adds generated-narration provenance and `local_system_speech` execution support; Migration 23
@@ -76,7 +85,7 @@ migrated, overwritten, moved, deleted or repurposed. Its verified SHA-256 is
 
 Production #1 **did occur** through the persistent Conveyor lifecycle. Its technical/end-to-end trial is completed;
 its production-quality acceptance is **FAILED / NOT ACCEPTED**. The Script/content was broadly acceptable, but neither
-artifact is accepted as final SimilarStoic channel quality.
+original artifact nor the later presentation proof is accepted as final SimilarStoic channel quality.
 
 - Hazel baseline: `final-media-artifact-similarstoic-control-v1-hazel-desktop-v1`, SHA-256
   `ae326e5722f5d361d6cf0b382e454639cdcca2ec7899439af0839e92cba621ef`, duration 45.168 s. It was technically valid,
@@ -105,10 +114,14 @@ narration, render or persistent final artifact.
 
 ### Hard stop and next action
 
-Canonical reconciliation and its founder-authorized push are complete. No new product development is selected or
-authorized: no successor milestone, v0.28, Migration 24, Production #2, mascot-rig work, or visual-production
-experimentation. The next product design/milestone decision requires new founder + ChatGPT approval; synchronization
-does not itself authorize any product action.
+The current bounded task is preservation and a documentation candidate only; final push requires founder approval.
+The unnumbered Production #1-derived presentation proof was technically successful but founder-rejected, not pending
+review. Its static mascot/geometric scenes and scene-clock captions are not accepted presentation architecture.
+
+After this task and review, the next authorized visual experiment remains one serious Leonardo storm-resistance image
+and at most one targeted refinement, two outputs maximum, then stop for founder + ChatGPT review. It has not run.
+Its ignored brief must first be reconciled to Core v3; provider controls/cost require verification. No full video,
+Production #2, successor milestone, v0.28, Migration 24, rig or architecture expansion is authorized by synchronization.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.
@@ -139,7 +152,10 @@ DEFERRED VISUAL REFINEMENT**: residual AI-clean/overly professional finish is no
 alter the approved hamster identity, colours, sling-bag treatment, proportions or CharacterReferenceSet
 continuity.
 
-SimilarStoic Core v3 remains the current accepted visual baseline, and CharacterReferenceSet v1 remains unchanged.
+SimilarStoic Core v3 remains the current accepted visual baseline. The historical CharacterReferenceSet v1 remains
+unchanged within its original database history; the same ID has different members in the persistent runtime. See the
+[database-qualified provenance finding](QUALITY_CYCLE_20260902.md#reference-set-provenance-qualification); do not
+rewrite either history or treat the set ID alone as globally interchangeable.
 **v0.27 — First-Run Operability Bridge** is the latest accepted implementation milestone; **v0.26 — Narrated Final
 Media Production** is its accepted historical predecessor. **Phase 2 — Content Operating Model is the current ACTIVE /
 INCOMPLETE roadmap phase, with accepted v0.15 through v0.27 implementations and no selected successor after v0.27**,

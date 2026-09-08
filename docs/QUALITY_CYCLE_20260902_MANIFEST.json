@@ -1,0 +1,392 @@
+{
+  "schema_version": 1,
+  "verified_date": "2026-09-08",
+  "purpose": "Nonsecret correlation manifest; binaries remain outside Git. Local archives are not a remote backup.",
+  "canonical_base": "8a81175c857466161d687b54eeb9a1d7d839b96d",
+  "rejected_experimental_commit": "ad52ab38ad32f97b933099ef98a32dc8fd268662",
+  "archive_root": "D:\\ConveyorRuntime\\continuity-archives\\20260908",
+  "preservation": {
+    "git_bundle": {
+      "path": "D:\\ConveyorRuntime\\continuity-archives\\20260908\\project-atlas-ad52ab3.bundle",
+      "sha256": "ec2d7ed22c1b144256dd715ecba23e0416846bb2222812cc9447fbab47cdc8ad",
+      "bytes": 174982030,
+      "verified": true
+    },
+    "quality_cycle": {
+      "path": "D:\\ConveyorRuntime\\continuity-archives\\20260908\\quality-cycle-20260902.zip",
+      "sha256": "c8fcac1ae97cb4ef38df53f232fc979fdd75106f9d4376c5f2029270856738c4",
+      "archive_bytes": 88913243,
+      "source_file_count": 48,
+      "source_bytes": 118190653,
+      "verified_all_members": true
+    },
+    "rejected_prototypes": {
+      "path": "D:\\ConveyorRuntime\\continuity-archives\\20260908\\rejected-v028-prototypes.zip",
+      "sha256": "38b6099850ebd76de2d4eeb5421067c1afbc1cfabcd301d92c1b9badfa0ca13c",
+      "archive_bytes": 4607,
+      "source_file_count": 2,
+      "source_bytes": 8909,
+      "verified_all_members": true
+    }
+  },
+  "quality_cycle": {
+    "source_root": "D:\\ProjectAtlas\\work\\similarstoic-quality-cycle-20260902",
+    "source_status": "ignored; unchanged; copied into verified archive",
+    "file_count": 48,
+    "total_source_bytes": 118190653,
+    "files": [
+      {
+        "path": "alignment/alignment_qa.json",
+        "bytes": 1167,
+        "sha256": "7022b90dfaa895729fbb5299b1bc445cca6e74100dc6384081cc373ce371f4e1",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "alignment/alignment_request_metadata.json",
+        "bytes": 945,
+        "sha256": "8f3144d640e935064ceb549e38c94b2e18abb2be510d48ed7d447724661c96c9",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "alignment/alignment_review_example.png",
+        "bytes": 116891,
+        "sha256": "0810ad97cef6d2b7d7e72eb7c98cf1eed5a0782dfddc232318b14269972fdda4",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "alignment/canonical_script_snapshot.txt",
+        "bytes": 575,
+        "sha256": "e249b27f7c31800db7e65b05cfbed06481d899acc4d8ce70e391869337433d29",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "alignment/caption_cues_exact_derivation.json",
+        "bytes": 2562,
+        "sha256": "793e18ed598f70380d1698bbc62d8b29d2e2fbb177011301b1fb59e33c7ba9e9",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "alignment/production1_marin_source.wav",
+        "bytes": 1651244,
+        "sha256": "648c1be676cd6a68731844a9fc9676116b32f23f316ac7e6d0379af005e74486",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "alignment/whisper1_verbose_raw.json",
+        "bytes": 8888,
+        "sha256": "c514c493c8fd1de484ba5abcacb9f554072912da1a49f899add49bc1e52436c4",
+        "category": "alignment",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "founder_voice_review/REVIEW.md",
+        "bytes": 594,
+        "sha256": "0de8fcbf2295381829497ab04966fffa1a49b9226e083ff3741c0270eccaeb4e",
+        "category": "founder_voice_review",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "founder_voice_review/Voice A.wav",
+        "bytes": 5673766,
+        "sha256": "6b31400be579e7a608b62cc68e69849a0b61b4d3877c9b60f482e0a93eccf53e",
+        "category": "founder_voice_review",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "founder_voice_review/Voice B.wav",
+        "bytes": 7331222,
+        "sha256": "53f7a1e793ab7a3fc39e994b41aa9154da5e299fc02070c593da416fc2b2f2f1",
+        "category": "founder_voice_review",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "founder_voice_review/Voice C.wav",
+        "bytes": 7453862,
+        "sha256": "58dacde008d19a4051c6c8d546b0b5b690372140f11b76a83273b39841becb3c",
+        "category": "founder_voice_review",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "founder_voice_review/Voice D.wav",
+        "bytes": 7716006,
+        "sha256": "f3822c1ebfc962a12ba4bc7d64d0d9c3994e69b56638e98a994b9b6485349d9a",
+        "category": "founder_voice_review",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "founder_voice_review/Voice E.wav",
+        "bytes": 7515302,
+        "sha256": "788104080c5cbaf0b555c8423572e4b84baddc431ee4c8a06d3d081bf55311e6",
+        "category": "founder_voice_review",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "ledger/spend_ledger_before_visual.json",
+        "bytes": 1027,
+        "sha256": "131551a5d70df4e262411a588e6b13f7f5fc8974c89512fa3ee823c526877593",
+        "category": "ledger",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "ledger/spend_ledger_final.json",
+        "bytes": 1417,
+        "sha256": "ed129a752bd5b79bfbae553f711cccd542d34742c78e3ad59579739439fa4583",
+        "category": "ledger",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "leonardo_storm_trial_brief.md",
+        "bytes": 1634,
+        "sha256": "67b0d75765ed9a02b6142ca6006e5877366700764a4f7a9f6e913ef99248d4e1",
+        "category": "review-and-provider-planning",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "provider_research.md",
+        "bytes": 4383,
+        "sha256": "058dc9b05faa37750c7293b35ebcd6102524cd81124b257d5b0c35f3ac999f9b",
+        "category": "review-and-provider-planning",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "QUALITY_CYCLE_REVIEW.md",
+        "bytes": 1002,
+        "sha256": "4b89e5906b1b7ad958cdd0d8cbae6439a9beb7f0ed30b3c4121c33653c45fedf",
+        "category": "review-and-provider-planning",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-a-storm-v1.png",
+        "bytes": 2960449,
+        "sha256": "a90ac5725b73323525ebc09858fff0281f4861026b3bf088cc2c56c240880f09",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-a-storm-v1_raw.json",
+        "bytes": 3947717,
+        "sha256": "75ec353d3d38e9d10a9d6b5d29a0fcbc995aa0b64257238a816c9a2a94f972ff",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-a-storm-v2.png",
+        "bytes": 3079302,
+        "sha256": "fe6f0804c1f7e09c08ef9401d4f1cf1717efe7b357f46d021c462be58ae77143",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-a-storm-v2_raw.json",
+        "bytes": 4106184,
+        "sha256": "0c9b3306e76392a9add4c44512f8f91c8099d8f0a1d688bbb07eb01cf803dba9",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-b-agency-v1.png",
+        "bytes": 2759051,
+        "sha256": "021df81b610884a2a4642ef022d25e02c67562d4eab95100d4770933aff91fe0",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-b-agency-v1_raw.json",
+        "bytes": 3679184,
+        "sha256": "37a8b6deeb527fae207afc3472ee08146a11f5f8c0750f296d3719498c0bed2c",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-c-release-v1.png",
+        "bytes": 2599682,
+        "sha256": "c87166235070c68b8c4aaf7b90a691866bd34b495faa89cf969595598aa059f9",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-c-release-v1_raw.json",
+        "bytes": 3466692,
+        "sha256": "b17676f933d55e073e72052c4115221e368684dfe1b56c095ef57a401b5dd542",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-c-release-v2-corrected-identity.png",
+        "bytes": 1628843,
+        "sha256": "75ad27059e5f60892281219a565edd1736e93b4316673ae860ff1ec14daf7bee",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/generations/beat-c-release-v2-corrected-identity_raw.json",
+        "bytes": 2172239,
+        "sha256": "6bb8f62eb4d0cf9fe429068c269a240ae36d821057ff9066bfc51bd083ce9b67",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/references/full_canonical_grounding_board.png",
+        "bytes": 1617002,
+        "sha256": "92e6a7c45704de0689eeaa7381b79cec0ebd5a364579f6413e6e7a1607039d9a",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/references/identity_expression_spec.png",
+        "bytes": 1717244,
+        "sha256": "eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/references/identity_pose_sheet.png",
+        "bytes": 1105455,
+        "sha256": "d3acb16af30b9a5aca29e92e2e8f19d7b5a21df4b8e572de054756ca23321cc4",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/references/identity_primary_presenting.png",
+        "bytes": 922763,
+        "sha256": "11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/visual_generation_records.json",
+        "bytes": 6223,
+        "sha256": "28a16353990faabf3e3eda7f9780087b4d041941ad75dd9dbb356ece59c51617",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/visual_quality_contact_sheet_all.png",
+        "bytes": 2446023,
+        "sha256": "f8b0e3d8d0ae5bf13f72a45487881414b15a9fb767a6f150bb7064ada7d87e2e",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "visual/visual_three_beat_contact_sheet.png",
+        "bytes": 2334565,
+        "sha256": "d2b8f0ec0c1dba8a450300805767cdb502d755e0f19245091d5b99e922272047",
+        "category": "visual",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-A-raw.wav",
+        "bytes": 709252,
+        "sha256": "90ceb113097b8f38cd37e22adf947e721aa7806d763ce7e5e9f2f6beba2d9278",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-A.wav",
+        "bytes": 5673766,
+        "sha256": "6b31400be579e7a608b62cc68e69849a0b61b4d3877c9b60f482e0a93eccf53e",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-B-raw.wav",
+        "bytes": 916434,
+        "sha256": "aa5526177d181d95798e3b6b3aea878e6afb8efe433e6c6c117d93f267510256",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-B.wav",
+        "bytes": 7331222,
+        "sha256": "53f7a1e793ab7a3fc39e994b41aa9154da5e299fc02070c593da416fc2b2f2f1",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-C-raw.wav",
+        "bytes": 931764,
+        "sha256": "eb7dfef076a447a6fd07b729e92e9a056a5d45ec7fc102f845e43d6115d33526",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-C.wav",
+        "bytes": 7453862,
+        "sha256": "58dacde008d19a4051c6c8d546b0b5b690372140f11b76a83273b39841becb3c",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-D-raw.wav",
+        "bytes": 964532,
+        "sha256": "8d5c0514d3af66a3e2ebd1c026983d937a176cce06352011be2d3f94ff14e808",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-D.wav",
+        "bytes": 7716006,
+        "sha256": "f3822c1ebfc962a12ba4bc7d64d0d9c3994e69b56638e98a994b9b6485349d9a",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-E-raw.wav",
+        "bytes": 939444,
+        "sha256": "1557940c91ff7a98a45bb638aff8e9161dac683e74f81f77e176f1f83465e7fd",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/blind-E.wav",
+        "bytes": 7515302,
+        "sha256": "788104080c5cbaf0b555c8423572e4b84baddc431ee4c8a06d3d081bf55311e6",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/BLIND_REVIEW.md",
+        "bytes": 731,
+        "sha256": "d6ebd664d1867559280bb7d657e68e296710a3b3b097cf458db13781b8f4384b",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/internal_treatment_map.json",
+        "bytes": 153,
+        "sha256": "329016cffe2873be8586cb7f4ca98ac1ddacb0da89e1b02f742cda8369dc39e3",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      },
+      {
+        "path": "voice/voice_technical_record.json",
+        "bytes": 7080,
+        "sha256": "62047c401fe6a2de0a181f5faec1991323b0030cf597a473e9b44915635cadea",
+        "category": "voice",
+        "storage": "ignored source and external local archive; not tracked"
+      }
+    ]
+  },
+  "rejected_prototypes": {
+    "source_root": "D:\\ProjectAtlas",
+    "source_status": "untracked rejected evidence; never executed or staged in this task",
+    "files": [
+      {
+        "path": "scripts/render_v028_identity_prototype.py",
+        "bytes": 4506,
+        "sha256": "58f75d3f33f521c3a111eefccf05a37acbabdb5c7b08d672ae983764b1e04f4c"
+      },
+      {
+        "path": "scripts/render_v028_layered_reconstruction.ps1",
+        "bytes": 4403,
+        "sha256": "43bb5dbeb28f36844b4bd6bbd1bf9eb7e4aeb782dad8fcccc5b76d920d6b796c"
+      }
+    ]
+  }
+}
