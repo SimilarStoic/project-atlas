@@ -39,7 +39,10 @@
       "tracked_path": "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png",
       "source_path": "D:\\ProjectAtlas\\work\\similarstoic-isolated-pose-20260908\\founder-review\\candidate-2.png",
       "bytes": 1256910,
-      "dimensions": [1024, 1536],
+      "dimensions": [
+        1024,
+        1536
+      ],
       "format": "PNG",
       "mode": "RGB",
       "has_alpha": false,
@@ -74,7 +77,10 @@
       "tracked_path": "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
       "source_path": "D:\\ProjectAtlas\\work\\similarstoic-environment-candidates-3-4-20260908\\founder-review\\environment-candidate-4.png",
       "bytes": 1510581,
-      "dimensions": [1024, 1536],
+      "dimensions": [
+        1024,
+        1536
+      ],
       "format": "PNG",
       "mode": "RGB",
       "has_alpha": false,
@@ -109,7 +115,10 @@
       "tracked_path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
       "source_path": "D:\\ProjectAtlas\\work\\similarstoic-static-refinement-20260908\\founder-review\\composition-refined.png",
       "bytes": 1232265,
-      "dimensions": [1024, 1536],
+      "dimensions": [
+        1024,
+        1536
+      ],
       "format": "PNG",
       "mode": "RGB",
       "has_alpha": false,
@@ -576,6 +585,109 @@
       "conservative_maximum_exposure_usd": 1.0,
       "remaining_authorization_usd": 9.0,
       "vertical_refinement_and_canonicalization_spend_usd": 0.0,
+      "top_up_required": false,
+      "account_funding_treated_as_spend": false
+    }
+  },
+  "abstract_scene_canonicalization": {
+    "accepted_date": "2026-09-08",
+    "canonical_base": "5879cbadef9e51964c7f4d1241a061663560a0e7",
+    "verdict": "ABSTRACT SCENE PASS",
+    "selected_composition": "Composition Variant 1 — balanced",
+    "bounded_conclusion": "SimilarStoic has a founder-approved third static capability: abstract explanatory metaphor without text-dependent meaning.",
+    "capabilities": [
+      "outdoor / high-action physical scene",
+      "calm indoor / everyday explanation scene",
+      "abstract / explanatory metaphor scene"
+    ],
+    "universal_repeatability_claimed": false,
+    "approved_assets": [
+      {
+        "role": "approved secondary acting-pose reference",
+        "tracked_path": "assets/visual-references/core-mascot/poses/core-v3-things-in-hand-acting-pose-v1.png",
+        "source_path": "D:\\ProjectAtlas\\work\\similarstoic-abstract-explanation-20260908\\founder-review\\character-candidate-1.png",
+        "sha256": "b61fe5512df30e50ebc421b23069eafb350016e8995a0afba0bb40c33757cc5e",
+        "bytes_copied_exactly": true,
+        "provider": "OpenAI",
+        "model": "gpt-image-2"
+      },
+      {
+        "role": "approved abstract explanation environment example",
+        "tracked_path": "assets/visual-references/environments/examples/similarstoic-abstract-reach-boundary-scene-v1.png",
+        "source_path": "D:\\ProjectAtlas\\work\\similarstoic-abstract-explanation-20260908\\founder-review\\environment-candidate-1.png",
+        "sha256": "c30a8e66321fe9b725d6646ca1639fc6b01e87da3035092a0765067eaf2458b5",
+        "bytes_copied_exactly": true,
+        "provider": "OpenAI",
+        "model": "gpt-image-2"
+      },
+      {
+        "role": "approved composition-grammar example #3",
+        "tracked_path": "assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png",
+        "source_path": "D:\\ProjectAtlas\\work\\similarstoic-abstract-explanation-20260908\\founder-review\\static-composition-variant-1.png",
+        "sha256": "a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427",
+        "bytes_copied_exactly": true,
+        "dimensions": [
+          1024,
+          1536
+        ]
+      }
+    ],
+    "deterministic_composition": {
+      "canvas_dimensions": [
+        1024,
+        1536
+      ],
+      "environment_dimensions": [
+        1024,
+        1536
+      ],
+      "environment_position": [
+        0,
+        0
+      ],
+      "character_generated_source_dimensions": [
+        1024,
+        1536
+      ],
+      "character_alpha_source_bbox": [
+        59,
+        344,
+        921,
+        1213
+      ],
+      "character_working_source_dimensions": [
+        862,
+        869
+      ],
+      "character_dimensions": [
+        630,
+        635
+      ],
+      "character_position": [
+        105,
+        720
+      ],
+      "character_bottom_y": 1355,
+      "grounding": "Existing character contact strokes and environment marks retained; no added shadow, object, caption, or typography.",
+      "provider_calls": 0,
+      "provider_spend_usd": 0.0
+    },
+    "authority_boundaries": {
+      "primary_identity_unchanged": true,
+      "default_scene_language_unchanged": true,
+      "composition_grammar_v1_unchanged": true,
+      "production_2": false,
+      "migration_24": false,
+      "new_architecture_layer": false
+    },
+    "spend": {
+      "quality_development_envelope_usd": 10.0,
+      "opening_conservative_exposure_usd": 1.0,
+      "abstract_scene_incremental_conservative_exposure_usd": 0.5,
+      "total_conservative_exposure_usd": 1.5,
+      "remaining_authorization_usd": 8.5,
+      "provider_reported_actual_cost_usd": null,
+      "canonicalization_spend_usd": 0.0,
       "top_up_required": false,
       "account_funding_treated_as_spend": false
     }

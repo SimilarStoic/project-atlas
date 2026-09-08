@@ -968,6 +968,7 @@ Core-mascot generation uses this hierarchy:
 | CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` | 1536x1024 | `eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46` | Approved supplementary core-only specification/identity grounding; not preferred as sole grounding input. |
 | APPROVED SECONDARY ACTING-POSE REFERENCE | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | Core v3 umbrella-resistance pose/performance grounding used alongside a canonical identity reference; never the primary identity authority. |
 | APPROVED SECONDARY ACTING-POSE REFERENCE | `assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png` | 1024x1536 | `16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf` | Calm/focused sorting and decision behavior with Core v3 identity and sling-bag continuity; never the primary identity authority. |
+| APPROVED SECONDARY ACTING-POSE REFERENCE | `assets/visual-references/core-mascot/poses/core-v3-things-in-hand-acting-pose-v1.png` | 1024x1536 | `b61fe5512df30e50ebc421b23069eafb350016e8995a0afba0bb40c33757cc5e` | Calm selective effort on reachable tokens for abstract explanation; never the primary identity authority. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png` | 1448x1086 | `27ff66e34a8649a22c649a5593c93d0532cd176cf69dafb61bc19a1d2e1eb85a` | Supplementary flowchart/explaining pose, expression, composition and context. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` | 1448x1086 | `24dc9fd6367d6f7c4f9731b12bd1b7e7376edf7870ecee0a8ac066699363ff65` | Supplementary growth-chart/surprised-expression pose, composition and context. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` | 1448x1086 | `95ad2c8a75b7ce798eb315d1c84d34571bb1a44ace1922b141bdb2173fdfae4f` | Supplementary reading/thinking pose, expression, composition and context. |
@@ -988,6 +989,12 @@ The approved indoor environment example is
 `45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a`. It demonstrates a successful calm indoor
 application without replacing the Default Scene Language authority.
 
+The approved abstract environment example is
+`assets/visual-references/environments/examples/similarstoic-abstract-reach-boundary-scene-v1.png`, 1024x1536,
+SHA-256 `c30a8e66321fe9b725d6646ca1639fc6b01e87da3035092a0765067eaf2458b5`. It demonstrates a sparse conceptual
+space with reachable and out-of-reach working areas without replacing the Default Scene Language authority or becoming
+a mandatory diagram template.
+
 The separate approved composition-grammar authority is
 `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`, 1024x1536, SHA-256
 `c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8`. It demonstrates coherent assembly of
@@ -1000,6 +1007,13 @@ The second approved composition example is
 **Static visual-production method demonstrated successfully across two materially different scene types:** outdoor /
 high-action storm and calm indoor / explanatory sorting. This does not establish universal repeatability or create a
 new architecture layer.
+
+The third approved composition example is
+`assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png`,
+1024x1536, SHA-256 `a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427`. Together with the approved
+`core-v3-things-in-hand-acting-pose-v1.png`, it establishes a third bounded capability: abstract explanatory metaphor
+without text-dependent meaning. It does not establish universal repeatability, mandate this layout, or create a new
+architecture layer.
 
 Supporting-character references must live in separate per-character directories. Identity references from different
 recurring characters must never be pooled. A recurring supporting character must receive its own isolated approved

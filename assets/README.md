@@ -30,6 +30,7 @@ Acting / pose references demonstrate approved physical performance and pose defo
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Core mascot | `core-v3-umbrella-resistance-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | APPROVED SECONDARY ACTING-POSE REFERENCE | Core v3 umbrella-resistance acting pose v1; secondary pose/performance grounding alongside a canonical identity reference. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or evidence that full-scene generation passed. |
 | Core mascot | `core-v3-sorting-decisions-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png` | 1024x1536 | `16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf` | APPROVED SECONDARY ACTING-POSE REFERENCE | Calm/focused sorting and decision behavior with successful Core v3 identity and sling-bag continuity. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or mandatory sorting props. |
+| Core mascot | `core-v3-things-in-hand-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-things-in-hand-acting-pose-v1.png` | 1024x1536 | `b61fe5512df30e50ebc421b23069eafb350016e8995a0afba0bb40c33757cc5e` | APPROVED SECONDARY ACTING-POSE REFERENCE | Calm selective effort on a small set of reachable tokens for abstract explanatory metaphor. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or mandatory token props. |
 
 ### Scene / expression exemplars
 
@@ -57,6 +58,7 @@ Environment examples demonstrate successful applications of the Default Scene La
 | Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SimilarStoic indoor scenes | `similarstoic-calm-indoor-sorting-scene-v1.png` | `assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png` | 1536x1024 | `45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a` | APPROVED INDOOR SCENE / ENVIRONMENT EXAMPLE | Calm indoor application with sparse room cues and deliberate off-white space. | Replacing the Default Scene Language authority, mandatory indoor layout, or reusable universal background. |
+| SimilarStoic abstract / explanation scenes | `similarstoic-abstract-reach-boundary-scene-v1.png` | `assets/visual-references/environments/examples/similarstoic-abstract-reach-boundary-scene-v1.png` | 1024x1536 | `c30a8e66321fe9b725d6646ca1639fc6b01e87da3035092a0765067eaf2458b5` | APPROVED ABSTRACT EXPLANATION ENVIRONMENT EXAMPLE | Sparse conceptual space separating a reachable working area from matching objects beyond a visible boundary, without labels. | Replacing the Default Scene Language authority, universal background, corporate diagram template, or mandatory boundary layout. |
 
 ### Approved composition-grammar references
 
@@ -73,6 +75,7 @@ style.
 | Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SimilarStoic static scenes | `similarstoic-static-composition-example-2-indoor-sorting-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png` | 1024x1536 | `dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #2 | Calm indoor/explanatory application of the existing composition grammar. | Replacing the grammar authority, universal repeatability claim, mandatory sorting layout, or runtime Asset registration. |
+| SimilarStoic static scenes | `similarstoic-static-composition-example-3-things-in-hand-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png` | 1024x1536 | `a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #3 | Abstract explanatory metaphor in which the hamster works with reachable objects while matching objects remain outside its working space. | Replacing the grammar authority, universal repeatability claim, mandatory token/boundary layout, text-dependent explanation, or runtime Asset registration. |
 
 Character identity authority, approved acting-pose references, Default Scene Language, approved environment examples,
 composition grammar and approved composition examples have distinct semantic roles.

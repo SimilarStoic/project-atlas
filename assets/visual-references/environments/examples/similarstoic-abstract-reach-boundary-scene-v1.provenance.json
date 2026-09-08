@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic abstract reach-boundary scene v1",
+  "role": "approved abstract explanation environment example",
+  "tracked_path": "assets/visual-references/environments/examples/similarstoic-abstract-reach-boundary-scene-v1.png",
+  "tracked_sha256": "c30a8e66321fe9b725d6646ca1639fc6b01e87da3035092a0765067eaf2458b5",
+  "bytes": 1469940,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic abstract / explanation scene — Option A: The things in your hands",
+    "root": "D:/ProjectAtlas/work/similarstoic-abstract-explanation-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-abstract-explanation-20260908/founder-review/environment-candidate-1.png",
+    "source_sha256": "c30a8e66321fe9b725d6646ca1639fc6b01e87da3035092a0765067eaf2458b5",
+    "bytes_copied_exactly": true,
+    "provider": "OpenAI",
+    "model": "gpt-image-2",
+    "operation": "images edit",
+    "accepted_inputs": [
+      "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+      "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png"
+    ]
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 5879cbadef9e51964c7f4d1241a061663560a0e7",
+    "scope": "Sparse abstract explanation space distinguishing reachable and out-of-reach token areas without labels"
+  },
+  "semantic_boundary": {
+    "default_scene_language_authority_unchanged": true,
+    "default_scene_language_path": "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+    "default_scene_language_sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+    "boundary": "Approved abstract environment example only; not a replacement style authority, universal background, corporate diagram template, mandatory boundary layout, or complete environment pack."
+  },
+  "experiment_cost": {
+    "quality_development_envelope_usd": 10.0,
+    "conservative_maximum_exposure_usd": 1.5,
+    "remaining_authorization_usd": 8.5,
+    "abstract_scene_incremental_conservative_exposure_usd": 0.5,
+    "provider_reported_actual_cost_usd": null,
+    "canonicalization_spend_usd": 0.0,
+    "top_up_required": false,
+    "account_funding_treated_as_spend": false
+  }
+}

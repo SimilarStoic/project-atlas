@@ -182,6 +182,22 @@ The second-scene experiment used a separate `$10` quality-development envelope. 
 `$1.00`, remaining authorization is `$9.00`, and top-up is not required. Vertical refinement and canonicalization added
 `$0` provider spend. Account funding is not treated as experiment spend.
 
+The later abstract/explanation experiment tested the approved “The things in your hands” concept. Founder + ChatGPT
+accepted the first isolated character attempt, first separate abstract environment attempt and deterministic balanced
+Composition Variant 1. Canonical copies are
+`assets/visual-references/core-mascot/poses/core-v3-things-in-hand-acting-pose-v1.png`,
+`assets/visual-references/environments/examples/similarstoic-abstract-reach-boundary-scene-v1.png`, and
+`assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png`.
+
+This is the first approved sparse abstract/explanation example. The hamster actively handles matching tokens within its
+working space while matching tokens beyond a broken boundary remain unattended, so the explanatory metaphor does not
+depend on text. It establishes a third bounded static capability without changing the identity, Default Scene Language
+or composition-grammar authorities, claiming universal repeatability, or adding runtime architecture.
+
+The two GPT Image 2 requests added `$0.50` conservative exposure because the generation CLI exposed no raw usage or
+dollar charge. The active `$10` envelope therefore has `$1.50` conservative maximum exposure and `$8.50` remaining;
+top-up is not required. Deterministic composition and canonicalization added `$0` provider spend.
+
 ## Spend: conservative working estimate, not verified billing
 
 | Ledger item | USD estimate |

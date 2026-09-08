@@ -24,13 +24,16 @@ explanatory text, or following generic talking-head grammar.
 
 1. **Identity authority** defines who the SimilarStoic hamster is.
 2. **Approved acting-pose references** demonstrate acceptable position, expression, deformation, and performance while
-   retaining identity. Current examples cover storm/umbrella resistance and indoor sorting/decision behaviour.
+   retaining identity. Current examples cover storm/umbrella resistance, indoor sorting/decision behaviour, and calm
+   selective work on reachable objects.
 3. **Default Scene Language authority** defines the ordinary environment style.
 4. **Approved environment examples** show applications of that language without replacing it.
 5. **Composition grammar** defines coherent assembly of character, environment, props, and effects.
-6. **Approved composition examples** currently cover outdoor/high-action storm and calm indoor/explanatory sorting.
+6. **Approved composition examples** currently cover outdoor/high-action storm, calm indoor/explanatory sorting, and an
+   abstract reach-boundary metaphor.
 
-> Static visual-production method demonstrated successfully across two materially different scene types.
+> Static visual-production method has demonstrated three capabilities: physical action, everyday explanation, and
+> abstract explanatory metaphor.
 
 This is bounded evidence, not a claim of universal repeatability. The current paths, digests, roles, and prohibited uses
 are maintained in [`assets/README.md`](../assets/README.md).
@@ -168,6 +171,11 @@ The best currently validated method is:
 Tested provider-generated full scenes showed weaker consistency and are not the preferred default today. This is a
 current evidence-based method, not a permanent universal rule.
 
+The founder-approved “things in your hands” example validates the sparse abstract/explanation pattern: matching objects
+may be divided by distance or a simple physical boundary while the hamster's active handling makes the reachable set its
+working focus. The metaphor remains understandable without labels, arrows or corporate diagram treatment. This is one
+approved example, not a mandatory token-and-boundary template.
+
 ## Motion future-state
 
 After a still composition is accepted, later production may evaluate restrained pan/zoom, object reveals, pose changes,
@@ -184,19 +192,15 @@ giant asset library in advance.
 
 ## Cost discipline
 
-The active visual-quality envelope is `$10`; conservative exposure is `$1.00`, remaining authorization is `$9.00`, and
+The active visual-quality envelope is `$10`; conservative exposure is `$1.50`, remaining authorization is `$8.50`, and
 top-up is not required. Remaining authorization is not a spending target. Paid generation remains bounded,
 evidence-driven, quality-first, and accounted for. Account funding is not spend.
 
 Notify founder + ChatGPT before an approved paid task would exceed remaining authorization, or when remaining
 authorization is below `$2` and more paid work is proposed.
 
-## Recommended next visual experiment — not authorized
+## Current experiment boundary
 
-The preferred next test is an **abstract / explanation scene**. It should test a third capability after outdoor physical
-action and indoor everyday explanation: an original abstract metaphor in which the hamster physically moves objects
-between areas, chooses a path, sorts controllable/uncontrollable objects, handles weights or containers, or interacts
-with a simple conceptual obstacle. Essential meaning must not depend on labels.
-
-The test should add a visual capability rather than merely a location. Do not execute it from this document. Evaluate a
-signature exaggerated break-frame only in a later, separately authorized experiment.
+The abstract/explanation scene test passed and its accepted evidence is listed in `assets/README.md`. No further visual
+experiment is authorized by this document. A signature exaggerated break-frame remains a possible later test only under
+separate founder authorization.

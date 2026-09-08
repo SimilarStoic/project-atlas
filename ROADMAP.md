@@ -515,9 +515,9 @@ room to act. Grounding should use minimal illustrative contact treatment. Sparse
 cross the character plane to make separately sourced assets feel co-authored, provided they remain unobtrusive. Character,
 props, environment and compositing treatments must share one illustrator's level of line weight, density, shading,
 texture, perspective, colour and polish. The approved composition examples support the bounded conclusion that the
-static visual-production method has been demonstrated successfully across two materially different scene types:
-outdoor/high-action storm and calm indoor/explanatory sorting. This is not a universal repeatability claim. The compact
-creative rules are maintained in
+static visual-production method has demonstrated three capabilities: outdoor/high-action storm, calm indoor/explanatory
+sorting, and abstract explanatory metaphor without text-dependent meaning. This is not a universal repeatability claim.
+The compact creative rules are maintained in
 [`docs/SIMILARSTOIC_VISUAL_VOCABULARY.md`](docs/SIMILARSTOIC_VISUAL_VOCABULARY.md).
 
 Signature original break-frame/still devices may occasionally interrupt the normal sparse visual grammar to

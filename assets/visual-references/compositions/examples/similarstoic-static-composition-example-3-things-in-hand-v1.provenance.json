@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic static composition example 3 — things in hand v1",
+  "role": "approved composition-grammar example #3",
+  "tracked_path": "assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png",
+  "tracked_sha256": "a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427",
+  "bytes": 1206519,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic abstract / explanation scene — Option A: The things in your hands",
+    "root": "D:/ProjectAtlas/work/similarstoic-abstract-explanation-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-abstract-explanation-20260908/founder-review/static-composition-variant-1.png",
+    "source_sha256": "a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427",
+    "bytes_copied_exactly": true,
+    "provider_calls_for_composition": 0,
+    "provider_spend_for_composition_usd": 0.0
+  },
+  "accepted_inputs": {
+    "character_pose": {
+      "path": "assets/visual-references/core-mascot/poses/core-v3-things-in-hand-acting-pose-v1.png",
+      "sha256": "b61fe5512df30e50ebc421b23069eafb350016e8995a0afba0bb40c33757cc5e"
+    },
+    "environment_example": {
+      "path": "assets/visual-references/environments/examples/similarstoic-abstract-reach-boundary-scene-v1.png",
+      "sha256": "c30a8e66321fe9b725d6646ca1639fc6b01e87da3035092a0765067eaf2458b5"
+    },
+    "composition_grammar": {
+      "path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
+      "sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8"
+    }
+  },
+  "deterministic_composition": {
+    "canvas_dimensions": [1024, 1536],
+    "environment_source_dimensions": [1024, 1536],
+    "environment_dimensions": [1024, 1536],
+    "environment_position": [0, 0],
+    "character_generated_source_dimensions": [1024, 1536],
+    "character_alpha_source_bbox": [59, 344, 921, 1213],
+    "character_working_source_dimensions": [862, 869],
+    "character_dimensions": [630, 635],
+    "character_position": [105, 720],
+    "character_bottom_y": 1355,
+    "grounding": "Existing character contact strokes and environment marks retained; no added shadow, object, caption, or typography."
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 5879cbadef9e51964c7f4d1241a061663560a0e7",
+    "scope": "Balanced abstract explanation composition for the accepted 'The things in your hands' metaphor"
+  },
+  "semantic_boundary": {
+    "composition_grammar_authority_unchanged": true,
+    "composition_grammar_path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
+    "composition_grammar_sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8",
+    "bounded_conclusion": "SimilarStoic has a founder-approved third static capability: abstract explanatory metaphor without text-dependent meaning.",
+    "universal_repeatability_claimed": false,
+    "production_2": false,
+    "new_architecture_layer": false
+  },
+  "experiment_cost": {
+    "quality_development_envelope_usd": 10.0,
+    "conservative_maximum_exposure_usd": 1.5,
+    "remaining_authorization_usd": 8.5,
+    "abstract_scene_incremental_conservative_exposure_usd": 0.5,
+    "provider_reported_actual_cost_usd": null,
+    "composition_and_canonicalization_spend_usd": 0.0,
+    "top_up_required": false,
+    "account_funding_treated_as_spend": false
+  }
+}

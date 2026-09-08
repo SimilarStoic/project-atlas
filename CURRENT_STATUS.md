@@ -2,8 +2,8 @@
 
 ## Last Updated
 
-8 September 2026 — the founder + ChatGPT-approved second SimilarStoic scene example is synchronized at canonical
-`fbc059534639becc55830ebda7bd1b8d63fbeac7`. A zero-spend visual-vocabulary documentation candidate is local only.
+8 September 2026 — the founder + ChatGPT-approved abstract/explanation scene is recorded in a local canonicalization
+candidate based on canonical `5879cbadef9e51964c7f4d1241a061663560a0e7`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -24,7 +24,9 @@ unchanged. Static integration and its bounded refinement both passed; the exact 
 `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`. Founder + ChatGPT also
 accepted the calm sorting acting pose, indoor environment example and portrait composition example #2. **Static
 visual-production method demonstrated successfully across two materially different scene types:** outdoor/high-action
-storm and calm indoor/explanatory sorting. This does not claim universal repeatability.
+storm and calm indoor/explanatory sorting. Founder + ChatGPT have now also accepted the “things in your hands” acting
+pose, abstract reach-boundary environment and balanced composition example #3. This establishes a third bounded static
+capability—abstract explanatory metaphor without text-dependent meaning—without claiming universal repeatability.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
 No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only exact
@@ -40,8 +42,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this composition-grammar canonicalization candidate:** local `main` and `origin/main` both resolved to
-  `9a434c5d79e7710ac201c46d5d3b8c4816603ef8`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this abstract-scene canonicalization candidate:** local `main` and `origin/main` both resolved to
+  `5879cbadef9e51964c7f4d1241a061663560a0e7`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -107,17 +109,15 @@ untracked evidence for the viable lower-detail pole. Candidate 4 is approximatel
 an ordinary scene; it is not mandatory reusable scenery, a universal background or a permanent provider selection.
 The visual method now consists of canonical identity authority, approved acting-pose references, approved Default Scene
 Language, approved environment examples, approved composition grammar and approved composition examples. The separated
-method has passed across the storm scene and calm indoor sorting scene. The second-scene `$10` quality-development
-envelope has conservative maximum exposure of `$1.00` and `$9.00` remaining; vertical refinement and canonicalization
-added `$0` provider spend. This is evidence across two materially different static scene types, not universal
+method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. The active
+`$10` quality-development envelope has conservative maximum exposure of `$1.50` and `$8.50` remaining; abstract-scene
+canonicalization added `$0` provider spend. This is bounded evidence of three static capabilities, not universal
 repeatability or a new architecture.
 
 ## Exact Next Action
 
-Review this visual-vocabulary documentation candidate; founder retains final push authority. The next recommended visual
-test is a separately authorized abstract/explanation scene that adds a new metaphor capability. Do not execute it from
-this document. No video, Production #2, v0.28, Migration 24, rig, architecture expansion or successor follows
-automatically.
+Review this abstract-scene canonicalization candidate; founder retains final push authority. No further experiment,
+video, Production #2, v0.28, Migration 24, rig, architecture expansion or successor follows automatically.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.
