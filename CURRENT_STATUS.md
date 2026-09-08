@@ -2,20 +2,22 @@
 
 ## Last Updated
 
-8 September 2026 — reviewed quality findings and verified evidence preservation recorded in a documentation
-candidate based on canonical `8a81175c857466161d687b54eeb9a1d7d839b96d`; final push requires founder authorization.
+8 September 2026 — founder-approved isolated acting-pose result recorded in a local canonicalization candidate based
+on canonical `c5dc39bd8b23d10ee5aef540b627b52835a47290`; this candidate is not pushed.
 
 ## Current State — Read This First
 
 The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records the reviewed continuity findings and
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1 and its local presentation proof remain
 founder-rejected for final quality; Marin narration is incomplete. Cedar is a relative comparison preference only,
-not the final voice. The tested GPT Image 2 method failed the consistency bar. The next bounded visual experiment is
-a maximum-two-output Leonardo storm trial after this documentation task and review; it has not run.
+not the final voice. The earlier GPT Image 2 full-scene reference-board method failed, while the later isolated-character
+method passed: founder + ChatGPT accepted
+`assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` as the first approved
+secondary acting-pose reference. The primary Core v3 identity reference remains unchanged.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
-No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes documentation
-only. The primary checkout still contains rejected `ad52ab3`: **do not push that local main**.
+No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only the
+approved pose-reference asset and its governance documentation. It does not promote rejected `ad52ab3` material.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
 migrations and tests; (4) verified persistent runtime; (5) verified local experimental/review evidence;
@@ -26,11 +28,11 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this continuity candidate:** fetched `origin/main` is
-  `8a81175c857466161d687b54eeb9a1d7d839b96d`. Primary local `main` remains at rejected
-  `ad52ab38ad32f97b933099ef98a32dc8fd268662`, ahead/behind `1 / 0`; the separate documentation branch starts from
-  canonical `8a81175`. The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0`
-  immediately before its documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
+- **Base before this accepted-pose canonicalization candidate:** local `main` and `origin/main` both resolved to
+  `c5dc39bd8b23d10ee5aef540b627b52835a47290`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+  `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
+  The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
+  documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
   INCOMPLETE; v0.27 remains the latest named accepted implementation milestone; source and verified runtime migrations
   are contiguous through 23; and Migration 24 is absent. The post-v0.27 changes are canonical repository history but
   do not imply acceptance of v0.28 or a successor milestone.
@@ -86,12 +88,20 @@ render, or persistent artifact for it.
 `D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, distinct from the runtime, with verified
 SHA-256 `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
 
+The isolated acting-pose experiment used exact canonical references directly, removed the environment burden, and
+allowed one defect-targeted refinement. Candidate 1 was useful but not selected because of shading/vignette defects;
+Candidate 2 passed and is founder-approved. The separate Leonardo Phoenix environment-only attempt failed because it
+inserted an unwanted hamster and umbrella; that output remains rejected evidence. The supported production-method
+hypothesis is stable approved pose assets plus separately sourced/generated environments plus controlled Conveyor
+composition. It remains under validation, not an accepted architecture. Cumulative working experiment spend is
+`$14.107475`, leaving `$10.892525` under the existing `$25` ceiling, subject to the existing billing qualifications.
+
 ## Exact Next Action
 
-Review this documentation/evidence candidate; founder retains final push authority. The next authorized quality
-experiment remains one Leonardo storm image with at most one targeted refinement, then stop for review. Reconcile
-its historical brief to Core v3 and verify API controls/cost before execution. Do not execute the trial during this
-documentation task. No full-video retry, Production #2, v0.28, Migration 24 or successor follows automatically.
+Review this accepted-pose canonicalization candidate; founder retains final push authority. The next proposed bounded
+experiment is one independently generated character-free storm environment followed, only if it passes, by one static
+local composite using the approved umbrella-resistance pose. It is not authorized for execution by this candidate.
+No full-video retry, Production #2, v0.28, Migration 24 or successor follows automatically.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

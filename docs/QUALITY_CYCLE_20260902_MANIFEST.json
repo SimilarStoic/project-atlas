@@ -29,6 +29,41 @@
       "verified_all_members": true
     }
   },
+  "accepted_pose_canonicalization": {
+    "accepted_date": "2026-09-08",
+    "canonical_base": "c5dc39bd8b23d10ee5aef540b627b52835a47290",
+    "character_experiment_verdict": "PASS",
+    "approved_asset": {
+      "name": "Core v3 — umbrella resistance acting pose v1",
+      "role": "approved secondary acting-pose reference",
+      "tracked_path": "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png",
+      "source_path": "D:\\ProjectAtlas\\work\\similarstoic-isolated-pose-20260908\\founder-review\\candidate-2.png",
+      "bytes": 1256910,
+      "dimensions": [1024, 1536],
+      "format": "PNG",
+      "mode": "RGB",
+      "has_alpha": false,
+      "sha256": "a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e",
+      "bytes_copied_exactly": true,
+      "identity_boundary": "Secondary pose/performance reference; the existing Core v3 primary identity authority remains unchanged."
+    },
+    "method": "GPT Image 2 edit using exact canonical references directly, character isolated from environment, first serious attempt followed by one defect-targeted refinement.",
+    "candidate_1": "Technically useful but not selected because of shading/vignette defects.",
+    "candidate_2": "Founder + ChatGPT-approved first acting-pose reference / pose-pack seed.",
+    "environment": {
+      "provider": "Leonardo Phoenix",
+      "verdict": "REJECTED",
+      "reason": "The environment-only output inserted an unwanted different hamster and umbrella.",
+      "provider_reported_cost_usd": 0.0374,
+      "tracked": false
+    },
+    "spend": {
+      "cumulative_working_estimate_usd": 14.107475,
+      "authorization_ceiling_usd": 25.0,
+      "remaining_working_estimate_usd": 10.892525,
+      "qualification": "OpenAI image amounts remain conservative estimates pending billing reconciliation; Leonardo amounts are provider-reported generation-response costs."
+    }
+  },
   "quality_cycle": {
     "source_root": "D:\\ProjectAtlas\\work\\similarstoic-quality-cycle-20260902",
     "source_status": "ignored; unchanged; copied into verified archive",

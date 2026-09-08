@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "name": "Core v3 — umbrella resistance acting pose v1",
+  "role": "approved secondary acting-pose reference",
+  "tracked_path": "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png",
+  "tracked_sha256": "a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e",
+  "bytes": 1256910,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false,
+    "transparency_metadata": false,
+    "background": "Plain warm off-white removable field with slight low-amplitude tonal variation; no alpha channel."
+  },
+  "source_experiment": {
+    "name": "isolated canonical hamster acting-pose test",
+    "root": "D:/ProjectAtlas/work/similarstoic-isolated-pose-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-isolated-pose-20260908/founder-review/candidate-2.png",
+    "source_sha256": "a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e",
+    "bytes_copied_exactly": true,
+    "provider": "OpenAI",
+    "model": "gpt-image-2",
+    "method": "Images edit using exact canonical tracked references directly, with the character isolated from environment generation.",
+    "history": "Candidate 1 preserved identity and acting but had shading and vignette defects. Candidate 2 was the single defect-targeted refinement to restore flatter Core v3 rendering and cleaner isolation."
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base c5dc39bd8b23d10ee5aef540b627b52835a47290",
+    "character_experiment_verdict": "PASS"
+  },
+  "identity_relationship": {
+    "primary_identity_authority_unchanged": true,
+    "primary_identity_path": "assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png",
+    "primary_identity_sha256": "11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956",
+    "boundary": "This pose demonstrates approved deformation and performance. It is not a replacement identity authority, a complete pose pack, a rig, or automatic approval of future generated images."
+  }
+}

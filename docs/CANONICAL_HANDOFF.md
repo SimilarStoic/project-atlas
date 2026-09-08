@@ -25,8 +25,9 @@ existing GitHub roadmap and specification remain authoritative.
 
 For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
-actual alignment, Cedar's relative preference/rejection, image-method failure, Leonardo boundaries, qualified spend
-and reference-set provenance. The local rejected implementation is excluded from this documentation candidate.
+actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
+acting-pose method, the rejected Leonardo environment, qualified spend and reference-set provenance. The local rejected
+implementation is excluded from the accepted-pose canonicalization candidate.
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.
@@ -43,11 +44,11 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the 8 September continuity candidate:** freshly fetched `origin/main` is
-`8a81175c857466161d687b54eeb9a1d7d839b96d`. Primary local `main` remains at founder-rejected experimental
-`ad52ab38ad32f97b933099ef98a32dc8fd268662`, ahead/behind `1 / 0`. Do not push that primary main. The separate
-documentation candidate starts from `8a81175` and must not descend from `ad52ab3`. The earlier 2 September
-synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is historical context.
+**Base before the accepted-pose canonicalization candidate:** local `main` and `origin/main` both resolve to
+`c5dc39bd8b23d10ee5aef540b627b52835a47290`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
+2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
+historical context.
 Phase 2 is ACTIVE /
 INCOMPLETE; v0.27 — First-Run Operability Bridge remains the latest named accepted implementation milestone, v0.26 is
 its accepted predecessor, and no successor milestone is selected. Source and verified runtime migrations are contiguous
@@ -112,16 +113,36 @@ presentation is not accepted as the final SimilarStoic identity standard. No v0.
 Production #2 has not started. There is no verified Production #2 Opportunity, gate, research, Script, VisualPlan,
 narration, render or persistent final artifact.
 
+### Approved secondary acting-pose reference
+
+Founder + ChatGPT accepted
+`assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png`, SHA-256
+`a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e`, as **Core v3 — umbrella resistance acting
+pose v1**, the first approved SimilarStoic acting-pose reference / pose-pack seed. It is a secondary pose/performance
+reference showing approved physical deformation while the hamster remains recognizable. It does not replace the
+primary identity authority at `assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png`
+and does not establish a complete pose pack, rig, permanent provider choice or automatic acceptance of later outputs.
+
+The accepted isolated-character method used GPT Image 2 edits with exact canonical tracked references directly and no
+generated reference board. Candidate 1 preserved identity and acting but retained shading/vignette defects. Candidate
+2 was the single defect-targeted refinement and passed founder review. The separate Leonardo Phoenix environment-only
+attempt was rejected because it inserted an unwanted different hamster and umbrella. It is not promoted.
+
+Current evidence supports continued evaluation of stable approved pose assets plus separately sourced/generated
+environments plus controlled Conveyor composition. This remains a production-method hypothesis under validation, not
+a fully accepted architecture. Working cumulative experiment spend is `$14.107475`, leaving `$10.892525` under the
+existing cumulative `$25` authorization, with the billing qualifications in the quality-cycle note unchanged.
+
 ### Hard stop and next action
 
-The current bounded task is preservation and a documentation candidate only; final push requires founder approval.
-The unnumbered Production #1-derived presentation proof was technically successful but founder-rejected, not pending
-review. Its static mascot/geometric scenes and scene-clock captions are not accepted presentation architecture.
+The current bounded task canonicalizes only the exact approved pose bytes and required governance documentation; final
+push requires founder approval. The unnumbered Production #1-derived presentation proof remains founder-rejected, not
+pending review. Its static mascot/geometric scenes and scene-clock captions are not accepted presentation architecture.
 
-After this task and review, the next authorized visual experiment remains one serious Leonardo storm-resistance image
-and at most one targeted refinement, two outputs maximum, then stop for founder + ChatGPT review. It has not run.
-Its ignored brief must first be reconciled to Core v3; provider controls/cost require verification. No full video,
-Production #2, successor milestone, v0.28, Migration 24, rig or architecture expansion is authorized by synchronization.
+The next proposed bounded experiment is to generate one character-free storm environment independently and, only if
+it passes, make one static local composite using the approved umbrella-resistance pose. It is not authorized for
+execution by this canonicalization. No full video, Production #2, successor milestone, v0.28, Migration 24, rig or
+architecture expansion is authorized.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.
@@ -883,20 +904,23 @@ Core-mascot generation uses this hierarchy:
 
 1. approved isolated core identity reference(s);
 2. the founder + ChatGPT-approved written visual-refinement contract;
-3. optional core scene/expression exemplars; and
-4. mandatory post-generation visual QA.
+3. optional approved secondary acting/pose references;
+4. optional core scene/expression exemplars; and
+5. mandatory post-generation visual QA.
 
 | Role class | Verified tracked asset | Dimensions | SHA-256 | Approved use |
 | --- | --- | --- | --- | --- |
 | CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png` | 1448x1086 | `11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956` | Preferred primary isolated core-mascot grounding asset. |
 | CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/a5564bd0-51d2-4713-82c1-42138f12a8dc.png` | 1448x1086 | `d3acb16af30b9a5aca29e92e2e8f19d7b5a21df4b8e572de054756ca23321cc4` | Preferred primary/supplementary core-only multi-pose grounding asset. |
 | CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` | 1536x1024 | `eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46` | Approved supplementary core-only specification/identity grounding; not preferred as sole grounding input. |
+| APPROVED SECONDARY ACTING-POSE REFERENCE | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | Core v3 umbrella-resistance pose/performance grounding used alongside a canonical identity reference; never the primary identity authority. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png` | 1448x1086 | `27ff66e34a8649a22c649a5593c93d0532cd176cf69dafb61bc19a1d2e1eb85a` | Supplementary flowchart/explaining pose, expression, composition and context. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` | 1448x1086 | `24dc9fd6367d6f7c4f9731b12bd1b7e7376edf7870ecee0a8ac066699363ff65` | Supplementary growth-chart/surprised-expression pose, composition and context. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` | 1448x1086 | `95ad2c8a75b7ce798eb315d1c84d34571bb1a44ace1922b141bdb2173fdfae4f` | Supplementary reading/thinking pose, expression, composition and context. |
 
 The three identity assets contain no supporting hamster model and are the only core-mascot identity inputs in this
-manifest. The scene/expression exemplars are supplementary only: their whiteboards, charts, books, tables, chairs,
+manifest. The acting-pose reference demonstrates accepted deformation/performance but cannot define or replace
+identity. The scene/expression exemplars are supplementary only: their whiteboards, charts, books, tables, chairs,
 diagrams and any other props are scene context, never mascot identity features.
 
 Supporting-character references must live in separate per-character directories. Identity references from different

@@ -2,16 +2,14 @@
 
 ## Authority and checkpoint
 
-Recorded 8 September 2026 after founder + ChatGPT accepted the continuity reconstruction as the basis for a bounded
-preservation and documentation-candidate task. This note records reviewed findings; it does not accept the rejected
-implementation, select a successor milestone, or authorize execution during the documentation task. Final push
-remains subject to founder authorization.
+Recorded 8 September 2026 and updated after founder + ChatGPT accepted the isolated-character experiment. This note
+records reviewed findings and the accepted-pose canonicalization candidate; it does not accept the rejected
+implementation, select a successor milestone, or authorize the next experiment. Final push remains subject to founder
+authorization.
 
-The freshly fetched canonical base before this update was `8a81175c857466161d687b54eeb9a1d7d839b96d`.
-The primary local `main` remained at founder-rejected experimental commit
-`ad52ab38ad32f97b933099ef98a32dc8fd268662`, one ahead and zero behind, with tracked files clean.
-This documentation candidate was created in a separate worktree from `8a81175`; rejected `ad52ab3` must not be its
-ancestor. A normal push of the primary local `main` would publish rejected implementation and is prohibited.
+The canonical base before the accepted-pose candidate was `c5dc39bd8b23d10ee5aef540b627b52835a47290` on local
+`main` and `origin/main`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected experimental commit
+`ad52ab38ad32f97b933099ef98a32dc8fd268662` remains separately preserved and is not promoted.
 
 Conveyor remains the engine; SimilarStoic remains the brand. **CHANGE WITHOUT REBUILD** and founder + ChatGPT
 review/acceptance authority are unchanged. Phase 1 is complete, Phase 2 is active/incomplete, and v0.27 is the latest
@@ -100,36 +98,32 @@ an explaining/whiteboard situation. The supported finding is that **the tested G
 not justified for scale-up**. It does not establish that all OpenAI image generation is inherently unsuitable. Do not
 brute-force more attempts using the same failed method.
 
-Current evidence supports evaluating **stable canonical character/model/pose assets + AI-assisted environments/scenes
-+ deterministic Conveyor assembly**. This is a design hypothesis, not an accepted specific architecture. Reusable assets
-remain consistent with the established creative direction. No rig or professional asset commission is accepted.
+The later isolated-character experiment tested a different control method: exact canonical tracked references were
+passed directly to GPT Image 2, the hamster was isolated from environment generation, and only one defect-targeted
+refinement followed the first serious attempt. Candidate 1 was technically useful but retained shading and a faint
+vignette. Candidate 2 corrected that defect while preserving the canonical face, colouring, bag, two-paw umbrella grip,
+body weight and expressive resistance pose. Founder + ChatGPT accepted Candidate 2, SHA-256
+`a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e`, as the first approved secondary acting-pose
+reference / pose-pack seed. The isolated-character method therefore **PASSED**. This does not reverse the failure of
+the earlier full-scene reference-board method or establish GPT Image 2 as the permanent character provider.
 
-## Leonardo: bounded next experiment, not executed
+The canonical tracked copy is
+`assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png`. It supplements the primary
+Core v3 identity authority; it does not replace it or establish a complete pose pack or rig.
 
-Leonardo is the preferred next controlled external visual-provider trial; Vertex Imagen customization remains a
-secondary option in the saved research. Provider notes are historical research, not live API/model/pricing validation.
-Founder configured local API access and reported $5 account funding. The audit checked credential presence only in the
-Codex process; no credential value is stored here. No Leonardo generation has occurred in the verified project history.
-Live account balance, authentication and current model/reference controls were not tested during continuity work.
+## Leonardo environment finding
 
-After this documentation task and review, the next authorized quality experiment remains:
+The first Leonardo Phoenix full-scene Character + Style Reference trial was insufficient. In the later environment-only
+test, one character-free stormy-street plate was requested. The output contained a different hamster holding an umbrella
+despite explicit exclusions and was rejected. Its provider-reported cost was `$0.0374`; it remains local evidence and
+must not be promoted. This single failure does not prove that all environment generation is impossible.
 
-1. One serious storm-resistance image: canonical white/light hamster and tan/orange accents, exact multicolour sling
-   bag, physical struggle against wind/rain, coherent umbrella interaction, frustrated/determined expression and an
-   illustrated storm/street world suitable for a vertical short. No text, desk explainer, geometric template or redesign.
-2. At most one targeted refinement based on the first output's actual defect: **two outputs maximum total**.
-3. Stop for founder + ChatGPT review. No third candidate or expansion to the remaining beat pack.
-
-Before execution, reconcile the ignored trial brief to SimilarStoic Core v3: sparse/imperfect hand-drawn treatment,
-flat colour and established identity; no glossy AI finish, detailed fur or inappropriate gradients/shading. Its glossy,
-shaded/fur-oriented language, stale credential prerequisite and inconsistent retry wording are superseded by this
-bounded direction. The ignored brief remains unchanged as historical evidence; the actual trial prompt will be corrected
-later. Codex must verify current API controls and cost within the existing ceiling before paid execution.
-
-Use exact canonical file `assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png`,
-SHA-256 `11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956`, rather than reference-set ID alone.
-No new full production video should be attempted before acceptable visual quality, narration direction/completeness
-and actual caption alignment are established. Production #2 remains blocked.
+Current evidence supports continued evaluation of **stable approved character pose assets + separately
+sourced/generated environments + controlled Conveyor composition**. This is a production-method hypothesis under
+validation, not a fully accepted architecture. The next proposed bounded experiment is one independently generated
+character-free storm environment and, only if it passes, one static local composite using the approved pose. It is not
+authorized by this note. No new full production video should be attempted before visual quality,
+narration direction/completeness and actual caption alignment are established. Production #2 remains blocked.
 
 ## Spend: conservative working estimate, not verified billing
 
@@ -138,16 +132,21 @@ and actual caption alignment are established. Production #2 remains blocked.
 | Whisper alignment | 0.003440 |
 | Five voice samples | 0.023235 |
 | Five image attempts, conservatively $2 each | 10.000000 |
-| Cumulative working estimate | **10.026675** |
+| Leonardo full-scene trial, provider reported | 0.043400 |
+| Two isolated GPT Image 2 edits, conservatively $2 each | 4.000000 |
+| Leonardo environment-only attempt, provider reported | 0.037400 |
+| Cumulative working estimate | **14.107475** |
 | Existing cumulative authorization | **25.000000** |
-| Working estimated remainder | **14.973325** |
+| Working estimated remainder | **10.892525** |
 
-The ledger arithmetic is correct, but the total is a conservative working estimate pending reconciliation, not verified
-provider billing. Contrary to the ledger's statement, all five image raw responses contain usage: 21,361 input tokens
-(20,484 image, 877 text), 27,440 output tokens and 48,801 combined tokens. Whisper reports 35 usage seconds, slightly
-different from the approximately 34.4-second duration used in the old estimate. Do not invent an exact billed total or
-increase available authority on the strength of an unverified recalculation. The $25 envelope is cumulative, not renewed
-per task. The founder's $5 Leonardo funding is provider credit, not automatically consumed experiment spend.
+The ledger arithmetic is correct, but the OpenAI amounts remain conservative working estimates pending billing
+reconciliation, not verified provider billing. The original five image raw responses contain usage: 21,361 input
+tokens (20,484 image, 877 text), 27,440 output tokens and 48,801 combined tokens. The bundled CLI used for the two later
+edits did not expose billed dollar amounts, so the existing `$2`-per-image conservative convention was retained.
+Whisper reports 35 usage seconds, slightly different from the approximately 34.4-second duration used in the old
+estimate. Leonardo amounts above are generation-response dollar costs. Do not invent a more exact billed total or
+increase available authority on the strength of an unverified recalculation. The `$25` envelope is cumulative, not
+renewed per task. The founder's `$5` Leonardo funding is provider credit, not automatically consumed experiment spend.
 
 ## Reference-set provenance qualification
 
@@ -187,9 +186,9 @@ access to these local archives or a separately verified copy; an on-disk archive
 does not archive or alter the operational runtime database/assets/media. Historical prototype source files were not
 executed, promoted or staged. No permanent experimental branch or primary-main realignment is performed in this task.
 
-## Documentation-candidate validation
+## Accepted-pose candidate validation
 
-The canonical-base suite passed **127 tests** on 8 September 2026 using isolated temporary databases/media fixtures
-and existing local FFmpeg; provider credentials and operational ATLAS configuration were removed from the test process.
-Ruff passed for all 14 canonical tracked Python files. Black 26.3.1 passed the repository-safe in-process check with
-full safety validation and no files requiring changes. No source, test, configuration or migration files changed.
+The canonical suite passed **127 tests** in 641.98 seconds on 8 September 2026 using isolated temporary fixtures.
+Ruff passed for all 14 canonical tracked Python files. Black 26.3.1 passed the repository-safe in-process equivalence
+check with full safety validation and no files requiring changes. `git diff --check` passed. No source, test,
+configuration or migration files changed.

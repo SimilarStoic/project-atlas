@@ -4,7 +4,7 @@ Store project assets that are intentionally version-controlled here. Keep genera
 
 ## Authoritative visual-reference manifest
 
-The six PNGs below are the founder + ChatGPT-approved, Git-tracked visual references for the **core mascot**. They are durable reference bytes, not runtime records, generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical `character-reference-set-similarstoic-hamster-core-v1` / Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
+The seven PNGs below are the founder + ChatGPT-approved, Git-tracked visual references for the **core mascot**. They are durable reference bytes, not runtime records, generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical `character-reference-set-similarstoic-hamster-core-v1` / Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
 
 ### Identity references
 
@@ -15,6 +15,14 @@ Identity references define concrete character appearance. They are the primary i
 | Core mascot | `9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png` | `assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png` | 1448x1086 | `11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956` | CORE IDENTITY REFERENCE | Preferred primary core-mascot grounding asset. | Supporting-character grounding, identity pooling, or treating scene context as identity. |
 | Core mascot | `a5564bd0-51d2-4713-82c1-42138f12a8dc.png` | `assets/visual-references/core-mascot/identity/a5564bd0-51d2-4713-82c1-42138f12a8dc.png` | 1448x1086 | `d3acb16af30b9a5aca29e92e2e8f19d7b5a21df4b8e572de054756ca23321cc4` | CORE IDENTITY REFERENCE | Preferred primary/supplementary core-mascot grounding asset. | Supporting-character grounding, identity pooling, or treating scene context as identity. |
 | Core mascot | `fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` | `assets/visual-references/core-mascot/identity/fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` | 1536x1024 | `eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46` | CORE IDENTITY REFERENCE | Supplementary core-only specification/identity grounding; not preferred as the sole grounding input. | Sole primary grounding, supporting-character grounding, identity pooling, or treating its instructional context as identity. |
+
+### Approved acting / pose references
+
+Acting / pose references demonstrate approved physical performance and pose deformation while retaining the core identity. They are secondary grounding inputs and never replace or override the identity references.
+
+| Character scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Core mascot | `core-v3-umbrella-resistance-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | APPROVED SECONDARY ACTING-POSE REFERENCE | Core v3 umbrella-resistance acting pose v1; secondary pose/performance grounding alongside a canonical identity reference. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or evidence that full-scene generation passed. |
 
 ### Scene / expression exemplars
 
