@@ -2,10 +2,14 @@
 
 ## Last Updated
 
-8 September 2026 — the founder + ChatGPT-approved second SimilarStoic scene example is recorded in a local
-canonicalization candidate based on canonical `60a7ce64f8d3de897ba18cfb08d04438a79b5e8f`; this candidate is not pushed.
+8 September 2026 — the founder + ChatGPT-approved second SimilarStoic scene example is synchronized at canonical
+`fbc059534639becc55830ebda7bd1b8d63fbeac7`. A zero-spend visual-vocabulary documentation candidate is local only.
 
 ## Current State — Read This First
+
+The canonical [SimilarStoic Visual-Production Vocabulary](docs/SIMILARSTOIC_VISUAL_VOCABULARY.md) defines the compact
+acting, environment, prop/effect, composition, reuse and break-frame design language for future visual work. It adds no
+runtime architecture and authorizes no production or generation.
 
 The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records the reviewed continuity findings and
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1 and its local presentation proof remain
@@ -110,8 +114,10 @@ repeatability or a new architecture.
 
 ## Exact Next Action
 
-Review this second-scene canonicalization candidate; founder retains final push authority. No video, Production #2,
-v0.28, Migration 24, rig, architecture expansion or successor follows automatically.
+Review this visual-vocabulary documentation candidate; founder retains final push authority. The next recommended visual
+test is a separately authorized abstract/explanation scene that adds a new metaphor capability. Do not execute it from
+this document. No video, Production #2, v0.28, Migration 24, rig, architecture expansion or successor follows
+automatically.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

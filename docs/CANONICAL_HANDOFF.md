@@ -27,8 +27,14 @@ For findings reviewed on 8 September 2026, read [Production #1 quality-cycle con
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the rejected environment attempts, the approved Candidate 4 environment style, the passed static
-integration/refinement and approved composition grammar, qualified spend and reference-set provenance. The local rejected
-implementation is excluded from the composition-grammar canonicalization candidate.
+integration/refinement and approved composition grammar, qualified spend and reference-set provenance. The approved
+second-scene example is synchronized at `fbc059534639becc55830ebda7bd1b8d63fbeac7`; rejected experimental implementation
+remains excluded from canonical history.
+
+For the current compact creative vocabulary governing acting categories, environment families, props/effects,
+composition patterns, reuse, negative space and signature break-frames, read
+[SimilarStoic Visual-Production Vocabulary](SIMILARSTOIC_VISUAL_VOCABULARY.md). It is design canon, not runtime
+architecture or production authorization.
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.

@@ -514,8 +514,11 @@ off-white areas remain deliberate, the mascot stays readable on mobile, and off-
 room to act. Grounding should use minimal illustrative contact treatment. Sparse rain, leaves, dust or motion marks may
 cross the character plane to make separately sourced assets feel co-authored, provided they remain unobtrusive. Character,
 props, environment and compositing treatments must share one illustrator's level of line weight, density, shading,
-texture, perspective, colour and polish. The approved composition-grammar reference validates this method for one static
-scene; it is not a mandatory layout or proof of repeatability across scene types.
+texture, perspective, colour and polish. The approved composition examples support the bounded conclusion that the
+static visual-production method has been demonstrated successfully across two materially different scene types:
+outdoor/high-action storm and calm indoor/explanatory sorting. This is not a universal repeatability claim. The compact
+creative rules are maintained in
+[`docs/SIMILARSTOIC_VISUAL_VOCABULARY.md`](docs/SIMILARSTOIC_VISUAL_VOCABULARY.md).
 
 Signature original break-frame/still devices may occasionally interrupt the normal sparse visual grammar to
 land a joke, dramatize an event, make an explanatory point or metaphor, convey a feeling, or make a concept

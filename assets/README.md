@@ -4,6 +4,9 @@ Store project assets that are intentionally version-controlled here. Keep genera
 
 ## Authoritative visual-reference manifest
 
+Creative use of this manifest is governed by the
+[SimilarStoic Visual-Production Vocabulary](../docs/SIMILARSTOIC_VISUAL_VOCABULARY.md).
+
 The approved core-mascot, environment and composition PNGs below are founder +
 ChatGPT-approved, Git-tracked visual references. They are durable reference bytes, not runtime records,
 generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical
