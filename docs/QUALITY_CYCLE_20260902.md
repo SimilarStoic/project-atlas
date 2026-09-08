@@ -2,10 +2,10 @@
 
 ## Authority and checkpoint
 
-Recorded 8 September 2026 and updated after founder + ChatGPT accepted the isolated-character result and Candidate 4
-environment style. This note records reviewed findings and the bounded visual-reference canonicalization candidates; it
-does not accept the rejected implementation, select a successor milestone, or authorize the next experiment. Final
-push remains subject to founder authorization.
+Recorded 8 September 2026 and updated after founder + ChatGPT accepted the isolated-character result, Candidate 4
+environment style and first static composition grammar. This note records reviewed findings and bounded visual-reference
+canonicalization; it does not accept the rejected implementation, select a successor milestone, or authorize the next
+experiment. Final push remains subject to founder authorization.
 
 The canonical base before the accepted-pose candidate was `c5dc39bd8b23d10ee5aef540b627b52835a47290` on local
 `main` and `origin/main`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected experimental commit
@@ -147,12 +147,30 @@ Visual simplicity is a brand choice first and production-efficiency advantage se
 generation complexity and corrective attempts while improving reuse, but “simple on purpose” must never become
 “cheap-looking”; quality remains authoritative over marginal savings.
 
-Current evidence supports continued evaluation of **stable approved character pose assets + separately
-sourced/generated environments + controlled Conveyor composition**. This is a production-method hypothesis under
-validation, not a fully accepted architecture. After review and push of this reference, the proposed next bounded action
-is one zero-provider-spend static composition using the approved pose and environment reference. No new full production
-video should be attempted before visual quality, narration direction/completeness and actual caption alignment are
-established. Production #2 remains blocked.
+## Static integration and composition grammar
+
+The zero-provider-spend static integration test using the exact approved umbrella acting pose, verified transparent
+derivative and approved environment-style reference received **INTEGRATION PASS**. Composition C provided the strongest
+shared-plane integration. A single bounded refinement increased mascot emphasis while retaining C's full environment,
+simple contact ellipse, sparse foreground rain and deliberate off-white negative space; it received **REFINEMENT PASS**.
+
+Founder + ChatGPT approved the refined frame, SHA-256
+`c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8`, as the first static composition / composition-
+grammar reference. Its canonical tracked copy is
+`assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`. The experiment made no
+provider call and added no provider-generated material.
+
+The approved grammar is character-first with subordinate environmental context, deliberate warm-white/off-white
+negative space, mobile-readable character scale, action-aware off-centre placement, minimal illustrative grounding and
+sparse shared-plane environmental marks where useful. Character, props, environment and compositing must appear to come
+from the same illustrator and avoid mismatched line weight, rendering density, shading, texture, perspective, colour or
+polish. The target is simple on purpose, not cheap-looking.
+
+The separated method of approved character poses, independently sourced/generated environments and deterministic local
+composition is visually validated for one static scene. The storm layout is not mandatory, no complete scene pack exists,
+and repeatability across different narrative beats remains unproven. No new full production video should be attempted
+before visual quality, narration direction/completeness and actual caption alignment are established. Production #2
+remains blocked.
 
 ## Spend: conservative working estimate, not verified billing
 

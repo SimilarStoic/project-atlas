@@ -4,10 +4,10 @@ Store project assets that are intentionally version-controlled here. Keep genera
 
 ## Authoritative visual-reference manifest
 
-The seven core-mascot PNGs and separate environment-style PNG below are founder + ChatGPT-approved, Git-tracked
-visual references. They are durable reference bytes, not runtime records, generated-output registrations, a new
-CharacterReferenceSet, or a change to the immutable historical `character-reference-set-similarstoic-hamster-core-v1`
-/ Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
+The seven core-mascot PNGs, separate environment-style PNG and composition-grammar PNG below are founder +
+ChatGPT-approved, Git-tracked visual references. They are durable reference bytes, not runtime records,
+generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical
+`character-reference-set-similarstoic-hamster-core-v1` / Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
 
 ### Identity references
 
@@ -46,8 +46,18 @@ define character identity or require reuse of their exact scenery or composition
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SimilarStoic ordinary scenes | `similarstoic-default-scene-language-v1.png` | `assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png` | 1024x1536 | `989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2` | APPROVED ENVIRONMENT-STYLE REFERENCE | Default scene-language grounding: warm off-white negative space, sparse wonky outlined forms, restrained block colours and only enough props/detail to establish location or action. Approximately the upper normal detail boundary for an ordinary scene. | Primary or secondary character identity authority, mandatory scenery/composition, universal background, complete environment pack, permanent provider selection, or permission for painterly/dense ordinary scenes. |
 
-Character identity, acting-pose and environment-style references have distinct semantic roles. Character, props and
-environment should nevertheless appear to share one illustrator: environmental line weight, complexity, colour
-treatment, shape language and rendering density must remain compatible with Core v3.
+### Approved composition-grammar references
+
+Composition-grammar references demonstrate how separately approved character and environment assets are arranged into
+one coherent illustration. They govern hierarchy and assembly rather than identity, acting performance or environment
+style.
+
+| Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SimilarStoic static scenes | `similarstoic-static-composition-grammar-v1.png` | `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png` | 1024x1536 | `c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8` | APPROVED COMPOSITION-GRAMMAR REFERENCE | Character-first hierarchy, subordinate environmental context, deliberate off-white negative space, mobile-readable scale, action-aware off-centre placement, minimal illustrative grounding and sparse shared-plane marks. | Identity, pose or environment-style authority; mandatory storm layout; proof of a complete scene pack or repeatability across scene types; runtime Asset registration. |
+
+Character identity, acting-pose, environment-style and composition-grammar references have distinct semantic roles.
+Character, props and environment should nevertheless appear to share one illustrator: environmental line weight,
+complexity, colour treatment, shape language and rendering density must remain compatible with Core v3.
 
 Supporting-character references, when separately founder + ChatGPT-approved, must live in their own per-character directories. Identity references from distinct recurring characters must never be pooled.

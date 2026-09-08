@@ -26,9 +26,9 @@ existing GitHub roadmap and specification remain authoritative.
 For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
-acting-pose method, the rejected environment attempts, the approved Candidate 4 environment style, qualified spend and
-reference-set provenance. The local rejected implementation is excluded from the environment-style canonicalization
-candidate.
+acting-pose method, the rejected environment attempts, the approved Candidate 4 environment style, the passed static
+integration/refinement and approved composition grammar, qualified spend and reference-set provenance. The local rejected
+implementation is excluded from the composition-grammar canonicalization candidate.
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.
@@ -45,8 +45,8 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the environment-style canonicalization candidate:** local `main` and `origin/main` both resolve to
-`5ea47679570320e7474aa3eb4162f6b7618c96a6`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+**Base before the composition-grammar canonicalization candidate:** local `main` and `origin/main` both resolve to
+`9a434c5d79e7710ac201c46d5d3b8c4816603ef8`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
 experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
 historical context.
@@ -155,22 +155,41 @@ Primary identity authority, approved acting-pose reference and environment-style
 roles. The environment reference must inherit compatible line weight, complexity, colour treatment, shape language and
 rendering density from Core v3, but it cannot define the hamster's identity or approved deformation.
 
-Current evidence supports continued evaluation of stable approved pose assets plus separately sourced/generated
-environments plus controlled Conveyor composition. This remains a production-method hypothesis under validation, not
-a fully accepted architecture. Working cumulative experiment spend is `$24.107475`, leaving `$0.892525` under the
-existing cumulative `$25` authorization, with the billing qualifications in the quality-cycle note unchanged.
+### Approved static composition grammar
+
+The zero-provider-spend static integration experiment and its bounded refinement both passed founder + ChatGPT review.
+The exact refined frame is tracked at
+`assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`, SHA-256
+`c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8`, as the first approved **composition-grammar
+reference**. It demonstrates character-first hierarchy, subordinate context, deliberate warm-white/off-white negative
+space, mobile-readable character scale, action-aware off-centre placement, minimal illustrative ground contact and
+sparse environmental marks crossing the character plane without obscuring it.
+
+Identity, acting-pose, environment-style and composition-grammar authorities remain distinct. The hard assembly rule is
+that character, props, environment and compositing treatments appear to share one illustrator: avoid mismatched line
+weight, density, shading, texture, perspective sophistication, colour treatment or polish. Negative space is active
+design, and the target is simple on purpose rather than cheap-looking.
+
+This approval validates the separated method for one static scene. The exact storm layout is not mandatory, no complete
+scene pack exists, and repeatability across multiple scene types remains unproven. It creates no runtime Asset record,
+Production #2, successor milestone, rig or video-production authority.
+
+The separated method of stable approved pose assets plus independently sourced/generated environments and controlled
+Conveyor composition is visually validated for this one scene, but is not accepted as expanded architecture. Working
+cumulative experiment spend is `$24.107475`, leaving `$0.892525` under the existing cumulative `$25` authorization,
+with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-The current bounded task canonicalizes only the exact approved Candidate 4 environment-style bytes, provenance and
-required governance documentation; final push requires founder approval. The unnumbered Production #1-derived
+The current bounded task canonicalizes only the exact approved composition-grammar bytes, provenance and required
+governance documentation; final push requires founder approval. The unnumbered Production #1-derived
 presentation proof remains founder-rejected, not pending review. Its static mascot/geometric scenes and scene-clock
 captions are not accepted presentation architecture.
 
-After founder/ChatGPT review and push, the proposed next bounded action is one zero-provider-spend static composition
-using the approved umbrella-resistance pose and Candidate 4 environment reference to validate stylistic integration.
-It is not authorized for execution by this canonicalization. No video, Production #2, successor milestone, v0.28,
-Migration 24, rig or architecture expansion is authorized.
+After founder/ChatGPT review and push, the proposed next bounded product experiment is a different narrative beat using
+the separated method to test whether this grammar generalizes beyond the storm scene. It is not authorized for execution
+by this canonicalization. No video, Production #2, successor milestone, v0.28, Migration 24, rig or architecture
+expansion is authorized.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.
@@ -956,6 +975,12 @@ The separate approved environment-style authority is
 `989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2`. It may ground ordinary-scene linework,
 palette, shape language, rendering density, negative space and prop simplicity. It cannot ground hamster identity or
 require reuse of the pictured street.
+
+The separate approved composition-grammar authority is
+`assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`, 1024x1536, SHA-256
+`c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8`. It demonstrates coherent assembly of
+approved character and environment assets. It cannot define identity, acting performance or environment style, and it
+is not a mandatory storm layout or proof of repeatability across scene types.
 
 Supporting-character references must live in separate per-character directories. Identity references from different
 recurring characters must never be pooled. A recurring supporting character must receive its own isolated approved

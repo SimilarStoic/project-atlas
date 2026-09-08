@@ -98,6 +98,40 @@
       "qualification": "OpenAI image amounts remain conservative estimates pending billing reconciliation; Leonardo amounts are provider-reported generation-response costs."
     }
   },
+  "composition_grammar_canonicalization": {
+    "accepted_date": "2026-09-08",
+    "canonical_base": "9a434c5d79e7710ac201c46d5d3b8c4816603ef8",
+    "static_integration_verdict": "PASS",
+    "refinement_verdict": "PASS",
+    "approved_asset": {
+      "name": "SimilarStoic static composition grammar v1",
+      "role": "approved composition-grammar reference",
+      "tracked_path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
+      "source_path": "D:\\ProjectAtlas\\work\\similarstoic-static-refinement-20260908\\founder-review\\composition-refined.png",
+      "bytes": 1232265,
+      "dimensions": [1024, 1536],
+      "format": "PNG",
+      "mode": "RGB",
+      "has_alpha": false,
+      "sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8",
+      "bytes_copied_exactly": true,
+      "semantic_boundary": "Demonstrates approved character/environment assembly; not identity, pose or environment-style authority, mandatory storm scenery, a scene pack, proof of cross-scene repeatability or a runtime Asset record."
+    },
+    "approved_inputs": {
+      "acting_pose_sha256": "a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e",
+      "environment_style_sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+      "transparent_derivative_sha256": "0c93d1b096441b757379cec33cd0b3855ac53ace24e855901ab8b45a997ffcf6"
+    },
+    "method": "Deterministic local scale, placement, flat contact ellipse and sparse foreground rain using exact approved inputs; zero provider calls and no provider-generated addition.",
+    "grammar": "Character-first hierarchy; subordinate context; deliberate warm-white/off-white negative space; mobile-readable scale; action-aware off-centre placement; minimal illustrative grounding; sparse shared-plane marks; one-illustrator compatibility; simple on purpose, not cheap-looking.",
+    "spend": {
+      "new_spend_usd": 0.0,
+      "provider_calls": 0,
+      "cumulative_working_estimate_usd": 24.107475,
+      "authorization_ceiling_usd": 25.0,
+      "remaining_working_estimate_usd": 0.892525
+    }
+  },
   "quality_cycle": {
     "source_root": "D:\\ProjectAtlas\\work\\similarstoic-quality-cycle-20260902",
     "source_status": "ignored; unchanged; copied into verified archive",

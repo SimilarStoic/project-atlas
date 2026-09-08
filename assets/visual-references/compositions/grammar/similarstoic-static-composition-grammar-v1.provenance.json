@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic static composition grammar v1",
+  "role": "approved composition-grammar reference",
+  "tracked_path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
+  "tracked_sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8",
+  "bytes": 1232265,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false,
+    "transparency_metadata": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic zero-provider-spend static composition refinement",
+    "root": "D:/ProjectAtlas/work/similarstoic-static-refinement-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-static-refinement-20260908/founder-review/composition-refined.png",
+    "source_sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8",
+    "bytes_copied_exactly": true,
+    "static_integration_verdict": "PASS",
+    "refinement_verdict": "PASS",
+    "method": "Exact approved acting-pose and environment-style assets assembled through deterministic local scaling, placement, flat contact treatment and sparse foreground rain layering.",
+    "provider_calls": 0,
+    "provider_spend_usd": 0.0,
+    "new_provider_generated_additions": false
+  },
+  "approved_inputs": {
+    "primary_identity_authority": {
+      "path": "assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png",
+      "sha256": "11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956"
+    },
+    "acting_pose_reference": {
+      "path": "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png",
+      "sha256": "a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e"
+    },
+    "transparent_derivative": {
+      "source_path": "D:/ProjectAtlas/work/similarstoic-separated-composite-20260908/founder-review/character-transparent.png",
+      "sha256": "0c93d1b096441b757379cec33cd0b3855ac53ace24e855901ab8b45a997ffcf6",
+      "reused_exactly": true
+    },
+    "environment_style_reference": {
+      "path": "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+      "sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2"
+    }
+  },
+  "deterministic_composition": {
+    "canvas_dimensions": [1024, 1536],
+    "environment_zoom": 1.0,
+    "character_crop_alpha_bbox": [54, 133, 1022, 1272],
+    "character_dimensions": [720, 847],
+    "character_position": [62, 605],
+    "feet_y": 1452,
+    "contact_ellipse_box": [136, 1432, 710, 1460],
+    "contact_ellipse_rgba": [171, 181, 184, 42],
+    "foreground_rain_rgba": [25, 28, 29, 195],
+    "foreground_rain_width": 3,
+    "foreground_rain_marks": [
+      [334, 653, 322, 687],
+      [469, 759, 457, 793],
+      [584, 879, 572, 914],
+      [704, 998, 692, 1033],
+      [814, 1117, 802, 1152],
+      [259, 1112, 247, 1146]
+    ]
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 9a434c5d79e7710ac201c46d5d3b8c4816603ef8",
+    "scope": "First approved SimilarStoic static composition / composition-grammar reference"
+  },
+  "approved_grammar": {
+    "character_first": "The hamster carries the story and remains the dominant focal element.",
+    "environment_second": "The environment establishes context without competing for attention.",
+    "white_space_discipline": "Large warm-white or off-white areas are deliberately retained; unused space need not be filled.",
+    "scale": "The character remains emotionally and facially readable on mobile without removing environmental context.",
+    "placement": "Off-centre placement is valid when pose, prop or action direction needs space.",
+    "grounding": "Use minimal illustrative contact treatment; avoid realistic cast shadows, complex lighting and dimensional rendering.",
+    "shared_plane_integration": "Sparse simple environmental marks may overlap the character plane when useful, without obscuring the character.",
+    "same_illustrator_rule": "Character, props, environment and compositing treatments must share compatible line weight, rendering density, shading, texture, perspective, colour treatment and polish.",
+    "negative_space": "Negative space is an active design element rather than missing content.",
+    "simplicity": "Simple on purpose, not cheap-looking."
+  },
+  "semantic_boundary": {
+    "demonstrates_assembly_of_approved_assets": true,
+    "identity_authority": false,
+    "acting_pose_authority": false,
+    "environment_style_authority": false,
+    "mandatory_storm_layout": false,
+    "complete_scene_pack": false,
+    "proof_of_repeatability_across_scene_types": false,
+    "runtime_asset_record": false,
+    "production_2": false,
+    "successor_milestone": false,
+    "rig": false
+  }
+}
