@@ -493,6 +493,22 @@ Animation is audio-first and visually enhanced. It should primarily use evolving
 - Hero frames are visual peaks, not the default rendering style.
 - Scene changes should follow changes in ideas, not arbitrary time intervals.
 
+For most ordinary SimilarStoic scenes, the founder-approved default scene language is predominantly warm white or
+off-white, with generous negative space, sparse composition, simple imperfect hand-drawn outlines, restrained flat
+block colours and only enough environmental detail and props to establish the location, concept or action. Character,
+props and environment should appear to have been drawn by the same illustrator; environment line weight, complexity,
+colour treatment, shape language and rendering density must remain compatible with Core v3 and subordinate to the
+hamster. The approved environment-style reference represents approximately the upper normal detail boundary, while a
+more minimal treatment remains valid. Predominantly flat colour permits only unobtrusive tonal variation that does not
+create painterly, glossy, dimensional or stylistically separate scenery. Obvious gradients, realistic or volumetric
+lighting, photorealistic shading, detailed materials and painterly surface texture remain outside the ordinary style.
+
+Predominantly white/off-white is a default, not a universal requirement: night scenes, hero or break frames, intense
+moments, special diagrams and deliberate visual jokes may use purposeful exceptions. Visual simplicity is a
+SimilarStoic brand choice first and a production-efficiency advantage second. It should improve consistency,
+character/world matching, generation efficiency and reuse, but “simple on purpose” must never become “cheap-looking”;
+quality remains authoritative over marginal cost savings.
+
 Signature original break-frame/still devices may occasionally interrupt the normal sparse visual grammar to
 land a joke, dramatize an event, make an explanatory point or metaphor, convey a feeling, or make a concept
 memorable. They may be unusually detailed, exaggerated, uncanny, absurd, dramatically over-serious, visually

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic default scene language v1",
+  "role": "approved environment-style / default-scene-language reference",
+  "tracked_path": "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+  "tracked_sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+  "bytes": 1510581,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false,
+    "transparency_metadata": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic controlled environment candidates 3 and 4",
+    "root": "D:/ProjectAtlas/work/similarstoic-environment-candidates-3-4-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-environment-candidates-3-4-20260908/founder-review/environment-candidate-4.png",
+    "source_sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+    "bytes_copied_exactly": true,
+    "provider": "OpenAI",
+    "model": "gpt-image-2",
+    "operation": "images edit",
+    "quality": "high",
+    "size": "1024x1536",
+    "output_format": "png",
+    "prompt_augmentation": false,
+    "candidate_4_prompt_sha256": "ce144bee0ff5f4f1346137b49128179df0dcfa75c04f3fecd5d9c74c46a6c626",
+    "style_grounding": {
+      "method": "Character-free deterministic crops from approved tracked SimilarStoic scene exemplars; no AI-generated reference board and no hamster identity input.",
+      "sha256": "0b6e5ab1c59c69812e8aa9097e0101dd39312097ecee6ff3f3d9c6d79485b630",
+      "sources": [
+        "assets/visual-references/core-mascot/scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png",
+        "assets/visual-references/core-mascot/scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png"
+      ]
+    },
+    "comparison_context": {
+      "candidate_3": {
+        "sha256": "891222920944bb5f2a7b6076ca6223e9a81b1cf4c8b673b7ceb6f6d5faf21864",
+        "role": "viable lower-detail / maximum-simplicity pole",
+        "tracked": false
+      },
+      "candidate_4": {
+        "sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+        "role": "selected upper normal detail boundary for ordinary scenes",
+        "tracked": true
+      }
+    }
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 5ea47679570320e7474aa3eb4162f6b7618c96a6",
+    "selection": "Candidate 4",
+    "scope": "Approved environment style reference and default scene language reference"
+  },
+  "semantic_boundary": {
+    "primary_identity_authority": "assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png",
+    "approved_acting_pose_reference": "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png",
+    "relationship_to_core_v3": "Defines the normal visual language of the world around Core v3. Environment line weight, complexity, colour treatment, shape language and rendering density should appear compatible with the character artwork.",
+    "detail_boundary": "Approximately the upper normal detail boundary for an ordinary SimilarStoic scene; Candidate 3 remains untracked experimental evidence for the viable lower-detail pole.",
+    "not_identity_authority": true,
+    "not_reusable_mandatory_scenery": true,
+    "not_universal_background": true,
+    "not_permanent_provider_selection": true,
+    "not_environment_pack": true,
+    "not_production_2": true,
+    "not_successor_milestone": true
+  },
+  "spend": {
+    "cumulative_working_estimate_usd": 24.107475,
+    "authorization_ceiling_usd": 25.0,
+    "remaining_working_estimate_usd": 0.892525,
+    "qualification": "OpenAI image amounts remain conservative working estimates pending billing reconciliation; the bundled CLI did not expose billed dollar amounts. No provider request or new spend occurred during canonicalization."
+  }
+}

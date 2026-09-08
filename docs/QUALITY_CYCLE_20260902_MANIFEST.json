@@ -64,6 +64,40 @@
       "qualification": "OpenAI image amounts remain conservative estimates pending billing reconciliation; Leonardo amounts are provider-reported generation-response costs."
     }
   },
+  "environment_style_canonicalization": {
+    "accepted_date": "2026-09-08",
+    "canonical_base": "5ea47679570320e7474aa3eb4162f6b7618c96a6",
+    "selection": "Candidate 4",
+    "approved_asset": {
+      "name": "SimilarStoic default scene language v1",
+      "role": "approved environment-style / default-scene-language reference",
+      "tracked_path": "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+      "source_path": "D:\\ProjectAtlas\\work\\similarstoic-environment-candidates-3-4-20260908\\founder-review\\environment-candidate-4.png",
+      "bytes": 1510581,
+      "dimensions": [1024, 1536],
+      "format": "PNG",
+      "mode": "RGB",
+      "has_alpha": false,
+      "sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+      "bytes_copied_exactly": true,
+      "semantic_boundary": "Defines default environment visual language and approximately the upper normal detail boundary for ordinary scenes; not character identity, mandatory scenery, a universal background, an environment pack or permanent provider selection."
+    },
+    "method": "GPT Image 2 edit at high quality using a character-free deterministic style board cropped from two approved tracked SimilarStoic scene exemplars.",
+    "candidate_3": {
+      "sha256": "891222920944bb5f2a7b6076ca6223e9a81b1cf4c8b673b7ceb6f6d5faf21864",
+      "finding": "Viable lower-detail / maximum-simplicity pole; retained as untracked experiment evidence."
+    },
+    "candidate_4": "Founder + ChatGPT-selected environment style and default scene language reference; approximately the upper normal detail boundary for an ordinary scene.",
+    "default_scene_language": "Predominantly warm white/off-white negative space, sparse composition, simple imperfect hand-drawn outlines, restrained block colours, few useful props, character-first hierarchy and only enough detail to establish place, concept or action. Character, props and environment should appear drawn by the same illustrator.",
+    "flat_colour_qualification": "Very subtle unobtrusive tonal variation is acceptable; obvious gradients, realistic or volumetric lighting, glossy rendering, photorealistic shading, detailed material rendering and painterly texture remain rejected.",
+    "spend": {
+      "cumulative_working_estimate_usd": 24.107475,
+      "authorization_ceiling_usd": 25.0,
+      "remaining_working_estimate_usd": 0.892525,
+      "new_spend_during_canonicalization_usd": 0.0,
+      "qualification": "OpenAI image amounts remain conservative estimates pending billing reconciliation; Leonardo amounts are provider-reported generation-response costs."
+    }
+  },
   "quality_cycle": {
     "source_root": "D:\\ProjectAtlas\\work\\similarstoic-quality-cycle-20260902",
     "source_status": "ignored; unchanged; copied into verified archive",

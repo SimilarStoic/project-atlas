@@ -2,10 +2,10 @@
 
 ## Authority and checkpoint
 
-Recorded 8 September 2026 and updated after founder + ChatGPT accepted the isolated-character experiment. This note
-records reviewed findings and the accepted-pose canonicalization candidate; it does not accept the rejected
-implementation, select a successor milestone, or authorize the next experiment. Final push remains subject to founder
-authorization.
+Recorded 8 September 2026 and updated after founder + ChatGPT accepted the isolated-character result and Candidate 4
+environment style. This note records reviewed findings and the bounded visual-reference canonicalization candidates; it
+does not accept the rejected implementation, select a successor milestone, or authorize the next experiment. Final
+push remains subject to founder authorization.
 
 The canonical base before the accepted-pose candidate was `c5dc39bd8b23d10ee5aef540b627b52835a47290` on local
 `main` and `origin/main`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected experimental commit
@@ -118,12 +118,41 @@ test, one character-free stormy-street plate was requested. The output contained
 despite explicit exclusions and was rejected. Its provider-reported cost was `$0.0374`; it remains local evidence and
 must not be promoted. This single failure does not prove that all environment generation is impossible.
 
+## Environment style calibration and selection
+
+The first independently generated GPT Image 2 storm street was character-free but founder-rejected because it was dark,
+cinematic, painterly, realistic, textured and too visually dominant. A subsequent style calibration used deterministic
+character-free crops from approved SimilarStoic scene exemplars to ground only linework, palette, prop treatment and
+negative space. Candidates 1 and 2 established a materially closer sparse direction but retained subtle tonal treatment.
+
+Two further controlled alternatives tested the approved direction. Candidate 3 demonstrated the viable lower-detail /
+maximum-simplicity pole. Founder + ChatGPT selected Candidate 4, SHA-256
+`989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2`, as the approved environment style /
+default-scene-language reference. Its canonical tracked copy is
+`assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png`. Candidate 4 represents
+approximately the upper normal detail boundary for an ordinary scene. It defines visual language rather than mandatory
+reusable street scenery, a universal background, an environment pack or a permanent provider selection. Candidates
+1–3 and all earlier rejected environments remain untracked experimental evidence.
+
+The ordinary-scene contract is predominantly warm white/off-white negative space, sparse composition, simple imperfect
+hand-drawn outlines, restrained block colours, few useful props and only enough detail to establish place, concept or
+action. Character, props and environment must appear drawn by the same illustrator; environment line weight,
+complexity, colour treatment, shape language and rendering density must remain compatible with Core v3 and subordinate
+to the hamster. Predominantly flat colour permits very subtle unobtrusive tonal variation, but not obvious gradients,
+realistic or volumetric lighting, glossy rendering, photorealistic shading, detailed materials or painterly texture.
+White/off-white is the ordinary default rather than a universal rule; purposeful later exceptions may include night,
+hero/break frames, intense moments, special diagrams or deliberate jokes.
+
+Visual simplicity is a brand choice first and production-efficiency advantage second. It may reduce inconsistency,
+generation complexity and corrective attempts while improving reuse, but “simple on purpose” must never become
+“cheap-looking”; quality remains authoritative over marginal savings.
+
 Current evidence supports continued evaluation of **stable approved character pose assets + separately
 sourced/generated environments + controlled Conveyor composition**. This is a production-method hypothesis under
-validation, not a fully accepted architecture. The next proposed bounded experiment is one independently generated
-character-free storm environment and, only if it passes, one static local composite using the approved pose. It is not
-authorized by this note. No new full production video should be attempted before visual quality,
-narration direction/completeness and actual caption alignment are established. Production #2 remains blocked.
+validation, not a fully accepted architecture. After review and push of this reference, the proposed next bounded action
+is one zero-provider-spend static composition using the approved pose and environment reference. No new full production
+video should be attempted before visual quality, narration direction/completeness and actual caption alignment are
+established. Production #2 remains blocked.
 
 ## Spend: conservative working estimate, not verified billing
 
@@ -135,14 +164,17 @@ narration direction/completeness and actual caption alignment are established. P
 | Leonardo full-scene trial, provider reported | 0.043400 |
 | Two isolated GPT Image 2 edits, conservatively $2 each | 4.000000 |
 | Leonardo environment-only attempt, provider reported | 0.037400 |
-| Cumulative working estimate | **14.107475** |
+| Rejected independent GPT Image 2 environment, conservatively | 2.000000 |
+| Four GPT Image 2 environment calibration/selection edits, conservatively $2 each | 8.000000 |
+| Cumulative working estimate | **24.107475** |
 | Existing cumulative authorization | **25.000000** |
-| Working estimated remainder | **10.892525** |
+| Working estimated remainder | **0.892525** |
 
 The ledger arithmetic is correct, but the OpenAI amounts remain conservative working estimates pending billing
 reconciliation, not verified provider billing. The original five image raw responses contain usage: 21,361 input
-tokens (20,484 image, 877 text), 27,440 output tokens and 48,801 combined tokens. The bundled CLI used for the two later
-edits did not expose billed dollar amounts, so the existing `$2`-per-image conservative convention was retained.
+tokens (20,484 image, 877 text), 27,440 output tokens and 48,801 combined tokens. The bundled CLI used for the later
+GPT Image 2 edits did not expose billed dollar amounts, so the existing `$2`-per-image conservative convention was
+retained.
 Whisper reports 35 usage seconds, slightly different from the approximately 34.4-second duration used in the old
 estimate. Leonardo amounts above are generation-response dollar costs. Do not invent a more exact billed total or
 increase available authority on the strength of an unverified recalculation. The `$25` envelope is cumulative, not

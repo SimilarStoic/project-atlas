@@ -2,8 +2,8 @@
 
 ## Last Updated
 
-8 September 2026 — founder-approved isolated acting-pose result recorded in a local canonicalization candidate based
-on canonical `c5dc39bd8b23d10ee5aef540b627b52835a47290`; this candidate is not pushed.
+8 September 2026 — founder-approved Candidate 4 environment style recorded in a local canonicalization candidate based
+on canonical `5ea47679570320e7474aa3eb4162f6b7618c96a6`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -13,11 +13,15 @@ founder-rejected for final quality; Marin narration is incomplete. Cedar is a re
 not the final voice. The earlier GPT Image 2 full-scene reference-board method failed, while the later isolated-character
 method passed: founder + ChatGPT accepted
 `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` as the first approved
-secondary acting-pose reference. The primary Core v3 identity reference remains unchanged.
+secondary acting-pose reference. Founder + ChatGPT subsequently selected
+`assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png` as the approved environment
+style / default-scene-language reference. The primary Core v3 identity reference and approved acting pose remain
+unchanged.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
-No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only the
-approved pose-reference asset and its governance documentation. It does not promote rejected `ad52ab3` material.
+No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only the exact
+approved environment-style reference bytes, provenance and bounded governance documentation. It does not promote
+rejected `ad52ab3` material.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
 migrations and tests; (4) verified persistent runtime; (5) verified local experimental/review evidence;
@@ -28,8 +32,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this accepted-pose canonicalization candidate:** local `main` and `origin/main` both resolved to
-  `c5dc39bd8b23d10ee5aef540b627b52835a47290`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this environment-style canonicalization candidate:** local `main` and `origin/main` both resolved to
+  `5ea47679570320e7474aa3eb4162f6b7618c96a6`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -88,20 +92,22 @@ render, or persistent artifact for it.
 `D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, distinct from the runtime, with verified
 SHA-256 `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
 
-The isolated acting-pose experiment used exact canonical references directly, removed the environment burden, and
-allowed one defect-targeted refinement. Candidate 1 was useful but not selected because of shading/vignette defects;
-Candidate 2 passed and is founder-approved. The separate Leonardo Phoenix environment-only attempt failed because it
-inserted an unwanted hamster and umbrella; that output remains rejected evidence. The supported production-method
-hypothesis is stable approved pose assets plus separately sourced/generated environments plus controlled Conveyor
-composition. It remains under validation, not an accepted architecture. Cumulative working experiment spend is
-`$14.107475`, leaving `$10.892525` under the existing `$25` ceiling, subject to the existing billing qualifications.
+The isolated acting-pose experiment established the approved secondary pose. Subsequent separated-environment tests
+rejected a detailed cinematic street, then calibrated a sparse hand-drawn direction across Candidates 1–4. Founder +
+ChatGPT selected Candidate 4 as the environment style/default-scene-language reference and Candidate 3 as useful
+untracked evidence for the viable lower-detail pole. Candidate 4 is approximately the upper normal detail boundary for
+an ordinary scene; it is not mandatory reusable scenery, a universal background or a permanent provider selection.
+The supported production-method hypothesis remains stable approved pose assets plus separately sourced/generated
+environments plus controlled Conveyor composition. It is under validation, not accepted architecture. Cumulative
+working experiment spend is `$24.107475`, leaving `$0.892525` under the existing `$25` ceiling, subject to the existing
+billing qualifications.
 
 ## Exact Next Action
 
-Review this accepted-pose canonicalization candidate; founder retains final push authority. The next proposed bounded
-experiment is one independently generated character-free storm environment followed, only if it passes, by one static
-local composite using the approved umbrella-resistance pose. It is not authorized for execution by this candidate.
-No full-video retry, Production #2, v0.28, Migration 24 or successor follows automatically.
+Review this environment-style canonicalization candidate; founder retains final push authority. After review and push,
+the proposed next bounded action is one zero-provider-spend static composition using the approved umbrella-resistance
+pose and Candidate 4 environment reference to validate stylistic integration. It is not authorized for execution by
+this candidate. No video, Production #2, v0.28, Migration 24 or successor follows automatically.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

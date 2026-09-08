@@ -26,8 +26,9 @@ existing GitHub roadmap and specification remain authoritative.
 For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
-acting-pose method, the rejected Leonardo environment, qualified spend and reference-set provenance. The local rejected
-implementation is excluded from the accepted-pose canonicalization candidate.
+acting-pose method, the rejected environment attempts, the approved Candidate 4 environment style, qualified spend and
+reference-set provenance. The local rejected implementation is excluded from the environment-style canonicalization
+candidate.
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.
@@ -44,8 +45,8 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the accepted-pose canonicalization candidate:** local `main` and `origin/main` both resolve to
-`c5dc39bd8b23d10ee5aef540b627b52835a47290`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+**Base before the environment-style canonicalization candidate:** local `main` and `origin/main` both resolve to
+`5ea47679570320e7474aa3eb4162f6b7618c96a6`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
 experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
 historical context.
@@ -128,21 +129,48 @@ generated reference board. Candidate 1 preserved identity and acting but retaine
 2 was the single defect-targeted refinement and passed founder review. The separate Leonardo Phoenix environment-only
 attempt was rejected because it inserted an unwanted different hamster and umbrella. It is not promoted.
 
+### Approved environment style and default scene language
+
+Founder + ChatGPT selected Candidate 4 from the controlled environment calibration as the approved **environment
+style / default-scene-language reference**. Its exact tracked copy is
+`assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png`, SHA-256
+`989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2`. It defines the normal visual language of the
+world around Core v3: predominantly warm white/off-white space, generous negative space, sparse composition, simple
+imperfect hand-drawn outlines, restrained block colours, few useful props and only enough detail to establish location,
+concept or action. Character, props and environment must appear to share one illustrator, without a stylistic seam.
+
+Candidate 4 is approximately the upper normal detail boundary for an ordinary scene; untracked Candidate 3 shows a
+viable lower-detail pole. Ordinary scenes may sit between them. Candidate 4 is a style reference, not mandatory reusable
+scenery, a universal background, an environment pack or permanent provider selection. Predominantly flat colour allows
+very subtle unobtrusive tonal variation, but obvious gradients, realistic or volumetric lighting, glossy rendering,
+photorealistic shading, detailed materials and painterly texture remain rejected. Predominantly white/off-white is the
+ordinary-scene default; night scenes, hero/break frames, intense moments, special diagrams and deliberate visual jokes
+may later use purposeful exceptions.
+
+Visual simplicity is a SimilarStoic brand choice first and a production-efficiency advantage second. It may improve
+consistency, character/world matching, generation efficiency and reuse, but “simple on purpose” must never become
+“cheap-looking”; quality remains authoritative over marginal cost savings.
+
+Primary identity authority, approved acting-pose reference and environment-style reference remain distinct semantic
+roles. The environment reference must inherit compatible line weight, complexity, colour treatment, shape language and
+rendering density from Core v3, but it cannot define the hamster's identity or approved deformation.
+
 Current evidence supports continued evaluation of stable approved pose assets plus separately sourced/generated
 environments plus controlled Conveyor composition. This remains a production-method hypothesis under validation, not
-a fully accepted architecture. Working cumulative experiment spend is `$14.107475`, leaving `$10.892525` under the
+a fully accepted architecture. Working cumulative experiment spend is `$24.107475`, leaving `$0.892525` under the
 existing cumulative `$25` authorization, with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-The current bounded task canonicalizes only the exact approved pose bytes and required governance documentation; final
-push requires founder approval. The unnumbered Production #1-derived presentation proof remains founder-rejected, not
-pending review. Its static mascot/geometric scenes and scene-clock captions are not accepted presentation architecture.
+The current bounded task canonicalizes only the exact approved Candidate 4 environment-style bytes, provenance and
+required governance documentation; final push requires founder approval. The unnumbered Production #1-derived
+presentation proof remains founder-rejected, not pending review. Its static mascot/geometric scenes and scene-clock
+captions are not accepted presentation architecture.
 
-The next proposed bounded experiment is to generate one character-free storm environment independently and, only if
-it passes, make one static local composite using the approved umbrella-resistance pose. It is not authorized for
-execution by this canonicalization. No full video, Production #2, successor milestone, v0.28, Migration 24, rig or
-architecture expansion is authorized.
+After founder/ChatGPT review and push, the proposed next bounded action is one zero-provider-spend static composition
+using the approved umbrella-resistance pose and Candidate 4 environment reference to validate stylistic integration.
+It is not authorized for execution by this canonicalization. No video, Production #2, successor milestone, v0.28,
+Migration 24, rig or architecture expansion is authorized.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.
@@ -922,6 +950,12 @@ The three identity assets contain no supporting hamster model and are the only c
 manifest. The acting-pose reference demonstrates accepted deformation/performance but cannot define or replace
 identity. The scene/expression exemplars are supplementary only: their whiteboards, charts, books, tables, chairs,
 diagrams and any other props are scene context, never mascot identity features.
+
+The separate approved environment-style authority is
+`assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png`, 1024x1536, SHA-256
+`989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2`. It may ground ordinary-scene linework,
+palette, shape language, rendering density, negative space and prop simplicity. It cannot ground hamster identity or
+require reuse of the pictured street.
 
 Supporting-character references must live in separate per-character directories. Identity references from different
 recurring characters must never be pooled. A recurring supporting character must receive its own isolated approved

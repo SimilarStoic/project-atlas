@@ -4,7 +4,10 @@ Store project assets that are intentionally version-controlled here. Keep genera
 
 ## Authoritative visual-reference manifest
 
-The seven PNGs below are the founder + ChatGPT-approved, Git-tracked visual references for the **core mascot**. They are durable reference bytes, not runtime records, generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical `character-reference-set-similarstoic-hamster-core-v1` / Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
+The seven core-mascot PNGs and separate environment-style PNG below are founder + ChatGPT-approved, Git-tracked
+visual references. They are durable reference bytes, not runtime records, generated-output registrations, a new
+CharacterReferenceSet, or a change to the immutable historical `character-reference-set-similarstoic-hamster-core-v1`
+/ Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
 
 ### Identity references
 
@@ -33,5 +36,18 @@ Scene / expression exemplars may guide pose, expression, composition, props and 
 | Core mascot | `a3e484f6-8c69-4b89-8592-dd8671563b65.png` | `assets/visual-references/core-mascot/scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png` | 1448x1086 | `27ff66e34a8649a22c649a5593c93d0532cd176cf69dafb61bc19a1d2e1eb85a` | CORE SCENE / EXPRESSION EXEMPLAR | Flowchart/explaining pose, expression, composition and scene context. | Defining core anatomy/identity or treating the flowchart/whiteboard as an identity feature. |
 | Core mascot | `e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` | `assets/visual-references/core-mascot/scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` | 1448x1086 | `24dc9fd6367d6f7c4f9731b12bd1b7e7376edf7870ecee0a8ac066699363ff65` | CORE SCENE / EXPRESSION EXEMPLAR | Growth-chart/surprised-expression pose, composition and scene context. | Defining core anatomy/identity or treating the chart as an identity feature. |
 | Core mascot | `42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` | `assets/visual-references/core-mascot/scenes/42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` | 1448x1086 | `95ad2c8a75b7ce798eb315d1c84d34571bb1a44ace1922b141bdb2173fdfae4f` | CORE SCENE / EXPRESSION EXEMPLAR | Reading/thinking pose, expression, composition and scene context. | Defining core anatomy/identity or treating the book, table or chair as identity features. |
+
+### Approved environment-style references
+
+Environment-style references define the normal visual language of the world surrounding the mascot. They do not
+define character identity or require reuse of their exact scenery or composition.
+
+| Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SimilarStoic ordinary scenes | `similarstoic-default-scene-language-v1.png` | `assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png` | 1024x1536 | `989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2` | APPROVED ENVIRONMENT-STYLE REFERENCE | Default scene-language grounding: warm off-white negative space, sparse wonky outlined forms, restrained block colours and only enough props/detail to establish location or action. Approximately the upper normal detail boundary for an ordinary scene. | Primary or secondary character identity authority, mandatory scenery/composition, universal background, complete environment pack, permanent provider selection, or permission for painterly/dense ordinary scenes. |
+
+Character identity, acting-pose and environment-style references have distinct semantic roles. Character, props and
+environment should nevertheless appear to share one illustrator: environmental line weight, complexity, colour
+treatment, shape language and rendering density must remain compatible with Core v3.
 
 Supporting-character references, when separately founder + ChatGPT-approved, must live in their own per-character directories. Identity references from distinct recurring characters must never be pooled.
