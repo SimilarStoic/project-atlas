@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic calm indoor sorting scene v1",
+  "role": "approved indoor scene / environment example",
+  "tracked_path": "assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png",
+  "tracked_sha256": "45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a",
+  "bytes": 1082917,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1536, 1024],
+    "mode": "RGB",
+    "has_alpha": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic second-scene visual generalization test",
+    "root": "D:/ProjectAtlas/work/similarstoic-second-scene-generalization-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-second-scene-generalization-20260908/founder-review/environment-candidate-1.png",
+    "source_sha256": "45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a",
+    "bytes_copied_exactly": true,
+    "provider": "OpenAI",
+    "model": "gpt-image-2",
+    "operation": "images edit",
+    "accepted_inputs": [
+      "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+      "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png"
+    ]
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 60a7ce64f8d3de897ba18cfb08d04438a79b5e8f",
+    "scope": "Successful calm indoor application of the existing Default Scene Language authority"
+  },
+  "semantic_boundary": {
+    "default_scene_language_authority_unchanged": true,
+    "default_scene_language_path": "assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png",
+    "default_scene_language_sha256": "989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2",
+    "boundary": "Approved environment example only; not a replacement style authority, universal background, environment pack, or mandatory indoor layout."
+  },
+  "experiment_cost": {
+    "quality_development_envelope_usd": 10.0,
+    "conservative_maximum_exposure_usd": 1.0,
+    "remaining_authorization_usd": 9.0,
+    "canonicalization_spend_usd": 0.0,
+    "top_up_required": false,
+    "account_funding_treated_as_spend": false
+  }
+}

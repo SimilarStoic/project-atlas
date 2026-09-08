@@ -961,6 +961,7 @@ Core-mascot generation uses this hierarchy:
 | CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/a5564bd0-51d2-4713-82c1-42138f12a8dc.png` | 1448x1086 | `d3acb16af30b9a5aca29e92e2e8f19d7b5a21df4b8e572de054756ca23321cc4` | Preferred primary/supplementary core-only multi-pose grounding asset. |
 | CORE IDENTITY REFERENCE | `assets/visual-references/core-mascot/identity/fa86fc7a-9006-4478-b5a2-371ba65cf06e.png` | 1536x1024 | `eb4eeab20550da110183819c51cd7710d067f63156ea1a1ef2e4f6c0f21b1f46` | Approved supplementary core-only specification/identity grounding; not preferred as sole grounding input. |
 | APPROVED SECONDARY ACTING-POSE REFERENCE | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | Core v3 umbrella-resistance pose/performance grounding used alongside a canonical identity reference; never the primary identity authority. |
+| APPROVED SECONDARY ACTING-POSE REFERENCE | `assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png` | 1024x1536 | `16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf` | Calm/focused sorting and decision behavior with Core v3 identity and sling-bag continuity; never the primary identity authority. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/a3e484f6-8c69-4b89-8592-dd8671563b65.png` | 1448x1086 | `27ff66e34a8649a22c649a5593c93d0532cd176cf69dafb61bc19a1d2e1eb85a` | Supplementary flowchart/explaining pose, expression, composition and context. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/e2a608fa-267b-4e7b-b7e8-0065699dd13f.png` | 1448x1086 | `24dc9fd6367d6f7c4f9731b12bd1b7e7376edf7870ecee0a8ac066699363ff65` | Supplementary growth-chart/surprised-expression pose, composition and context. |
 | CORE SCENE / EXPRESSION EXEMPLAR | `assets/visual-references/core-mascot/scenes/42ee8538-a4ff-4ca5-8b00-0044ef90207e.png` | 1448x1086 | `95ad2c8a75b7ce798eb315d1c84d34571bb1a44ace1922b141bdb2173fdfae4f` | Supplementary reading/thinking pose, expression, composition and context. |
@@ -976,11 +977,23 @@ The separate approved environment-style authority is
 palette, shape language, rendering density, negative space and prop simplicity. It cannot ground hamster identity or
 require reuse of the pictured street.
 
+The approved indoor environment example is
+`assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png`, 1536x1024, SHA-256
+`45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a`. It demonstrates a successful calm indoor
+application without replacing the Default Scene Language authority.
+
 The separate approved composition-grammar authority is
 `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`, 1024x1536, SHA-256
 `c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8`. It demonstrates coherent assembly of
 approved character and environment assets. It cannot define identity, acting performance or environment style, and it
 is not a mandatory storm layout or proof of repeatability across scene types.
+
+The second approved composition example is
+`assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png`,
+1024x1536, SHA-256 `dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7`.
+**Static visual-production method demonstrated successfully across two materially different scene types:** outdoor /
+high-action storm and calm indoor / explanatory sorting. This does not establish universal repeatability or create a
+new architecture layer.
 
 Supporting-character references must live in separate per-character directories. Identity references from different
 recurring characters must never be pooled. A recurring supporting character must receive its own isolated approved

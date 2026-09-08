@@ -2,8 +2,8 @@
 
 ## Last Updated
 
-8 September 2026 — the first founder + ChatGPT-approved SimilarStoic static composition / composition-grammar reference
-is recorded in a local canonicalization candidate based on canonical `9a434c5d79e7710ac201c46d5d3b8c4816603ef8`; this candidate is not pushed.
+8 September 2026 — the founder + ChatGPT-approved second SimilarStoic scene example is recorded in a local
+canonicalization candidate based on canonical `60a7ce64f8d3de897ba18cfb08d04438a79b5e8f`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -17,11 +17,14 @@ secondary acting-pose reference. Founder + ChatGPT subsequently selected
 `assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png` as the approved environment
 style / default-scene-language reference. The primary Core v3 identity reference and approved acting pose remain
 unchanged. Static integration and its bounded refinement both passed; the exact approved result is tracked as
-`assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`.
+`assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png`. Founder + ChatGPT also
+accepted the calm sorting acting pose, indoor environment example and portrait composition example #2. **Static
+visual-production method demonstrated successfully across two materially different scene types:** outdoor/high-action
+storm and calm indoor/explanatory sorting. This does not claim universal repeatability.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
-No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only the exact
-approved composition-reference bytes, provenance and bounded governance documentation. It does not promote
+No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only exact
+approved visual-reference bytes, provenance and bounded governance documentation. It does not promote
 rejected `ad52ab3` material.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
@@ -98,18 +101,17 @@ rejected a detailed cinematic street, then calibrated a sparse hand-drawn direct
 ChatGPT selected Candidate 4 as the environment style/default-scene-language reference and Candidate 3 as useful
 untracked evidence for the viable lower-detail pole. Candidate 4 is approximately the upper normal detail boundary for
 an ordinary scene; it is not mandatory reusable scenery, a universal background or a permanent provider selection.
-The separated method of stable approved pose assets plus independently sourced/generated environments and controlled
-Conveyor composition has passed visual integration and refinement for one static scene. This validates the method for
-that scene, not repeatability across multiple scene types or a new architecture. Cumulative
-working experiment spend is `$24.107475`, leaving `$0.892525` under the existing `$25` ceiling, subject to the existing
-billing qualifications.
+The visual method now consists of canonical identity authority, approved acting-pose references, approved Default Scene
+Language, approved environment examples, approved composition grammar and approved composition examples. The separated
+method has passed across the storm scene and calm indoor sorting scene. The second-scene `$10` quality-development
+envelope has conservative maximum exposure of `$1.00` and `$9.00` remaining; vertical refinement and canonicalization
+added `$0` provider spend. This is evidence across two materially different static scene types, not universal
+repeatability or a new architecture.
 
 ## Exact Next Action
 
-Review this composition-grammar canonicalization candidate; founder retains final push authority. After review and push,
-the proposed next bounded product experiment is a different narrative beat using the separated method to test whether
-the visual grammar generalizes beyond the storm scene. It is not authorized for execution by this candidate. No video,
-Production #2, v0.28, Migration 24 or successor follows automatically.
+Review this second-scene canonicalization candidate; founder retains final push authority. No video, Production #2,
+v0.28, Migration 24, rig, architecture expansion or successor follows automatically.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

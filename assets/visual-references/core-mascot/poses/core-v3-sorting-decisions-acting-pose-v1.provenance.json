@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "name": "Core v3 — sorting decisions acting pose v1",
+  "role": "approved secondary acting-pose reference",
+  "tracked_path": "assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png",
+  "tracked_sha256": "16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf",
+  "bytes": 1304009,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic second-scene visual generalization test",
+    "root": "D:/ProjectAtlas/work/similarstoic-second-scene-generalization-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-second-scene-generalization-20260908/founder-review/character-candidate-2.png",
+    "source_sha256": "16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf",
+    "bytes_copied_exactly": true,
+    "provider": "OpenAI",
+    "model": "gpt-image-2",
+    "operation": "images edit",
+    "accepted_inputs": [
+      "assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png",
+      "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png"
+    ]
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 60a7ce64f8d3de897ba18cfb08d04438a79b5e8f",
+    "scope": "Calm/focused sorting and decision behavior with Core v3 identity and sling-bag continuity"
+  },
+  "identity_relationship": {
+    "primary_identity_authority_unchanged": true,
+    "primary_identity_path": "assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png",
+    "primary_identity_sha256": "11332518cdace450f8e432fe8cb3558ea2374cf0273f94973912e914cee66956",
+    "boundary": "Secondary pose/performance reference only; not a replacement identity authority, complete pose pack, rig, or automatic approval of future generations."
+  },
+  "experiment_cost": {
+    "quality_development_envelope_usd": 10.0,
+    "conservative_maximum_exposure_usd": 1.0,
+    "remaining_authorization_usd": 9.0,
+    "canonicalization_spend_usd": 0.0,
+    "top_up_required": false,
+    "account_funding_treated_as_spend": false
+  }
+}

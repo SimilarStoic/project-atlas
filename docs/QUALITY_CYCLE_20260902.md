@@ -166,11 +166,21 @@ sparse shared-plane environmental marks where useful. Character, props, environm
 from the same illustrator and avoid mismatched line weight, rendering density, shading, texture, perspective, colour or
 polish. The target is simple on purpose, not cheap-looking.
 
-The separated method of approved character poses, independently sourced/generated environments and deterministic local
-composition is visually validated for one static scene. The storm layout is not mandatory, no complete scene pack exists,
-and repeatability across different narrative beats remains unproven. No new full production video should be attempted
-before visual quality, narration direction/completeness and actual caption alignment are established. Production #2
-remains blocked.
+The later second-scene experiment used the same separated method for a calm indoor explanatory beat. Founder + ChatGPT
+accepted the focused sorting pose, sparse indoor environment and deterministic 1024×1536 vertical composition. Canonical
+copies are `assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png`,
+`assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png`, and
+`assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png`.
+
+**Static visual-production method demonstrated successfully across two materially different scene types:** an
+outdoor/high-action storm scene and a calm indoor/explanatory sorting scene. This does not claim universal repeatability,
+create a complete scene pack or add an architecture layer. No new full production video should be attempted before
+visual quality, narration direction/completeness and actual caption alignment are established. Production #2 remains
+blocked.
+
+The second-scene experiment used a separate `$10` quality-development envelope. Conservative maximum exposure is
+`$1.00`, remaining authorization is `$9.00`, and top-up is not required. Vertical refinement and canonicalization added
+`$0` provider spend. Account funding is not treated as experiment spend.
 
 ## Spend: conservative working estimate, not verified billing
 

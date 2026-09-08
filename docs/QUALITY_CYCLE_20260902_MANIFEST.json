@@ -491,5 +491,93 @@
         "sha256": "43bb5dbeb28f36844b4bd6bbd1bf9eb7e4aeb782dad8fcccc5b76d920d6b796c"
       }
     ]
+  },
+  "second_scene_canonicalization": {
+    "accepted_date": "2026-09-08",
+    "canonical_base": "60a7ce64f8d3de897ba18cfb08d04438a79b5e8f",
+    "verdict": "GENERALIZATION PASS / VERTICAL REFINEMENT PASS",
+    "bounded_conclusion": "Static visual-production method demonstrated successfully across two materially different scene types.",
+    "scene_types": [
+      "outdoor / high-action storm scene",
+      "calm indoor / explanatory sorting scene"
+    ],
+    "universal_repeatability_claimed": false,
+    "approved_assets": [
+      {
+        "role": "approved secondary acting-pose reference",
+        "tracked_path": "assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png",
+        "source_path": "D:\\ProjectAtlas\\work\\similarstoic-second-scene-generalization-20260908\\founder-review\\character-candidate-2.png",
+        "sha256": "16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf",
+        "bytes_copied_exactly": true,
+        "provider": "OpenAI",
+        "model": "gpt-image-2"
+      },
+      {
+        "role": "approved indoor scene / environment example",
+        "tracked_path": "assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png",
+        "source_path": "D:\\ProjectAtlas\\work\\similarstoic-second-scene-generalization-20260908\\founder-review\\environment-candidate-1.png",
+        "sha256": "45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a",
+        "bytes_copied_exactly": true,
+        "provider": "OpenAI",
+        "model": "gpt-image-2"
+      },
+      {
+        "role": "approved composition-grammar example #2",
+        "tracked_path": "assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png",
+        "source_path": "D:\\ProjectAtlas\\work\\similarstoic-second-scene-generalization-20260908\\founder-review\\static-composition-vertical-refinement-v1.png",
+        "sha256": "dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7",
+        "bytes_copied_exactly": true,
+        "dimensions": [
+          1024,
+          1536
+        ]
+      }
+    ],
+    "deterministic_vertical_composition": {
+      "canvas_dimensions": [
+        1024,
+        1536
+      ],
+      "canvas_rgb": [
+        252,
+        249,
+        245
+      ],
+      "environment_dimensions": [
+        1024,
+        683
+      ],
+      "environment_position": [
+        0,
+        180
+      ],
+      "environment_edge_feather_px": 48,
+      "character_dimensions": [
+        773,
+        810
+      ],
+      "character_position": [
+        62,
+        520
+      ],
+      "character_bottom_y": 1330,
+      "grounding": "Existing character contact strokes retained; no added shadow or object.",
+      "provider_calls": 0,
+      "provider_spend_usd": 0.0
+    },
+    "authority_boundaries": {
+      "primary_identity_unchanged": true,
+      "default_scene_language_unchanged": true,
+      "composition_grammar_v1_unchanged": true,
+      "new_architecture_layer": false
+    },
+    "spend": {
+      "quality_development_envelope_usd": 10.0,
+      "conservative_maximum_exposure_usd": 1.0,
+      "remaining_authorization_usd": 9.0,
+      "vertical_refinement_and_canonicalization_spend_usd": 0.0,
+      "top_up_required": false,
+      "account_funding_treated_as_spend": false
+    }
   }
 }

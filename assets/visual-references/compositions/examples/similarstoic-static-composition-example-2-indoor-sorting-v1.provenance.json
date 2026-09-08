@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic static composition example 2 — indoor sorting v1",
+  "role": "approved composition-grammar example #2",
+  "tracked_path": "assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png",
+  "tracked_sha256": "dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7",
+  "bytes": 806191,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic second-scene visual generalization test and vertical refinement",
+    "root": "D:/ProjectAtlas/work/similarstoic-second-scene-generalization-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-second-scene-generalization-20260908/founder-review/static-composition-vertical-refinement-v1.png",
+    "source_sha256": "dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7",
+    "bytes_copied_exactly": true,
+    "provider_calls_for_vertical_refinement": 0,
+    "provider_spend_for_vertical_refinement_usd": 0.0
+  },
+  "accepted_inputs": {
+    "character_pose": {
+      "path": "assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png",
+      "sha256": "16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf"
+    },
+    "environment_example": {
+      "path": "assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png",
+      "sha256": "45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a"
+    },
+    "composition_grammar": {
+      "path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
+      "sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8"
+    }
+  },
+  "deterministic_composition": {
+    "canvas_dimensions": [1024, 1536],
+    "canvas_rgb": [252, 249, 245],
+    "environment_source_dimensions": [1536, 1024],
+    "environment_dimensions": [1024, 683],
+    "environment_scale": 0.6666666667,
+    "environment_position": [0, 180],
+    "environment_edge_feather_px": 48,
+    "character_working_source_dimensions": [957, 1003],
+    "character_dimensions": [773, 810],
+    "character_position": [62, 520],
+    "character_bottom_y": 1330,
+    "grounding": "Existing character contact strokes retained; no added shadow or object."
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base 60a7ce64f8d3de897ba18cfb08d04438a79b5e8f",
+    "scope": "Second approved example of the existing static composition grammar in a calm indoor explanatory scene"
+  },
+  "semantic_boundary": {
+    "composition_grammar_authority_unchanged": true,
+    "composition_grammar_path": "assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png",
+    "composition_grammar_sha256": "c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8",
+    "cross_scene_conclusion": "Static visual-production method demonstrated successfully across two materially different scene types.",
+    "universal_repeatability_claimed": false,
+    "production_2": false,
+    "new_architecture_layer": false
+  },
+  "experiment_cost": {
+    "quality_development_envelope_usd": 10.0,
+    "conservative_maximum_exposure_usd": 1.0,
+    "remaining_authorization_usd": 9.0,
+    "vertical_refinement_spend_usd": 0.0,
+    "canonicalization_spend_usd": 0.0,
+    "top_up_required": false,
+    "account_funding_treated_as_spend": false
+  }
+}

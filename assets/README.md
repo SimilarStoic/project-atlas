@@ -4,7 +4,7 @@ Store project assets that are intentionally version-controlled here. Keep genera
 
 ## Authoritative visual-reference manifest
 
-The seven core-mascot PNGs, separate environment-style PNG and composition-grammar PNG below are founder +
+The approved core-mascot, environment and composition PNGs below are founder +
 ChatGPT-approved, Git-tracked visual references. They are durable reference bytes, not runtime records,
 generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical
 `character-reference-set-similarstoic-hamster-core-v1` / Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
@@ -26,6 +26,7 @@ Acting / pose references demonstrate approved physical performance and pose defo
 | Character scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Core mascot | `core-v3-umbrella-resistance-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | APPROVED SECONDARY ACTING-POSE REFERENCE | Core v3 umbrella-resistance acting pose v1; secondary pose/performance grounding alongside a canonical identity reference. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or evidence that full-scene generation passed. |
+| Core mascot | `core-v3-sorting-decisions-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-sorting-decisions-acting-pose-v1.png` | 1024x1536 | `16eb2a1ec14e7ddccca7332f2cf2b8e0842d51f5ce7fb3d0b8d672d21f9605bf` | APPROVED SECONDARY ACTING-POSE REFERENCE | Calm/focused sorting and decision behavior with successful Core v3 identity and sling-bag continuity. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or mandatory sorting props. |
 
 ### Scene / expression exemplars
 
@@ -46,6 +47,14 @@ define character identity or require reuse of their exact scenery or composition
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SimilarStoic ordinary scenes | `similarstoic-default-scene-language-v1.png` | `assets/visual-references/environments/style/similarstoic-default-scene-language-v1.png` | 1024x1536 | `989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2` | APPROVED ENVIRONMENT-STYLE REFERENCE | Default scene-language grounding: warm off-white negative space, sparse wonky outlined forms, restrained block colours and only enough props/detail to establish location or action. Approximately the upper normal detail boundary for an ordinary scene. | Primary or secondary character identity authority, mandatory scenery/composition, universal background, complete environment pack, permanent provider selection, or permission for painterly/dense ordinary scenes. |
 
+### Approved environment examples
+
+Environment examples demonstrate successful applications of the Default Scene Language without replacing its authority.
+
+| Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SimilarStoic indoor scenes | `similarstoic-calm-indoor-sorting-scene-v1.png` | `assets/visual-references/environments/examples/similarstoic-calm-indoor-sorting-scene-v1.png` | 1536x1024 | `45a8fcf77d1ba6d1b85601e9eba9a05e0554df705d3399c083f23a7b523dba2a` | APPROVED INDOOR SCENE / ENVIRONMENT EXAMPLE | Calm indoor application with sparse room cues and deliberate off-white space. | Replacing the Default Scene Language authority, mandatory indoor layout, or reusable universal background. |
+
 ### Approved composition-grammar references
 
 Composition-grammar references demonstrate how separately approved character and environment assets are arranged into
@@ -56,7 +65,14 @@ style.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | SimilarStoic static scenes | `similarstoic-static-composition-grammar-v1.png` | `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png` | 1024x1536 | `c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8` | APPROVED COMPOSITION-GRAMMAR REFERENCE | Character-first hierarchy, subordinate environmental context, deliberate off-white negative space, mobile-readable scale, action-aware off-centre placement, minimal illustrative grounding and sparse shared-plane marks. | Identity, pose or environment-style authority; mandatory storm layout; proof of a complete scene pack or repeatability across scene types; runtime Asset registration. |
 
-Character identity, acting-pose, environment-style and composition-grammar references have distinct semantic roles.
+### Approved composition examples
+
+| Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SimilarStoic static scenes | `similarstoic-static-composition-example-2-indoor-sorting-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png` | 1024x1536 | `dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #2 | Calm indoor/explanatory application of the existing composition grammar. | Replacing the grammar authority, universal repeatability claim, mandatory sorting layout, or runtime Asset registration. |
+
+Character identity authority, approved acting-pose references, Default Scene Language, approved environment examples,
+composition grammar and approved composition examples have distinct semantic roles.
 Character, props and environment should nevertheless appear to share one illustrator: environmental line weight,
 complexity, colour treatment, shape language and rendering density must remain compatible with Core v3.
 
