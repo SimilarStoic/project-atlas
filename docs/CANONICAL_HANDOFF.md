@@ -28,8 +28,8 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`eec4397459af5c5912b3f2a9b0415f8cc7bc5a65`; the break-frame canonicalization candidate is local and pending push.
-Rejected experimental implementation remains excluded from canonical history.
+`9fbf807e0148a177ba86902922d17c4851a5e200`; the accepted Production #2 documentation candidate is local and pending
+push. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -51,8 +51,8 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the composition-grammar canonicalization candidate:** local `main` and `origin/main` both resolve to
-`9a434c5d79e7710ac201c46d5d3b8c4816603ef8`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+**Base before the Production #2 acceptance candidate:** local `main` and `origin/main` both resolve to
+`9fbf807e0148a177ba86902922d17c4851a5e200`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
 experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
 historical context.
@@ -128,18 +128,34 @@ plan, approved imagery, composition grammar, motion design or editorial structur
 narration audio, completeness transcription, actual speech alignment, caption timing, duration-dependent edit timing
 and final rendering. Never reuse old timestamps; preserve provider, model, voice and reference/consent provenance.
 
-### v0.28 and Production #2
+### v0.28 and accepted Production #2
 
 The flattened mascot source was used for Production #1. Later facial-overlay, deterministic motion, layered
 reconstruction and animation-ready rig experiments were non-canonical and founder-rejected; the flattened source was
 insufficient for high-quality programmatic reconstruction. No canonical rig exists, and the static-character
 presentation is not accepted as the final SimilarStoic identity standard. No v0.28 milestone or Migration 24 exists.
 
-Production #2 execution has not started. Founder + ChatGPT have authorized bounded design only and selected the existing
-`credit-utilisation` Opportunity, **Why a paid-off credit card can still affect your score**. The complete design is
-[Production #2 — Bounded Design](PRODUCTION_2_DESIGN.md). No Production #2-specific runtime gate, research record,
-Script, VisualPlan, narration, render or persistent artifact exists yet; those follow existing governance only after
-the design checkpoint is pushed.
+Production #2, **Why a paid-off credit card can still affect your score**, completed the existing governed runtime
+lifecycle from design checkpoint `9fbf807e0148a177ba86902922d17c4851a5e200` and passed founder + ChatGPT final
+quality review. The mutable `credit-utilisation` Opportunity now records `accepted` status and the exact accepted
+artifact identity. Immutable render and final-artifact rows remain unchanged as at-render history.
+
+The lineage includes research pack `research-pack-similarstoic-credit-utilisation-v1`, Script
+`script-similarstoic-credit-utilisation-v1`, VisualPlan `visual-plan-similarstoic-credit-utilisation-v1`, narration
+`narration-asset-similarstoic-production-2-marin-v1`, input snapshot
+`final-media-input-snapshot-similarstoic-production-2-v1`, render execution
+`render-execution-similarstoic-production-2-founder-review-v1` and final artifact
+`final-media-artifact-similarstoic-production-2-founder-review-v1`. The runtime-managed MP4 at
+`D:\ConveyorRuntime\media\production-2\similarstoic-production-2-credit-utilisation-founder-review-v1.mp4` has
+SHA-256 `ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`; it is 48.120 seconds,
+1080×1920, 30 fps H.264/AAC. Full decode passed, all 126 Script words are present and all 32 captions derive from
+final-master speech alignment. The UK-first claims preserve material geography and scoring-model distinctions.
+
+Marin remains the **PROVISIONAL ACCEPTED PRODUCTION BASELINE** and permanent narrator identity remains replaceable.
+Six-scene visual continuity passed. Current conservative envelope exposure is `$3.81`,
+leaving `$6.19` of the authorized `$10`; Production #2 added `$0.781255` conservative exposure and no exact
+provider-reported dollar charge. This acceptance creates no v0.28 milestone, Migration 24, rig or architecture change
+and does not authorize Production #3.
 
 ### Approved secondary acting-pose reference
 
@@ -208,10 +224,9 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-Review and push the docs-only Production #2 design checkpoint. After synchronization, routine execution may build the
-selected credit-utilisation package end to end through the existing gates and within the recorded spend boundary.
-This candidate authorizes no provider call, narration, image, render, publication, Production #3, successor milestone,
-v0.28, Migration 24, rig or architecture expansion before that push.
+Review and push the single bounded Production #2 acceptance commit. After synchronization, stop. Production #3 has not
+started and requires separate consequential direction. This acceptance authorizes no further provider call, narration,
+image, render, publication, successor milestone, v0.28, Migration 24, rig or architecture expansion.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.

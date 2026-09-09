@@ -438,15 +438,18 @@ Typical duration:
 
 > 30–90 seconds.
 
-## Production #2 bounded design checkpoint
+## Production #2 accepted production checkpoint
 
-Founder + ChatGPT have authorized **Production #2 design only**. The selected existing Opportunity is
-`credit-utilisation`, titled **Why a paid-off credit card can still affect your score**. Its complete editorial,
-visual, motion, narration, caption and QA brief is [Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md).
+Founder + ChatGPT accepted **Production #2**, **Why a paid-off credit card can still affect your score**. It completed
+the existing research, editorial and production lineage from the exact pushed design checkpoint
+`9fbf807e0148a177ba86902922d17c4851a5e200`; the full brief and acceptance record are in
+[Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md).
 
-This checkpoint does not start Production #2 execution, call providers, render media, publish, select v0.28, add a
-migration or expand architecture. After the design checkpoint is pushed, execution must create and freeze the required
-research/editorial/production lineage through existing governance and return at the applicable quality and spend gates.
+The accepted runtime artifact is `final-media-artifact-similarstoic-production-2-founder-review-v1`, SHA-256
+`ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`: a 48.120-second, 1080×1920,
+30 fps H.264/AAC vertical short with complete 126-word narration and 32 final-master speech-aligned caption cues. It
+demonstrates the approved SimilarStoic visual vocabulary in a full UK-first production. It does not establish universal
+readiness, make Marin permanent, select v0.28, add a migration, expand architecture or authorize Production #3.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 

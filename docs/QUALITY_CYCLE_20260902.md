@@ -13,9 +13,10 @@ The canonical base before the accepted-pose candidate was `c5dc39bd8b23d10ee5aef
 
 Conveyor remains the engine; SimilarStoic remains the brand. **CHANGE WITHOUT REBUILD** and founder + ChatGPT
 review/acceptance authority are unchanged. Phase 1 is complete, Phase 2 is active/incomplete, and v0.27 is the latest
-named accepted implementation milestone. There is no accepted v0.28, selected successor, authorized rig or Production
-#2. Source and persistent-runtime migrations remain contiguous 1–23; Migration 24 is absent. Runtime integrity and
-foreign-key checks passed. No Production #2 lineage was found. Historical acceptance and runtime records are retained.
+named accepted implementation milestone. There is no accepted v0.28, selected successor or authorized rig. Production
+#2 later completed the existing governed lifecycle and passed founder + ChatGPT final quality review; its acceptance is
+recorded below. Source and persistent-runtime migrations remain contiguous 1–23; Migration 24 is absent. Runtime
+integrity and foreign-key checks passed. Historical acceptance and runtime records are retained.
 
 ## Production #1 and the rejected presentation proof
 
@@ -116,8 +117,41 @@ while regenerating and revalidating narration audio, completeness transcription,
 timings, duration-dependent edit timing and final media. Provider/model/voice/reference provenance remains mandatory.
 
 This proof added `$0.02` conservative exposure: three TTS auditions were estimated at `$0.01345`, and three Whisper
-checks calculated from 57 provider-reported seconds were `$0.00570`; no other provider cost occurred. The active `$10`
-envelope therefore has `$3.02` conservative exposure and `$6.98` remaining. Top-up is not required.
+checks calculated from 57 provider-reported seconds were `$0.00570`; no other provider cost occurred. At proof
+acceptance, the active `$10` envelope therefore had `$3.02` conservative exposure and `$6.98` remaining.
+
+## Accepted Production #2 — 9 September 2026
+
+Founder + ChatGPT accepted **Why a paid-off credit card can still affect your score** as Production #2. Execution used
+the exact pushed design checkpoint `9fbf807e0148a177ba86902922d17c4851a5e200` and completed the existing governed
+research, editorial and production lineage. The mutable `credit-utilisation` Opportunity records the accepted state and
+artifact identity; immutable render and artifact rows retain their truthful at-render review state.
+
+The governed lineage includes research pack `research-pack-similarstoic-credit-utilisation-v1`, Script
+`script-similarstoic-credit-utilisation-v1`, VisualPlan `visual-plan-similarstoic-credit-utilisation-v1`, narration
+`narration-asset-similarstoic-production-2-marin-v1`, input snapshot
+`final-media-input-snapshot-similarstoic-production-2-v1`, render execution
+`render-execution-similarstoic-production-2-founder-review-v1` and final artifact
+`final-media-artifact-similarstoic-production-2-founder-review-v1`.
+
+The runtime-managed artifact is
+`D:\ConveyorRuntime\media\production-2\similarstoic-production-2-credit-utilisation-founder-review-v1.mp4`, SHA-256
+`ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`. It is 48.120 seconds, 1080×1920,
+30 fps H.264/AAC. Full decode, frame, audio, aspect-ratio and caption checks passed. All 126 intended Script words are
+present in the mastered narration, and all 32 compact caption cues derive from final-master speech alignment. The
+six-scene visual continuity check passed. The UK-first editorial guardrail is preserved: consequential claims remain
+tied to approved UK sources, and geography and credit-scoring-model distinctions remain explicit where material.
+
+OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the **PROVISIONAL ACCEPTED PRODUCTION BASELINE**; permanent
+narrator identity remains replaceable through future consented founder-voice or other provider work. The MP4 stays in
+managed runtime and ignored founder-review evidence; canonical Git
+records its identity and acceptance without tracking the binary.
+
+Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: `$0.75` for three successful image calls,
+`$0.022255` for one successful and one failed-transfer TTS call, and `$0.009` calculated for two Whisper calls covering
+90 provider-reported seconds. No exact provider-reported dollar charge was returned. The active `$10` envelope now has
+`$3.81` conservative maximum exposure and `$6.19` remaining. Acceptance and canonicalization added no provider call or
+spend. Production #3 has not started.
 
 ## GPT Image 2 findings and design hypothesis
 

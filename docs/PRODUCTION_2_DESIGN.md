@@ -9,6 +9,10 @@ render, publication, runtime record, Migration 24, v0.28 milestone, rig or archi
 Production #2 execution must use existing Conveyor records and provenance structures. The design checkpoint does not
 pretend that a runtime production lineage already exists.
 
+**Current acceptance state (9 September 2026):** execution from pushed design checkpoint
+`9fbf807e0148a177ba86902922d17c4851a5e200` is complete and founder + ChatGPT accepted the final result. The original
+design boundary below remains the frozen pre-execution brief; see the execution and acceptance record at the end.
+
 ## Selected canonical editorial candidate
 
 - **Existing Opportunity:** `credit-utilisation`
@@ -170,3 +174,34 @@ Using the current active-ledger convention, expected conservative Production #2 
 reserve up to `$1.25` for the bounded contingencies above. Current remaining authorization is `$6.98`, so it is
 sufficient and no SPEND GATE or top-up is required before execution. Record actual/provider-reported evidence at the
 time of each call and stop before exceeding the then-current authorization.
+
+## Execution and acceptance record — 9 September 2026
+
+Production #2 executed from the exact pushed design checkpoint
+`9fbf807e0148a177ba86902922d17c4851a5e200`. The approved exact Script, six-scene structure, UK-first evidence
+boundaries, restrained motion, subordinate captions and SimilarStoic visual vocabulary were preserved. Founder +
+ChatGPT accepted the completed result for canonicalization.
+
+The governed runtime lineage is:
+
+- Opportunity `credit-utilisation`, now `accepted` with the final identity recorded in mutable acceptance metadata;
+- research pack `research-pack-similarstoic-credit-utilisation-v1`;
+- Script `script-similarstoic-credit-utilisation-v1`;
+- VisualPlan `visual-plan-similarstoic-credit-utilisation-v1`;
+- narration `narration-asset-similarstoic-production-2-marin-v1`;
+- final-media input snapshot `final-media-input-snapshot-similarstoic-production-2-v1`;
+- render execution `render-execution-similarstoic-production-2-founder-review-v1`;
+- final artifact `final-media-artifact-similarstoic-production-2-founder-review-v1`.
+
+The accepted runtime-managed artifact is
+`D:\ConveyorRuntime\media\production-2\similarstoic-production-2-credit-utilisation-founder-review-v1.mp4`, SHA-256
+`ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`. It is 48.120 seconds, 1080×1920,
+30 fps H.264/AAC. Full decode passed; exact narration completeness is 126/126 words; all 32 compact captions derive
+from final-master speech alignment; six-scene visual continuity passed. The binary remains managed runtime/ignored
+review evidence and is not tracked.
+
+OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the **PROVISIONAL ACCEPTED PRODUCTION BASELINE**; permanent
+narrator identity remains replaceable. Production #2
+added `$0.781255` conservative exposure, rounded to `$0.79`; no exact provider-reported dollar charge was returned.
+Total conservative exposure under the `$10` envelope is `$3.81`, leaving `$6.19`. Canonicalization added no provider
+call or spend. This acceptance creates no Production #3, v0.28, Migration 24, rig or architecture change.

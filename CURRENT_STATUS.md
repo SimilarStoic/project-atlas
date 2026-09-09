@@ -2,8 +2,9 @@
 
 ## Last Updated
 
-9 September 2026 — the accepted audiovisual integration proof and bounded Production #2 design are recorded in a local
-documentation candidate based on canonical `56e32b21b664eba06ffc9f46d9d72b9749b439bd`; this candidate is not pushed.
+9 September 2026 — Production #2 is complete and accepted by founder + ChatGPT. Its runtime acceptance and bounded
+canonical documentation are recorded in a single local candidate based on canonical
+`9fbf807e0148a177ba86902922d17c4851a5e200`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -15,7 +16,7 @@ The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1's original Hazel, Marin v2 and presentation
 proofs remain founder-rejected for final quality. The later 18.03-second audiovisual integration proof is accepted: it
 combined approved stills with restrained motion, idea-led cuts, subordinate speech-aligned captions and complete
-narration. OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin is a **provisional accepted production-development baseline**,
+narration. OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin is the **PROVISIONAL ACCEPTED PRODUCTION BASELINE**,
 not the permanent SimilarStoic narrator. The earlier GPT Image 2 full-scene reference-board method failed, while the later isolated-character
 method passed: founder + ChatGPT accepted
 `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` as the first approved
@@ -36,10 +37,10 @@ evidence for a comedic interruption mode and does not replace or alter ordinary 
 composition authority.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
-Production #2 is authorized for **bounded design only**; its selected topic is documented in
-[Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md). No Production #2 generation/execution, v0.28, successor
-milestone, Migration 24 or rig is authorized by this candidate. It changes documentation only and does not promote
-rejected `ad52ab3` material.
+Production #2, **Why a paid-off credit card can still affect your score**, completed the existing governed lifecycle
+and is accepted for canonicalization. Its exact brief and acceptance record are in
+[Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md). This acceptance does not select v0.28, authorize a
+successor milestone, create Migration 24 or a rig, or promote rejected `ad52ab3` material.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
 migrations and tests; (4) verified persistent runtime; (5) verified local experimental/review evidence;
@@ -50,8 +51,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this Production #2 design candidate:** local `main` and `origin/main` both resolved to
-  `56e32b21b664eba06ffc9f46d9d72b9749b439bd`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this Production #2 acceptance candidate:** local `main` and `origin/main` both resolved to
+  `9fbf807e0148a177ba86902922d17c4851a5e200`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -104,9 +105,17 @@ reconstruction and rig experiments were founder-rejected/non-canonical: no canon
 proved insufficient for high-quality programmatic reconstruction, and the static-character presentation is not the
 accepted final SimilarStoic identity standard. No v0.28 milestone is selected.
 
-Production #2 execution has **not** started. Bounded design now selects the existing `credit-utilisation` Opportunity,
-but no Production #2-specific runtime gate, research record, Script, VisualPlan, narration, render or persistent
-artifact exists yet.
+Production #2 has **completed and passed founder + ChatGPT final quality review**. The mutable
+`credit-utilisation` Opportunity is `accepted` and records the accepted artifact identity while the immutable render
+and artifact rows preserve their exact at-render review state. Governed lineage includes research pack
+`research-pack-similarstoic-credit-utilisation-v1`, Script `script-similarstoic-credit-utilisation-v1`, VisualPlan
+`visual-plan-similarstoic-credit-utilisation-v1`, input snapshot
+`final-media-input-snapshot-similarstoic-production-2-v1` and final artifact
+`final-media-artifact-similarstoic-production-2-founder-review-v1`. The runtime-managed MP4 has SHA-256
+`ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`; it is 48.120 seconds, 1080×1920,
+30 fps H.264/AAC. Exact narration completeness is 126/126 words and all 32 caption cues use final-master speech
+alignment. Six-scene visual continuity passed. The MP4 remains managed runtime/ignored review evidence rather than a
+tracked repository binary.
 
 Founder + ChatGPT accepted the local audiovisual integration proof at
 `D:\ProjectAtlas\work\similarstoic-audiovisual-proof-20260909\founder-review\similarstoic-audiovisual-integration-proof-v1.mp4`,
@@ -126,18 +135,20 @@ an ordinary scene; it is not mandatory reusable scenery, a universal background 
 The visual method now consists of canonical identity authority, approved acting-pose references, approved Default Scene
 Language, approved environment examples, approved composition grammar, approved composition examples and a distinct
 rare special break-frame example. The separated
-method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. After the
-accepted audiovisual proof, the active `$10` quality-development envelope has conservative maximum exposure of `$3.02`
-and `$6.98` remaining. The break-frame
+method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. After
+Production #2, the active `$10` quality-development envelope has conservative maximum exposure of `$3.81` and `$6.19`
+remaining. Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: three successful image calls,
+one successful and one failed-transfer TTS call, and two Whisper calls covering 90 provider-reported seconds. No exact
+provider-reported dollar charge was returned. The break-frame
 sequence rejected machinery/cinematic, rough-cartoon and photoreal gross-up directions before the accepted hand-drawn
 gross-up; canonicalization added `$0` provider spend. This is bounded evidence, not universal repeatability or a new
 architecture.
 
 ## Exact Next Action
 
-Review and push the bounded [Production #2 design](docs/PRODUCTION_2_DESIGN.md). After synchronization, its selected
-credit-utilisation brief may proceed through existing research/editorial/production governance. No generation, render,
-publication, v0.28, Migration 24, rig, architecture expansion or successor follows before that push.
+Review and push the single bounded Production #2 acceptance commit. After synchronization, stop: Production #3 has not
+started and requires its own consequential direction. No further generation, spend, render, publication, v0.28,
+Migration 24, rig, architecture expansion or successor is authorized by this acceptance.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "verified_date": "2026-09-08",
+  "verified_date": "2026-09-09",
   "purpose": "Nonsecret correlation manifest; binaries remain outside Git. Local archives are not a remote backup.",
-  "canonical_base": "8a81175c857466161d687b54eeb9a1d7d839b96d",
+  "canonical_base": "9fbf807e0148a177ba86902922d17c4851a5e200",
   "rejected_experimental_commit": "ad52ab38ad32f97b933099ef98a32dc8fd268662",
   "archive_root": "D:\\ConveyorRuntime\\continuity-archives\\20260908",
   "preservation": {
@@ -754,6 +754,71 @@
       "canonicalization_spend_usd": 0.0,
       "top_up_required": false,
       "account_funding_treated_as_spend": false
+    }
+  },
+  "production_2_acceptance": {
+    "accepted_date": "2026-09-09",
+    "accepted_by": ["founder", "ChatGPT"],
+    "state": "accepted_for_canonicalization",
+    "canonical_design_checkpoint": "9fbf807e0148a177ba86902922d17c4851a5e200",
+    "title": "Why a paid-off credit card can still affect your score",
+    "opportunity_id": "credit-utilisation",
+    "runtime_db": "D:\\ConveyorRuntime\\conveyor.db",
+    "runtime_acceptance_record": "mutable Opportunity status and production_2_acceptance metadata",
+    "immutable_history_preserved": true,
+    "lineage": {
+      "research_pack": "research-pack-similarstoic-credit-utilisation-v1",
+      "script": "script-similarstoic-credit-utilisation-v1",
+      "visual_plan": "visual-plan-similarstoic-credit-utilisation-v1",
+      "narration": "narration-asset-similarstoic-production-2-marin-v1",
+      "final_media_input_snapshot": "final-media-input-snapshot-similarstoic-production-2-v1",
+      "render_execution": "render-execution-similarstoic-production-2-founder-review-v1",
+      "final_media_artifact": "final-media-artifact-similarstoic-production-2-founder-review-v1"
+    },
+    "final_artifact": {
+      "runtime_managed_path": "D:\\ConveyorRuntime\\media\\production-2\\similarstoic-production-2-credit-utilisation-founder-review-v1.mp4",
+      "local_review_path": "D:\\ProjectAtlas\\work\\similarstoic-production-2-20260909\\founder-review\\similarstoic-production-2-credit-utilisation-founder-review-v1.mp4",
+      "sha256": "ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493",
+      "bytes": 8532971,
+      "duration_ms": 48120,
+      "dimensions": [1080, 1920],
+      "video_codec": "H.264",
+      "audio_codec": "AAC",
+      "frame_rate_fps": 30,
+      "tracked_media_bytes": false
+    },
+    "quality_assurance": {
+      "full_decode": "pass",
+      "script_words_expected": 126,
+      "script_words_recovered": 126,
+      "scene_count": 6,
+      "six_scene_visual_continuity": "pass",
+      "caption_cues": 32,
+      "caption_timing": "final-master speech alignment",
+      "uk_first_editorial_guardrail": true
+    },
+    "narration_baseline": {
+      "provider": "OpenAI",
+      "model": "gpt-4o-mini-tts-2025-12-15",
+      "voice": "Marin",
+      "status": "provisional_accepted_production_baseline_replaceable"
+    },
+    "spend": {
+      "quality_development_envelope_usd": 10.0,
+      "opening_conservative_exposure_usd": 3.02,
+      "production_2_incremental_conservative_exposure_usd": 0.781255,
+      "production_2_incremental_rounded_usd": 0.79,
+      "total_conservative_exposure_rounded_usd": 3.81,
+      "remaining_authorization_rounded_usd": 6.19,
+      "provider_reported_exact_charge_usd": null,
+      "canonicalization_spend_usd": 0.0
+    },
+    "authority_boundaries": {
+      "production_3_started": false,
+      "migration_24": false,
+      "v0_28": false,
+      "rig": false,
+      "architecture_change": false
     }
   }
 }
