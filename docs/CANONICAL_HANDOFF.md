@@ -110,6 +110,24 @@ original artifact nor the later presentation proof is accepted as final SimilarS
 read-only and was unavailable through the configured endpoint/account at that time. No consent recording or founder
 voice recording was uploaded, and no custom voice was created.
 
+Founder + ChatGPT later accepted the bounded audiovisual integration proof at
+`D:\ProjectAtlas\work\similarstoic-audiovisual-proof-20260909\founder-review\similarstoic-audiovisual-integration-proof-v1.mp4`,
+SHA-256 `1267f9c05c3431ee2d71fe73433f318efc9bfb935616a13fd56593500f7d55ca`, duration 18.03 seconds, 1080×1920,
+H.264/AAC. It demonstrated that approved static compositions remain coherent under restrained push/pull, drift,
+foreground effects, simple reveals and idea-led cuts. Its six compact caption cues came from actual final-audio word
+timings, and all 45 words of the selected canonical excerpt were recovered from the mastered narration. It is materially
+closer to publishable SimilarStoic quality than Hazel or Marin v2 without claiming automatic readiness for later videos.
+
+OpenAI `gpt-4o-mini-tts-2025-12-15`, voice `marin`, is now the **PROVISIONAL ACCEPTED PRODUCTION-DEVELOPMENT
+BASELINE**. It is good enough to continue production development but is not the permanent channel voice. Permanent
+narrator identity remains open; a future founder-derived custom voice requires founder-provided recordings, explicit
+consent and separately authorized provider work.
+
+Narrator identity and TTS provider are separate concerns. Either may later change without rebuilding script, visual
+plan, approved imagery, composition grammar, motion design or editorial structure. Any voice replacement requires new
+narration audio, completeness transcription, actual speech alignment, caption timing, duration-dependent edit timing
+and final rendering. Never reuse old timestamps; preserve provider, model, voice and reference/consent provenance.
+
 ### v0.28 and Production #2
 
 The flattened mascot source was used for Production #1. Later facial-overlay, deterministic motion, layered
@@ -117,8 +135,11 @@ reconstruction and animation-ready rig experiments were non-canonical and founde
 insufficient for high-quality programmatic reconstruction. No canonical rig exists, and the static-character
 presentation is not accepted as the final SimilarStoic identity standard. No v0.28 milestone or Migration 24 exists.
 
-Production #2 has not started. There is no verified Production #2 Opportunity, gate, research, Script, VisualPlan,
-narration, render or persistent final artifact.
+Production #2 execution has not started. Founder + ChatGPT have authorized bounded design only and selected the existing
+`credit-utilisation` Opportunity, **Why a paid-off credit card can still affect your score**. The complete design is
+[Production #2 — Bounded Design](PRODUCTION_2_DESIGN.md). No Production #2-specific runtime gate, research record,
+Script, VisualPlan, narration, render or persistent artifact exists yet; those follow existing governance only after
+the design checkpoint is pushed.
 
 ### Approved secondary acting-pose reference
 
@@ -187,15 +208,10 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-The current bounded task canonicalizes only the exact approved composition-grammar bytes, provenance and required
-governance documentation; final push requires founder approval. The unnumbered Production #1-derived
-presentation proof remains founder-rejected, not pending review. Its static mascot/geometric scenes and scene-clock
-captions are not accepted presentation architecture.
-
-After founder/ChatGPT review and push, the proposed next bounded product experiment is a different narrative beat using
-the separated method to test whether this grammar generalizes beyond the storm scene. It is not authorized for execution
-by this canonicalization. No video, Production #2, successor milestone, v0.28, Migration 24, rig or architecture
-expansion is authorized.
+Review and push the docs-only Production #2 design checkpoint. After synchronization, routine execution may build the
+selected credit-utilisation package end to end through the existing gates and within the recorded spend boundary.
+This candidate authorizes no provider call, narration, image, render, publication, Production #3, successor milestone,
+v0.28, Migration 24, rig or architecture expansion before that push.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.

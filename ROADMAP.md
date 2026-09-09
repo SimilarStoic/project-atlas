@@ -412,7 +412,12 @@ Characteristics:
 - Never robotic, corporate or excessively theatrical
 - Natural rather than obviously AI-generated
 
-One consistent AI narrator voice should be used. The narrator is not visually present.
+One consistent narrator voice should be used within a production. OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin is the
+provisional accepted production-development baseline, not the permanent SimilarStoic narrator identity. Narrator
+identity and provider remain replaceable: changing either requires regenerated narration, completeness transcription,
+actual speech alignment, captions, duration-dependent edit timing and final media, while script and visual design remain
+stable. Any founder-derived custom voice requires explicit consent and separate authorization. The narrator is not
+visually present.
 
 Audio quality has its own QA process. Pronunciation, pacing and processing should remain consistent. Music and sound effects are optional and should only enhance storytelling.
 
@@ -432,6 +437,16 @@ Default structure:
 Typical duration:
 
 > 30–90 seconds.
+
+## Production #2 bounded design checkpoint
+
+Founder + ChatGPT have authorized **Production #2 design only**. The selected existing Opportunity is
+`credit-utilisation`, titled **Why a paid-off credit card can still affect your score**. Its complete editorial,
+visual, motion, narration, caption and QA brief is [Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md).
+
+This checkpoint does not start Production #2 execution, call providers, render media, publish, select v0.28, add a
+migration or expand architecture. After the design checkpoint is pushed, execution must create and freeze the required
+research/editorial/production lineage through existing governance and return at the applicable quality and spend gates.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 

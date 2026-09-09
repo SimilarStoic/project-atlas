@@ -81,8 +81,43 @@ insufficiently natural. It is the current comparison baseline only. The local re
 
 Raw and normalized hashes match the technical record; founder-review copies match the normalized files. Raw audio is
 24 kHz mono PCM; normalized files are 192 kHz mono PCM after FFmpeg loudness normalization (I=-16, TP=-1.5, LRA=11).
-A raw-versus-normalized Cedar comparison remains outstanding. Normalization has not been established as the cause of
-the thin/tinny perception. No additional audition or voice selection is authorized here.
+A raw-versus-normalized Cedar comparison remained outstanding at that checkpoint. Normalization had not been established
+as the cause of the thin/tinny perception, and no additional audition was then authorized.
+
+## Accepted audiovisual integration proof — 9 September 2026
+
+Founder + ChatGPT accepted the later local proof at
+`D:\ProjectAtlas\work\similarstoic-audiovisual-proof-20260909\founder-review\similarstoic-audiovisual-integration-proof-v1.mp4`,
+SHA-256 `1267f9c05c3431ee2d71fe73433f318efc9bfb935616a13fd56593500f7d55ca`. It is 18.03 seconds, 1080×1920,
+30 fps H.264 High with AAC-LC audio. Full decode, frame, silence, aspect-ratio and caption-placement checks passed.
+The MP4 remains ignored/local evidence; this documentation records its accepted conclusion rather than tracking the
+media bytes.
+
+The proof received **VISUAL INTEGRATION PASS**, **EDITING PASS**, **CAPTION METHOD PASS**, **NARRATION COMPLETENESS
+PASS** and **OVERALL AUDIOVISUAL PROOF PASS**. Approved still compositions remained coherent under restrained motion,
+an idea-led reaction punch-in, drift, sparse foreground rain, a simple reveal and conceptual cuts. Six compact captions
+were derived from actual `whisper-1` word timings and remained subordinate to mascot/action. All 45 intended words of
+the exact selected Script v1 excerpt were recovered from the final mastered narration. Narration completeness and final-
+audio alignment remain hard pre-render requirements; heuristic scene clocks, words-per-second timing and reuse of old
+timestamps remain rejected.
+
+This result is materially closer to publishable SimilarStoic quality than Hazel or Marin v2. It demonstrates that the
+validated static language can become a short moving, narrated and speech-aligned piece while preserving mascot/style
+identity. It does not make all future videos production-ready.
+
+Three bounded auditions used OpenAI `gpt-4o-mini-tts-2025-12-15`; Marin was selected, lightly warmth-mastered and
+founder-accepted **for now** as the **PROVISIONAL ACCEPTED PRODUCTION-DEVELOPMENT BASELINE**. Marin is not the permanent
+SimilarStoic channel voice. Permanent narrator identity remains an independent future quality track and may use a
+founder-consented custom voice through OpenAI or another provider. No recording collection, cloning or custom voice was
+performed.
+
+Narrator identity and TTS provider are separate concerns. Replacing either must preserve script/editorial/visual design
+while regenerating and revalidating narration audio, completeness transcription, actual speech alignment, caption
+timings, duration-dependent edit timing and final media. Provider/model/voice/reference provenance remains mandatory.
+
+This proof added `$0.02` conservative exposure: three TTS auditions were estimated at `$0.01345`, and three Whisper
+checks calculated from 57 provider-reported seconds were `$0.00570`; no other provider cost occurred. The active `$10`
+envelope therefore has `$3.02` conservative exposure and `$6.98` remaining. Top-up is not required.
 
 ## GPT Image 2 findings and design hypothesis
 
@@ -175,8 +210,8 @@ copies are `assets/visual-references/core-mascot/poses/core-v3-sorting-decisions
 **Static visual-production method demonstrated successfully across two materially different scene types:** an
 outdoor/high-action storm scene and a calm indoor/explanatory sorting scene. This does not claim universal repeatability,
 create a complete scene pack or add an architecture layer. No new full production video should be attempted before
-visual quality, narration direction/completeness and actual caption alignment are established. Production #2 remains
-blocked.
+visual quality, narration direction/completeness and actual caption alignment are established. Production #2 remained
+blocked at that checkpoint.
 
 The second-scene experiment used a separate `$10` quality-development envelope. Conservative maximum exposure is
 `$1.00`, remaining authorization is `$9.00`, and top-up is not required. Vertical refinement and canonicalization added
@@ -212,8 +247,9 @@ break-frame creates a deliberately disproportionate comedic rupture through deta
 while remaining recognizable as original SimilarStoic hand-drawn work. It does not alter any ordinary identity,
 acting-pose, environment or composition authority.
 
-The active `$10` quality-development envelope now has `$3.00` conservative maximum exposure and `$7.00` remaining;
-top-up is not required. This canonicalization adds `$0` provider spend. Account funding remains separate from spend.
+At the break-frame checkpoint, the active `$10` quality-development envelope had `$3.00` conservative maximum exposure
+and `$7.00` remaining; top-up was not required. This canonicalization added `$0` provider spend. Account funding
+remained separate from spend. The later audiovisual-proof section records the current totals.
 
 ## Spend: conservative working estimate, not verified billing
 
