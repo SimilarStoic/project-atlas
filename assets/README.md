@@ -77,8 +77,17 @@ style.
 | SimilarStoic static scenes | `similarstoic-static-composition-example-2-indoor-sorting-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png` | 1024x1536 | `dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #2 | Calm indoor/explanatory application of the existing composition grammar. | Replacing the grammar authority, universal repeatability claim, mandatory sorting layout, or runtime Asset registration. |
 | SimilarStoic static scenes | `similarstoic-static-composition-example-3-things-in-hand-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png` | 1024x1536 | `a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #3 | Abstract explanatory metaphor in which the hamster works with reachable objects while matching objects remain outside its working space. | Replacing the grammar authority, universal repeatability claim, mandatory token/boundary layout, text-dependent explanation, or runtime Asset registration. |
 
+### Approved special break-frame examples
+
+Special break-frame examples are rare comedic interruptions. They may guide exaggerated expression, crop and local
+line-detail density, but they do not govern ordinary SimilarStoic scenes.
+
+| Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SimilarStoic special break-frames | `similarstoic-hand-drawn-gross-up-notification-v1.png` | `assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png` | 1024x1536 | `c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e` | APPROVED SPECIAL BREAK-FRAME EXAMPLE | Rare hand-drawn gross-up close-up; reference for line detail, expression, aggressive crop and disproportionate reaction. | Identity or ordinary acting-pose authority; Default Scene Language or ordinary environment/composition authority; mandatory notification layout; photorealism, cinematic or steampunk complexity, multicolour spectacle, polished CGI, or generic AI concept art. |
+
 Character identity authority, approved acting-pose references, Default Scene Language, approved environment examples,
-composition grammar and approved composition examples have distinct semantic roles.
+composition grammar, approved composition examples and special break-frame examples have distinct semantic roles.
 Character, props and environment should nevertheless appear to share one illustrator: environmental line weight,
 complexity, colour treatment, shape language and rendering density must remain compatible with Core v3.
 

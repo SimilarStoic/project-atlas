@@ -26,10 +26,10 @@ existing GitHub roadmap and specification remain authoritative.
 For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
-acting-pose method, the rejected environment attempts, the approved Candidate 4 environment style, the passed static
-integration/refinement and approved composition grammar, qualified spend and reference-set provenance. The approved
-second-scene example is synchronized at `fbc059534639becc55830ebda7bd1b8d63fbeac7`; rejected experimental implementation
-remains excluded from canonical history.
+acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
+approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
+`eec4397459af5c5912b3f2a9b0415f8cc7bc5a65`; the break-frame canonicalization candidate is local and pending push.
+Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -1015,6 +1015,14 @@ The third approved composition example is
 without text-dependent meaning. It does not establish universal repeatability, mandate this layout, or create a new
 architecture layer.
 
+The first approved special break-frame example is
+`assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png`, 1024x1536,
+SHA-256 `c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e`. It records a rare hand-drawn gross-up
+close-up in which detail, expression, crop and disproportionate reaction create a comedic rupture. It is special-mode
+evidence only: it cannot define identity, ordinary acting, Default Scene Language, ordinary environment detail or
+ordinary composition grammar. The rejected machinery/cinematic, rough-cartoon and photoreal gross-up candidates remain
+local experimental evidence and are not visual canon.
+
 Supporting-character references must live in separate per-character directories. Identity references from different
 recurring characters must never be pooled. A recurring supporting character must receive its own isolated approved
 reference(s) before stable reuse. Generated images never become approved references automatically; founder + ChatGPT
@@ -1026,6 +1034,9 @@ supporting roster, create a milestone or authorize a later phase. Those implemen
 designed and authorized work.
 
 #### Flat-colour and outline contract
+
+The following contract governs ordinary mascot production. The approved special break-frame may intensify hand-drawn
+line detail and distortion within its narrow comedic role; it does not alter the ordinary contract.
 
 All hamster characters use direct-transition flat block colours. Gradients, tonal or volumetric shading, painterly
 blending, textured/detailed fur, cross-hatching, glossy highlights and polished AI-clean rendering are prohibited.

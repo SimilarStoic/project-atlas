@@ -198,6 +198,23 @@ The two GPT Image 2 requests added `$0.50` conservative exposure because the gen
 dollar charge. The active `$10` envelope therefore has `$1.50` conservative maximum exposure and `$8.50` remaining;
 top-up is not required. Deterministic composition and canonicalization added `$0` provider spend.
 
+The subsequent exaggerated break-frame experiment tested “One Notification, End of Days.” A colourful machinery /
+cinematic direction failed because environment complexity and polish carried the frame instead of the reaction. A
+rough-cartoon direction improved reaction readability but remained an enlarged ordinary cartoon. A photoreal gross-up
+was rejected because realistic fur, flesh, gloss, lighting and giant-eye horror broke Same-illustrator identity. Those
+candidate bytes remain rejected local evidence.
+
+Founder + ChatGPT accepted the hand-drawn gross-up candidate as the first approved special break-frame example. Its
+exact tracked copy is
+`assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png`, SHA-256
+`c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e`. The narrow lesson is that a successful
+break-frame creates a deliberately disproportionate comedic rupture through detail, expression, crop and reaction,
+while remaining recognizable as original SimilarStoic hand-drawn work. It does not alter any ordinary identity,
+acting-pose, environment or composition authority.
+
+The active `$10` quality-development envelope now has `$3.00` conservative maximum exposure and `$7.00` remaining;
+top-up is not required. This canonicalization adds `$0` provider spend. Account funding remains separate from spend.
+
 ## Spend: conservative working estimate, not verified billing
 
 | Ledger item | USD estimate |

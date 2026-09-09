@@ -691,5 +691,69 @@
       "top_up_required": false,
       "account_funding_treated_as_spend": false
     }
+  },
+  "break_frame_canonicalization": {
+    "accepted_date": "2026-09-08",
+    "canonical_base": "eec4397459af5c5912b3f2a9b0415f8cc7bc5a65",
+    "verdict": "BREAK-FRAME PASS",
+    "role": "approved special break-frame example",
+    "bounded_rule": "SimilarStoic may occasionally use an extreme hand-drawn gross-up close-up as a rare comedic interruption.",
+    "approved_asset": {
+      "tracked_path": "assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png",
+      "source_path": "D:/ProjectAtlas/work/similarstoic-break-frame-handdrawn-gross-up-20260908/founder-review/handdrawn-gross-up-candidate-1.png",
+      "sha256": "c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e",
+      "bytes": 3277971,
+      "dimensions": [1024, 1536],
+      "bytes_copied_exactly": true
+    },
+    "generation_evidence": {
+      "provider": "OpenAI",
+      "model": "gpt-image-2",
+      "operation": "images edit",
+      "settings": {
+        "quality": "high",
+        "size": "1024x1536",
+        "output_format": "png",
+        "prompt_augmentation": false
+      },
+      "prompt_sha256": "5ebea279e52a5a29aac04fd1ea7e9de396d8658c244abbd8c11fd38dccdab2a8",
+      "provider_calls_for_selected_candidate": 1
+    },
+    "authority_boundaries": {
+      "special_mode_only": true,
+      "primary_identity_unchanged": true,
+      "ordinary_acting_pose_authority_unchanged": true,
+      "default_scene_language_unchanged": true,
+      "ordinary_environment_examples_unchanged": true,
+      "ordinary_composition_grammar_unchanged": true,
+      "production_2": false,
+      "migration_24": false,
+      "new_architecture_layer": false
+    },
+    "rejected_directions": [
+      {
+        "direction": "colourful machinery / cinematic",
+        "status": "rejected local evidence",
+        "reason": "Environment complexity and polish carried the frame instead of the reaction."
+      },
+      {
+        "direction": "rough-cartoon",
+        "status": "mixed / rejected local evidence",
+        "reason": "Improved reaction readability but remained an enlarged ordinary cartoon."
+      },
+      {
+        "direction": "photoreal gross-up",
+        "status": "mixed / rejected local evidence",
+        "reason": "Realistic fur, flesh, gloss and lighting broke Same-illustrator identity."
+      }
+    ],
+    "spend": {
+      "quality_development_envelope_usd": 10.0,
+      "conservative_maximum_exposure_usd": 3.0,
+      "remaining_authorization_usd": 7.0,
+      "canonicalization_spend_usd": 0.0,
+      "top_up_required": false,
+      "account_funding_treated_as_spend": false
+    }
   }
 }

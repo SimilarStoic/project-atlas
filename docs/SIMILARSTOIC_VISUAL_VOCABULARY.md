@@ -131,13 +131,21 @@ The dominant visual mode uses the Default Scene Language and composition grammar
 
 An occasional original break-frame may interrupt ordinary grammar for jokes, absurdity, emotional peaks, shock,
 dramatic overreaction, memorable metaphor, a hero moment, or intentionally over-serious treatment of something mundane.
-It may be more exaggerated, intense, dramatically posed, dense, strange, or overcommitted. Its impact depends on being
-rare and contrasting with the normal language.
+The first approved example is a hand-drawn gross-up close-up for “One Notification, End of Days.” It establishes a rare
+comedic interruption built from **detail + expression + crop + disproportionate reaction**. It may increase anatomical
+exaggeration, facial distortion, emotional intensity, line-detail density, crop aggression and humanized tension while
+retaining Core v3 identity, the warm off-white family, restrained colour and black/charcoal hand-drawn authorship.
+
+The successful break-frame is not merely more detailed or dramatic; it is a deliberately disproportionate comedic
+rupture. Do not substitute cinematic complexity, photorealism, steampunk machinery, multicolour spectacle, polished
+CGI or generic AI concept-art rendering. The tracked example is
+`assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png`, SHA-256
+`c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e`. It does not alter ordinary identity,
+acting-pose, environment or composition authority.
 
 This canonizes the comedic function of animated visual interruption, not imitation of a franchise. Break-frames must be
 original SimilarStoic artwork. Do not reproduce SpongeBob characters, backgrounds, compositions, assets, dialogue,
-recognizable scenes, or other third-party protected expression. Break-frames are not the default, and none is generated
-or authorized by this document.
+recognizable scenes, or other third-party protected expression. Break-frames are not the default.
 
 ## Purposeful ordinary-detail exceptions
 
@@ -192,7 +200,7 @@ giant asset library in advance.
 
 ## Cost discipline
 
-The active visual-quality envelope is `$10`; conservative exposure is `$1.50`, remaining authorization is `$8.50`, and
+The active visual-quality envelope is `$10`; conservative exposure is `$3.00`, remaining authorization is `$7.00`, and
 top-up is not required. Remaining authorization is not a spending target. Paid generation remains bounded,
 evidence-driven, quality-first, and accounted for. Account funding is not spend.
 
@@ -201,6 +209,5 @@ authorization is below `$2` and more paid work is proposed.
 
 ## Current experiment boundary
 
-The abstract/explanation scene test passed and its accepted evidence is listed in `assets/README.md`. No further visual
-experiment is authorized by this document. A signature exaggerated break-frame remains a possible later test only under
-separate founder authorization.
+The first hand-drawn gross-up break-frame passed and its accepted evidence is listed in `assets/README.md`. No further
+visual experiment is authorized by this document.

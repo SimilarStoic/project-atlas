@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "name": "SimilarStoic hand-drawn gross-up notification break-frame v1",
+  "role": "approved special break-frame example",
+  "tracked_path": "assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png",
+  "tracked_sha256": "c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e",
+  "bytes": 3277971,
+  "image": {
+    "format": "PNG",
+    "dimensions": [1024, 1536],
+    "mode": "RGB",
+    "has_alpha": false
+  },
+  "source_experiment": {
+    "name": "SimilarStoic hand-drawn gross-up close-up — One Notification, End of Days",
+    "root": "D:/ProjectAtlas/work/similarstoic-break-frame-handdrawn-gross-up-20260908",
+    "source_path": "D:/ProjectAtlas/work/similarstoic-break-frame-handdrawn-gross-up-20260908/founder-review/handdrawn-gross-up-candidate-1.png",
+    "source_sha256": "c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e",
+    "bytes_copied_exactly": true,
+    "provider": "OpenAI",
+    "model": "gpt-image-2",
+    "operation": "images edit",
+    "timestamp_utc": "2026-09-08T21:37:49Z",
+    "settings": {
+      "quality": "high",
+      "size": "1024x1536",
+      "output_format": "png",
+      "prompt_augmentation": false
+    },
+    "prompt_path": "D:/ProjectAtlas/work/similarstoic-break-frame-handdrawn-gross-up-20260908/prompts/candidate-1.txt",
+    "prompt_sha256": "5ebea279e52a5a29aac04fd1ea7e9de396d8658c244abbd8c11fd38dccdab2a8",
+    "accepted_inputs": [
+      "assets/visual-references/core-mascot/identity/9a9ccdc1-b948-45d1-a375-fc36d4e3bdc2.png",
+      "assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png",
+      "assets/visual-references/core-mascot/poses/core-v3-things-in-hand-acting-pose-v1.png"
+    ],
+    "provider_calls_for_selected_candidate": 1,
+    "targeted_refinement_used": false
+  },
+  "acceptance": {
+    "accepted_by": "Founder + ChatGPT",
+    "accepted_date": "2026-09-08",
+    "checkpoint_context": "Canonical base eec4397459af5c5912b3f2a9b0415f8cc7bc5a65",
+    "verdict": "BREAK-FRAME PASS",
+    "scope": "First SimilarStoic hand-drawn gross-up break-frame example for the 'One Notification, End of Days' concept"
+  },
+  "semantic_boundary": {
+    "special_mode_only": true,
+    "primary_identity_authority_unchanged": true,
+    "ordinary_acting_pose_authority_unchanged": true,
+    "default_scene_language_authority_unchanged": true,
+    "ordinary_environment_examples_unchanged": true,
+    "ordinary_composition_grammar_unchanged": true,
+    "boundary": "Rare special break-frame evidence only; not identity authority, ordinary acting canon, environment authority, ordinary composition grammar, a mandatory notification layout, or permission to use photorealism, cinematic complexity, steampunk machinery, multicolour spectacle, polished CGI, or generic AI concept-art rendering."
+  },
+  "rejected_experimental_history": [
+    {
+      "direction": "machinery / colourful cinematic",
+      "status": "rejected; local evidence only",
+      "reason": "Decorative machinery, colour, painterly polish and cinematic complexity carried the frame instead of the reaction."
+    },
+    {
+      "direction": "rough-cartoon gross-up",
+      "status": "mixed / rejected; local evidence only",
+      "reason": "Reaction-led improvement, but still an enlarged rough cartoon rather than the intended signature interruption."
+    },
+    {
+      "direction": "photoreal gross-up",
+      "status": "mixed / rejected; local evidence only",
+      "reason": "Realistic fur, flesh, gloss, lighting and giant-eye horror broke Same-illustrator identity."
+    }
+  ],
+  "experiment_cost": {
+    "quality_development_envelope_usd": 10.0,
+    "conservative_maximum_exposure_usd": 3.0,
+    "remaining_authorization_usd": 7.0,
+    "selected_attempt_incremental_conservative_exposure_usd": 0.25,
+    "provider_reported_actual_cost_usd": null,
+    "canonicalization_spend_usd": 0.0,
+    "top_up_required": false,
+    "account_funding_treated_as_spend": false
+  }
+}

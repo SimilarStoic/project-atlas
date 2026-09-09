@@ -2,8 +2,8 @@
 
 ## Last Updated
 
-8 September 2026 — the founder + ChatGPT-approved abstract/explanation scene is recorded in a local canonicalization
-candidate based on canonical `5879cbadef9e51964c7f4d1241a061663560a0e7`; this candidate is not pushed.
+8 September 2026 — the founder + ChatGPT-approved hand-drawn gross-up break-frame is recorded in a local
+canonicalization candidate based on canonical `eec4397459af5c5912b3f2a9b0415f8cc7bc5a65`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -27,6 +27,11 @@ visual-production method demonstrated successfully across two materially differe
 storm and calm indoor/explanatory sorting. Founder + ChatGPT have now also accepted the “things in your hands” acting
 pose, abstract reach-boundary environment and balanced composition example #3. This establishes a third bounded static
 capability—abstract explanatory metaphor without text-dependent meaning—without claiming universal repeatability.
+Founder + ChatGPT have also accepted the first rare special break-frame example: a hand-drawn gross-up close-up for
+“One Notification, End of Days,” tracked at
+`assets/visual-references/break-frames/examples/similarstoic-hand-drawn-gross-up-notification-v1.png`. It is bounded
+evidence for a comedic interruption mode and does not replace or alter ordinary identity, acting-pose, environment or
+composition authority.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
 No v0.28, successor milestone, Migration 24, Production #2 or rig is authorized. This candidate changes only exact
@@ -42,8 +47,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this abstract-scene canonicalization candidate:** local `main` and `origin/main` both resolved to
-  `5879cbadef9e51964c7f4d1241a061663560a0e7`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this break-frame canonicalization candidate:** local `main` and `origin/main` both resolved to
+  `eec4397459af5c5912b3f2a9b0415f8cc7bc5a65`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -108,15 +113,17 @@ ChatGPT selected Candidate 4 as the environment style/default-scene-language ref
 untracked evidence for the viable lower-detail pole. Candidate 4 is approximately the upper normal detail boundary for
 an ordinary scene; it is not mandatory reusable scenery, a universal background or a permanent provider selection.
 The visual method now consists of canonical identity authority, approved acting-pose references, approved Default Scene
-Language, approved environment examples, approved composition grammar and approved composition examples. The separated
+Language, approved environment examples, approved composition grammar, approved composition examples and a distinct
+rare special break-frame example. The separated
 method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. The active
-`$10` quality-development envelope has conservative maximum exposure of `$1.50` and `$8.50` remaining; abstract-scene
-canonicalization added `$0` provider spend. This is bounded evidence of three static capabilities, not universal
-repeatability or a new architecture.
+`$10` quality-development envelope has conservative maximum exposure of `$3.00` and `$7.00` remaining. The break-frame
+sequence rejected machinery/cinematic, rough-cartoon and photoreal gross-up directions before the accepted hand-drawn
+gross-up; canonicalization added `$0` provider spend. This is bounded evidence, not universal repeatability or a new
+architecture.
 
 ## Exact Next Action
 
-Review this abstract-scene canonicalization candidate; founder retains final push authority. No further experiment,
+Review this break-frame canonicalization candidate; founder retains final push authority. No further experiment,
 video, Production #2, v0.28, Migration 24, rig, architecture expansion or successor follows automatically.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
