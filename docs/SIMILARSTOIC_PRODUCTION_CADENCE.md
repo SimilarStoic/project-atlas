@@ -105,16 +105,19 @@ of one production does not automatically approve its bespoke assets as reusable 
 
 Track per production: elapsed working time, provider calls and failed transfers, conservative and provider-reported
 cost, reusable versus bespoke asset count, Script-word completeness, caption-cue count, technical failures, routine
-revision count and founder verdict. After at least three consecutive accepted founder-review artifacts, assess whether
-topic selection, editorial preparation, asset reuse or QA can safely move faster. That assessment may recommend a
-change; it does not change the cadence or founder gates automatically.
+revision count and founder verdict. Productions #2–#4 now satisfy the internal production-method validation objective.
+Further cadence learning must include controlled publication and attributable audience evidence under
+[the publishing and learning-loop design](PUBLISHING_AND_LEARNING_LOOP.md). That assessment may recommend a change; it
+does not change the cadence or founder gates automatically.
 
 ## Current boundary
 
 Productions #2, #3 and #4 are accepted. Production #4's execution and acceptance record is in
 [Production #4 — Design and Acceptance](PRODUCTION_4_DESIGN.md). It validates the cadence on a third consecutive full
 production across a non-finance topic, while its visual result supplies the illustration-hierarchy lesson above.
-Active-envelope exposure is `$4.39 / $10`, leaving `$5.61`. Production #5 may proceed autonomously under this cadence
-after the Production #4 acceptance commit is pushed; it must return at FINAL QUALITY GATE, must not publish and must not
-begin Production #6. Current runtime migrations remain 1–23; Migration 24, v0.28, a rig and new architecture remain
-absent.
+
+The internal production-method objective is satisfied. Keep the five-working-day pace for the initial live pilot and
+publish no more than one item per week; do not accelerate volume until publishing reliability and repeated learning are
+proven. Production #5 is reserved as the first live-loop validation production and is not started. Active-envelope
+exposure is `$4.39 / $10`, leaving `$5.61`. Current runtime migrations remain 1–23; Migration 24, Production #6, v0.28,
+a rig and new architecture remain absent.

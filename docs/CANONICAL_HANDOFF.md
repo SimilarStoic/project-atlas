@@ -28,8 +28,9 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`c24d7ca96d646ff1f3d816272c58ba188bb225c3`; Production #4 is accepted and its bounded acceptance candidate is local
-and pending push. Rejected experimental implementation remains excluded from canonical history.
+`48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`; Production #4 is accepted and synchronized. A bounded controlled
+publishing and learning-loop design candidate is local and pending push. Production #5 is reserved and has not started.
+Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -51,8 +52,8 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the Production #4 acceptance candidate:** local `main` and `origin/main` both resolve to
-`c24d7ca96d646ff1f3d816272c58ba188bb225c3`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+**Base before the publishing/learning design candidate:** local `main` and `origin/main` both resolve to
+`48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
 experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
 historical context.
@@ -197,6 +198,27 @@ Forward production lesson: labels, checklists and diagrams may support the actio
 should remain the primary illustration whenever possible; avoid slide-deck or infographic drift. Production #4 remains
 accepted without revision.
 
+### Controlled publishing and performance learning loop
+
+Productions #2–#4 satisfy the current production-method validation objective. The next bounded question is whether
+Conveyor can publish an exact founder-approved item under control, ingest attributable aggregate performance and apply
+conservative evidence to future content decisions. The canonical candidate
+[Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube Shorts as the
+sole initial pilot platform, retains one founder decision for each exact public action and keeps the existing pace at no
+more than one pilot Short per week.
+
+The pilot uses local package preparation, founder approval of the exact artifact/package/account/time, private upload,
+remote processing/metadata verification and only then the approved public transition. Core observations are engaged
+views/views, watch time, average duration/percentage, the time-normalized retention curve, likes, comments, shares and
+subscribers gained, captured append-only at approximately 24 hours, 72 hours, 7 days and 28 days. One item cannot change
+strategy; repeated evidence across comparable items is required before even a bounded routine adjustment.
+
+Current migrations 1–23 preserve provenance through `FinalMediaArtifact` but have no publishing-package, publication,
+performance-snapshot or learning-assessment persistence. A future additive migration is justified before an automated
+live pilot, but Migration 24 is not authorized or implemented. No platform API, credential, external publication,
+Production #5 execution or runtime architecture change has occurred. Production #5 is reserved as the first live-loop
+validation production; Production #6 must not begin.
+
 ### Approved secondary acting-pose reference
 
 Founder + ChatGPT accepted
@@ -264,10 +286,10 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-Review and push the single bounded Production #4 acceptance commit. After synchronization, Production #5 may proceed
-autonomously under the accepted cadence and active quality envelope. Return at FINAL QUALITY GATE; stop at SPEND GATE
-before exceeding `$10`, or when remaining authority falls below `$2` while further paid work would be useful. Do not
-begin Production #6. No publication, successor milestone, v0.28, Migration 24, rig or architecture expansion follows.
+Review and push the bounded controlled-publishing and learning-loop design. Production #5 remains reserved and must not
+start until the required persistence/adapter implementation and exact pilot authority are separately accepted. No
+platform call, external publication, Production #6, successor milestone, v0.28, Migration 24, rig or architecture
+expansion follows from this design.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.

@@ -2,9 +2,10 @@
 
 ## Last Updated
 
-9 September 2026 — Production #4 is complete and accepted by founder + ChatGPT. Its runtime acceptance, immutable
-provenance and bounded canonical documentation are recorded in one local acceptance candidate based on synchronized
-checkpoint `c24d7ca96d646ff1f3d816272c58ba188bb225c3`; this candidate is not pushed.
+9 September 2026 — Production #4 acceptance is synchronized at
+`48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`. Productions #2–#4 satisfy the current production-method validation
+objective. A controlled publishing and performance-learning-loop design is recorded in one local documentation
+candidate based on that checkpoint; this candidate is not pushed. Production #5 is reserved and has not started.
 
 ## Current State — Read This First
 
@@ -52,6 +53,13 @@ and is accepted. Its exact design, execution and acceptance record are in
 [Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md). It promises no career outcome, requires human
 verification of important output and keeps sensitive information out of unapproved tools.
 
+The production-method validation objective is now **SATISFIED**. The next question is whether Conveyor can publish an
+exact approved item under control, observe real audience behaviour and use attributable evidence to improve later
+content decisions. [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) selects
+a YouTube Shorts-only pilot, retains one founder gate for the exact external publication action, defines append-only
+performance and learning provenance, and reserves Production #5 as the first live-loop validation production. It is
+design only: no platform implementation, API call, publication, new migration or Production #5 execution has occurred.
+
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
 research/editorial preparation, production mechanics and QA while retaining final artifact, canon, publication,
@@ -68,8 +76,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this Production #4 acceptance candidate:** local `main` and `origin/main` both resolved to
-  `c24d7ca96d646ff1f3d816272c58ba188bb225c3`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this publishing/learning design candidate:** local `main` and `origin/main` both resolved to
+  `48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -186,9 +194,9 @@ architecture.
 
 ## Exact Next Action
 
-Review and push the single bounded Production #4 acceptance commit. After synchronization, Production #5 may proceed
-autonomously under the accepted cadence and active quality envelope, returning at FINAL QUALITY GATE. Do not begin
-Production #6. No publication, v0.28, Migration 24, rig or architecture expansion is authorized.
+Review and push the bounded controlled-publishing and learning-loop design. Production #5 remains reserved and must not
+start until the required publishing persistence/adapter implementation and exact pilot authority are separately
+accepted. No external publication, Production #6, v0.28, Migration 24, rig or architecture expansion is authorized.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

@@ -475,11 +475,17 @@ Production #4 passed, with one forward production lesson: future episodes should
 as the primary illustration and use labels, checklists and diagrams only as support, avoiding slide-deck or infographic
 drift. This lesson does not reopen or revise the accepted artifact.
 
-Routine Production #5 selection, design and execution may proceed after the Production #4 acceptance commit is
-synchronized. Active-envelope exposure is `$4.39 / $10`, leaving `$5.61`; stop before exceeding it, or when remaining
-authority falls below `$2` while further paid work would be useful. Final artifact review and publication remain founder
-decisions. Do not begin Production #6. No workflow engine, scheduler, migration, milestone or architecture expansion is
-created.
+With Productions #2–#4 accepted, the current production-method validation objective is satisfied. Do not continue
+internal productions merely to prove another acceptable render. [Controlled Publishing and Performance Learning
+Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) defines the next bounded target: one-platform controlled publication,
+attributable aggregate performance snapshots and conservative evidence applied to future content decisions.
+
+Production #5 is reserved as the first live-loop validation production and is not started. The initial platform scope
+is YouTube Shorts only, at no more than one public pilot item per week. Founder approval remains required for each exact
+external publication during the pilot. Existing persistence is sufficient through `FinalMediaArtifact`; a future
+additive migration is justified for publishing packages, publication decisions/identities, performance snapshots and
+learning assessments, but Migration 24 remains unauthorized and absent. Active-envelope exposure stays `$4.39 / $10`,
+leaving `$5.61`. Do not begin Production #6 or implement publishing/analytics architecture from this design alone.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 
