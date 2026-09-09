@@ -2,9 +2,10 @@
 
 ## Last Updated
 
-9 September 2026 — Production #2 is complete and accepted by founder + ChatGPT. Its runtime acceptance and bounded
-canonical documentation are recorded in a single local candidate based on canonical
-`9fbf807e0148a177ba86902922d17c4851a5e200`; this candidate is not pushed.
+9 September 2026 — Production #2 acceptance is synchronized at
+`f5760f167797c7c0cc1d0cda3be35646ac24b9a7`. A minimum repeatable production cadence and bounded Production #3
+design are recorded in one local documentation candidate based on that canonical checkpoint; this candidate is not
+pushed and Production #3 has not started.
 
 ## Current State — Read This First
 
@@ -38,9 +39,18 @@ composition authority.
 
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
 Production #2, **Why a paid-off credit card can still affect your score**, completed the existing governed lifecycle
-and is accepted for canonicalization. Its exact brief and acceptance record are in
+and is accepted. Its exact brief and acceptance record are in
 [Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md). This acceptance does not select v0.28, authorize a
 successor milestone, create Migration 24 or a rig, or promote rejected `ad52ab3` material.
+
+The proposed [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
+founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
+research/editorial preparation, production mechanics and QA while retaining consequential design/spend, final artifact,
+canon, publication and architecture decisions at existing founder gates. The bounded
+[Production #3 design](docs/PRODUCTION_3_DESIGN.md) selects the existing `lifestyle-inflation` Opportunity and replaces
+its unsupported “£100k” headline with **The £300 monthly upgrade that quietly becomes £72,000**, using the direct
+nominal cash arithmetic `£300 × 12 × 20 = £72,000`. It authorizes no
+runtime record, provider call, spend, generation, render or publication by itself.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
 migrations and tests; (4) verified persistent runtime; (5) verified local experimental/review evidence;
@@ -51,8 +61,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this Production #2 acceptance candidate:** local `main` and `origin/main` both resolved to
-  `9fbf807e0148a177ba86902922d17c4851a5e200`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this cadence and Production #3 design candidate:** local `main` and `origin/main` both resolved to
+  `f5760f167797c7c0cc1d0cda3be35646ac24b9a7`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -146,9 +156,10 @@ architecture.
 
 ## Exact Next Action
 
-Review and push the single bounded Production #2 acceptance commit. After synchronization, stop: Production #3 has not
-started and requires its own consequential direction. No further generation, spend, render, publication, v0.28,
-Migration 24, rig, architecture expansion or successor is authorized by this acceptance.
+Review and push the cadence and bounded Production #3 design candidate. Production #3 remains unstarted after this
+commit. Its zero-provider feasibility pass and any runtime lineage begin only after the design checkpoint is pushed;
+paid work additionally requires the proposed exact `$0.80` ceiling to be authorized. No publication, v0.28,
+Migration 24, rig, architecture expansion or successor is authorized.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

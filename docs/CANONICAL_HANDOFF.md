@@ -28,8 +28,9 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`9fbf807e0148a177ba86902922d17c4851a5e200`; the accepted Production #2 documentation candidate is local and pending
-push. Rejected experimental implementation remains excluded from canonical history.
+`f5760f167797c7c0cc1d0cda3be35646ac24b9a7`; Production #2 is accepted and synchronized. The minimum production
+cadence and bounded Production #3 design candidate are local and pending push; Production #3 has not started. Rejected
+experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -51,8 +52,8 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the Production #2 acceptance candidate:** local `main` and `origin/main` both resolve to
-`9fbf807e0148a177ba86902922d17c4851a5e200`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+**Base before the cadence and Production #3 design candidate:** local `main` and `origin/main` both resolve to
+`f5760f167797c7c0cc1d0cda3be35646ac24b9a7`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
 experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
 historical context.
@@ -157,6 +158,21 @@ leaving `$6.19` of the authorized `$10`; Production #2 added `$0.781255` conserv
 provider-reported dollar charge. This acceptance creates no v0.28 milestone, Migration 24, rig or architecture change
 and does not authorize Production #3.
 
+### Minimum repeatable cadence and bounded Production #3 design
+
+The proposed [minimum repeatable cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md) limits work in progress to one and targets
+one founder-review-ready short per five working days. Routine queue selection, source/evidence preparation, editorial
+drafting, visual planning, asset decisions, narration/alignment, captions, rendering, QA, provenance and bounded fixes
+run without separate founder interactions once exact design and spend authority exists. Consequential design/spend,
+final artifact, canon, publication, roadmap, migration and architecture decisions remain founder-reviewed under the
+existing gates.
+
+[Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md) selects `lifestyle-inflation` for a low-risk evergreen
+behavioural test: **The £300 monthly upgrade that quietly becomes £72,000**. The exact figure is nominal cash arithmetic
+`£300 × 12 × 20`, without investment return, inflation, borrowing-cost or wealth claims. The first execution step is a
+zero-provider reuse feasibility pass. A proposed `$0.80` conservative paid-production ceiling remains unapproved; the
+design creates no runtime lineage, provider call, spend, generation, render or publication.
+
 ### Approved secondary acting-pose reference
 
 Founder + ChatGPT accepted
@@ -224,9 +240,10 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-Review and push the single bounded Production #2 acceptance commit. After synchronization, stop. Production #3 has not
-started and requires separate consequential direction. This acceptance authorizes no further provider call, narration,
-image, render, publication, successor milestone, v0.28, Migration 24, rig or architecture expansion.
+Review and push the cadence and bounded Production #3 design candidate. Production #3 remains unstarted. After
+synchronization, its zero-provider feasibility and governed lineage may begin only under the exact pushed design;
+provider work must stop at SPEND GATE until the proposed `$0.80` ceiling is explicitly authorized. No publication,
+successor milestone, v0.28, Migration 24, rig or architecture expansion follows from this candidate.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.

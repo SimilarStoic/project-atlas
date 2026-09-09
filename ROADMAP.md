@@ -451,6 +451,21 @@ The accepted runtime artifact is `final-media-artifact-similarstoic-production-2
 demonstrates the approved SimilarStoic visual vocabulary in a full UK-first production. It does not establish universal
 readiness, make Marin permanent, select v0.28, add a migration, expand architecture or authorize Production #3.
 
+## Minimum repeatable cadence and Production #3 design
+
+The next bounded operating checkpoint is the
+[SimilarStoic minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md): one active production,
+an initial target of one founder-review-ready short per five working days, automatic routine work between existing
+consequential gates, and measurement across at least three consecutive accepted pieces before any acceleration.
+
+The first candidate under that cadence is [Production #3 — Bounded Design](docs/PRODUCTION_3_DESIGN.md), using the
+existing `lifestyle-inflation` Opportunity. Its exact title is **The £300 monthly upgrade that quietly becomes
+£72,000**, based
+only on nominal cash arithmetic rather than a return forecast. This is design authority only. It starts no runtime
+lineage, production, provider request, spend, render or publication; its proposed `$0.80` paid-production ceiling is not
+authorized until explicitly included in a reviewed execution decision. No workflow engine, scheduler, migration,
+milestone or architecture expansion is created.
+
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 
 The structure is a framework, not a rigid template. Narration must be fully understandable without visuals; visuals enhance rather than carry essential information.

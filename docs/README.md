@@ -11,3 +11,7 @@ For the reviewed post-production findings and preservation checkpoint, read
 [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md) and its
 [nonsecret evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). Rejected experimental code remains excluded
 from the canonical documentation candidate; publication requires founder authorization.
+
+The accepted Production #2 method is operationalized in the
+[SimilarStoic minimum repeatable production cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md). The next unstarted content
+candidate is specified in [Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md).

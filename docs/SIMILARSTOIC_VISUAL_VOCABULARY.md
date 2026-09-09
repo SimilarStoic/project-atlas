@@ -184,11 +184,15 @@ may be divided by distance or a simple physical boundary while the hamster's act
 working focus. The metaphor remains understandable without labels, arrows or corporate diagram treatment. This is one
 approved example, not a mandatory token-and-boundary template.
 
-## Motion future-state
+## Validated motion application
 
-After a still composition is accepted, later production may evaluate restrained pan/zoom, object reveals, pose changes,
-motion marks, foreground effects, simple transforms, and scene transitions. This is future guidance only; it defines no
-motion architecture and authorizes no rig.
+Accepted Production #2 demonstrated the vocabulary across a complete 48.12-second vertical short. Restrained push/pull,
+drift, object reveals, simple transforms, sparse foreground effects and idea-led cuts may animate approved still
+compositions when each movement has an explanatory, emphasis or pacing purpose. Narration remains the master timeline;
+complete final-master transcription and real speech alignment precede caption and duration-dependent edit timing.
+
+This evidence authorizes no rig, lip sync, generic AI video, constant Ken Burns movement or new motion architecture.
+Future pieces still require exact artifact QA and founder review before publication.
 
 ## Asset-library discipline
 
@@ -200,7 +204,7 @@ giant asset library in advance.
 
 ## Cost discipline
 
-The active visual-quality envelope is `$10`; conservative exposure is `$3.00`, remaining authorization is `$7.00`, and
+The active visual-quality envelope is `$10`; conservative exposure is `$3.81`, remaining authorization is `$6.19`, and
 top-up is not required. Remaining authorization is not a spending target. Paid generation remains bounded,
 evidence-driven, quality-first, and accounted for. Account funding is not spend.
 
