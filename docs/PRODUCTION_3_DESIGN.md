@@ -11,6 +11,10 @@ Execution requires this exact design checkpoint to be reviewed and pushed. Any p
 exact proposition-specific ceiling. The current `$6.19` remaining quality-envelope authority is capacity, not automatic
 permission to spend it on this proposition.
 
+**Current acceptance state (9 September 2026):** execution from pushed design checkpoint
+`e8be85632d8f7ac628f3883375641685cba5d67f` is complete and founder + ChatGPT accepted the final result. The original
+design boundary below remains the frozen pre-execution brief; the execution and acceptance record is appended below.
+
 ## Candidate selection
 
 - **Existing Opportunity:** `lifestyle-inflation`
@@ -163,3 +167,37 @@ The first pass is local and costs `$0`. If reuse fails quality review, the expec
 Recommended proposition-specific ceiling: **`$0.80` conservative maximum**. This is below the current `$6.19`
 remaining active-envelope capacity, but it is not authorized by this design alone. Provider choice, exact pricing and
 remaining authority must be rechecked before execution. Unused capacity remains unspent.
+
+## Execution and acceptance record — 9 September 2026
+
+Production #3 executed from exact pushed design checkpoint
+`e8be85632d8f7ac628f3883375641685cba5d67f`. Founder + ChatGPT accepted the completed result for canonicalization.
+The final title is **The £300 monthly upgrade that quietly adds up to £72,000 over 20 years**. The Script preserves the
+direct nominal arithmetic `£300 × 12 × 20 = £72,000` and makes no investment-return, inflation, borrowing-cost or
+wealth claim.
+
+The governed runtime lineage is:
+
+- Opportunity `lifestyle-inflation`, now `accepted` with exact acceptance metadata;
+- research pack `research-pack-similarstoic-lifestyle-inflation-v1`;
+- Script `script-similarstoic-lifestyle-inflation-v1`;
+- VisualPlan `visual-plan-similarstoic-lifestyle-inflation-v1`;
+- narration `narration-asset-similarstoic-production-3-marin-v1`;
+- final-media input snapshot `final-media-input-snapshot-similarstoic-production-3-v1`;
+- render execution `render-execution-similarstoic-production-3-founder-review-v1`;
+- final artifact `final-media-artifact-similarstoic-production-3-founder-review-v1`.
+
+The accepted runtime-managed artifact is
+`D:\ConveyorRuntime\media\production-3\similarstoic-production-3-lifestyle-inflation-founder-review-v1.mp4`, SHA-256
+`8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`. It is 48.450 seconds, 1080×1920,
+30 fps H.264/AAC. Full decode passed; exact narration completeness is 126/126 canonical words and 130/130 normalized
+spoken tokens; 21 semantic captions derive from the same final-duration audio alignment; six-scene visual continuity
+passed. The binary remains managed runtime/ignored review evidence and is not tracked.
+
+The production used canonical visual-authority reuse plus deterministic local composition, with zero image-provider
+calls. One 48.45-second Marin TTS call and one Whisper alignment covering 49 provider-reported seconds added
+`$0.0170125` conservative/calculable exposure, rounded to `$0.02`. Total active-envelope exposure is `$3.83`, leaving
+`$6.17` of the authorized `$10`. Canonicalization added no provider call or spend.
+
+OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the **PROVISIONAL ACCEPTED PRODUCTION BASELINE**; permanent
+narrator identity remains replaceable. Acceptance creates no v0.28 milestone, Migration 24, rig or architecture change.

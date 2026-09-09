@@ -13,9 +13,9 @@ The canonical base before the accepted-pose candidate was `c5dc39bd8b23d10ee5aef
 
 Conveyor remains the engine; SimilarStoic remains the brand. **CHANGE WITHOUT REBUILD** and founder + ChatGPT
 review/acceptance authority are unchanged. Phase 1 is complete, Phase 2 is active/incomplete, and v0.27 is the latest
-named accepted implementation milestone. There is no accepted v0.28, selected successor or authorized rig. Production
-#2 later completed the existing governed lifecycle and passed founder + ChatGPT final quality review; its acceptance is
-recorded below. Source and persistent-runtime migrations remain contiguous 1–23; Migration 24 is absent. Runtime
+named accepted implementation milestone. There is no accepted v0.28, selected successor or authorized rig. Productions
+#2 and #3 later completed the existing governed lifecycle and passed founder + ChatGPT final quality review; their
+acceptance records are below. Source and persistent-runtime migrations remain contiguous 1–23; Migration 24 is absent. Runtime
 integrity and foreign-key checks passed. Historical acceptance and runtime records are retained.
 
 ## Production #1 and the rejected presentation proof
@@ -151,7 +151,35 @@ Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: `$0.7
 `$0.022255` for one successful and one failed-transfer TTS call, and `$0.009` calculated for two Whisper calls covering
 90 provider-reported seconds. No exact provider-reported dollar charge was returned. The active `$10` envelope now has
 `$3.81` conservative maximum exposure and `$6.19` remaining. Acceptance and canonicalization added no provider call or
-spend. Production #3 has not started.
+spend.
+
+## Accepted Production #3 — 9 September 2026
+
+Founder + ChatGPT accepted **The £300 monthly upgrade that quietly adds up to £72,000 over 20 years** as Production
+#3. Execution used exact pushed design checkpoint `e8be85632d8f7ac628f3883375641685cba5d67f`. Its UK-first editorial
+boundary is simple nominal cash arithmetic: `£300 × 12 × 20 = £72,000`, without investment-return, inflation,
+borrowing-cost or wealth claims.
+
+The mutable `lifestyle-inflation` Opportunity is `accepted` and records the exact accepted artifact identity. Immutable
+runtime rows preserve research pack `research-pack-similarstoic-lifestyle-inflation-v1`, Script
+`script-similarstoic-lifestyle-inflation-v1`, VisualPlan `visual-plan-similarstoic-lifestyle-inflation-v1`, narration
+`narration-asset-similarstoic-production-3-marin-v1`, input snapshot
+`final-media-input-snapshot-similarstoic-production-3-v1`, render execution
+`render-execution-similarstoic-production-3-founder-review-v1` and final artifact
+`final-media-artifact-similarstoic-production-3-founder-review-v1`.
+
+The runtime-managed MP4 is
+`D:\ConveyorRuntime\media\production-3\similarstoic-production-3-lifestyle-inflation-founder-review-v1.mp4`, SHA-256
+`8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`. It is 48.450 seconds, 1080×1920,
+30 fps H.264/AAC. Full decode passed. All 126 canonical Script words and 130 normalized spoken tokens are present; 21
+semantic caption cues derive from the same final-duration audio alignment. Six-scene identity, Same-illustrator and
+mobile-readability checks passed. The binary remains in managed runtime and ignored founder-review evidence.
+
+Production #3 generated no image and made no image-provider call. One 48.45-second Marin TTS request was conservatively
+estimated at `$0.0121125`; one Whisper alignment reported 49 usage seconds, calculated at `$0.0049`. Incremental
+conservative/calculable exposure is `$0.0170125`, rounded to `$0.02`. No provider response returned an actual dollar
+charge. Active-envelope exposure is now `$3.83 / $10`, leaving `$6.17`; canonicalization added no provider call or
+spend. Marin remains provisional and replaceable.
 
 ## GPT Image 2 findings and design hypothesis
 

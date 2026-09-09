@@ -12,7 +12,7 @@ per five working days**, with work in progress limited to one production. This i
 than a release quota. Only measured results from several consecutive productions should justify shortening it toward
 the roadmap's longer-term daily ambition.
 
-## Proven Production #2 method
+## Proven Production #2–#3 method
 
 The repeatable core is:
 
@@ -48,7 +48,7 @@ create extra founder interactions.
 
 ## What runs automatically
 
-Within an exact accepted design and any proposition-specific spend ceiling, Codex/Conveyor may handle:
+Within the standing production authority and active quality envelope, Codex/Conveyor may handle:
 
 - ranking existing Opportunities and selecting a routine low-risk candidate from accepted pillars;
 - freshness review, source collection, Claim extraction, evidence mapping and readiness checks;
@@ -67,10 +67,11 @@ urgency to preserve cadence.
 
 Founder judgement remains concentrated at consequential boundaries:
 
-- a combined canonical design/push checkpoint that exposes the exact proposition, Script, material evidence/risk and
-  any bounded paid-production ceiling before execution;
-- a SPEND GATE if no exact ceiling covers the proposition, remaining authority is insufficient, or a retry would exceed
-  the ceiling;
+- a consequential design checkpoint when a topic introduces unusual claim risk, a new visual mode, a permanent voice
+  decision or a material change to canonical direction; routine low-risk topic and production design does not create a
+  founder gate;
+- a SPEND GATE before exceeding the active `$10` quality envelope, or when remaining authorization falls below the
+  standing `$2` threshold while further paid work would improve the current production;
 - the final exact video artifact before publication while the existing initial human pre-publication rule remains;
 - any permanent narrator decision, founder-voice/custom-voice consent, new recurring character identity, change to
   visual canon, unusually risky claim, major brand exception or publication-policy change;
@@ -105,6 +106,10 @@ change; it does not change the cadence or founder gates automatically.
 
 ## Current boundary
 
-Production #2 is accepted. Production #3 is designed separately in [Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md)
-but has not started. Current runtime migrations remain 1–23; Migration 24, v0.28, a rig, publishing and new architecture
+Productions #2 and #3 are accepted. Production #3's execution and acceptance record is in
+[Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md). Its reuse-first result validates the cadence on a second
+consecutive full production: six local deterministic scenes, one Marin narration request, one final-duration alignment
+and one founder-review master. Active-envelope exposure is `$3.83 / $10`, leaving `$6.17`. Production #4 may proceed
+autonomously under this cadence after the Production #3 acceptance commit is pushed; it must return at FINAL QUALITY
+GATE and must not publish. Current runtime migrations remain 1–23; Migration 24, v0.28, a rig and new architecture
 remain absent.

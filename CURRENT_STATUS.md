@@ -2,10 +2,9 @@
 
 ## Last Updated
 
-9 September 2026 — Production #2 acceptance is synchronized at
-`f5760f167797c7c0cc1d0cda3be35646ac24b9a7`. A minimum repeatable production cadence and bounded Production #3
-design are recorded in one local documentation candidate based on that canonical checkpoint; this candidate is not
-pushed and Production #3 has not started.
+9 September 2026 — Production #3 is complete and accepted by founder + ChatGPT. Its runtime acceptance and bounded
+canonical documentation are recorded in one local acceptance candidate based on synchronized design checkpoint
+`e8be85632d8f7ac628f3883375641685cba5d67f`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -43,14 +42,17 @@ and is accepted. Its exact brief and acceptance record are in
 [Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md). This acceptance does not select v0.28, authorize a
 successor milestone, create Migration 24 or a rig, or promote rejected `ad52ab3` material.
 
-The proposed [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
+Production #3, **The £300 monthly upgrade that quietly adds up to £72,000 over 20 years**, also completed the governed
+lifecycle and is accepted. Its exact design and acceptance record are in
+[Production #3 — Bounded Design](docs/PRODUCTION_3_DESIGN.md). The direct nominal arithmetic remains
+`£300 × 12 × 20 = £72,000`; no return, inflation or wealth outcome is implied.
+
+The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
-research/editorial preparation, production mechanics and QA while retaining consequential design/spend, final artifact,
-canon, publication and architecture decisions at existing founder gates. The bounded
-[Production #3 design](docs/PRODUCTION_3_DESIGN.md) selects the existing `lifestyle-inflation` Opportunity and replaces
-its unsupported “£100k” headline with **The £300 monthly upgrade that quietly becomes £72,000**, using the direct
-nominal cash arithmetic `£300 × 12 × 20 = £72,000`. It authorizes no
-runtime record, provider call, spend, generation, render or publication by itself.
+research/editorial preparation, production mechanics and QA while retaining final artifact, canon, publication,
+exceptional spend and architecture decisions at founder gates. Routine productions may use the active `$10` quality
+envelope without separate per-production spend gates. Stop before exceeding the envelope, or when remaining authority
+falls below `$2` while further paid work would be useful.
 
 The source-of-truth order is: **(1) current GitHub `main`; (2) canonical tracked documentation; (3) source,
 migrations and tests; (4) verified persistent runtime; (5) verified local experimental/review evidence;
@@ -61,8 +63,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this cadence and Production #3 design candidate:** local `main` and `origin/main` both resolved to
-  `f5760f167797c7c0cc1d0cda3be35646ac24b9a7`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this Production #3 acceptance candidate:** local `main` and `origin/main` both resolved to
+  `e8be85632d8f7ac628f3883375641685cba5d67f`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -127,6 +129,17 @@ and artifact rows preserve their exact at-render review state. Governed lineage 
 alignment. Six-scene visual continuity passed. The MP4 remains managed runtime/ignored review evidence rather than a
 tracked repository binary.
 
+Production #3 has **completed and passed founder + ChatGPT final quality review**. The mutable
+`lifestyle-inflation` Opportunity is `accepted`; immutable render and artifact rows preserve exact at-render history.
+Governed lineage includes research pack `research-pack-similarstoic-lifestyle-inflation-v1`, Script
+`script-similarstoic-lifestyle-inflation-v1`, VisualPlan `visual-plan-similarstoic-lifestyle-inflation-v1`, narration
+`narration-asset-similarstoic-production-3-marin-v1`, input snapshot
+`final-media-input-snapshot-similarstoic-production-3-v1` and final artifact
+`final-media-artifact-similarstoic-production-3-founder-review-v1`. The runtime-managed MP4 has SHA-256
+`8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`; it is 48.450 seconds, 1080×1920,
+30 fps H.264/AAC. Exact narration completeness is 126/126 canonical words and 130/130 normalized spoken tokens; all
+21 semantic caption cues use final-duration speech alignment. Six-scene visual continuity and full decode passed.
+
 Founder + ChatGPT accepted the local audiovisual integration proof at
 `D:\ProjectAtlas\work\similarstoic-audiovisual-proof-20260909\founder-review\similarstoic-audiovisual-integration-proof-v1.mp4`,
 SHA-256 `1267f9c05c3431ee2d71fe73433f318efc9bfb935616a13fd56593500f7d55ca`, 18.03 seconds, 1080×1920 H.264/AAC.
@@ -146,20 +159,21 @@ The visual method now consists of canonical identity authority, approved acting-
 Language, approved environment examples, approved composition grammar, approved composition examples and a distinct
 rare special break-frame example. The separated
 method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. After
-Production #2, the active `$10` quality-development envelope has conservative maximum exposure of `$3.81` and `$6.19`
+Production #3, the active `$10` quality-development envelope has conservative maximum exposure of `$3.83` and `$6.17`
 remaining. Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: three successful image calls,
 one successful and one failed-transfer TTS call, and two Whisper calls covering 90 provider-reported seconds. No exact
-provider-reported dollar charge was returned. The break-frame
+provider-reported dollar charge was returned. Production #3 added `$0.0170125`, rounded to `$0.02`, through one Marin
+TTS call and one 49-second Whisper alignment; its six visuals used approved assets and local composition at zero image
+provider cost. The break-frame
 sequence rejected machinery/cinematic, rough-cartoon and photoreal gross-up directions before the accepted hand-drawn
 gross-up; canonicalization added `$0` provider spend. This is bounded evidence, not universal repeatability or a new
 architecture.
 
 ## Exact Next Action
 
-Review and push the cadence and bounded Production #3 design candidate. Production #3 remains unstarted after this
-commit. Its zero-provider feasibility pass and any runtime lineage begin only after the design checkpoint is pushed;
-paid work additionally requires the proposed exact `$0.80` ceiling to be authorized. No publication, v0.28,
-Migration 24, rig, architecture expansion or successor is authorized.
+Review and push the single bounded Production #3 acceptance commit. After synchronization, Production #4 may proceed
+autonomously under the accepted cadence and active quality envelope, returning at FINAL QUALITY GATE. No publication,
+v0.28, Migration 24, rig, architecture expansion or successor is authorized.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

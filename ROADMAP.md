@@ -451,20 +451,24 @@ The accepted runtime artifact is `final-media-artifact-similarstoic-production-2
 demonstrates the approved SimilarStoic visual vocabulary in a full UK-first production. It does not establish universal
 readiness, make Marin permanent, select v0.28, add a migration, expand architecture or authorize Production #3.
 
-## Minimum repeatable cadence and Production #3 design
+## Minimum repeatable cadence and accepted Production #3
 
-The next bounded operating checkpoint is the
+The bounded operating method is the
 [SimilarStoic minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md): one active production,
 an initial target of one founder-review-ready short per five working days, automatic routine work between existing
 consequential gates, and measurement across at least three consecutive accepted pieces before any acceleration.
 
-The first candidate under that cadence is [Production #3 — Bounded Design](docs/PRODUCTION_3_DESIGN.md), using the
-existing `lifestyle-inflation` Opportunity. Its exact title is **The £300 monthly upgrade that quietly becomes
-£72,000**, based
-only on nominal cash arithmetic rather than a return forecast. This is design authority only. It starts no runtime
-lineage, production, provider request, spend, render or publication; its proposed `$0.80` paid-production ceiling is not
-authorized until explicitly included in a reviewed execution decision. No workflow engine, scheduler, migration,
-milestone or architecture expansion is created.
+The first completed candidate under that cadence is [Production #3 — Bounded Design](docs/PRODUCTION_3_DESIGN.md),
+**The £300 monthly upgrade that quietly adds up to £72,000 over 20 years**. Founder + ChatGPT accepted the exact
+runtime artifact `final-media-artifact-similarstoic-production-3-founder-review-v1`, SHA-256
+`8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`. It is a 48.450-second, 1080×1920,
+30 fps H.264/AAC vertical short with complete narration and 21 final-duration speech-aligned caption cues. The visual
+pass used approved assets and deterministic local composition without an image-provider call.
+
+Routine Production #4 selection, design and execution may proceed after the Production #3 acceptance commit is
+synchronized. Provider work may continue inside the active `$10` quality envelope; stop before exceeding it, or when
+remaining authority falls below `$2` while further paid work would be useful. Final artifact review and publication
+remain founder decisions. No workflow engine, scheduler, migration, milestone or architecture expansion is created.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 

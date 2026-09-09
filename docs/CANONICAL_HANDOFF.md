@@ -28,9 +28,8 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`f5760f167797c7c0cc1d0cda3be35646ac24b9a7`; Production #2 is accepted and synchronized. The minimum production
-cadence and bounded Production #3 design candidate are local and pending push; Production #3 has not started. Rejected
-experimental implementation remains excluded from canonical history.
+`e8be85632d8f7ac628f3883375641685cba5d67f`; Production #3 is accepted and its bounded acceptance candidate is local
+and pending push. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -52,8 +51,8 @@ principle: **CHANGE WITHOUT REBUILD**.
 
 ### Current canon and pre-reconciliation history
 
-**Base before the cadence and Production #3 design candidate:** local `main` and `origin/main` both resolve to
-`f5760f167797c7c0cc1d0cda3be35646ac24b9a7`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
+**Base before the Production #3 acceptance candidate:** local `main` and `origin/main` both resolve to
+`e8be85632d8f7ac628f3883375641685cba5d67f`, ahead/behind `0 / 0`, with the tracked tree clean. Founder-rejected
 experimental `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not promoted. The earlier
 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` before its documentation commit; that is
 historical context.
@@ -158,7 +157,7 @@ leaving `$6.19` of the authorized `$10`; Production #2 added `$0.781255` conserv
 provider-reported dollar charge. This acceptance creates no v0.28 milestone, Migration 24, rig or architecture change
 and does not authorize Production #3.
 
-### Minimum repeatable cadence and bounded Production #3 design
+### Minimum repeatable cadence and accepted Production #3
 
 The proposed [minimum repeatable cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md) limits work in progress to one and targets
 one founder-review-ready short per five working days. Routine queue selection, source/evidence preparation, editorial
@@ -167,11 +166,18 @@ run without separate founder interactions once exact design and spend authority 
 final artifact, canon, publication, roadmap, migration and architecture decisions remain founder-reviewed under the
 existing gates.
 
-[Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md) selects `lifestyle-inflation` for a low-risk evergreen
-behavioural test: **The £300 monthly upgrade that quietly becomes £72,000**. The exact figure is nominal cash arithmetic
-`£300 × 12 × 20`, without investment return, inflation, borrowing-cost or wealth claims. The first execution step is a
-zero-provider reuse feasibility pass. A proposed `$0.80` conservative paid-production ceiling remains unapproved; the
-design creates no runtime lineage, provider call, spend, generation, render or publication.
+[Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md) records the completed and accepted low-risk evergreen piece:
+**The £300 monthly upgrade that quietly adds up to £72,000 over 20 years**. The exact figure is nominal cash arithmetic
+`£300 × 12 × 20`, without investment-return, inflation, borrowing-cost or wealth claims. The mutable
+`lifestyle-inflation` Opportunity is `accepted`; immutable runtime lineage ends at final artifact
+`final-media-artifact-similarstoic-production-3-founder-review-v1`.
+
+The runtime-managed MP4 at
+`D:\ConveyorRuntime\media\production-3\similarstoic-production-3-lifestyle-inflation-founder-review-v1.mp4` has
+SHA-256 `8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`; it is 48.450 seconds, 1080×1920,
+30 fps H.264/AAC. Full decode, complete narration, final-duration caption timing and six-scene visual continuity passed.
+Production #3 added `$0.0170125` conservative/calculable exposure, bringing the active envelope to `$3.83 / $10` with
+`$6.17` remaining. Canonicalization added no provider call or spend. Marin remains provisional and replaceable.
 
 ### Approved secondary acting-pose reference
 
@@ -240,10 +246,10 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-Review and push the cadence and bounded Production #3 design candidate. Production #3 remains unstarted. After
-synchronization, its zero-provider feasibility and governed lineage may begin only under the exact pushed design;
-provider work must stop at SPEND GATE until the proposed `$0.80` ceiling is explicitly authorized. No publication,
-successor milestone, v0.28, Migration 24, rig or architecture expansion follows from this candidate.
+Review and push the single bounded Production #3 acceptance commit. After synchronization, Production #4 may proceed
+autonomously under the accepted cadence and active quality envelope. Return at FINAL QUALITY GATE; stop at SPEND GATE
+before exceeding `$10`, or when remaining authority falls below `$2` while further paid work would be useful. No
+publication, successor milestone, v0.28, Migration 24, rig or architecture expansion follows from this acceptance.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.
