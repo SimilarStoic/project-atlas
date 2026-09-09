@@ -12,6 +12,8 @@ For the reviewed post-production findings and preservation checkpoint, read
 [nonsecret evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). Rejected experimental code remains excluded
 from the canonical documentation candidate; publication requires founder authorization.
 
-The accepted Production #2 method is operationalized in the
-[SimilarStoic minimum repeatable production cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md). The next unstarted content
-candidate is specified in [Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md).
+The accepted Production #2–#4 method is operationalized in the
+[SimilarStoic minimum repeatable production cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md). The
+[controlled publishing and performance-learning design](PUBLISHING_AND_LEARNING_LOOP.md) defines the unimplemented
+one-platform pilot. The [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) defines
+the unimplemented provider-neutral reference-authority bridge required before Production #5's quality-uplift proof.

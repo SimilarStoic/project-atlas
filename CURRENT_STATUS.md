@@ -2,16 +2,23 @@
 
 ## Last Updated
 
-9 September 2026 — Production #4 acceptance is synchronized at
-`48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`. Productions #2–#4 satisfy the current production-method validation
-objective. A controlled publishing and performance-learning-loop design is recorded in one local documentation
-candidate based on that checkpoint; this candidate is not pushed. Production #5 is reserved and has not started.
+9 September 2026 — The controlled publishing and performance-learning-loop design is synchronized at
+`f76698248b83f1a7cdfd449286655d6534d363c9`. Productions #2–#4 satisfy the production-method validation objective.
+A bounded multi-authority visual-generation architecture design is recorded in one local documentation candidate based
+on that checkpoint; this candidate is not pushed. Production #5 is reserved and has not started.
 
 ## Current State — Read This First
 
 The canonical [SimilarStoic Visual-Production Vocabulary](docs/SIMILARSTOIC_VISUAL_VOCABULARY.md) defines the compact
 acting, environment, prop/effect, composition, reuse and break-frame design language for future visual work. It adds no
 runtime architecture and authorizes no production or generation.
+
+The [multi-authority visual-generation design](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) specifies the smallest
+provider-neutral bridge from those approved visual-DNA authorities to scene-specific generation. It preserves
+`VisualStyleProfile`, `CharacterProfile` and `CharacterReferenceSet`, proposes typed digest-backed non-character
+authorities plus immutable per-execution recipe provenance, and keeps composition as guidance/local assembly rather
+than a new executable asset type. The design requires a future additive schema change but assigns no migration number
+and implements nothing.
 
 The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records the reviewed continuity findings and
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1's original Hazel, Marin v2 and presentation
@@ -53,12 +60,16 @@ and is accepted. Its exact design, execution and acceptance record are in
 [Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md). It promises no career outcome, requires human
 verification of important output and keeps sensitive information out of unapproved tools.
 
-The production-method validation objective is now **SATISFIED**. The next question is whether Conveyor can publish an
-exact approved item under control, observe real audience behaviour and use attributable evidence to improve later
-content decisions. [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) selects
-a YouTube Shorts-only pilot, retains one founder gate for the exact external publication action, defines append-only
-performance and learning provenance, and reserves Production #5 as the first live-loop validation production. It is
-design only: no platform implementation, API call, publication, new migration or Production #5 execution has occurred.
+The production-method validation objective is **PASSED**, while public-launch quality is **NOT YET PASSED**. Founder
+assessment places current output at approximately **50%** of desired mature quality; the target before public launch is
+approximately **80–85%** through stronger reference-driven bespoke generation, scene depth, acting and visual
+treatment with less chunky/AI-assembled output. Production #5 is reserved as the
+**REFERENCE-DRIVEN DYNAMIC SCENE GENERATION / QUALITY-UPLIFT PROOF** and remains unstarted.
+
+[Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
+YouTube Shorts-only pilot, one founder gate for the exact external publication action, and append-only performance and
+learning provenance. It is synchronized design authority only: no platform implementation, API call, publication, new
+migration or Production #5 execution has occurred.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -194,9 +205,11 @@ architecture.
 
 ## Exact Next Action
 
-Review and push the bounded controlled-publishing and learning-loop design. Production #5 remains reserved and must not
-start until the required publishing persistence/adapter implementation and exact pilot authority are separately
-accepted. No external publication, Production #6, v0.28, Migration 24, rig or architecture expansion is authorized.
+Review and push the bounded multi-authority visual-generation architecture design. Production #5 remains reserved and
+must not start until the minimum visual-authority implementation is separately accepted and operationally verified.
+Migration numbering must follow actual implementation order relative to publishing/learning persistence. No external
+publication, Production #5 execution, Production #6, v0.28, migration, rig or architecture implementation is
+authorized by the design commit.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

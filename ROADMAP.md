@@ -480,12 +480,27 @@ internal productions merely to prove another acceptable render. [Controlled Publ
 Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) defines the next bounded target: one-platform controlled publication,
 attributable aggregate performance snapshots and conservative evidence applied to future content decisions.
 
-Production #5 is reserved as the first live-loop validation production and is not started. The initial platform scope
-is YouTube Shorts only, at no more than one public pilot item per week. Founder approval remains required for each exact
-external publication during the pilot. Existing persistence is sufficient through `FinalMediaArtifact`; a future
-additive migration is justified for publishing packages, publication decisions/identities, performance snapshots and
-learning assessments, but Migration 24 remains unauthorized and absent. Active-envelope exposure stays `$4.39 / $10`,
-leaving `$5.61`. Do not begin Production #6 or implement publishing/analytics architecture from this design alone.
+The publishing design initially reserved Production #5 as the first live-loop item. Subsequent founder direction gives
+Production #5 the immediate role of reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may
+later serve as the first live-loop item. The initial publishing platform remains YouTube Shorts only, at no more than
+one public pilot item per week, with founder approval for each exact external publication. Existing persistence is
+sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
+decisions/identities, performance snapshots and learning assessments, but Migration 24 remains unauthorized and
+absent. Active-envelope exposure stays `$4.39 / $10`, leaving `$5.61`. Do not begin Production #6 or implement
+publishing/analytics architecture from this design alone.
+
+Production-method validation is **PASSED**, but public-launch quality is **NOT YET PASSED**. Founder assessment places
+current output at approximately **50%** of desired mature quality, with an approximately **80–85%** target before
+public launch. [Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
+minimum provider-neutral bridge from approved visual-DNA examples to new scene-specific generation: keep existing
+character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per
+execution, and require one shared global illustration authority across scene components.
+
+That design requires a future additive persistence change but assigns no migration number. Implementation order will
+determine numbering relative to publishing/learning persistence; no placeholder number overrides actual order.
+Production #5 remains **RESERVED / NOT STARTED** and its next role is **REFERENCE-DRIVEN DYNAMIC SCENE GENERATION /
+QUALITY-UPLIFT PROOF**. It must not execute until the minimum authority selection, digest freezing, provider translation
+and immutable execution provenance path is implemented and verified.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 

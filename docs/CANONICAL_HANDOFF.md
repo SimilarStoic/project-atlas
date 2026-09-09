@@ -28,14 +28,19 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`; Production #4 is accepted and synchronized. A bounded controlled
-publishing and learning-loop design candidate is local and pending push. Production #5 is reserved and has not started.
-Rejected experimental implementation remains excluded from canonical history.
+`f76698248b83f1a7cdfd449286655d6534d363c9`; Production #4 and the controlled publishing/learning design are
+synchronized. A bounded [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md)
+candidate is local and pending push. Production #5 is reserved and has not started. Rejected experimental
+implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
 [SimilarStoic Visual-Production Vocabulary](SIMILARSTOIC_VISUAL_VOCABULARY.md). It is design canon, not runtime
 architecture or production authorization.
+
+The multi-authority architecture design preserves the working CharacterProfile/CharacterReferenceSet path and proposes
+the minimum typed, digest-backed non-character authority and execution-recipe provenance needed for new
+reference-driven scenes. It assigns no migration number and implements no schema or provider work.
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.
@@ -216,8 +221,10 @@ strategy; repeated evidence across comparable items is required before even a bo
 Current migrations 1–23 preserve provenance through `FinalMediaArtifact` but have no publishing-package, publication,
 performance-snapshot or learning-assessment persistence. A future additive migration is justified before an automated
 live pilot, but Migration 24 is not authorized or implemented. No platform API, credential, external publication,
-Production #5 execution or runtime architecture change has occurred. Production #5 is reserved as the first live-loop
-validation production; Production #6 must not begin.
+Production #5 execution or runtime architecture change has occurred. Subsequent founder direction assigns Production
+#5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later
+serve as the first live-loop item after publishing implementation and exact publication authority. Production #6 must
+not begin.
 
 ### Approved secondary acting-pose reference
 
@@ -286,10 +293,11 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-Review and push the bounded controlled-publishing and learning-loop design. Production #5 remains reserved and must not
-start until the required persistence/adapter implementation and exact pilot authority are separately accepted. No
-platform call, external publication, Production #6, successor milestone, v0.28, Migration 24, rig or architecture
-expansion follows from this design.
+Review and push the bounded multi-authority visual-generation architecture design. Production #5 remains reserved and
+must not start until the minimum visual-authority implementation is separately accepted and operationally verified.
+Migration numbering follows actual implementation order relative to publishing/learning persistence. No platform
+call, external publication, Production #5 execution, Production #6, successor milestone, v0.28, migration, rig or
+architecture implementation follows from this design.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.
