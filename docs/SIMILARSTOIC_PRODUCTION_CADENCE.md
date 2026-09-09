@@ -12,7 +12,7 @@ per five working days**, with work in progress limited to one production. This i
 than a release quota. Only measured results from several consecutive productions should justify shortening it toward
 the roadmap's longer-term daily ambition.
 
-## Proven Production #2–#3 method
+## Proven Production #2–#4 method
 
 The repeatable core is:
 
@@ -26,6 +26,11 @@ The repeatable core is:
 8. transcribe the final mastered narration, prove completeness and derive captions from real speech timing;
 9. render one 1080×1920 H.264/AAC review master and run technical, factual, visual and brand QA;
 10. preserve exact lineage, hashes, provider evidence and conservative cost accounting before founder review.
+
+Production #4 adds one non-blocking illustration rule: small labels, checklists and diagrams may support the action,
+but the hamster and visual metaphor should remain primary whenever possible. Avoid letting routine explanatory scenes
+drift into slide-deck or infographic presentation. This forward rule does not require revision of accepted Production
+#4.
 
 The final Script and mastered narration must match. Old timestamps, word-count timing and scene-clock captions remain
 invalid. Captions stay subordinate; visuals cannot carry a claim absent from the narration. Motion must explain,
@@ -106,10 +111,10 @@ change; it does not change the cadence or founder gates automatically.
 
 ## Current boundary
 
-Productions #2 and #3 are accepted. Production #3's execution and acceptance record is in
-[Production #3 — Bounded Design](PRODUCTION_3_DESIGN.md). Its reuse-first result validates the cadence on a second
-consecutive full production: six local deterministic scenes, one Marin narration request, one final-duration alignment
-and one founder-review master. Active-envelope exposure is `$3.83 / $10`, leaving `$6.17`. Production #4 may proceed
-autonomously under this cadence after the Production #3 acceptance commit is pushed; it must return at FINAL QUALITY
-GATE and must not publish. Current runtime migrations remain 1–23; Migration 24, v0.28, a rig and new architecture
-remain absent.
+Productions #2, #3 and #4 are accepted. Production #4's execution and acceptance record is in
+[Production #4 — Design and Acceptance](PRODUCTION_4_DESIGN.md). It validates the cadence on a third consecutive full
+production across a non-finance topic, while its visual result supplies the illustration-hierarchy lesson above.
+Active-envelope exposure is `$4.39 / $10`, leaving `$5.61`. Production #5 may proceed autonomously under this cadence
+after the Production #4 acceptance commit is pushed; it must return at FINAL QUALITY GATE, must not publish and must not
+begin Production #6. Current runtime migrations remain 1–23; Migration 24, v0.28, a rig and new architecture remain
+absent.

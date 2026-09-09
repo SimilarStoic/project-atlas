@@ -2,7 +2,7 @@
   "schema_version": 1,
   "verified_date": "2026-09-09",
   "purpose": "Nonsecret correlation manifest; binaries remain outside Git. Local archives are not a remote backup.",
-  "canonical_base": "e8be85632d8f7ac628f3883375641685cba5d67f",
+  "canonical_base": "c24d7ca96d646ff1f3d816272c58ba188bb225c3",
   "rejected_experimental_commit": "ad52ab38ad32f97b933099ef98a32dc8fd268662",
   "archive_root": "D:\\ConveyorRuntime\\continuity-archives\\20260908",
   "preservation": {
@@ -703,7 +703,10 @@
       "source_path": "D:/ProjectAtlas/work/similarstoic-break-frame-handdrawn-gross-up-20260908/founder-review/handdrawn-gross-up-candidate-1.png",
       "sha256": "c38e0af357b0beb35ded28e78739115a630ca68ea9f6249f37f5ff8dcbae185e",
       "bytes": 3277971,
-      "dimensions": [1024, 1536],
+      "dimensions": [
+        1024,
+        1536
+      ],
       "bytes_copied_exactly": true
     },
     "generation_evidence": {
@@ -758,7 +761,10 @@
   },
   "production_2_acceptance": {
     "accepted_date": "2026-09-09",
-    "accepted_by": ["founder", "ChatGPT"],
+    "accepted_by": [
+      "founder",
+      "ChatGPT"
+    ],
     "state": "accepted_for_canonicalization",
     "canonical_design_checkpoint": "9fbf807e0148a177ba86902922d17c4851a5e200",
     "title": "Why a paid-off credit card can still affect your score",
@@ -781,7 +787,10 @@
       "sha256": "ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493",
       "bytes": 8532971,
       "duration_ms": 48120,
-      "dimensions": [1080, 1920],
+      "dimensions": [
+        1080,
+        1920
+      ],
       "video_codec": "H.264",
       "audio_codec": "AAC",
       "frame_rate_fps": 30,
@@ -823,7 +832,10 @@
   },
   "production_3_acceptance": {
     "accepted_date": "2026-09-09",
-    "accepted_by": ["founder", "ChatGPT"],
+    "accepted_by": [
+      "founder",
+      "ChatGPT"
+    ],
     "state": "accepted_for_canonicalization",
     "canonical_design_checkpoint": "e8be85632d8f7ac628f3883375641685cba5d67f",
     "title": "The £300 monthly upgrade that quietly adds up to £72,000 over 20 years",
@@ -846,7 +858,10 @@
       "sha256": "8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4",
       "bytes": 6165700,
       "duration_ms": 48450,
-      "dimensions": [1080, 1920],
+      "dimensions": [
+        1080,
+        1920
+      ],
       "video_codec": "H.264",
       "audio_codec": "AAC",
       "frame_rate_fps": 30,
@@ -885,6 +900,102 @@
     "authority_boundaries": {
       "production_4_started": false,
       "production_4_authorized_after_acceptance_sync": true,
+      "publication": false,
+      "migration_24": false,
+      "v0_28": false,
+      "rig": false,
+      "architecture_change": false
+    }
+  },
+  "production_4_acceptance": {
+    "accepted_date": "2026-09-09",
+    "accepted_by": [
+      "founder",
+      "ChatGPT"
+    ],
+    "state": "accepted_for_canonicalization",
+    "canonical_checkpoint": "c24d7ca96d646ff1f3d816272c58ba188bb225c3",
+    "title": "Three AI workflows that make a junior analyst more valuable",
+    "opportunity_id": "ai-workflow",
+    "runtime_db": "D:\\ConveyorRuntime\\conveyor.db",
+    "runtime_acceptance_record": "mutable Opportunity status and production_4_acceptance metadata",
+    "immutable_history_preserved": true,
+    "lineage": {
+      "research_pack": "research-pack-similarstoic-ai-workflow-v1",
+      "script": "script-similarstoic-ai-workflow-v1",
+      "visual_plan": "visual-plan-similarstoic-ai-workflow-v1",
+      "narration": "narration-asset-similarstoic-production-4-marin-v1",
+      "final_media_input_snapshot": "final-media-input-snapshot-similarstoic-production-4-v1",
+      "render_execution": "render-execution-similarstoic-production-4-founder-review-v1",
+      "final_media_artifact": "final-media-artifact-similarstoic-production-4-founder-review-v1"
+    },
+    "final_artifact": {
+      "runtime_managed_path": "D:\\ConveyorRuntime\\media\\production-4\\similarstoic-production-4-ai-workflows-founder-review-v1.mp4",
+      "local_review_path": "D:\\ProjectAtlas\\work\\similarstoic-production-4-20260909\\founder-review\\similarstoic-production-4-ai-workflows-founder-review-v1.mp4",
+      "sha256": "a9a15ec24be9ed11df601c61a6dd5ff5e42a983b81449fc2dffefe795c7118ac",
+      "bytes": 7090520,
+      "duration_ms": 65400,
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "video_codec": "H.264",
+      "audio_codec": "AAC",
+      "frame_rate_fps": 30,
+      "tracked_media_bytes": false
+    },
+    "quality_assurance": {
+      "full_decode": "pass",
+      "script_words_expected": 144,
+      "script_words_recovered": 144,
+      "scene_count": 6,
+      "six_scene_visual_continuity": "pass",
+      "caption_cues": 21,
+      "caption_timing": "final-audio speech alignment",
+      "audio_only_comprehension": "pass",
+      "uk_first_editorial_guardrail": true,
+      "human_verification_explicit": true,
+      "privacy_boundary_explicit": true,
+      "integrated_loudness_lufs": -16.44,
+      "true_peak_dbtp": -1.49
+    },
+    "bespoke_auditor_pose": {
+      "status": "production_evidence_not_canonical_visual_authority",
+      "local_path": "D:\\ProjectAtlas\\work\\similarstoic-production-4-20260909\\assets\\core-v3-auditor-acting-pose-v1.png",
+      "sha256": "5b2da25a09400bec392c21311e6007bbaab97a837ae2a2fa3fc16ac4f48883ae",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "mode": "RGBA"
+    },
+    "narration_baseline": {
+      "provider": "OpenAI",
+      "model": "gpt-4o-mini-tts-2025-12-15",
+      "voice": "Marin",
+      "status": "provisional_accepted_production_baseline_replaceable",
+      "master_sha256": "773dcbe902675814e553cea54d913dbc257ba2687e280bb35d3af00e0a7400ae"
+    },
+    "spend": {
+      "quality_development_envelope_usd": 10.0,
+      "opening_conservative_exposure_rounded_usd": 3.83,
+      "production_4_incremental_conservative_exposure_usd": 0.557925,
+      "production_4_incremental_rounded_usd": 0.56,
+      "image_calls": 2,
+      "tts_calls": 3,
+      "whisper_calls": 5,
+      "whisper_provider_reported_seconds": 262,
+      "total_conservative_exposure_rounded_usd": 4.39,
+      "remaining_authorization_rounded_usd": 5.61,
+      "standing_remaining_authorization_threshold_usd": 2.0,
+      "provider_reported_exact_charge_usd": null,
+      "canonicalization_spend_usd": 0.0
+    },
+    "production_lesson": "Future episodes should keep the hamster and visual metaphor primary; labels, checklists, and diagrams remain supporting elements to avoid slide-deck or infographic drift. Production #4 is not revised.",
+    "authority_boundaries": {
+      "production_5_started": false,
+      "production_5_authorized_after_acceptance_sync": true,
+      "production_6_started": false,
       "publication": false,
       "migration_24": false,
       "v0_28": false,

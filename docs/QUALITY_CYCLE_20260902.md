@@ -181,6 +181,40 @@ conservative/calculable exposure is `$0.0170125`, rounded to `$0.02`. No provide
 charge. Active-envelope exposure is now `$3.83 / $10`, leaving `$6.17`; canonicalization added no provider call or
 spend. Marin remains provisional and replaceable.
 
+## Accepted Production #4 — 9 September 2026
+
+Founder + ChatGPT accepted **Three AI workflows that make a junior analyst more valuable** as Production #4. It ran
+autonomously from synchronized checkpoint `c24d7ca96d646ff1f3d816272c58ba188bb225c3` under the accepted production
+cadence. The editorial result promises no career outcome, requires human verification of important output and states
+that sensitive information does not belong in an unapproved tool.
+
+The mutable `ai-workflow` Opportunity is `accepted` with exact `production_4_acceptance` metadata. Immutable lineage
+preserves research pack `research-pack-similarstoic-ai-workflow-v1`, Script `script-similarstoic-ai-workflow-v1`,
+VisualPlan `visual-plan-similarstoic-ai-workflow-v1`, narration `narration-asset-similarstoic-production-4-marin-v1`,
+input snapshot `final-media-input-snapshot-similarstoic-production-4-v1`, render execution
+`render-execution-similarstoic-production-4-founder-review-v1` and final artifact
+`final-media-artifact-similarstoic-production-4-founder-review-v1`. Render and artifact metadata retain their exact
+at-render `pending` review state.
+
+The runtime-managed MP4 is
+`D:\ConveyorRuntime\media\production-4\similarstoic-production-4-ai-workflows-founder-review-v1.mp4`, SHA-256
+`a9a15ec24be9ed11df601c61a6dd5ff5e42a983b81449fc2dffefe795c7118ac`. It is 65.400 seconds, 1080×1920,
+30 fps H.264/AAC. Full decode passed. Prompt-free alignment recovered all 144 normalized Script words; 21 semantic
+caption cues derive from the final audio. Six-scene identity, Same-illustrator, editorial, mobile-readability and
+technical checks passed. The binary and bespoke auditor-pose derivative remain managed runtime/ignored evidence rather
+than tracked visual authority.
+
+Two image calls are conservatively estimated at `$0.50`. Three TTS calls produced 126.90 seconds across one rejected
+take, the retained take and an exact missing-tail repair, estimated at `$0.031725`. Five Whisper calls covered 262
+provider-reported seconds and calculate to `$0.0262`; diagnostics and validation of a failed local join remain included.
+No provider returned an actual dollar charge. Production #4 incremental exposure is `$0.557925`, rounded to `$0.56`.
+The active envelope is now `$4.39 / $10`, leaving `$5.61`; canonicalization added no call or spend. Marin remains
+provisional and replaceable.
+
+Production lesson: future episodes should avoid slide-deck or infographic drift. Labels, checklists and diagrams may
+support the action, but the hamster and visual metaphor should remain the primary illustration whenever possible. This
+is a forward non-blocking lesson; accepted Production #4 is not revised.
+
 ## GPT Image 2 findings and design hypothesis
 
 Five GPT Image 2 high-quality reference-conditioned edit experiments were performed. Saved PNG hashes match the

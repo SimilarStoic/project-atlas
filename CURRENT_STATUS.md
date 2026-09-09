@@ -2,9 +2,9 @@
 
 ## Last Updated
 
-9 September 2026 — Production #3 is complete and accepted by founder + ChatGPT. Its runtime acceptance and bounded
-canonical documentation are recorded in one local acceptance candidate based on synchronized design checkpoint
-`e8be85632d8f7ac628f3883375641685cba5d67f`; this candidate is not pushed.
+9 September 2026 — Production #4 is complete and accepted by founder + ChatGPT. Its runtime acceptance, immutable
+provenance and bounded canonical documentation are recorded in one local acceptance candidate based on synchronized
+checkpoint `c24d7ca96d646ff1f3d816272c58ba188bb225c3`; this candidate is not pushed.
 
 ## Current State — Read This First
 
@@ -47,6 +47,11 @@ lifecycle and is accepted. Its exact design and acceptance record are in
 [Production #3 — Bounded Design](docs/PRODUCTION_3_DESIGN.md). The direct nominal arithmetic remains
 `£300 × 12 × 20 = £72,000`; no return, inflation or wealth outcome is implied.
 
+Production #4, **Three AI workflows that make a junior analyst more valuable**, completed the same governed lifecycle
+and is accepted. Its exact design, execution and acceptance record are in
+[Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md). It promises no career outcome, requires human
+verification of important output and keeps sensitive information out of unapproved tools.
+
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
 research/editorial preparation, production mechanics and QA while retaining final artifact, canon, publication,
@@ -63,8 +68,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this Production #3 acceptance candidate:** local `main` and `origin/main` both resolved to
-  `e8be85632d8f7ac628f3883375641685cba5d67f`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
+- **Base before this Production #4 acceptance candidate:** local `main` and `origin/main` both resolved to
+  `c24d7ca96d646ff1f3d816272c58ba188bb225c3`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
@@ -140,6 +145,14 @@ Governed lineage includes research pack `research-pack-similarstoic-lifestyle-in
 30 fps H.264/AAC. Exact narration completeness is 126/126 canonical words and 130/130 normalized spoken tokens; all
 21 semantic caption cues use final-duration speech alignment. Six-scene visual continuity and full decode passed.
 
+Production #4 has **completed and passed founder + ChatGPT final quality review**. The mutable `ai-workflow`
+Opportunity is `accepted`; immutable render and artifact rows preserve exact at-render history. Governed lineage ends
+at `final-media-artifact-similarstoic-production-4-founder-review-v1`. The runtime-managed MP4 has SHA-256
+`a9a15ec24be9ed11df601c61a6dd5ff5e42a983b81449fc2dffefe795c7118ac`; it is 65.400 seconds, 1080×1920,
+30 fps H.264/AAC. Exact normalized narration completeness is 144/144 words; all 21 semantic caption cues use final-audio
+alignment. Six-scene identity, visual, editorial and technical QA passed. Its bespoke auditor pose remains production
+evidence rather than a new reusable canonical authority.
+
 Founder + ChatGPT accepted the local audiovisual integration proof at
 `D:\ProjectAtlas\work\similarstoic-audiovisual-proof-20260909\founder-review\similarstoic-audiovisual-integration-proof-v1.mp4`,
 SHA-256 `1267f9c05c3431ee2d71fe73433f318efc9bfb935616a13fd56593500f7d55ca`, 18.03 seconds, 1080×1920 H.264/AAC.
@@ -159,21 +172,23 @@ The visual method now consists of canonical identity authority, approved acting-
 Language, approved environment examples, approved composition grammar, approved composition examples and a distinct
 rare special break-frame example. The separated
 method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. After
-Production #3, the active `$10` quality-development envelope has conservative maximum exposure of `$3.83` and `$6.17`
+Production #4, the active `$10` quality-development envelope has conservative maximum exposure of `$4.39` and `$5.61`
 remaining. Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: three successful image calls,
 one successful and one failed-transfer TTS call, and two Whisper calls covering 90 provider-reported seconds. No exact
 provider-reported dollar charge was returned. Production #3 added `$0.0170125`, rounded to `$0.02`, through one Marin
 TTS call and one 49-second Whisper alignment; its six visuals used approved assets and local composition at zero image
-provider cost. The break-frame
+provider cost. Production #4 added `$0.557925`, rounded to `$0.56`, through two image calls, three TTS calls and five
+Whisper calls covering 262 provider-reported seconds; rejected and diagnostic attempts remain included. No response
+returned an actual dollar charge. The break-frame
 sequence rejected machinery/cinematic, rough-cartoon and photoreal gross-up directions before the accepted hand-drawn
 gross-up; canonicalization added `$0` provider spend. This is bounded evidence, not universal repeatability or a new
 architecture.
 
 ## Exact Next Action
 
-Review and push the single bounded Production #3 acceptance commit. After synchronization, Production #4 may proceed
-autonomously under the accepted cadence and active quality envelope, returning at FINAL QUALITY GATE. No publication,
-v0.28, Migration 24, rig, architecture expansion or successor is authorized.
+Review and push the single bounded Production #4 acceptance commit. After synchronization, Production #5 may proceed
+autonomously under the accepted cadence and active quality envelope, returning at FINAL QUALITY GATE. Do not begin
+Production #6. No publication, v0.28, Migration 24, rig or architecture expansion is authorized.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

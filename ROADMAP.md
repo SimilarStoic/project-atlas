@@ -451,7 +451,7 @@ The accepted runtime artifact is `final-media-artifact-similarstoic-production-2
 demonstrates the approved SimilarStoic visual vocabulary in a full UK-first production. It does not establish universal
 readiness, make Marin permanent, select v0.28, add a migration, expand architecture or authorize Production #3.
 
-## Minimum repeatable cadence and accepted Production #3
+## Minimum repeatable cadence and accepted Productions #3–#4
 
 The bounded operating method is the
 [SimilarStoic minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md): one active production,
@@ -465,10 +465,21 @@ runtime artifact `final-media-artifact-similarstoic-production-3-founder-review-
 30 fps H.264/AAC vertical short with complete narration and 21 final-duration speech-aligned caption cues. The visual
 pass used approved assets and deterministic local composition without an image-provider call.
 
-Routine Production #4 selection, design and execution may proceed after the Production #3 acceptance commit is
-synchronized. Provider work may continue inside the active `$10` quality envelope; stop before exceeding it, or when
-remaining authority falls below `$2` while further paid work would be useful. Final artifact review and publication
-remain founder decisions. No workflow engine, scheduler, migration, milestone or architecture expansion is created.
+The next completed candidate is [Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md), **Three AI
+workflows that make a junior analyst more valuable**. Founder + ChatGPT accepted runtime artifact
+`final-media-artifact-similarstoic-production-4-founder-review-v1`, SHA-256
+`a9a15ec24be9ed11df601c61a6dd5ff5e42a983b81449fc2dffefe795c7118ac`. It is a 65.400-second, 1080×1920,
+30 fps H.264/AAC short with complete 144-word narration and 21 final-audio speech-aligned captions.
+
+Production #4 passed, with one forward production lesson: future episodes should keep the hamster and visual metaphor
+as the primary illustration and use labels, checklists and diagrams only as support, avoiding slide-deck or infographic
+drift. This lesson does not reopen or revise the accepted artifact.
+
+Routine Production #5 selection, design and execution may proceed after the Production #4 acceptance commit is
+synchronized. Active-envelope exposure is `$4.39 / $10`, leaving `$5.61`; stop before exceeding it, or when remaining
+authority falls below `$2` while further paid work would be useful. Final artifact review and publication remain founder
+decisions. Do not begin Production #6. No workflow engine, scheduler, migration, milestone or architecture expansion is
+created.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 
