@@ -14,6 +14,10 @@ conversation memory, implementation convenience, nor an inferred better sequence
 direction, reinterpret commitments, remove requirements, add objectives, or treat deferred or unspecified
 work as approved.
 
+Future build-vs-buy, provider, SaaS/API and commercial-capability decisions must follow
+[Conveyor Business and Vendor Strategy](BUSINESS_AND_VENDOR_STRATEGY.md). That authority guides evaluation but does not
+itself authorize integration, purchasing, spend, architecture changes, production or publication.
+
 A roadmap or specification change becomes canonical only when the founder explicitly approves it with
 ChatGPT, it is explicitly identified as such a change, canonical GitHub documentation is deliberately
 updated, the change is reviewed and accepted, and that update is committed and pushed. Until then, the

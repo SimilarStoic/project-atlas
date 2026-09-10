@@ -6,6 +6,10 @@ Start Conveyor work with the [canonical handoff and governance protocol](CANONIC
 [current status](../CURRENT_STATUS.md) and [roadmap](../ROADMAP.md). Project Atlas remains the historical/legacy project
 name; SimilarStoic remains the channel, editorial brand and mascot world.
 
+Use [Conveyor Business and Vendor Strategy](BUSINESS_AND_VENDOR_STRATEGY.md) for canonical build-vs-buy, provider,
+SaaS/API, portability, cost-discipline and commercial-capability decisions. It is decision authority, not authorization
+to integrate a provider, purchase a service, increase spend or change roadmap sequencing.
+
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 
 For the reviewed post-production findings and preservation checkpoint, read

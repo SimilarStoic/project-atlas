@@ -728,6 +728,10 @@ Automated video production, automated publishing and advanced analytics are late
 
 The architecture follows a **change without rebuild** principle. Data, capabilities, workflows, configuration and interface should remain loosely coupled.
 
+Future provider, tool, SaaS/API, build-vs-buy and commercial-integration choices must follow
+[Conveyor Business and Vendor Strategy](docs/BUSINESS_AND_VENDOR_STRATEGY.md); that authority does not alter roadmap
+sequencing or independently authorize integration or spend.
+
 Conveyor is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
 image/visual providers, production stages, rendering components, publishing integrations, analytics
 integrations and other implementation-specific pipes should be replaceable behind stable boundaries, explicit
