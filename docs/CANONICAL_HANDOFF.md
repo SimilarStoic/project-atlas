@@ -4,10 +4,11 @@
 
 This document is the durable cross-chat re-grounding guide for Conveyor. GitHub is the canonical
 repository of truth. The founder is product owner and final product and acceptance authority. ChatGPT works
-with the founder as product architect, technical decision-maker, roadmap interpreter, milestone designer,
-architecture steward, bounded Codex task author, implementation reviewer and anti-drift guard. Codex is a
-bounded repository inspection and implementation agent; it must not independently decide product architecture,
-roadmap changes, milestone boundaries, domain semantics, successor sequencing, or final technical direction.
+with the founder as product/technical architecture decision-support, product and quality strategist,
+roadmap/specification steward, canonical GitHub reader, research/recommendation layer, bounded Codex task author,
+implementation reviewer and anti-drift guard. Codex is the normal repository/runtime executor; it must not
+independently decide product architecture, roadmap changes, milestone boundaries, domain semantics, successor
+sequencing or final technical direction beyond what canon and the bounded task already determine.
 
 The canonical roadmap in [ROADMAP.md](../ROADMAP.md) is static by default. Neither a new chat, incomplete
 conversation memory, implementation convenience, nor an inferred better sequence may change phases, reorder
@@ -23,11 +24,65 @@ ChatGPT, it is explicitly identified as such a change, canonical GitHub document
 updated, the change is reviewed and accepted, and that update is committed and pushed. Until then, the
 existing GitHub roadmap and specification remain authoritative.
 
+## Operating roles and repository authority
+
+Technical capability does not imply repository authority. The normal operating split is **decision/specification
+through founder + ChatGPT; repository/runtime execution through Codex**.
+
+- **Founder:** final authority for product direction, consequential product or architecture choices, brand/editorial
+  direction, important artifact acceptance, permanent narrator identity, meaningful scope expansion,
+  destructive/protected actions, spend expansions or top-ups, public publication and authorization to push one exact
+  commit.
+- **ChatGPT:** the normal product architect, product/quality strategist, roadmap and specification steward,
+  architecture decision-support layer, canonical GitHub reader, research/recommendation layer, anti-drift reviewer,
+  Codex task author/reviewer and founder decision-support layer. It should make strong bounded recommendations and
+  product/technical decisions where existing canon determines the best course. **ChatGPT is read-only to the Conveyor
+  repository by default.** Connected GitHub capability does not authorize mutation. Without an explicit,
+  unambiguous founder override for one specific action, ChatGPT must not create, update or delete GitHub files; create
+  commits; create or move branches/refs; merge; push; modify `main`; or implement repository changes directly through
+  GitHub. Such an override is action-specific and creates no standing write authority.
+- **Codex:** the normal bounded repository/runtime executor. Within authorized canon and task scope it performs local
+  documentation/source edits, authorized migrations, tests, Git and persistent-runtime inspection, separately
+  authorized provider calls, asset/render generation, provenance, validation, local commits, synchronization and an
+  authorized push. Codex makes routine bounded implementation choices autonomously and stops for consequential gates
+  or genuine blockers, not ordinary engineering minutiae. It does not independently change product strategy,
+  architecture direction, roadmap sequencing, milestone boundaries, consequential brand/editorial choices, spend or
+  publication authority unless the task and canon already determine the decision.
+
+Maximum-hands-off remains the operating goal: founder gates protect consequential outcomes without making the founder
+an engineering middleman.
+
+### Canonicalization and exact push gate
+
+**“MAKE THIS CANON” is not GitHub write authorization.** Its normal meaning is: ChatGPT determines or recommends the
+canonical change; Codex edits and validates the repository; Codex creates one bounded local commit and returns an exact
+push gate; the founder authorizes that exact commit; then Codex pushes and verifies synchronization. General approval
+of an idea or task does not authorize ChatGPT to write GitHub or Codex to push an unspecified future commit.
+
+Before a consequential push, Codex's gate must identify at minimum the exact commit SHA and subject, changed files or
+bounded diff summary, validation results, local `HEAD`, its relationship and ahead/behind count against `origin/main`,
+material runtime effects, provider/spend effects where relevant, blockers and a **PUSH / DO NOT PUSH** recommendation.
+
+### GitHub visibility and remote drift
+
+Connected GitHub access establishes remote repository evidence only. It does not prove the state of the local
+`D:\ProjectAtlas` working tree/index, ignored or untracked evidence, `D:\ConveyorRuntime`, runtime databases, generated
+media/assets, local tests, provider outputs or other workstation-only evidence. ChatGPT must state that boundary rather
+than extrapolate; Codex verifies local/runtime facts when they matter.
+
+Before consequential implementation, fetch or otherwise verify expected GitHub `main`. If remote `main` is beyond or
+differs from the expected checkpoint, declare **REMOTE DRIFT** and treat it as a reconciliation event: do not start new
+implementation or independently repair GitHub through ChatGPT; inspect the unexpected remote change; have Codex
+reconcile remote, local and runtime state while preserving valid evidence; then continue from the reconciled canonical
+checkpoint. An unexpected remote change is not automatically wrong and must not be reverted by assumption.
+
 ## Current canonical synchronisation state
 
 ### Current canonical snapshot
 
-- Git checkpoint: `58c69ffad0bc5523c9a23ad25f5076aab0d330b0` — `production: accept SimilarStoic Production 5`.
+- Production #5 acceptance checkpoint: `58c69ffad0bc5523c9a23ad25f5076aab0d330b0` —
+  `production: accept SimilarStoic Production 5`. Determine current GitHub `main` by fetching/reading it; do not infer
+  current `HEAD` from this historically stable acceptance checkpoint.
 - Phase 1 is complete; Phase 2 — Content Operating Model is **ACTIVE / INCOMPLETE**.
 - Productions #2–#5 are accepted. Production #5 v4 is the accepted artifact, SHA-256
   `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`; v1–v3 remain historical iteration evidence.
@@ -78,7 +133,8 @@ and tests; (4) verified persistent runtime; (5) verified local experimental/revi
 authority for product direction, architecture, editorial/quality acceptance, milestone selection, destructive actions
 and final push. ChatGPT is product architect, roadmap/specification steward, anti-drift reviewer and bounded Codex
 task author/reviewer. Codex is the bounded local inspection, implementation, testing and validation agent. Governing
-principle: **CHANGE WITHOUT REBUILD**.
+principle: **CHANGE WITHOUT REBUILD**. GitHub's precedence establishes canonical remote history; it does not prove
+workstation or persistent-runtime state, which Codex must verify when relevant.
 
 ### Current canon and pre-reconciliation history
 
