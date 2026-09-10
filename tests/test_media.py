@@ -123,6 +123,47 @@ def test_caption_cues_are_short_phrase_level_segments() -> None:
     assert cues[-1]["end_ms"] == 1200
 
 
+def test_default_social_caption_profile_is_mobile_readable_and_safe() -> None:
+    settings = MediaService.RENDER_SETTINGS
+    profile = settings["caption_profile"]
+
+    assert settings["caption_style"] == "similarstoic-social-mobile-v3"
+    assert profile["font_size"] >= 88
+    assert profile["max_lines"] == 2
+    assert profile["margin_bottom"] >= 300
+    assert min(profile["margin_left"], profile["margin_right"]) >= 60
+    assert round(profile["font_size"] * profile["phone_preview_width"] / 1080) >= 23
+    assert profile["default_zone"] == "lower_center_safe"
+    assert profile["alternate_zones"] == ["middle_center_safe", "upper_center_safe"]
+    assert profile["position_change_policy"] == "scene_boundary_only_when_action_requires"
+    assert settings["default_motion"] == "static"
+    assert settings["global_motion_policy"] == "static_anchored_default"
+
+
+def test_social_caption_filter_freezes_profile_and_preserves_legacy_snapshots() -> None:
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    modern = MediaService._composition_filters(scenes, 1000)
+    assert "FontSize=92" in modern[-1]
+    assert "MarginV=320" in modern[-1]
+    assert "BorderStyle=3" in modern[-1]
+
+    legacy_settings = dict(MediaService.RENDER_SETTINGS)
+    legacy_settings["caption_style"] = "similarstoic-readable-v1"
+    legacy_settings.pop("caption_profile")
+    legacy = MediaService._composition_filters(scenes, 1000, legacy_settings)
+    assert "FontSize=42" in legacy[-1]
+    assert "MarginV=130" in legacy[-1]
+
+    v2_settings = dict(MediaService.RENDER_SETTINGS)
+    v2_settings["profile"] = "similarstoic-vertical-v1"
+    v2_settings["caption_style"] = "similarstoic-social-mobile-v2"
+    v2_settings["caption_profile"] = MediaService.SOCIAL_CAPTION_PROFILE_V2
+    v2_settings.pop("global_motion_policy")
+    v2 = MediaService._composition_filters(scenes, 1000, v2_settings)
+    assert "FontSize=68" in v2[-1]
+    assert "MarginV=250" in v2[-1]
+
+
 def _ready_visual_plan(repository: AtlasRepository, prefix: str):
     """Build the accepted Gate lineage required by final-media input snapshots."""
 
@@ -229,6 +270,9 @@ def _create_snapshot(
                 "asset_selection_id": selection.id,
                 "duration_ms": duration_ms,
                 "motion": motion,
+                "motion_rationale": (
+                    "Test-only deliberate emphasis move." if motion != "static" else None
+                ),
                 "transition_to_next": transition,
             }
         )
@@ -413,8 +457,18 @@ def test_composition_filters_cover_cut_crossfade_and_all_frozen_motions() -> Non
 
     scenes = [
         {"duration_ms": 500, "motion": "static", "transition_to_next": "cut"},
-        {"duration_ms": 500, "motion": "slow_zoom_in", "transition_to_next": "crossfade"},
-        {"duration_ms": 500, "motion": "slow_zoom_out", "transition_to_next": None},
+        {
+            "duration_ms": 500,
+            "motion": "slow_zoom_in",
+            "motion_rationale": "Deliberate reveal.",
+            "transition_to_next": "crossfade",
+        },
+        {
+            "duration_ms": 500,
+            "motion": "slow_zoom_out",
+            "motion_rationale": "Deliberate context reveal.",
+            "transition_to_next": None,
+        },
     ]
     filters = MediaService._composition_filters(scenes, 1500)
 

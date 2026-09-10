@@ -21,10 +21,11 @@ The repeatable core is:
 3. prepare one audio-complete Script and approve its editorial package;
 4. create a six-beat VisualPlan using the approved visual vocabulary;
 5. reuse canonical assets where they naturally fit and generate only script-required gaps;
-6. compose locally with character-first hierarchy, restrained motion and idea-led cuts;
+6. compose locally with character-first hierarchy, a static anchored camera by default and idea-led cuts;
 7. use Marin as the provisional accepted production baseline unless separately changed;
-8. transcribe the final mastered narration, prove completeness and derive captions from real speech timing;
-9. render one 1080×1920 H.264/AAC review master and run technical, factual, visual and brand QA;
+8. transcribe the final mastered narration, prove completeness and derive phone-readable captions from real speech timing;
+9. render one 1080×1920 H.264/AAC review master and run technical, factual, semantic, visual-integrity,
+   motion-stability, phone-scale caption and brand QA;
 10. preserve exact lineage, hashes, provider evidence and conservative cost accounting before founder review.
 
 Production #4 adds one non-blocking illustration rule: small labels, checklists and diagrams may support the action,
@@ -36,6 +37,22 @@ The final Script and mastered narration must match. Old timestamps, word-count t
 invalid. Captions stay subordinate; visuals cannot carry a claim absent from the narration. Motion must explain,
 emphasize or pace an idea rather than run continuously.
 
+Before a final artifact can pass internally:
+
+- every scene visibly communicates the subject, action, acted-on object and causal relationship at a glance; a written
+  rationale cannot substitute for a weak rendered frame;
+- generated artwork passes full-resolution and phone-scale vision review for cleanliness, topology, complete geometry,
+  attachments, perspective, anatomy, repeated-object consistency, paired-scene continuity and collisions;
+- repair preserves useful semantic objects, environmental depth and character interaction rather than emptying the scene;
+- the camera is static by default; any global motion has a recorded purpose, remains monotonic and anchored, and contains
+  no micro-wiggle, faux handheld movement, loop seam, lag or snapback;
+- captions use `similarstoic-social-mobile-v3`, remain one or two short semantic lines in a predictable lower-centre
+  safe zone, use only predefined scene-boundary alternatives, and pass full-frame, busy-scene, close-up and 270×480
+  phone-scale review;
+- material quantitative or time-sensitive claims receive separate dated on-screen source attribution;
+- current claims pass a newest-primary-source comparison at research freeze, with any retained older source justified;
+- Marin remains explicitly provisional and replaceable rather than silently becoming the launch narrator.
+
 ## Five-working-day operating loop
 
 | Window | Output | Normal owner | Exit condition |
@@ -44,8 +61,8 @@ emphasize or pace an idea rather than run continuously.
 | Day 1–2 — evidence and editorial | sources, Claims, readiness, title, hook, exact Script and editorial QA | automatic preparation | every consequential sentence supported or explicitly framed as illustration/opinion |
 | Day 2 — production design | six-beat VisualPlan, reuse map, generation gaps, motion/caption plan and attempt ceiling | automatic preparation | audio-only story works; each scene has one job; spend is bounded |
 | Day 3 — assets and narration | selected/reused assets, only necessary new assets, mastered narration and provenance | automatic after authority | identity and Same-illustrator QA pass; narration has no clipping or missing line |
-| Day 4 — assembly and alignment | deterministic composition, final-master alignment, captions and review render | automatic | exact Script-word completeness passes; all timing uses final audio |
-| Day 5 — final QA and review | technical/editorial/brand report, cost record and founder-review package | automatic preparation, founder decision | one exact artifact is accepted, revised or rejected |
+| Day 4 — assembly and alignment | deterministic composition, final-master alignment, mobile-safe captions, dated attribution and stable motion | automatic | exact Script-word completeness passes; all timing uses final audio; phone-scale preview passes |
+| Day 5 — final QA and review | technical/editorial/semantic/cleanliness/continuity/motion report, cost record and founder-review package | automatic preparation, founder decision | one exact artifact is accepted, revised or rejected |
 
 The day labels are planning bounds, not reasons to skip readiness or force a weak result. A factual, identity, audio or
 technical failure pauses the clock until corrected. Routine corrections remain inside the same production and do not
@@ -116,8 +133,10 @@ Productions #2, #3 and #4 are accepted. Production #4's execution and acceptance
 [Production #4 — Design and Acceptance](PRODUCTION_4_DESIGN.md). It validates the cadence on a third consecutive full
 production across a non-finance topic, while its visual result supplies the illustration-hierarchy lesson above.
 
-The internal production-method objective is satisfied. Keep the five-working-day pace for the initial live pilot and
+The internal production-method objective is satisfied. Production #5 v1 additionally proves the reference-driven
+dynamic generation architecture, while its final artifact is **MIXED / REVISE** and acceptance is on hold pending v2.
+Keep the five-working-day pace for the initial live pilot and
 publish no more than one item per week; do not accelerate volume until publishing reliability and repeated learning are
-proven. Production #5 is reserved for the reference-driven quality-uplift proof and is not started. Active-envelope
-exposure is `$4.39 / $10`, leaving `$5.61`. The verified runtime is migrated through 24 for multi-authority visual
+proven. Production #5 v2 is the only active production correction. Active-envelope exposure is `$5.68 / $10`, leaving
+`$4.32`. The verified runtime is migrated through 24 for multi-authority visual
 references; Production #6, v0.28 and a rig remain absent.

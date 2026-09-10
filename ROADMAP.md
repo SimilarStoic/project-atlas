@@ -487,7 +487,8 @@ one public pilot item per week, with founder approval for each exact external pu
 sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
 decisions/identities, performance snapshots and learning assessments. Migration 24 is now assigned to the bounded
 multi-authority visual-reference implementation; a later publishing implementation will use the next available
-migration, currently expected to be 25. Active-envelope exposure stays `$4.39 / $10`, leaving `$5.61`. Do not begin
+migration, currently expected to be 25. Production #5 v1 brings active-envelope exposure to `$5.68 / $10`, leaving
+`$4.32`. Do not begin
 Production #6 or implement publishing/analytics architecture from this design alone.
 
 Production-method validation is **PASSED**, but public-launch quality is **NOT YET PASSED**. Founder assessment places
@@ -497,10 +498,11 @@ minimum provider-neutral bridge from approved visual-DNA examples to new scene-s
 character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per
 execution, and require one shared global illustration authority across scene components.
 
-The bounded local implementation assigns Migration 24 to that additive persistence change and validates authority
-selection, digest freezing, provider translation and immutable execution provenance. Production #5 remains
-**RESERVED / NOT STARTED** and its next role is **REFERENCE-DRIVEN DYNAMIC SCENE GENERATION / QUALITY-UPLIFT PROOF**.
-It must not execute until the implementation candidate is accepted, pushed and synchronized.
+The bounded Migration 24 implementation is synchronized and validates authority selection, digest freezing, provider
+translation and immutable execution provenance. Production #5 proved the reference-driven dynamic scene-generation
+architecture, but founder review rated both v1 and v2 **MIXED / REVISE**. Acceptance remains on hold while v3 applies
+the stronger repair-don't-empty, connected-object topology, self-evident semantic-grounding, social-mobile-v3 caption
+hierarchy, static-camera-default and rendered-frame vision gates. Public-launch quality remains not passed.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 

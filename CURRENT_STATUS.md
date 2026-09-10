@@ -2,10 +2,10 @@
 
 ## Last Updated
 
-10 September 2026 — The reviewed multi-authority visual-generation design is synchronized at
-`76b8c4e93aad07b273e249902fcfffb08256d835`. Its bounded Migration 24 implementation and runtime materialization are
-validated in one local candidate pending founder review and push. Productions #2–#4 remain accepted. Production #5 is
-reserved and has not started.
+10 September 2026 — Multi-authority visual-generation implementation is synchronized at
+`1284e344b376e550b0a06ee79e79e9ae478b96c2`. Production #5 v1 proved the reference-driven dynamic scene-generation
+architecture, but founder review rated the final artifact **MIXED / REVISE** and placed acceptance on hold. Its exact
+artifact and immutable evidence remain preserved while bounded v2 correction is active. Productions #2–#4 remain accepted.
 
 ## Current State — Read This First
 
@@ -61,11 +61,13 @@ and is accepted. Its exact design, execution and acceptance record are in
 [Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md). It promises no career outcome, requires human
 verification of important output and keeps sensitive information out of unapproved tools.
 
-The production-method validation objective is **PASSED**, while public-launch quality is **NOT YET PASSED**. Founder
-assessment places current output at approximately **50%** of desired mature quality; the target before public launch is
-approximately **80–85%** through stronger reference-driven bespoke generation, scene depth, acting and visual
-treatment with less chunky/AI-assembled output. Production #5 is reserved as the
-**REFERENCE-DRIVEN DYNAMIC SCENE GENERATION / QUALITY-UPLIFT PROOF** and remains unstarted.
+The production-method validation objective is **PASSED**, while public-launch quality is **NOT YET PASSED**. Production
+#5 establishes **REFERENCE-DRIVEN DYNAMIC SCENE GENERATION: PASS**, while both exact v1 and v2 final artifacts remain
+**MIXED / REVISE** and **ACCEPTANCE: HOLD**. V3 is the only active correction. It must repair physical cable topology,
+make the grid-connection queue self-explanatory, preserve scene richness, use materially larger stable captions, keep the
+camera static by default and pass actual full-frame plus phone-scale vision review before a new founder gate.
+Marin remains usable for development but narrator quality is **PROVISIONAL / UPGRADE REQUIRED BEFORE OR DURING
+LAUNCH-QUALITY FINALIZATION**. The active envelope after v2 is `$6.43 / $10` with `$3.57` remaining.
 
 [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
 YouTube Shorts-only pilot, one founder gate for the exact external publication action, and append-only performance and
@@ -191,9 +193,9 @@ an ordinary scene; it is not mandatory reusable scenery, a universal background 
 The visual method now consists of canonical identity authority, approved acting-pose references, approved Default Scene
 Language, approved environment examples, approved composition grammar, approved composition examples and a distinct
 rare special break-frame example. The separated
-method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. After
-Production #4, the active `$10` quality-development envelope has conservative maximum exposure of `$4.39` and `$5.61`
-remaining. Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: three successful image calls,
+method has passed across outdoor/high-action storm, calm indoor sorting and abstract explanatory metaphor. Production
+#5 v1 added `$1.2855625` conservative/calculable exposure through five image calls, two TTS calls and four Whisper calls,
+bringing the active `$10` envelope to `$5.68` used and `$4.32` remaining. Production #2 added `$0.781255` conservative exposure, rounded to `$0.79`: three successful image calls,
 one successful and one failed-transfer TTS call, and two Whisper calls covering 90 provider-reported seconds. No exact
 provider-reported dollar charge was returned. Production #3 added `$0.0170125`, rounded to `$0.02`, through one Marin
 TTS call and one 49-second Whisper alignment; its six visuals used approved assets and local composition at zero image

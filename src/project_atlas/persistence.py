@@ -4812,7 +4812,13 @@ class AtlasRepository:
     ) -> tuple[Asset, bytes]:
         """Safely load exact verified managed bytes for provider-time reference use."""
 
-        asset = self._validate_character_reference_asset(asset_id, character_profile_id)
+        asset = self.get_asset(asset_id)
+        if asset.source_kind == "imported":
+            asset = self._validate_imported_character_reference_asset(
+                asset_id, character_profile_id
+            )
+        else:
+            asset = self._validate_character_reference_asset(asset_id, character_profile_id)
         content = self.managed_asset_path(asset.id).read_bytes()
         if asset.content_digest is None or sha256(content).hexdigest() != asset.content_digest:
             raise ValueError("Managed Asset bytes do not match the stored content digest.")

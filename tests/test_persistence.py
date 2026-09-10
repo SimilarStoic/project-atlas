@@ -2359,6 +2359,11 @@ def test_imported_character_reference_bootstrap_is_explicit_managed_and_compatib
             "imported-ref-selection", character_spec.id, first.id, reference_set.id
         )
         assert selected.character_reference_set_id == reference_set.id
+        loaded, loaded_bytes = repository.load_verified_character_reference_asset(
+            first.id, profile_id
+        )
+        assert loaded == first
+        assert loaded_bytes == png
 
         graphic_spec = repository.create_asset_spec_under_scene_authorization(
             "imported-ref-graphic-spec", scene.id, "graphic", "Purpose", "Description", "Prompt"

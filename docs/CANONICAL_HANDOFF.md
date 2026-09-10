@@ -28,10 +28,11 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`76b8c4e93aad07b273e249902fcfffb08256d835`; Production #4, the controlled publishing/learning design and the
-[multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) are synchronized. A bounded
-Migration 24 implementation candidate is local and pending founder review and push. Production #5 is reserved and has
-not started. Rejected experimental implementation remains excluded from canonical history.
+`1284e344b376e550b0a06ee79e79e9ae478b96c2`; Production #4, the controlled publishing/learning design and the
+[multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) are synchronized. Migration 24
+is operational. Production #5 v1 proves the reference-driven generation architecture, while founder review records its
+final artifact as **MIXED / REVISE** with acceptance on hold. Its immutable v1 evidence is preserved and bounded v2
+correction is active. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -204,6 +205,16 @@ checks passed. Production #4 added `$0.557925` conservative/calculable exposure,
 Forward production lesson: labels, checklists and diagrams may support the action, but the hamster and visual metaphor
 should remain the primary illustration whenever possible; avoid slide-deck or infographic drift. Production #4 remains
 accepted without revision.
+
+### Production #5 v1 review state
+
+Production #5 proves the Migration 24 reference-driven dynamic scene-generation path, but founder review rates both v1
+and v2 **MIXED / REVISE** and acceptance remains on hold. Preserve both exact MP4s and immutable lineage. V3 is the only
+active correction. It must repair rather than empty scenes, enforce coherent connected-object topology, make important
+visual relationships understandable from the rendered frame, use social-mobile-v3 captions with predictable zones and
+keep the camera static unless a specific beat justifies motion. Marin remains provisional and replaceable. The v2
+envelope state is `$6.43 / $10` used with `$3.57` remaining. Production #6, Migration 25, publishing implementation and
+publication remain absent.
 
 ### Controlled publishing and performance learning loop
 

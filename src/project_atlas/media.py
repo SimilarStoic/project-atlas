@@ -423,8 +423,44 @@ class OpenAINarrationSynthesizer:
 class MediaService:
     """Small v0.26 lifecycle service; all public inputs are opaque IDs or content bytes."""
 
+    SOCIAL_CAPTION_PROFILE_V2 = {
+        "font_name": "Arial",
+        "font_size": 68,
+        "bold": True,
+        "max_lines": 2,
+        "margin_left": 72,
+        "margin_right": 72,
+        "margin_bottom": 250,
+        "primary_colour": "&H001D1E1F",
+        "background_colour": "&H18FFFDF8",
+        "border_style": 3,
+        "outline": 10,
+        "shadow": 0,
+        "phone_preview_width": 270,
+        "minimum_phone_font_pixels": 17,
+    }
+    SOCIAL_CAPTION_PROFILE = {
+        "font_name": "Arial",
+        "font_size": 92,
+        "bold": True,
+        "max_lines": 2,
+        "margin_left": 72,
+        "margin_right": 72,
+        "margin_bottom": 320,
+        "primary_colour": "&H001D1E1F",
+        "background_colour": "&H08FFFDF8",
+        "border_style": 3,
+        "outline": 13,
+        "shadow": 0,
+        "phone_preview_width": 270,
+        "minimum_phone_font_pixels": 23,
+        "default_zone": "lower_center_safe",
+        "alternate_zones": ["middle_center_safe", "upper_center_safe"],
+        "position_change_policy": "scene_boundary_only_when_action_requires",
+    }
+
     RENDER_SETTINGS = {
-        "profile": "similarstoic-vertical-v1",
+        "profile": "similarstoic-vertical-v2",
         "width": 1080,
         "height": 1920,
         "frame_rate": 30,
@@ -433,7 +469,11 @@ class MediaService:
         "audio_codec": "aac",
         "pixel_format": "yuv420p",
         "caption_policy": "deterministic-script-captions-v1",
-        "caption_style": "similarstoic-readable-v1",
+        "caption_style": "similarstoic-social-mobile-v3",
+        "caption_profile": SOCIAL_CAPTION_PROFILE,
+        "default_motion": "static",
+        "global_motion_policy": "static_anchored_default",
+        "non_static_motion_requires_rationale": True,
         "crossfade_ms": 250,
         "duration_tolerance_ms": 100,
     }
@@ -705,14 +745,55 @@ class MediaService:
                 "Frozen Scene durations do not match the intended final timeline."
             )
         filters.append(
-            f"[{current}]trim=duration={total_duration_ms / 1000:.3f},"
-            "setpts=PTS-STARTPTS[composed]"
+            f"[{current}]trim=duration={total_duration_ms / 1000:.3f},setpts=PTS-STARTPTS[composed]"
         )
-        filters.append(
-            "[composed]subtitles=captions.srt:"
-            "force_style='FontSize=42,Alignment=2,MarginV=130,PrimaryColour=&H00FFFFFF,"
-            "OutlineColour=&H00101010,BorderStyle=1,Outline=3'[captioned]"
-        )
+        caption_style = settings.get("caption_style")
+        if caption_style == "similarstoic-readable-v1":
+            force_style = (
+                "FontSize=42,Alignment=2,MarginV=130,PrimaryColour=&H00FFFFFF,"
+                "OutlineColour=&H00101010,BorderStyle=1,Outline=3"
+            )
+        elif caption_style in {
+            "similarstoic-social-mobile-v2",
+            "similarstoic-social-mobile-v3",
+        }:
+            profile = settings.get("caption_profile")
+            expected_profile = (
+                cls.SOCIAL_CAPTION_PROFILE_V2
+                if caption_style == "similarstoic-social-mobile-v2"
+                else cls.SOCIAL_CAPTION_PROFILE
+            )
+            if profile != expected_profile:
+                raise MediaRuntimeError("Snapshot has an unsupported social caption profile.")
+            phone_font_pixels = round(
+                profile["font_size"] * profile["phone_preview_width"] / settings["width"]
+            )
+            if (
+                profile["max_lines"] != 2
+                or profile["margin_bottom"] < (300 if caption_style.endswith("v3") else 220)
+                or min(profile["margin_left"], profile["margin_right"]) < 60
+                or phone_font_pixels < profile["minimum_phone_font_pixels"]
+            ):
+                raise MediaRuntimeError("Social caption profile fails mobile readability bounds.")
+            if caption_style.endswith("v3") and (
+                profile.get("default_zone") != "lower_center_safe"
+                or profile.get("alternate_zones")
+                != ["middle_center_safe", "upper_center_safe"]
+                or profile.get("position_change_policy")
+                != "scene_boundary_only_when_action_requires"
+            ):
+                raise MediaRuntimeError("Social caption profile has an unsafe position hierarchy.")
+            force_style = (
+                f"FontName={profile['font_name']},FontSize={profile['font_size']},"
+                f"Bold={-1 if profile['bold'] else 0},Alignment=2,"
+                f"MarginL={profile['margin_left']},MarginR={profile['margin_right']},"
+                f"MarginV={profile['margin_bottom']},PrimaryColour={profile['primary_colour']},"
+                f"BackColour={profile['background_colour']},BorderStyle={profile['border_style']},"
+                f"Outline={profile['outline']},Shadow={profile['shadow']}"
+            )
+        else:
+            raise MediaRuntimeError("Snapshot has an unsupported caption style.")
+        filters.append(f"[composed]subtitles=captions.srt:force_style='{force_style}'[captioned]")
         return filters
 
     def artifact_content(self, artifact_id: str) -> bytes:

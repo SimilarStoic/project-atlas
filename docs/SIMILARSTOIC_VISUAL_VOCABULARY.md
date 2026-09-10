@@ -4,7 +4,7 @@
 
 This document defines the minimum reusable creative vocabulary for future SimilarStoic visual production. It is a
 creative and production-design authority, not runtime architecture, a database schema, a rig specification, an
-exhaustive inventory, an instruction to pre-generate assets, or authorization for Production #2. Apply **CHANGE WITHOUT
+exhaustive inventory, or an instruction to pre-generate assets. Apply **CHANGE WITHOUT
 REBUILD** through a small reusable core plus script-driven expansion.
 
 ## Narration and visual roles
@@ -19,6 +19,9 @@ attention. They must not carry essential information missing from narration.
 The hamster should usually be doing something. It is primarily the actor, viewer proxy, metaphor carrier, and emotional
 reaction point. Avoid defaulting to a hamster standing beside a diagram, acting as a presenter, sitting beside
 explanatory text, or following generic talking-head grammar.
+
+Every scene must have a written internal rationale tying one exact spoken idea to an action, metaphor, environment or
+prop. The visual must make that idea easier to interpret. Attractive but semantically unrelated novelty fails final QA.
 
 ## Visual identity stack
 
@@ -95,6 +98,40 @@ Keep props simple, useful, and subordinate.
   arrows where appropriate.
 
 Props and effects should integrate the frame or clarify action without becoming infographic clutter.
+
+Large decorative borders or dividers between artwork and captions are prohibited unless they carry a specific
+narrative function. Captions coexist with the scene; they do not require a separate decorative zone.
+
+## Generation cleanliness, integrity and continuity
+
+SimilarStoic artwork may be charmingly uneven. It must not look accidentally corrupted. Before final render, inspect
+every generated scene at full resolution and reject, repair or locally clean unexplained strokes, floating marks,
+guide-like lines, random dots, decorative fragments, malformed geometry, accidental object fragments and unrelated
+intersections.
+
+The same pass must check object completeness, continuity and collisions. Outlines, fills, limbs and mechanisms must be
+complete enough to read; persistent objects in paired beats must not arbitrarily appear, disappear or change scale;
+recurring props must retain coherent dimensions and function; and unrelated lines must not cross mascot anatomy or an
+important prop. Use a targeted repair or regeneration for the diagnosed defect. Preserve clean components and rejected
+attempt provenance rather than resampling a successful scene blindly.
+
+### Repair, do not empty
+
+A local generation defect is normally repaired while the intended scene richness, semantic objects, depth and
+composition remain intact. Use deterministic cleanup first, then targeted image editing, constrained component
+regeneration and only then full-scene regeneration when the scene is fundamentally unsalvageable. Do not delete or
+flatten a malformed object that contributes meaning, depth, visual interest or spatial logic. A before/after repair must
+confirm that useful props, foreground/midground/background, character interaction and environmental context survive.
+
+Connected objects must have coherent topology. Cables, pipes, rails, handles, mechanisms and limbs require a credible
+start, endpoint, uninterrupted route, correct attachment, sensible perspective and consistent dimensions. They must not
+pass impossibly through solid objects or continue unexplained after an occlusion. Handmade imperfection is welcome;
+physical impossibility and generation corruption fail QA.
+
+Final visual QA uses the actual rendered frame at full resolution and phone scale. It inspects path topology, complete
+outlines, attachments, intersections, duplicated or disappearing fragments, fills, perspective, anatomy, repeated-object
+consistency and continuity between related beats. A written rationale or technical image check cannot make a visibly weak
+frame pass.
 
 ## Composition patterns v1
 
@@ -191,8 +228,38 @@ drift, object reveals, simple transforms, sparse foreground effects and idea-led
 compositions when each movement has an explanatory, emphasis or pacing purpose. Narration remains the master timeline;
 complete final-master transcription and real speech alignment precede caption and duration-dependent edit timing.
 
+The canonical camera default is **static and anchored**. Global camera motion is optional and needs a specific narrative
+or editing purpose. A deliberate monotonic push, pull, reveal pan or depth-based parallax may be used; object-local
+motion, environmental effects, changes, cuts and reveals are preferred when they can carry the beat. Whole-frame
+micro-wiggle, faux handheld shake, oscillation, back-and-forth floating, loop seams, lag/snapback, abrupt drift resets and
+motion added merely to animate a still fail final QA.
+
 This evidence authorizes no rig, lip sync, generic AI video, constant Ken Burns movement or new motion architecture.
 Future pieces still require exact artifact QA and founder review before publication.
+
+## Social captions and source attribution
+
+The default 1080×1920 social caption profile is `similarstoic-social-mobile-v3`: bold 92 px dark text, a high-contrast
+warm off-white box, generous side margins, normally one or two short semantic lines, and a 320 px bottom margin. Its
+stable anchor is the lower-centre safe zone. When important action occupies that zone, move the whole cue to the
+predefined middle-centre or upper-centre safe zone at a scene boundary and keep that position stable for the beat. Do not
+make viewers chase captions, bounce words individually or move text continuously. Validate full frames, busy and
+close-up scenes, and a 270×480 phone preview where the equivalent type is at least 23 px. Final caption timing comes from
+the verified final narration rather than estimated word counts.
+
+Material quantitative or time-sensitive claims also receive a separate concise source line such as `IEA, Apr 2025` or
+`Source: Ofgem, Jul 2026`. Attribution is smaller and visually distinct from speech captions; it does not replace full
+research-pack provenance or clutter the narration text.
+
+## Research and narrator finish gates
+
+At research freeze, identify the newest credible primary or first-party source for each time-sensitive claim and compare
+it with the existing pack. Prefer newer evidence when it supersedes the same claim. Retain an older source only when it
+remains historically necessary or uniquely supports the exact claim, and record that reason. Repeat the check before
+final approval when meaningful time has elapsed.
+
+Marin remains the provisional production-development narrator. It is replaceable and is not the permanent public-launch
+voice. Narrator quality is **PROVISIONAL / UPGRADE REQUIRED BEFORE OR DURING LAUNCH-QUALITY FINALIZATION**.
 
 ## Asset-library discipline
 
@@ -204,7 +271,8 @@ giant asset library in advance.
 
 ## Cost discipline
 
-The active visual-quality envelope is `$10`; conservative exposure is `$3.81`, remaining authorization is `$6.19`, and
+The active visual-quality envelope is `$10`; conservative exposure after Production #5 v1 is `$5.68`, remaining
+authorization is `$4.32`, and
 top-up is not required. Remaining authorization is not a spending target. Paid generation remains bounded,
 evidence-driven, quality-first, and accounted for. Account funding is not spend.
 
@@ -213,5 +281,6 @@ authorization is below `$2` and more paid work is proposed.
 
 ## Current experiment boundary
 
-The first hand-drawn gross-up break-frame passed and its accepted evidence is listed in `assets/README.md`. No further
-visual experiment is authorized by this document.
+Reference-driven dynamic scene generation passed architecturally in Production #5 v1, but the v1 final artifact is
+**MIXED / REVISE** and acceptance remains on hold. Its immutable evidence is preserved while a bounded v2 applies the
+finish gates above. This document does not accept or authorize publication of either artifact.
