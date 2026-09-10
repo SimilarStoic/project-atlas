@@ -2,10 +2,10 @@
 
 ## Last Updated
 
-9 September 2026 — The controlled publishing and performance-learning-loop design is synchronized at
-`f76698248b83f1a7cdfd449286655d6534d363c9`. Productions #2–#4 satisfy the production-method validation objective.
-A bounded multi-authority visual-generation architecture design is recorded in one local documentation candidate based
-on that checkpoint; this candidate is not pushed. Production #5 is reserved and has not started.
+10 September 2026 — The reviewed multi-authority visual-generation design is synchronized at
+`76b8c4e93aad07b273e249902fcfffb08256d835`. Its bounded Migration 24 implementation and runtime materialization are
+validated in one local candidate pending founder review and push. Productions #2–#4 remain accepted. Production #5 is
+reserved and has not started.
 
 ## Current State — Read This First
 
@@ -14,11 +14,12 @@ acting, environment, prop/effect, composition, reuse and break-frame design lang
 runtime architecture and authorizes no production or generation.
 
 The [multi-authority visual-generation design](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) specifies the smallest
-provider-neutral bridge from those approved visual-DNA authorities to scene-specific generation. It preserves
-`VisualStyleProfile`, `CharacterProfile` and `CharacterReferenceSet`, proposes typed digest-backed non-character
-authorities plus immutable per-execution recipe provenance, and keeps composition as guidance/local assembly rather
-than a new executable asset type. The design requires a future additive schema change but assigns no migration number
-and implements nothing.
+provider-neutral bridge from those approved visual-DNA authorities to scene-specific generation. The local
+implementation preserves `VisualStyleProfile`, `CharacterProfile` and `CharacterReferenceSet`; Migration 24 adds typed,
+digest-backed non-character authorities plus immutable per-execution recipe provenance; composition remains
+guidance/local assembly rather than a new executable asset type. The persistent runtime is migrated and the minimum
+approved authorities are materialized, but this implementation is not canonical until its pending commit is reviewed
+and pushed.
 
 The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records the reviewed continuity findings and
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1's original Hazel, Marin v2 and presentation
@@ -47,8 +48,8 @@ composition authority.
 Phase 1 is complete; Phase 2 remains ACTIVE / INCOMPLETE; v0.27 remains the latest named accepted implementation.
 Production #2, **Why a paid-off credit card can still affect your score**, completed the existing governed lifecycle
 and is accepted. Its exact brief and acceptance record are in
-[Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md). This acceptance does not select v0.28, authorize a
-successor milestone, create Migration 24 or a rig, or promote rejected `ad52ab3` material.
+[Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md). This acceptance did not itself select v0.28, authorize a
+successor milestone or rig, or promote rejected `ad52ab3` material.
 
 Production #3, **The £300 monthly upgrade that quietly adds up to £72,000 over 20 years**, also completed the governed
 lifecycle and is accepted. Its exact design and acceptance record are in
@@ -68,8 +69,8 @@ treatment with less chunky/AI-assembled output. Production #5 is reserved as the
 
 [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
 YouTube Shorts-only pilot, one founder gate for the exact external publication action, and append-only performance and
-learning provenance. It is synchronized design authority only: no platform implementation, API call, publication, new
-migration or Production #5 execution has occurred.
+learning provenance. It is synchronized design authority only: no platform implementation, API call, publication,
+publishing migration or Production #5 execution has occurred.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -93,8 +94,8 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
   INCOMPLETE; v0.27 remains the latest named accepted implementation milestone; source and verified runtime migrations
-  are contiguous through 23; and Migration 24 is absent. The post-v0.27 changes are canonical repository history but
-  do not imply acceptance of v0.28 or a successor milestone.
+  are contiguous through 24 in the pending implementation candidate. The post-v0.27 changes do not imply acceptance
+  of v0.28 or a successor milestone.
 - **Historical pre-reconciliation context:** remote `origin/main` was
   `5220320ef81e422dec338b8410ad80b5491c0f31`, with Migration 21 then latest. Local `HEAD` was
   `2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind, before founder review and the
@@ -111,10 +112,10 @@ The selected persistent runtime is outside Git at `D:\ConveyorRuntime\conveyor.d
 `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`, `ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH`, and
 `ATLAS_FFPROBE_PATH`. No runtime data is tracked.
 
-SQLite `integrity_check` is `ok`; migrations 1–23 are contiguous. Migration 22 adds generated narration provenance
+SQLite `integrity_check` is `ok`; migrations 1–24 are contiguous. Migration 22 adds generated narration provenance
 and immutable terminal `NarrationGenerationExecution` history. Migration 23 truthfully permits `openai_tts` alongside
-`local_system_speech`. Both are canonical post-v0.27 repository changes; they do not create a v0.28 milestone.
-Migration 24 does not exist.
+`local_system_speech`. Migration 24 adds immutable multi-authority visual-reference persistence and direct generation
+execution lineage. These post-v0.27 changes do not create a v0.28 milestone.
 
 **Production #1 did occur through the persistent Conveyor lifecycle.** Its technical/end-to-end trial is completed,
 but its production-quality acceptance is **FAILED / NOT ACCEPTED**. The approved Script/content was broadly
@@ -205,11 +206,10 @@ architecture.
 
 ## Exact Next Action
 
-Review and push the bounded multi-authority visual-generation architecture design. Production #5 remains reserved and
-must not start until the minimum visual-authority implementation is separately accepted and operationally verified.
-Migration numbering must follow actual implementation order relative to publishing/learning persistence. No external
-publication, Production #5 execution, Production #6, v0.28, migration, rig or architecture implementation is
-authorized by the design commit.
+Review and push the validated Migration 24 multi-authority visual-generation implementation candidate. Production #5
+remains reserved and must not start until this implementation is accepted, pushed and synchronized. Publishing and
+learning persistence remains unimplemented and will use the next available migration, currently expected to be 25.
+No external publication, Production #5 execution, Production #6, v0.28 or rig is part of this candidate.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

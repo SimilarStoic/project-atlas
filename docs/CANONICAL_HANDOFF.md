@@ -28,19 +28,20 @@ and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record p
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`f76698248b83f1a7cdfd449286655d6534d363c9`; Production #4 and the controlled publishing/learning design are
-synchronized. A bounded [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md)
-candidate is local and pending push. Production #5 is reserved and has not started. Rejected experimental
-implementation remains excluded from canonical history.
+`76b8c4e93aad07b273e249902fcfffb08256d835`; Production #4, the controlled publishing/learning design and the
+[multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) are synchronized. A bounded
+Migration 24 implementation candidate is local and pending founder review and push. Production #5 is reserved and has
+not started. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
 [SimilarStoic Visual-Production Vocabulary](SIMILARSTOIC_VISUAL_VOCABULARY.md). It is design canon, not runtime
 architecture or production authorization.
 
-The multi-authority architecture design preserves the working CharacterProfile/CharacterReferenceSet path and proposes
-the minimum typed, digest-backed non-character authority and execution-recipe provenance needed for new
-reference-driven scenes. It assigns no migration number and implements no schema or provider work.
+The multi-authority implementation preserves the working CharacterProfile/CharacterReferenceSet path and adds the
+minimum typed, digest-backed non-character authority and execution-recipe provenance needed for new reference-driven
+scenes. Migration 24 and the canonical runtime authority materialization are validated locally; no provider work was
+performed.
 
 Treat this document as continuity context, but verify repository facts through Codex where possible. Do not use later
 chat recollection to override repository evidence. Do not push without explicit current founder authorization.
@@ -65,9 +66,9 @@ historical context.
 Phase 2 is ACTIVE /
 INCOMPLETE; v0.27 — First-Run Operability Bridge remains the latest named accepted implementation milestone, v0.26 is
 its accepted predecessor, and no successor milestone is selected. Source and verified runtime migrations are contiguous
-through 23: Migration 22 adds generated-narration provenance and `local_system_speech` execution support; Migration 23
-adds truthful `openai_tts` support. Migration 24 is absent and unauthorized. These post-v0.27 canonical repository
-changes do not constitute an accepted v0.28 milestone.
+through 24 in the pending implementation candidate: Migration 22 adds generated-narration provenance and
+`local_system_speech` execution support; Migration 23 adds truthful `openai_tts` support; Migration 24 adds
+multi-authority visual-reference persistence. These post-v0.27 changes do not constitute an accepted v0.28 milestone.
 
 **Historical pre-reconciliation context:** `origin/main` was
 `5220320ef81e422dec338b8410ad80b5491c0f31`, where Migration 21 was latest. Local `HEAD` was
@@ -86,10 +87,11 @@ The runtime directory and its contents must not be committed. This is a workstat
 requirement; portable configuration remains `ATLAS_DB_PATH`, `ATLAS_ASSET_STORAGE_ROOT`,
 `ATLAS_MEDIA_STORAGE_ROOT`, `ATLAS_FFMPEG_PATH`, and `ATLAS_FFPROBE_PATH`.
 
-`D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; migrations 1–23 are contiguous. Migration 22 adds
+`D:\ConveyorRuntime\conveyor.db` passed SQLite `integrity_check`; migrations 1–24 are contiguous. Migration 22 adds
 generated narration provenance and immutable `NarrationGenerationExecution` records. Migration 23 adds truthful
-`openai_tts` support alongside `local_system_speech`. Migrations 22–23 are canonical post-v0.27 repository history;
-they do not create a v0.28 milestone. Migration 24 does not exist.
+`openai_tts` support alongside `local_system_speech`. Migration 24 adds immutable visual-reference authorities,
+ordered managed-Asset members and direct generation-execution lineage. These post-v0.27 changes do not create a v0.28
+milestone.
 
 `D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, separate from the runtime. It must not be
 migrated, overwritten, moved, deleted or repurposed. Its verified SHA-256 is
@@ -218,10 +220,11 @@ views/views, watch time, average duration/percentage, the time-normalized retent
 subscribers gained, captured append-only at approximately 24 hours, 72 hours, 7 days and 28 days. One item cannot change
 strategy; repeated evidence across comparable items is required before even a bounded routine adjustment.
 
-Current migrations 1–23 preserve provenance through `FinalMediaArtifact` but have no publishing-package, publication,
-performance-snapshot or learning-assessment persistence. A future additive migration is justified before an automated
-live pilot, but Migration 24 is not authorized or implemented. No platform API, credential, external publication,
-Production #5 execution or runtime architecture change has occurred. Subsequent founder direction assigns Production
+Current migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities, but have
+no publishing-package, publication, performance-snapshot or learning-assessment persistence. A future additive
+publishing migration is justified before an automated live pilot and will use the next available number, currently
+expected to be 25. No platform API, credential, external publication or Production #5 execution has occurred.
+Subsequent founder direction assigns Production
 #5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later
 serve as the first live-loop item after publishing implementation and exact publication authority. Production #6 must
 not begin.
@@ -293,11 +296,10 @@ with the billing qualifications in the quality-cycle note unchanged.
 
 ### Hard stop and next action
 
-Review and push the bounded multi-authority visual-generation architecture design. Production #5 remains reserved and
-must not start until the minimum visual-authority implementation is separately accepted and operationally verified.
-Migration numbering follows actual implementation order relative to publishing/learning persistence. No platform
-call, external publication, Production #5 execution, Production #6, successor milestone, v0.28, migration, rig or
-architecture implementation follows from this design.
+Review and push the validated Migration 24 multi-authority implementation candidate. Production #5 remains reserved
+and must not start until this implementation is accepted, pushed and synchronized. Publishing/learning persistence
+will use the next available migration, currently expected to be 25. No platform call, external publication,
+Production #5 execution, Production #6, successor milestone, v0.28 or rig is part of this candidate.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.

@@ -7,10 +7,11 @@ Store project assets that are intentionally version-controlled here. Keep genera
 Creative use of this manifest is governed by the
 [SimilarStoic Visual-Production Vocabulary](../docs/SIMILARSTOIC_VISUAL_VOCABULARY.md).
 
-The approved core-mascot, environment and composition PNGs below are founder +
-ChatGPT-approved, Git-tracked visual references. They are durable reference bytes, not runtime records,
-generated-output registrations, a new CharacterReferenceSet, or a change to the immutable historical
-`character-reference-set-similarstoic-hamster-core-v1` / Asset `asset-9a02b4cb416744a994965e2e1f2f0c33`.
+The approved core-mascot, environment and composition PNGs below are founder + ChatGPT-approved, Git-tracked visual
+references. Migration 24 materializes the bounded non-character authority members as exact digest-backed managed
+Assets without changing these canonical bytes. This does not create generated output, a new CharacterReferenceSet, or
+a change to the immutable historical `character-reference-set-similarstoic-hamster-core-v1` / Asset
+`asset-9a02b4cb416744a994965e2e1f2f0c33`.
 
 ### Identity references
 
@@ -68,14 +69,14 @@ style.
 
 | Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| SimilarStoic static scenes | `similarstoic-static-composition-grammar-v1.png` | `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png` | 1024x1536 | `c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8` | APPROVED COMPOSITION-GRAMMAR REFERENCE | Character-first hierarchy, subordinate environmental context, deliberate off-white negative space, mobile-readable scale, action-aware off-centre placement, minimal illustrative grounding and sparse shared-plane marks. | Identity, pose or environment-style authority; mandatory storm layout; proof of a complete scene pack or repeatability across scene types; runtime Asset registration. |
+| SimilarStoic static scenes | `similarstoic-static-composition-grammar-v1.png` | `assets/visual-references/compositions/grammar/similarstoic-static-composition-grammar-v1.png` | 1024x1536 | `c6f933eddf7394ff3d00708650f7c1fa1df2f29ff8011e7ae4858653dd1f45d8` | APPROVED COMPOSITION-GRAMMAR REFERENCE | Character-first hierarchy, subordinate environmental context, deliberate off-white negative space, mobile-readable scale, action-aware off-centre placement, minimal illustrative grounding and sparse shared-plane marks. | Identity, pose or environment-style authority; mandatory storm layout; proof of a complete scene pack or repeatability across scene types; ungoverned use outside the Migration 24 authority recipe. |
 
 ### Approved composition examples
 
 | Scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| SimilarStoic static scenes | `similarstoic-static-composition-example-2-indoor-sorting-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png` | 1024x1536 | `dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #2 | Calm indoor/explanatory application of the existing composition grammar. | Replacing the grammar authority, universal repeatability claim, mandatory sorting layout, or runtime Asset registration. |
-| SimilarStoic static scenes | `similarstoic-static-composition-example-3-things-in-hand-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png` | 1024x1536 | `a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #3 | Abstract explanatory metaphor in which the hamster works with reachable objects while matching objects remain outside its working space. | Replacing the grammar authority, universal repeatability claim, mandatory token/boundary layout, text-dependent explanation, or runtime Asset registration. |
+| SimilarStoic static scenes | `similarstoic-static-composition-example-2-indoor-sorting-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-2-indoor-sorting-v1.png` | 1024x1536 | `dae3ca8f2cd035a686fdbc87458bf280120ef0bf4e53ebb39c9fd3e422d933a7` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #2 | Calm indoor/explanatory application of the existing composition grammar. | Replacing the grammar authority, universal repeatability claim, mandatory sorting layout, or ungoverned use outside the Migration 24 authority recipe. |
+| SimilarStoic static scenes | `similarstoic-static-composition-example-3-things-in-hand-v1.png` | `assets/visual-references/compositions/examples/similarstoic-static-composition-example-3-things-in-hand-v1.png` | 1024x1536 | `a5c7664ffcc40a6decdba0dc1a5c793d5850b6ddb975131a7395dc712329e427` | APPROVED COMPOSITION-GRAMMAR EXAMPLE #3 | Abstract explanatory metaphor in which the hamster works with reachable objects while matching objects remain outside its working space. | Replacing the grammar authority, universal repeatability claim, mandatory token/boundary layout, text-dependent explanation, or ungoverned use outside the Migration 24 authority recipe. |
 
 ### Approved special break-frame examples
 

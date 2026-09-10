@@ -118,6 +118,6 @@ production across a non-finance topic, while its visual result supplies the illu
 
 The internal production-method objective is satisfied. Keep the five-working-day pace for the initial live pilot and
 publish no more than one item per week; do not accelerate volume until publishing reliability and repeated learning are
-proven. Production #5 is reserved as the first live-loop validation production and is not started. Active-envelope
-exposure is `$4.39 / $10`, leaving `$5.61`. Current runtime migrations remain 1–23; Migration 24, Production #6, v0.28,
-a rig and new architecture remain absent.
+proven. Production #5 is reserved for the reference-driven quality-uplift proof and is not started. Active-envelope
+exposure is `$4.39 / $10`, leaving `$5.61`. The verified runtime is migrated through 24 for multi-authority visual
+references; Production #6, v0.28 and a rig remain absent.

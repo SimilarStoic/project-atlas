@@ -10,7 +10,8 @@ audience behaviour and apply conservative evidence to later content decisions:
 > interpretation → learning applied to future content
 
 This document is design authority only. It implements no platform API, credential, publication, metric collection,
-Production #5, migration or autonomous optimiser. Migration 24 remains unauthorized. Production #5 is reserved as the
+Production #5, publishing migration or autonomous optimiser. Migration 24 is assigned to multi-authority visual
+references. Production #5 is reserved as the
 **FIRST LIVE-LOOP VALIDATION PRODUCTION** and must not begin until the publishing/learning implementation and exact pilot
 authority are separately accepted. Production #6 must not begin.
 
@@ -134,13 +135,15 @@ the assessment ID and describes the bounded change.
 
 ## Persistence conclusion and future additive migration
 
-Migrations 1–23 already preserve the chain from Opportunity through accepted `FinalMediaArtifact`. They contain no
+Migrations 1–24 already preserve the chain from Opportunity through accepted `FinalMediaArtifact` and visual-reference
+authority provenance. They contain no
 durable publishing package, publication approval, platform-publication identity, performance snapshot or learning
 assessment tables. JSON in existing metadata could hold a temporary note, but it cannot safely represent append-only
 platform state and repeated metric observations without blurring immutable provenance.
 
-A **future additive migration is justified before the first automated live-loop pilot**. Migration 24 is not authorized
-or implemented by this design. The smallest future persistence proposal should cover these concepts:
+A **future additive migration is justified before the first automated live-loop pilot**. It will use the next available
+migration number, currently expected to be 25; it is not implemented by this design. The smallest future persistence
+proposal should cover these concepts:
 
 - immutable `PublishingPackage` tied to one `FinalMediaArtifact`;
 - immutable `PublicationGateDecision` tied to the exact package and founder decision;

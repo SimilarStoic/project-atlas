@@ -503,6 +503,44 @@ class CharacterReferenceSetMember:
     created_at: str
 
 
+@dataclass(frozen=True)
+class VisualReferenceAuthority:
+    """An immutable, versioned non-character visual-reference authority."""
+
+    id: str
+    authority_key: str
+    version: int
+    role: str
+    name: str
+    generation_guidance: str
+    parent_authority_id: str | None
+    metadata: dict[str, Any]
+    created_at: str
+
+
+@dataclass(frozen=True)
+class VisualReferenceAuthorityMember:
+    """One ordered managed-Asset member of a visual-reference authority."""
+
+    visual_reference_authority_id: str
+    asset_id: str
+    position: int
+    member_role: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class GenerationExecutionVisualAuthority:
+    """Direct immutable authority lineage for one generation execution."""
+
+    generation_execution_id: str
+    visual_reference_authority_id: str
+    selection_order: int
+    usage_role: str
+    adapter_hints: dict[str, Any]
+    created_at: str
+
+
 Migration = tuple[int, tuple[str, ...]]
 EDITORIAL_ANGLE_CLAIM_ROLES = frozenset({"core", "supporting"})
 GENERATION_EXECUTION_OUTCOMES = frozenset({"succeeded", "failed"})
@@ -517,6 +555,14 @@ EDITORIAL_GATE_DECISION_OUTCOMES = frozenset({"Approve", "Revise", "Reject"})
 EDITORIAL_READINESS_ASSESSMENT_SCHEMA_VERSION = 1
 EDITORIAL_READINESS_EVALUATOR_ID = "deterministic-editorial-readiness"
 EDITORIAL_READINESS_EVALUATOR_VERSION = "v1"
+VISUAL_REFERENCE_AUTHORITY_ROLES = frozenset(
+    {
+        "global_illustration_style",
+        "environment_family",
+        "composition_depth",
+        "special_break_frame",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -1364,6 +1410,90 @@ MIGRATIONS: tuple[Migration, ...] = (
             "DROP TABLE narration_generation_executions_v22",
             "CREATE INDEX idx_narration_generation_executions_script_created "
             "ON narration_generation_executions (script_id, created_at, id)",
+        ),
+    ),
+    (
+        24,
+        (
+            """
+        CREATE TABLE visual_reference_authorities (
+          id TEXT PRIMARY KEY,
+          authority_key TEXT NOT NULL,
+          version INTEGER NOT NULL CHECK (version >= 1),
+          role TEXT NOT NULL CHECK (
+            role IN (
+              'global_illustration_style', 'environment_family',
+              'composition_depth', 'special_break_frame'
+            )
+          ),
+          name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+          generation_guidance TEXT NOT NULL CHECK (length(trim(generation_guidance)) > 0),
+          parent_authority_id TEXT NULL,
+          metadata_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          UNIQUE (authority_key, version),
+          CHECK (parent_authority_id IS NULL OR parent_authority_id <> id),
+          FOREIGN KEY (parent_authority_id)
+            REFERENCES visual_reference_authorities(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE visual_reference_authority_members (
+          visual_reference_authority_id TEXT NOT NULL,
+          asset_id TEXT NOT NULL,
+          position INTEGER NOT NULL CHECK (position >= 1),
+          member_role TEXT NOT NULL CHECK (length(trim(member_role)) > 0),
+          created_at TEXT NOT NULL,
+          PRIMARY KEY (visual_reference_authority_id, asset_id),
+          UNIQUE (visual_reference_authority_id, position),
+          FOREIGN KEY (visual_reference_authority_id)
+            REFERENCES visual_reference_authorities(id) ON DELETE RESTRICT,
+          FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE RESTRICT
+        )
+        """,
+            """
+        CREATE TABLE generation_execution_visual_authorities (
+          generation_execution_id TEXT NOT NULL,
+          visual_reference_authority_id TEXT NOT NULL,
+          selection_order INTEGER NOT NULL CHECK (selection_order >= 1),
+          usage_role TEXT NOT NULL CHECK (length(trim(usage_role)) > 0),
+          adapter_hints_json TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          PRIMARY KEY (generation_execution_id, visual_reference_authority_id),
+          UNIQUE (generation_execution_id, selection_order),
+          FOREIGN KEY (generation_execution_id)
+            REFERENCES generation_executions(id) ON DELETE RESTRICT,
+          FOREIGN KEY (visual_reference_authority_id)
+            REFERENCES visual_reference_authorities(id) ON DELETE RESTRICT
+        )
+        """,
+            "CREATE INDEX idx_visual_reference_authorities_role_key_version "
+            "ON visual_reference_authorities (role, authority_key, version)",
+            "CREATE INDEX idx_visual_reference_authority_members_asset "
+            "ON visual_reference_authority_members (asset_id)",
+            "CREATE INDEX idx_generation_execution_visual_authorities_authority "
+            "ON generation_execution_visual_authorities "
+            "(visual_reference_authority_id, generation_execution_id)",
+            """
+        CREATE TRIGGER visual_reference_authorities_immutable_update
+        BEFORE UPDATE ON visual_reference_authorities
+        BEGIN SELECT RAISE(ABORT, 'visual reference authorities are immutable'); END
+        """,
+            """
+        CREATE TRIGGER visual_reference_authorities_immutable_delete
+        BEFORE DELETE ON visual_reference_authorities
+        BEGIN SELECT RAISE(ABORT, 'visual reference authorities are immutable'); END
+        """,
+            """
+        CREATE TRIGGER visual_reference_authority_members_immutable_update
+        BEFORE UPDATE ON visual_reference_authority_members
+        BEGIN SELECT RAISE(ABORT, 'visual reference authority members are immutable'); END
+        """,
+            """
+        CREATE TRIGGER visual_reference_authority_members_immutable_delete
+        BEFORE DELETE ON visual_reference_authority_members
+        BEGIN SELECT RAISE(ABORT, 'visual reference authority members are immutable'); END
+        """,
         ),
     ),
 )
@@ -4332,6 +4462,191 @@ class AtlasRepository:
             ],
         }
 
+    def create_visual_reference_authority(
+        self,
+        authority_id: str,
+        authority_key: str,
+        role: str,
+        name: str,
+        generation_guidance: str,
+        members: list[tuple[str, str]],
+        *,
+        parent_authority_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> VisualReferenceAuthority:
+        """Create one immutable authority version and its exact ordered Asset members."""
+
+        required_text = (authority_id, authority_key, role, name, generation_guidance)
+        if not all(isinstance(value, str) and value.strip() for value in required_text):
+            raise ValueError("VisualReferenceAuthority required fields must be non-empty text.")
+        if role not in VISUAL_REFERENCE_AUTHORITY_ROLES:
+            raise ValueError("VisualReferenceAuthority role is not supported.")
+        if not isinstance(members, list) or not members:
+            raise ValueError("A VisualReferenceAuthority requires one or more members.")
+        if not all(
+            isinstance(member, tuple)
+            and len(member) == 2
+            and all(isinstance(value, str) and value.strip() for value in member)
+            for member in members
+        ):
+            raise ValueError("Authority members require Asset ID and member-role text.")
+        asset_ids = [asset_id.strip() for asset_id, _ in members]
+        if len(set(asset_ids)) != len(asset_ids):
+            raise ValueError("An Asset cannot appear more than once in one visual authority.")
+        authority_metadata = {} if metadata is None else metadata
+        if not isinstance(authority_metadata, dict):
+            raise ValueError("VisualReferenceAuthority metadata must be an object.")
+        parent_id = self._normalized_optional_identifier(parent_authority_id)
+        if role == "global_illustration_style" and parent_id is not None:
+            raise ValueError("A global illustration authority cannot have a parent authority.")
+        if role != "global_illustration_style":
+            if parent_id is None:
+                raise ValueError("A non-global visual authority requires an exact global parent.")
+            parent = self.get_visual_reference_authority(parent_id)
+            if parent.role != "global_illustration_style":
+                raise ValueError("A visual authority parent must be global illustration style.")
+        for asset_id in asset_ids:
+            self._validate_visual_reference_asset(asset_id)
+        stamp = now()
+        with self.connection:
+            self.connection.execute("BEGIN IMMEDIATE")
+            version = self.connection.execute(
+                "SELECT COALESCE(MAX(version), 0) + 1 FROM visual_reference_authorities "
+                "WHERE authority_key = ?",
+                (authority_key.strip(),),
+            ).fetchone()[0]
+            self.connection.execute(
+                "INSERT INTO visual_reference_authorities "
+                "(id, authority_key, version, role, name, generation_guidance, "
+                "parent_authority_id, metadata_json, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    authority_id.strip(),
+                    authority_key.strip(),
+                    version,
+                    role,
+                    name.strip(),
+                    generation_guidance.strip(),
+                    parent_id,
+                    json.dumps(authority_metadata, sort_keys=True),
+                    stamp,
+                ),
+            )
+            for position, (asset_id, member_role) in enumerate(members, start=1):
+                self.connection.execute(
+                    "INSERT INTO visual_reference_authority_members "
+                    "(visual_reference_authority_id, asset_id, position, member_role, "
+                    "created_at) VALUES (?, ?, ?, ?, ?)",
+                    (authority_id.strip(), asset_id.strip(), position, member_role.strip(), stamp),
+                )
+        return self.get_visual_reference_authority(authority_id.strip())
+
+    def get_visual_reference_authority(self, authority_id: str) -> VisualReferenceAuthority:
+        row = self.connection.execute(
+            "SELECT * FROM visual_reference_authorities WHERE id = ?", (authority_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(authority_id)
+        return self._visual_reference_authority(row)
+
+    def list_visual_reference_authorities(
+        self, role: str | None = None
+    ) -> list[VisualReferenceAuthority]:
+        """Return immutable authorities in stable role/key/version order."""
+
+        if role is None:
+            rows = self.connection.execute(
+                "SELECT * FROM visual_reference_authorities "
+                "ORDER BY role, authority_key, version"
+            )
+        else:
+            if role not in VISUAL_REFERENCE_AUTHORITY_ROLES:
+                raise ValueError("VisualReferenceAuthority role is not supported.")
+            rows = self.connection.execute(
+                "SELECT * FROM visual_reference_authorities WHERE role = ? "
+                "ORDER BY authority_key, version",
+                (role,),
+            )
+        return [self._visual_reference_authority(row) for row in rows]
+
+    def get_latest_visual_reference_authority(
+        self, authority_key: str
+    ) -> VisualReferenceAuthority | None:
+        """Resolve the highest immutable version for one exact authority key."""
+
+        row = self.connection.execute(
+            "SELECT * FROM visual_reference_authorities WHERE authority_key = ? "
+            "ORDER BY version DESC LIMIT 1",
+            (authority_key,),
+        ).fetchone()
+        return self._visual_reference_authority(row) if row else None
+
+    def list_visual_reference_authority_members(
+        self, authority_id: str
+    ) -> list[VisualReferenceAuthorityMember]:
+        """Return an authority's immutable members in exact supplied order."""
+
+        self.get_visual_reference_authority(authority_id)
+        rows = self.connection.execute(
+            "SELECT * FROM visual_reference_authority_members "
+            "WHERE visual_reference_authority_id = ? ORDER BY position",
+            (authority_id,),
+        )
+        return [self._visual_reference_authority_member(row) for row in rows]
+
+    def list_generation_execution_visual_authorities(
+        self, execution_id: str
+    ) -> list[GenerationExecutionVisualAuthority]:
+        """Return direct visual-authority lineage in frozen selection order."""
+
+        self.get_generation_execution(execution_id)
+        rows = self.connection.execute(
+            "SELECT * FROM generation_execution_visual_authorities "
+            "WHERE generation_execution_id = ? ORDER BY selection_order",
+            (execution_id,),
+        )
+        return [self._generation_execution_visual_authority(row) for row in rows]
+
+    def load_verified_visual_reference_asset(self, asset_id: str) -> tuple[Asset, bytes]:
+        """Load exact managed authority-member bytes after digest verification."""
+
+        asset = self._validate_visual_reference_asset(asset_id)
+        content = self.managed_asset_path(asset.id).read_bytes()
+        if sha256(content).hexdigest() != asset.content_digest:
+            raise ValueError("Managed Asset bytes do not match the stored content digest.")
+        return asset, content
+
+    def visual_reference_authority_payload(self, authority_id: str) -> dict[str, Any]:
+        """Return one authority with exact immutable member provenance."""
+
+        authority = self.get_visual_reference_authority(authority_id)
+        return {
+            "id": authority.id,
+            "authority_key": authority.authority_key,
+            "version": authority.version,
+            "role": authority.role,
+            "name": authority.name,
+            "generation_guidance": authority.generation_guidance,
+            "parent_authority_id": authority.parent_authority_id,
+            "metadata": authority.metadata,
+            "created_at": authority.created_at,
+            "members": [
+                {
+                    "asset_id": member.asset_id,
+                    "position": member.position,
+                    "member_role": member.member_role,
+                    "content_digest": self.get_asset(member.asset_id).content_digest,
+                    "media_type": self.get_asset(member.asset_id).media_type,
+                }
+                for member in self.list_visual_reference_authority_members(authority.id)
+            ],
+        }
+
+    def _validate_visual_reference_asset(self, asset_id: str) -> Asset:
+        asset = self.get_asset(asset_id)
+        self._validate_selectable_managed_asset(asset)
+        return asset
+
     def asset_spec_payload(self, asset_spec_id: str) -> dict[str, Any]:
         """Load one Scene asset requirement and its registered immutable outputs."""
 
@@ -4375,6 +4690,15 @@ class AtlasRepository:
             "visual_style_profile_id": execution.visual_style_profile_id,
             "character_profile": self.character_profile_summary(execution.character_profile_id),
             "character_reference_set_id": execution.character_reference_set_id,
+            "visual_reference_authorities": [
+                {
+                    "authority_id": item.visual_reference_authority_id,
+                    "selection_order": item.selection_order,
+                    "usage_role": item.usage_role,
+                    "adapter_hints": item.adapter_hints,
+                }
+                for item in self.list_generation_execution_visual_authorities(execution.id)
+            ],
             "generator_key": execution.generator_key,
             "provider_key": execution.provider_key,
             "model_key": execution.model_key,
@@ -4943,12 +5267,24 @@ class AtlasRepository:
         )
         if asset_spec_snapshot.get("asset_spec_id") != asset_spec_id:
             raise ValueError("GenerationExecution snapshot must identify its persisted AssetSpec.")
-        self._validate_generation_execution_provenance(
+        authority_selections = self._validate_generation_execution_provenance(
             generation_input,
             visual_style_profile_id,
             character_profile_id,
             character_reference_set_id,
         )
+        if authority_selections:
+            recipe = generation_input["visual_authority_recipe"]
+            if (
+                recipe.get("asset_spec_id") != asset_spec_id
+                or recipe.get("scene_id") != asset_spec_snapshot.get("scene_id")
+                or recipe.get("scene_specific_brief")
+                != asset_spec_snapshot.get("generation_prompt")
+            ):
+                raise ValueError(
+                    "Visual-authority recipe must match the frozen AssetSpec and scene brief."
+                )
+        stamp = now()
         self.connection.execute(
             "INSERT INTO generation_executions "
             "(id, asset_spec_id, asset_spec_snapshot_json, generation_input_json, generator_key, "
@@ -4968,12 +5304,26 @@ class AtlasRepository:
                 self._normalized_optional_identifier(error_code),
                 self._normalized_optional_identifier(error_message),
                 json.dumps(response_metadata, sort_keys=True),
-                now(),
+                stamp,
                 visual_style_profile_id,
                 character_profile_id,
                 character_reference_set_id,
             ),
         )
+        for selection in authority_selections:
+            self.connection.execute(
+                "INSERT INTO generation_execution_visual_authorities "
+                "(generation_execution_id, visual_reference_authority_id, selection_order, "
+                "usage_role, adapter_hints_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    execution_id,
+                    selection["authority_id"],
+                    selection["selection_order"],
+                    selection["usage_role"],
+                    json.dumps(selection["adapter_hints"], sort_keys=True),
+                    stamp,
+                ),
+            )
 
     @staticmethod
     def _validate_asset_version(version: int) -> None:
@@ -5031,16 +5381,16 @@ class AtlasRepository:
         visual_style_profile_id: str | None,
         character_profile_id: str | None,
         character_reference_set_id: str | None = None,
-    ) -> None:
+    ) -> list[dict[str, Any]]:
         schema_version = generation_input.get("schema_version")
-        if schema_version not in {2, 3, 4}:
+        if schema_version not in {2, 3, 4, 5}:
             if visual_style_profile_id is not None:
                 raise ValueError("GenerationInput v1 cannot identify a VisualStyleProfile.")
             if character_profile_id is not None:
                 raise ValueError("GenerationInput v1 cannot identify a CharacterProfile.")
             if character_reference_set_id is not None:
                 raise ValueError("GenerationInput v1 cannot identify a CharacterReferenceSet.")
-            return
+            return []
         if visual_style_profile_id is None:
             raise ValueError("Styled GenerationInput must identify a VisualStyleProfile.")
         style = generation_input.get("style")
@@ -5058,7 +5408,7 @@ class AtlasRepository:
                 raise ValueError("GenerationInput v2 cannot identify a CharacterProfile.")
             if character_reference_set_id is not None:
                 raise ValueError("GenerationInput v2 cannot identify a CharacterReferenceSet.")
-            return
+            return []
         character = generation_input.get("character")
         if character_profile_id is None:
             if character is not None:
@@ -5067,53 +5417,68 @@ class AtlasRepository:
                 raise ValueError("GenerationInput v4 requires CharacterProfile lineage.")
             if character_reference_set_id is not None:
                 raise ValueError("GenerationInput v3 cannot identify a CharacterReferenceSet.")
-            return
-        if not isinstance(character, dict):
-            raise ValueError("GenerationInput v3 character must be an object.")
-        character_profile = self.get_character_profile(character_profile_id)
-        if (
-            character.get("profile_id") != character_profile.id
-            or character.get("character_key") != character_profile.character_key
-            or character.get("version") != character_profile.version
-            or character.get("name") != character_profile.name
-            or character.get("identity_description") != character_profile.identity_description
-            or character.get("generation_guidance") != character_profile.generation_guidance
-        ):
-            raise ValueError("GenerationInput v3 character must match its CharacterProfile.")
-        if schema_version == 3:
-            if character_reference_set_id is not None:
-                raise ValueError("GenerationInput v3 cannot identify a CharacterReferenceSet.")
-            return
-        if character_reference_set_id is None:
-            raise ValueError("GenerationInput v4 requires CharacterReferenceSet lineage.")
+            if generation_input.get("character_references") is not None:
+                raise ValueError("Character references require CharacterProfile lineage.")
+        else:
+            if not isinstance(character, dict):
+                raise ValueError("GenerationInput v3 character must be an object.")
+            character_profile = self.get_character_profile(character_profile_id)
+            if (
+                character.get("profile_id") != character_profile.id
+                or character.get("character_key") != character_profile.character_key
+                or character.get("version") != character_profile.version
+                or character.get("name") != character_profile.name
+                or character.get("identity_description") != character_profile.identity_description
+                or character.get("generation_guidance") != character_profile.generation_guidance
+            ):
+                raise ValueError("GenerationInput v3 character must match its CharacterProfile.")
+            if schema_version == 3:
+                if character_reference_set_id is not None:
+                    raise ValueError("GenerationInput v3 cannot identify a CharacterReferenceSet.")
+                return []
+            if character_reference_set_id is None:
+                raise ValueError(
+                    "Referenced character generation requires CharacterReferenceSet lineage."
+                )
+            self._validate_frozen_character_references(
+                generation_input, character_profile, character_reference_set_id
+            )
+        if schema_version != 5:
+            return []
+        return self._validate_visual_authority_recipe(generation_input)
+
+    def _validate_frozen_character_references(
+        self,
+        generation_input: dict[str, Any],
+        character_profile: CharacterProfile,
+        character_reference_set_id: str,
+    ) -> None:
         references = generation_input.get("character_references")
         if not isinstance(references, dict):
-            raise ValueError("GenerationInput v4 character references must be an object.")
+            raise ValueError("Referenced character generation requires a reference object.")
         if references.get("intent") != "character_identity_grounding":
-            raise ValueError("GenerationInput v4 character references require identity grounding.")
+            raise ValueError("Character references require identity grounding.")
         reference_set = self.get_character_reference_set(character_reference_set_id)
         if (
             references.get("reference_set_id") != reference_set.id
             or references.get("reference_set_version") != reference_set.version
-            or reference_set.character_profile_id != character_profile_id
+            or reference_set.character_profile_id != character_profile.id
         ):
-            raise ValueError(
-                "GenerationInput v4 references must match CharacterReferenceSet lineage."
-            )
+            raise ValueError("References must match CharacterReferenceSet lineage.")
         reference_profile = references.get("character_profile")
         if not isinstance(reference_profile, dict) or (
             reference_profile.get("profile_id") != character_profile.id
             or reference_profile.get("character_key") != character_profile.character_key
             or reference_profile.get("version") != character_profile.version
         ):
-            raise ValueError("GenerationInput v4 references must match its CharacterProfile.")
+            raise ValueError("Character references must match their CharacterProfile.")
         members = references.get("members")
         set_members = self.list_character_reference_set_members(reference_set.id)
         if not isinstance(members, list) or len(members) != len(set_members):
-            raise ValueError("GenerationInput v4 references must freeze every ordered member.")
+            raise ValueError("Character references must freeze every ordered member.")
         for frozen, member in zip(members, set_members, strict=True):
             if not isinstance(frozen, dict):
-                raise ValueError("GenerationInput v4 reference members must be objects.")
+                raise ValueError("Character reference members must be objects.")
             asset = self.get_asset(member.asset_id)
             if (
                 frozen.get("asset_id") != asset.id
@@ -5121,9 +5486,82 @@ class AtlasRepository:
                 or frozen.get("media_type") != asset.media_type
                 or frozen.get("position") != member.position
             ):
-                raise ValueError(
-                    "GenerationInput v4 reference members must match frozen set Assets."
-                )
+                raise ValueError("Character reference members must match frozen set Assets.")
+
+    def _validate_visual_authority_recipe(
+        self, generation_input: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        recipe = generation_input.get("visual_authority_recipe")
+        if not isinstance(recipe, dict) or recipe.get("schema_version") != 1:
+            raise ValueError("GenerationInput v5 requires visual-authority recipe v1.")
+        authorities = recipe.get("authorities")
+        if not isinstance(authorities, list) or not authorities:
+            raise ValueError("A visual-authority recipe requires selected authorities.")
+        seen_ids: set[str] = set()
+        seen_orders: set[int] = set()
+        selected: list[dict[str, Any]] = []
+        global_ids: list[str] = []
+        for frozen in authorities:
+            if not isinstance(frozen, dict):
+                raise ValueError("Visual-authority recipe selections must be objects.")
+            authority_id = frozen.get("authority_id")
+            selection_order = frozen.get("selection_order")
+            adapter_hints = frozen.get("adapter_hints", {})
+            if not isinstance(authority_id, str) or not authority_id.strip():
+                raise ValueError("Visual-authority recipe requires authority IDs.")
+            if type(selection_order) is not int or selection_order < 1:
+                raise ValueError("Visual-authority selection order must be positive integers.")
+            if authority_id in seen_ids or selection_order in seen_orders:
+                raise ValueError("Visual-authority recipe IDs and ordering must be unique.")
+            if not isinstance(adapter_hints, dict):
+                raise ValueError("Visual-authority adapter hints must be an object.")
+            seen_ids.add(authority_id)
+            seen_orders.add(selection_order)
+            authority = self.get_visual_reference_authority(authority_id)
+            if (
+                frozen.get("authority_key") != authority.authority_key
+                or frozen.get("authority_version") != authority.version
+                or frozen.get("usage_role") != authority.role
+                or frozen.get("parent_authority_id") != authority.parent_authority_id
+                or frozen.get("generation_guidance") != authority.generation_guidance
+            ):
+                raise ValueError("Frozen visual-authority identity does not match persistence.")
+            members = frozen.get("members")
+            persisted_members = self.list_visual_reference_authority_members(authority.id)
+            if not isinstance(members, list) or len(members) != len(persisted_members):
+                raise ValueError("A recipe must freeze every visual-authority member.")
+            for frozen_member, member in zip(members, persisted_members, strict=True):
+                if not isinstance(frozen_member, dict):
+                    raise ValueError("Frozen visual-authority members must be objects.")
+                asset = self._validate_visual_reference_asset(member.asset_id)
+                if (
+                    frozen_member.get("asset_id") != asset.id
+                    or frozen_member.get("content_digest") != asset.content_digest
+                    or frozen_member.get("media_type") != asset.media_type
+                    or frozen_member.get("position") != member.position
+                    or frozen_member.get("member_role") != member.member_role
+                ):
+                    raise ValueError("Frozen visual-authority members do not match persistence.")
+            if authority.role == "global_illustration_style":
+                global_ids.append(authority.id)
+            selected.append(
+                {
+                    "authority_id": authority.id,
+                    "selection_order": selection_order,
+                    "usage_role": authority.role,
+                    "adapter_hints": adapter_hints,
+                }
+            )
+        if len(global_ids) != 1:
+            raise ValueError("A visual-authority recipe requires exactly one global authority.")
+        selected_ids = set(seen_ids)
+        for item in authorities:
+            parent_id = item.get("parent_authority_id")
+            if parent_id is not None and parent_id not in selected_ids:
+                raise ValueError("Selected child authorities require their exact global parent.")
+        if sorted(seen_orders) != list(range(1, len(authorities) + 1)):
+            raise ValueError("Visual-authority selection order must be contiguous from one.")
+        return sorted(selected, key=lambda item: item["selection_order"])
 
     def _validate_asset_spec_character_profile(
         self, asset_type: str, character_profile_id: str | None
@@ -6823,6 +7261,45 @@ class AtlasRepository:
             row["character_reference_set_id"],
             row["asset_id"],
             row["position"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _visual_reference_authority(row: sqlite3.Row) -> VisualReferenceAuthority:
+        return VisualReferenceAuthority(
+            row["id"],
+            row["authority_key"],
+            row["version"],
+            row["role"],
+            row["name"],
+            row["generation_guidance"],
+            row["parent_authority_id"],
+            json.loads(row["metadata_json"]),
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _visual_reference_authority_member(
+        row: sqlite3.Row,
+    ) -> VisualReferenceAuthorityMember:
+        return VisualReferenceAuthorityMember(
+            row["visual_reference_authority_id"],
+            row["asset_id"],
+            row["position"],
+            row["member_role"],
+            row["created_at"],
+        )
+
+    @staticmethod
+    def _generation_execution_visual_authority(
+        row: sqlite3.Row,
+    ) -> GenerationExecutionVisualAuthority:
+        return GenerationExecutionVisualAuthority(
+            row["generation_execution_id"],
+            row["visual_reference_authority_id"],
+            row["selection_order"],
+            row["usage_role"],
+            json.loads(row["adapter_hints_json"]),
             row["created_at"],
         )
 

@@ -21,10 +21,20 @@ from project_atlas.persistence import (
     AtlasRepository,
     CharacterProfile,
     GenerationExecution,
+    VisualReferenceAuthority,
     VisualStyleProfile,
 )
 
 DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v3"
+DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID = (
+    "visual-reference-authority-similarstoic-global-illustration-v1"
+)
+DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID = (
+    "visual-reference-authority-similarstoic-composition-depth-v1"
+)
+DEFAULT_BREAK_FRAME_VISUAL_AUTHORITY_ID = (
+    "visual-reference-authority-similarstoic-special-break-frame-v1"
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +45,8 @@ class ReferenceImage:
     media_type: str
     content: bytes
     position: int
+    usage_role: str = "character_identity"
+    authority_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -48,12 +60,19 @@ class GenerationInput:
     style: dict[str, Any] | None = None
     character: dict[str, Any] | None = None
     character_references: dict[str, Any] | None = None
+    visual_authority_recipe: dict[str, Any] | None = None
     reference_images: tuple[ReferenceImage, ...] = ()
 
     def payload(self) -> dict[str, Any]:
         payload = {
             "schema_version": (
-                4 if self.character_references is not None else 3 if self.style is not None else 1
+                5
+                if self.visual_authority_recipe is not None
+                else (
+                    4
+                    if self.character_references is not None
+                    else 3 if self.style is not None else 1
+                )
             ),
             "asset_type": self.asset_type,
             "prompt": self.prompt,
@@ -66,6 +85,8 @@ class GenerationInput:
             payload["character"] = self.character
         if self.character_references is not None:
             payload["character_references"] = self.character_references
+        if self.visual_authority_recipe is not None:
+            payload["visual_authority_recipe"] = self.visual_authority_recipe
         return payload
 
 
@@ -212,6 +233,8 @@ class PromptComposer:
         character_profile: CharacterProfile | None = None,
         character_references: dict[str, Any] | None = None,
         reference_images: tuple[ReferenceImage, ...] = (),
+        visual_authority_recipe: dict[str, Any] | None = None,
+        parameters: dict[str, Any] | None = None,
     ) -> GenerationInput:
         """Return one v3 input with resolved style and optional character identity provenance."""
 
@@ -226,13 +249,19 @@ class PromptComposer:
             prompt_parts.append(
                 f"Character identity guidance: {character_profile.generation_guidance}"
             )
+        if visual_authority_recipe is not None:
+            for authority in visual_authority_recipe["authorities"]:
+                prompt_parts.append(
+                    f"{authority['usage_role'].replace('_', ' ').title()} authority guidance: "
+                    f"{authority['generation_guidance']}"
+                )
         prompt_parts.append(f"AssetSpec requirement: {asset_spec.generation_prompt}")
         prompt = "\n\n".join(prompt_parts)
         return GenerationInput(
             asset_type=asset_spec.asset_type,
             prompt=prompt,
             continuity_key=asset_spec.continuity_key,
-            parameters={},
+            parameters=parameters or {},
             style={
                 "profile_id": profile.id,
                 "style_key": profile.style_key,
@@ -258,6 +287,7 @@ class PromptComposer:
                 else None
             ),
             character_references=character_references,
+            visual_authority_recipe=visual_authority_recipe,
             reference_images=reference_images,
         )
 
@@ -395,6 +425,14 @@ class OpenAIImageGenerator:
 
     def supports(self, asset_type: str) -> bool:
         return asset_type in self.supported_asset_types
+
+    def generation_parameters(self) -> dict[str, Any]:
+        """Return stable adapter settings for the frozen provider-neutral input."""
+
+        parameters: dict[str, Any] = {"output_format": "png"}
+        if self.image_size:
+            parameters["image_size"] = self.image_size
+        return parameters
 
     def validate_configuration(self) -> None:
         """Reject a missing API credential before crossing the provider-attempt boundary."""
@@ -547,6 +585,7 @@ class GenerationService:
         generator: AssetGenerator,
         storage: LocalAssetStorage,
         visual_style_profile_id: str | None = None,
+        global_visual_authority_id: str | None = None,
     ) -> None:
         self.repository = repository
         self.generator = generator
@@ -555,6 +594,11 @@ class GenerationService:
             visual_style_profile_id.strip()
             if isinstance(visual_style_profile_id, str) and visual_style_profile_id.strip()
             else configured_visual_style_profile_id()
+        )
+        self.global_visual_authority_id = (
+            global_visual_authority_id.strip()
+            if isinstance(global_visual_authority_id, str) and global_visual_authority_id.strip()
+            else DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID
         )
         self.prompt_composer = PromptComposer()
 
@@ -579,7 +623,6 @@ class GenerationService:
             )
         profile = self._active_visual_style_profile()
         character_profile = self._character_profile_for(asset_spec)
-        self._validate_provider_configuration()
         reference_set_id: str | None = None
         character_references: dict[str, Any] | None = None
         reference_images: tuple[ReferenceImage, ...] = ()
@@ -588,6 +631,12 @@ class GenerationService:
                 character_profile
             )
             reference_set_id = reference_set.id
+        visual_authority_recipe, visual_reference_images = self._visual_authority_references_for(
+            asset_spec, len(reference_images)
+        )
+        reference_images += visual_reference_images
+        self._validate_reference_capacity(reference_images)
+        self._validate_provider_configuration()
         snapshot = asset_spec_snapshot(asset_spec)
         generation_input_object = self.prompt_composer.compose(
             asset_spec,
@@ -595,6 +644,8 @@ class GenerationService:
             character_profile,
             character_references,
             reference_images,
+            visual_authority_recipe,
+            self._generation_parameters(reference_images, visual_authority_recipe),
         )
         generation_input = generation_input_object.payload()
         return self._execute_generation(
@@ -805,6 +856,156 @@ class GenerationService:
             },
             tuple(reference_images),
         )
+
+    def _visual_authority_references_for(
+        self, asset_spec: AssetSpec, prior_reference_count: int
+    ) -> tuple[dict[str, Any] | None, tuple[ReferenceImage, ...]]:
+        """Resolve exact approved non-character authorities and verified reference bytes."""
+
+        try:
+            global_authority = self.repository.get_visual_reference_authority(
+                self.global_visual_authority_id
+            )
+        except KeyError:
+            return None, ()
+        selected = [global_authority]
+        metadata = asset_spec.metadata
+        family = metadata.get("environment_family")
+        if family is not None:
+            if not isinstance(family, str) or not family.strip():
+                raise ValueError("AssetSpec environment_family must be non-empty text.")
+            family_matches = [
+                authority
+                for authority in self.repository.list_visual_reference_authorities(
+                    "environment_family"
+                )
+                if authority.metadata.get("environment_family") == family.strip()
+            ]
+            if family_matches:
+                selected.append(max(family_matches, key=lambda item: item.version))
+        if metadata.get("use_composition_depth") is True:
+            selected.append(
+                self.repository.get_visual_reference_authority(
+                    DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID
+                )
+            )
+        if metadata.get("special_break_frame") is True:
+            selected.append(
+                self.repository.get_visual_reference_authority(
+                    DEFAULT_BREAK_FRAME_VISUAL_AUTHORITY_ID
+                )
+            )
+        explicit_ids = metadata.get("visual_authority_ids", [])
+        if not isinstance(explicit_ids, list) or not all(
+            isinstance(authority_id, str) and authority_id.strip() for authority_id in explicit_ids
+        ):
+            raise ValueError("AssetSpec visual_authority_ids must be a list of IDs.")
+        for authority_id in explicit_ids:
+            selected.append(self.repository.get_visual_reference_authority(authority_id.strip()))
+        selected = self._deduplicated_authorities(selected)
+        selected_ids = {authority.id for authority in selected}
+        for authority in selected:
+            if authority.parent_authority_id is not None and (
+                authority.parent_authority_id not in selected_ids
+            ):
+                raise ValueError("Selected visual authority requires its exact global parent.")
+        frozen_authorities = []
+        reference_images = []
+        next_position = prior_reference_count + 1
+        hints_by_id = metadata.get("visual_authority_adapter_hints", {})
+        if not isinstance(hints_by_id, dict):
+            raise ValueError("Visual authority adapter hints must be an object.")
+        for selection_order, authority in enumerate(selected, start=1):
+            authority_hints = hints_by_id.get(authority.id, {})
+            if not isinstance(authority_hints, dict):
+                raise ValueError("Per-authority adapter hints must be objects.")
+            frozen_members = []
+            for member in self.repository.list_visual_reference_authority_members(authority.id):
+                asset, content = self.repository.load_verified_visual_reference_asset(
+                    member.asset_id
+                )
+                if asset.content_digest is None:
+                    raise ValueError("Visual authority members require immutable digests.")
+                frozen_members.append(
+                    {
+                        "asset_id": asset.id,
+                        "content_digest": asset.content_digest,
+                        "media_type": asset.media_type,
+                        "position": member.position,
+                        "member_role": member.member_role,
+                    }
+                )
+                reference_images.append(
+                    ReferenceImage(
+                        asset.id,
+                        asset.media_type,
+                        content,
+                        next_position,
+                        authority.role,
+                        authority.id,
+                    )
+                )
+                next_position += 1
+            frozen_authorities.append(
+                {
+                    "selection_order": selection_order,
+                    "usage_role": authority.role,
+                    "authority_id": authority.id,
+                    "authority_key": authority.authority_key,
+                    "authority_version": authority.version,
+                    "parent_authority_id": authority.parent_authority_id,
+                    "generation_guidance": authority.generation_guidance,
+                    "adapter_hints": authority_hints,
+                    "members": frozen_members,
+                }
+            )
+        return (
+            {
+                "schema_version": 1,
+                "scene_id": asset_spec.scene_id,
+                "asset_spec_id": asset_spec.id,
+                "scene_specific_brief": asset_spec.generation_prompt,
+                "authorities": frozen_authorities,
+            },
+            tuple(reference_images),
+        )
+
+    @staticmethod
+    def _deduplicated_authorities(
+        authorities: list[VisualReferenceAuthority],
+    ) -> list[VisualReferenceAuthority]:
+        unique = []
+        seen: set[str] = set()
+        for authority in authorities:
+            if authority.id not in seen:
+                seen.add(authority.id)
+                unique.append(authority)
+        if sum(item.role == "global_illustration_style" for item in unique) != 1:
+            raise ValueError("Generation requires exactly one global illustration authority.")
+        return unique
+
+    def _validate_reference_capacity(self, reference_images: tuple[ReferenceImage, ...]) -> None:
+        maximum = getattr(self.generator, "max_reference_images", None)
+        if maximum is not None and (
+            type(maximum) is not int or maximum < 0 or len(reference_images) > maximum
+        ):
+            raise ValueError("Generator cannot represent the required visual reference recipe.")
+
+    def _generation_parameters(
+        self,
+        reference_images: tuple[ReferenceImage, ...],
+        visual_authority_recipe: dict[str, Any] | None,
+    ) -> dict[str, Any]:
+        if visual_authority_recipe is None:
+            return {}
+        parameters = {"reference_image_count": len(reference_images)}
+        provider_parameters = getattr(self.generator, "generation_parameters", None)
+        if provider_parameters is not None:
+            resolved = provider_parameters()
+            if not isinstance(resolved, dict):
+                raise ValueError("Generator generation parameters must be an object.")
+            parameters["provider_adapter"] = resolved
+        return parameters
 
     @staticmethod
     def _validate_artifact(artifact: GeneratedArtifact) -> None:

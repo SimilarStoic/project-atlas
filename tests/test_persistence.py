@@ -11,6 +11,8 @@ import pytest
 
 import project_atlas.persistence as persistence
 from project_atlas.generation import (
+    DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID,
+    DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID,
     AssetStorageFailure,
     GeneratedArtifact,
     GenerationFailure,
@@ -118,6 +120,38 @@ def ensure_character_reference_set(
     ).id
 
 
+def create_visual_authority_asset(
+    repository: AtlasRepository,
+    storage_root,
+    key: str,
+    *,
+    asset_type: str = "environment",
+):
+    """Create one verified managed imported image for visual-authority tests."""
+
+    asset_spec = repository.create_asset_spec(
+        f"asset-spec-visual-authority-{key}",
+        "scene-isa-deadline-video-v1-01",
+        asset_type,
+        f"Provide {key} authority evidence.",
+        f"An exact approved {key} visual reference.",
+        "Use the exact imported authority bytes.",
+    )
+    content = b"\x89PNG\r\n\x1a\n" + key.encode()
+    storage = LocalAssetStorage(storage_root)
+    asset_id = f"asset-visual-authority-{key}"
+    stored = storage.write(asset_spec.id, asset_id, content, "image/png")
+    return repository.create_asset(
+        asset_id,
+        asset_spec.id,
+        1,
+        storage.relative_path(stored),
+        "image/png",
+        "imported",
+        content_digest=sha256(content).hexdigest(),
+    )
+
+
 def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_path) -> None:
     """Fresh startup applies all migrations and creates the scoped seed data."""
 
@@ -127,7 +161,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 24))
+        ] == list(range(1, 25))
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -2145,7 +2179,7 @@ def test_migration_22_preserves_imported_narration_and_adds_generation_provenanc
             for row in repository.connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
-        ] == list(range(1, 24))
+        ] == list(range(1, 25))
         tables = {
             row[0]
             for row in repository.connection.execute(
@@ -2749,7 +2783,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 24))
+        ] == list(range(1, 25))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -2773,6 +2807,316 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
             ]["name"]
             == "character_reference_set_id"
         )
+    finally:
+        repository.close()
+
+
+def test_migration_24_adds_visual_authority_schema_without_backfill(tmp_path) -> None:
+    """Migration 24 is additive and leaves historical generation lineage empty."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=tmp_path / "assets")
+    try:
+        assert [
+            row["version"]
+            for row in repository.connection.execute(
+                "SELECT version FROM schema_migrations ORDER BY version"
+            )
+        ] == list(range(1, 25))
+        tables = {
+            row["name"]
+            for row in repository.connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+        assert {
+            "visual_reference_authorities",
+            "visual_reference_authority_members",
+            "generation_execution_visual_authorities",
+        } <= tables
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM generation_execution_visual_authorities"
+            ).fetchone()[0]
+            == 0
+        )
+    finally:
+        repository.close()
+
+
+def test_visual_reference_authorities_are_versioned_digest_verified_and_immutable(
+    tmp_path,
+) -> None:
+    """Authority versions freeze exact managed members and a global parent."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        global_asset = create_visual_authority_asset(repository, storage_root, "global")
+        family_asset = create_visual_authority_asset(repository, storage_root, "family")
+        global_authority = repository.create_visual_reference_authority(
+            DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID,
+            "similarstoic-global-illustration",
+            "global_illustration_style",
+            "Global illustration",
+            "Keep one visibly hand-drawn illustrator treatment.",
+            [(global_asset.id, "primary_style")],
+        )
+        family_v1 = repository.create_visual_reference_authority(
+            "visual-authority-home-v1",
+            "similarstoic-environment-home",
+            "environment_family",
+            "Home environment",
+            "Create sparse new home interiors.",
+            [(family_asset.id, "family_example")],
+            parent_authority_id=global_authority.id,
+            metadata={"environment_family": "home"},
+        )
+        family_v2 = repository.create_visual_reference_authority(
+            "visual-authority-home-v2",
+            "similarstoic-environment-home",
+            "environment_family",
+            "Home environment refined",
+            "Create sparse new home interiors with clearer depth.",
+            [(global_asset.id, "supporting_example")],
+            parent_authority_id=global_authority.id,
+            metadata={"environment_family": "home"},
+        )
+        assert global_authority.version == 1
+        assert family_v1.version == 1
+        assert family_v2.version == 2
+        assert (
+            repository.get_latest_visual_reference_authority("similarstoic-environment-home")
+            == family_v2
+        )
+        assert (
+            repository.visual_reference_authority_payload(family_v1.id)["members"][0][
+                "content_digest"
+            ]
+            == family_asset.content_digest
+        )
+        assert not hasattr(repository, "update_visual_reference_authority")
+        assert not hasattr(repository, "delete_visual_reference_authority")
+        with pytest.raises(sqlite3.IntegrityError, match="immutable"), repository.connection:
+            repository.connection.execute(
+                "UPDATE visual_reference_authority_members SET position = 2 "
+                "WHERE visual_reference_authority_id = ?",
+                (family_v1.id,),
+            )
+        (storage_root / family_asset.storage_path).write_bytes(b"altered")
+        with pytest.raises(ValueError, match="do not match"):
+            repository.load_verified_visual_reference_asset(family_asset.id)
+    finally:
+        repository.close()
+
+
+def test_generation_freezes_multiple_visual_authorities_and_adapter_inputs(tmp_path) -> None:
+    """One execution records exact global, family and composition authority recipes."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        global_asset = create_visual_authority_asset(repository, storage_root, "global")
+        family_asset = create_visual_authority_asset(repository, storage_root, "home")
+        composition_asset = create_visual_authority_asset(
+            repository, storage_root, "composition", asset_type="graphic"
+        )
+        global_authority = repository.create_visual_reference_authority(
+            DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID,
+            "similarstoic-global-illustration",
+            "global_illustration_style",
+            "Global illustration",
+            "Keep one visibly hand-drawn illustrator treatment.",
+            [(global_asset.id, "primary_style")],
+        )
+        family_authority = repository.create_visual_reference_authority(
+            "visual-authority-home-v1",
+            "similarstoic-environment-home",
+            "environment_family",
+            "Home environment",
+            "Create sparse new home interiors.",
+            [(family_asset.id, "family_example")],
+            parent_authority_id=global_authority.id,
+            metadata={"environment_family": "home"},
+        )
+        composition_authority = repository.create_visual_reference_authority(
+            DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID,
+            "similarstoic-composition-depth",
+            "composition_depth",
+            "Composition depth",
+            "Keep character-first hierarchy and readable depth.",
+            [(composition_asset.id, "primary_grammar")],
+            parent_authority_id=global_authority.id,
+        )
+        asset_spec = repository.create_asset_spec(
+            "asset-spec-multi-authority-home",
+            "scene-isa-deadline-video-v1-01",
+            "environment",
+            "Create a new office-like home workspace.",
+            "A new sparse home workspace, not a copy of the reference.",
+            "Generate a materially new home workspace for this scene.",
+            metadata={"environment_family": "home", "use_composition_depth": True},
+        )
+        generator = FakeImageGenerator()
+        result = GenerationService(
+            repository, generator, LocalAssetStorage(storage_root)
+        ).generate_asset_spec(asset_spec.id)
+        assert result.asset is not None
+        generation_input = generator.inputs[0]
+        assert generation_input.payload()["schema_version"] == 5
+        assert [item.authority_id for item in generation_input.reference_images] == [
+            global_authority.id,
+            family_authority.id,
+            composition_authority.id,
+        ]
+        recipe = result.execution.generation_input["visual_authority_recipe"]
+        assert recipe["scene_specific_brief"] == asset_spec.generation_prompt
+        assert [item["authority_id"] for item in recipe["authorities"]] == [
+            global_authority.id,
+            family_authority.id,
+            composition_authority.id,
+        ]
+        assert [
+            item.visual_reference_authority_id
+            for item in repository.list_generation_execution_visual_authorities(result.execution.id)
+        ] == [global_authority.id, family_authority.id, composition_authority.id]
+        assert result.execution.generation_input["parameters"]["reference_image_count"] == 3
+
+        failed = GenerationService(
+            repository,
+            FakeImageGenerator(
+                failure=GenerationFailure("Provider rejected.", error_code="rejected")
+            ),
+            LocalAssetStorage(storage_root),
+        ).generate_asset_spec(asset_spec.id)
+        assert failed.asset is None
+        assert [
+            item.visual_reference_authority_id
+            for item in repository.list_generation_execution_visual_authorities(failed.execution.id)
+        ] == [global_authority.id, family_authority.id, composition_authority.id]
+    finally:
+        repository.close()
+
+
+def test_independent_components_freeze_one_shared_global_illustration_authority(
+    tmp_path,
+) -> None:
+    """Character, environment and graphic generations share exact illustrator lineage."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        global_asset = create_visual_authority_asset(repository, storage_root, "global")
+        global_authority = repository.create_visual_reference_authority(
+            DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID,
+            "similarstoic-global-illustration",
+            "global_illustration_style",
+            "Global illustration",
+            "Keep one visibly hand-drawn illustrator treatment.",
+            [(global_asset.id, "primary_style")],
+        )
+        character_spec_id = "asset-spec-isa-scene-01-hamster-sorting-v1"
+        character_spec = repository.get_asset_spec(character_spec_id)
+        ensure_character_reference_set(
+            repository, storage_root, character_spec.character_profile_id
+        )
+        environment_spec = repository.create_asset_spec(
+            "asset-spec-shared-authority-environment",
+            character_spec.scene_id,
+            "environment",
+            "Create a sparse room.",
+            "A new sparse room.",
+            "Generate a new sparse room.",
+        )
+        graphic_spec = repository.create_asset_spec(
+            "asset-spec-shared-authority-graphic",
+            character_spec.scene_id,
+            "graphic",
+            "Create a simple supporting graphic.",
+            "A new hand-drawn supporting graphic.",
+            "Generate a new supporting graphic.",
+        )
+
+        execution_ids = []
+        for asset_spec_id in (character_spec_id, environment_spec.id, graphic_spec.id):
+            result = GenerationService(
+                repository, FakeImageGenerator(), LocalAssetStorage(storage_root)
+            ).generate_asset_spec(asset_spec_id)
+            execution_ids.append(result.execution.id)
+
+        for execution_id in execution_ids:
+            links = repository.list_generation_execution_visual_authorities(execution_id)
+            assert [item.visual_reference_authority_id for item in links] == [global_authority.id]
+            assert links[0].usage_role == "global_illustration_style"
+    finally:
+        repository.close()
+
+
+def test_visual_authority_failures_stop_before_provider_and_legacy_inputs_remain_valid(
+    tmp_path,
+) -> None:
+    """Invalid authority bytes fail closed while historical v3 executions need no backfill."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        global_asset = create_visual_authority_asset(repository, storage_root, "global")
+        repository.create_visual_reference_authority(
+            DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID,
+            "similarstoic-global-illustration",
+            "global_illustration_style",
+            "Global illustration",
+            "Keep one visibly hand-drawn illustrator treatment.",
+            [(global_asset.id, "primary_style")],
+        )
+        (storage_root / global_asset.storage_path).write_bytes(b"altered")
+        generator = FakeImageGenerator()
+        with pytest.raises(ValueError, match="do not match"):
+            GenerationService(
+                repository, generator, LocalAssetStorage(storage_root)
+            ).generate_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        assert generator.inputs == []
+
+        legacy_spec = repository.get_asset_spec("asset-spec-isa-scene-02-tax-year-calendar-v1")
+        style = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v3")
+        legacy_input = PromptComposer().compose(legacy_spec, style).payload()
+        legacy = repository.create_failed_generation_execution(
+            "generation-execution-legacy-v3-after-migration-24",
+            legacy_spec.id,
+            asset_spec_snapshot(legacy_spec),
+            legacy_input,
+            "legacy-generator",
+            visual_style_profile_id=style.id,
+            error_code="historical_failure",
+            error_message="Historical failure retained.",
+        )
+        assert legacy.generation_input["schema_version"] == 3
+        assert repository.list_generation_execution_visual_authorities(legacy.id) == []
+    finally:
+        repository.close()
+
+
+def test_provider_reference_capacity_rejects_recipe_before_invocation(tmp_path) -> None:
+    """An adapter that cannot carry mandatory authority references fails before spend."""
+
+    storage_root = tmp_path / "assets"
+    repository = AtlasRepository(tmp_path / "atlas.db", asset_storage_root=storage_root)
+    try:
+        global_asset = create_visual_authority_asset(repository, storage_root, "global")
+        repository.create_visual_reference_authority(
+            DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID,
+            "similarstoic-global-illustration",
+            "global_illustration_style",
+            "Global illustration",
+            "Keep one visibly hand-drawn illustrator treatment.",
+            [(global_asset.id, "primary_style")],
+        )
+        generator = FakeImageGenerator()
+        generator.max_reference_images = 0
+        with pytest.raises(ValueError, match="cannot represent"):
+            GenerationService(
+                repository, generator, LocalAssetStorage(storage_root)
+            ).generate_asset_spec("asset-spec-isa-scene-01-kitchen-background-v1")
+        assert generator.inputs == []
     finally:
         repository.close()
 
@@ -3170,7 +3514,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 24))
+        ] == list(range(1, 25))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -3364,7 +3708,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 24))
+        ] == list(range(1, 25))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -3509,7 +3853,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                24,
+                25,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -3531,7 +3875,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 24"
+                "SELECT version FROM schema_migrations WHERE version = 25"
             ).fetchone()
             is None
         )
@@ -5579,7 +5923,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 24))
+        ] == list(range(1, 25))
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

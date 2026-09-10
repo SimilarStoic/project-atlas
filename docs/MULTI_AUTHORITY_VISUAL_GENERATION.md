@@ -6,9 +6,12 @@ Approved SimilarStoic images are **generative reference authorities**: visual DN
 poses, environments, props, metaphors and compositions. They are not a finite library of finished scene assets.
 
 This design closes the gap between that creative rule and canonical runtime provenance. It preserves the working
-character-reference path and adds the smallest provider-neutral authority model needed for other visual roles. It is
-design authority only: no schema, migration, provider call, media generation, Production #5 or publishing work is
-implemented here.
+character-reference path and adds the smallest provider-neutral authority model needed for other visual roles.
+
+Implementation status on 10 September 2026: a bounded local candidate implements this design as Migration 24,
+materializes the minimum approved authority set in the verified persistent runtime, and passes copied-runtime and
+provider-neutral fake-adapter validation. The candidate awaits founder review and push. It made no provider call,
+generated no media, and did not start Production #5 or publishing work.
 
 ## Current-state gap
 
@@ -234,13 +237,9 @@ table is needed for the first proof.
 
 ## Migration sequencing
 
-No migration number is selected by this design. Migration numbering follows implementation order.
-
-Both this visual-authority persistence and the publishing/learning design require additive schema work. If visual
-authority implementation is approved first, it receives the next available migration number and publishing/learning
-moves to the following number or numbers. If publishing is implemented first, the order reverses. Documentation that
-currently calls Migration 24 a reserved publishing placeholder must be synchronized when implementation order is
-chosen; no accepted schema meaning is overwritten, because Migration 24 does not yet exist.
+Founder approval assigned Migration 24 to this visual-authority persistence implementation. Publishing/learning
+persistence remains a separate future change and will use the next available migration number, currently expected to
+be 25. No Migration 25 is created by this implementation.
 
 ## Bounded implementation plan
 

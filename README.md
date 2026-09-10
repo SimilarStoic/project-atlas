@@ -6,22 +6,18 @@ Project Atlas is the legacy project name.
 
 ## Current reconciliation state
 
-At the canonical-continuity verification on 2 September 2026, GitHub `main`, local `main`, and `origin/main` are
-synchronised at `f44f65b46929d584125342e8528a585cfd0b2fc0` (ahead/behind `0 / 0`). Phase 2 is ACTIVE / INCOMPLETE;
-v0.27 remains the latest named accepted implementation milestone, and no successor is selected. Source and verified
-runtime migrations are contiguous through 23: Migration 22 adds generated-narration provenance and
-`local_system_speech` execution support, while Migration 23 adds truthful `openai_tts` support. Migration 24 is absent
-and unauthorized. These canonical post-v0.27 repository changes do not constitute an accepted v0.28 milestone.
+The synchronized canonical base is `76b8c4e93aad07b273e249902fcfffb08256d835`. Phase 2 is ACTIVE / INCOMPLETE;
+v0.27 remains the latest named accepted implementation milestone, and no successor is selected. A local implementation
+candidate adds Migration 24 for immutable multi-authority visual-reference persistence and has migrated the verified
+persistent runtime through 24. The candidate remains pending founder review and push. These post-v0.27 changes do not
+constitute an accepted v0.28 milestone.
 
 The former remote `5220320ef81e422dec338b8410ad80b5491c0f31` and local candidate
 `2358f244b48db9cae49e0a0bc8b1ec9ce0525811` describe the historical pre-reconciliation state. The founder completed
 the reconciliation review and authorized the subsequent push; that history is retained in the canonical handoff.
 
-Production #1 completed as a technical/end-to-end trial, but failed founder production-quality acceptance. The Hazel
-baseline was technically valid but robotic/static/caption-heavy; the OpenAI Marin refinement was more natural but did
-not establish an accepted SimilarStoic voice or presentation identity. Production #2 has not started. No successor,
-v0.28, or Migration 24 is selected. Reconciliation is complete, but it does not authorize a new milestone, Production
-#2, or product-development work; the next product design/milestone decision requires new founder + ChatGPT approval.
+Production #1 completed as a technical/end-to-end trial, but failed founder production-quality acceptance. Productions
+#2–#4 are accepted. Production #5 remains reserved and has not started. No successor milestone or v0.28 is selected.
 
 The display rename does not change the legacy technical compatibility namespace: Python distribution
 `project-atlas`, package/import namespace `project_atlas`, `ATLAS_*` environment variables, and the default

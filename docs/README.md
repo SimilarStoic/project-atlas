@@ -16,4 +16,5 @@ The accepted Production #2–#4 method is operationalized in the
 [SimilarStoic minimum repeatable production cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md). The
 [controlled publishing and performance-learning design](PUBLISHING_AND_LEARNING_LOOP.md) defines the unimplemented
 one-platform pilot. The [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) defines
-the unimplemented provider-neutral reference-authority bridge required before Production #5's quality-uplift proof.
+the provider-neutral reference-authority bridge implemented locally as the pending Migration 24 candidate required
+before Production #5's quality-uplift proof.

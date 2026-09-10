@@ -485,9 +485,10 @@ Production #5 the immediate role of reference-driven dynamic-scene/quality-uplif
 later serve as the first live-loop item. The initial publishing platform remains YouTube Shorts only, at no more than
 one public pilot item per week, with founder approval for each exact external publication. Existing persistence is
 sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
-decisions/identities, performance snapshots and learning assessments, but Migration 24 remains unauthorized and
-absent. Active-envelope exposure stays `$4.39 / $10`, leaving `$5.61`. Do not begin Production #6 or implement
-publishing/analytics architecture from this design alone.
+decisions/identities, performance snapshots and learning assessments. Migration 24 is now assigned to the bounded
+multi-authority visual-reference implementation; a later publishing implementation will use the next available
+migration, currently expected to be 25. Active-envelope exposure stays `$4.39 / $10`, leaving `$5.61`. Do not begin
+Production #6 or implement publishing/analytics architecture from this design alone.
 
 Production-method validation is **PASSED**, but public-launch quality is **NOT YET PASSED**. Founder assessment places
 current output at approximately **50%** of desired mature quality, with an approximately **80–85%** target before
@@ -496,11 +497,10 @@ minimum provider-neutral bridge from approved visual-DNA examples to new scene-s
 character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per
 execution, and require one shared global illustration authority across scene components.
 
-That design requires a future additive persistence change but assigns no migration number. Implementation order will
-determine numbering relative to publishing/learning persistence; no placeholder number overrides actual order.
-Production #5 remains **RESERVED / NOT STARTED** and its next role is **REFERENCE-DRIVEN DYNAMIC SCENE GENERATION /
-QUALITY-UPLIFT PROOF**. It must not execute until the minimum authority selection, digest freezing, provider translation
-and immutable execution provenance path is implemented and verified.
+The bounded local implementation assigns Migration 24 to that additive persistence change and validates authority
+selection, digest freezing, provider translation and immutable execution provenance. Production #5 remains
+**RESERVED / NOT STARTED** and its next role is **REFERENCE-DRIVEN DYNAMIC SCENE GENERATION / QUALITY-UPLIFT PROOF**.
+It must not execute until the implementation candidate is accepted, pushed and synchronized.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 
@@ -1092,10 +1092,10 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 ## Phase 2 — Content Operating Model
 
 Status: ACTIVE / INCOMPLETE. **v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation
-milestone; **v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Current canonical source
-and verified runtime migrations are contiguous through 23: Migration 22 adds generated-narration provenance and
-Migration 23 adds OpenAI TTS provenance/support. These post-v0.27 changes do not accept v0.28 or select a successor;
-Migration 24 is absent and unauthorized.
+milestone; **v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Current source and
+verified runtime migrations are contiguous through 24 in the pending implementation candidate: Migration 22 adds
+generated-narration provenance, Migration 23 adds OpenAI TTS provenance/support, and Migration 24 adds multi-authority
+visual-reference persistence. These post-v0.27 changes do not accept v0.28 or select a successor.
 
 Implement:
 - Research
@@ -1115,10 +1115,10 @@ Implement:
 
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
 **v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation milestone; **v0.26 —
-Narrated Final Media Production** is its accepted historical predecessor. Current canonical source and verified runtime
-migrations are contiguous through 23; Migrations 22–23 are post-v0.27 narration-provenance/support changes, not a
-v0.28 acceptance. Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is unimplemented and no later phase
-is activated. No successor after v0.27 is selected; Migration 24 is absent and unauthorized.
+Narrated Final Media Production** is its accepted historical predecessor. Current source and verified runtime
+migrations are contiguous through 24 in the pending implementation candidate; Migrations 22–24 are post-v0.27
+provenance/support changes, not a v0.28 acceptance. Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is
+unimplemented and no later phase is activated. No successor after v0.27 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
 create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
 
@@ -2257,8 +2257,8 @@ toward:
   v0.25 — Operational Visual Production Inputs is its accepted historical predecessor;
   v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
   at v0.27 acceptance, migration 21 was latest and migration 22 was absent; current canonical source/runtime
-  migrations are through 23, with Migrations 22–23 adding narration provenance/support only; no successor after
-  v0.27 is selected and Migration 24 is absent;
+  migrations are through 24 in the pending implementation candidate, with Migrations 22–24 adding bounded
+  provenance/support only; no successor after v0.27 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
   substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
