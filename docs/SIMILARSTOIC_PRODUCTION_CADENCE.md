@@ -133,10 +133,11 @@ Productions #2, #3 and #4 are accepted. Production #4's execution and acceptance
 [Production #4 — Design and Acceptance](PRODUCTION_4_DESIGN.md). It validates the cadence on a third consecutive full
 production across a non-finance topic, while its visual result supplies the illustration-hierarchy lesson above.
 
-The internal production-method objective is satisfied. Production #5 v1 additionally proves the reference-driven
-dynamic generation architecture, while its final artifact is **MIXED / REVISE** and acceptance is on hold pending v2.
+The internal production-method objective is satisfied. Production #5 v3 establishes reference-driven scene generation
+as the intended default method, while its exact artifact remains **MIXED / TARGETED FINAL REPAIR** and acceptance is on
+hold pending v4.
 Keep the five-working-day pace for the initial live pilot and
 publish no more than one item per week; do not accelerate volume until publishing reliability and repeated learning are
-proven. Production #5 v2 is the only active production correction. Active-envelope exposure is `$5.68 / $10`, leaving
-`$4.32`. The verified runtime is migrated through 24 for multi-authority visual
+proven. Production #5 v4 is the only active production correction. Active-envelope exposure before v4 is `$7.18 / $10`,
+leaving `$2.82`. The verified runtime is migrated through 24 for multi-authority visual
 references; Production #6, v0.28 and a rig remain absent.

@@ -458,6 +458,15 @@ class MediaService:
         "alternate_zones": ["middle_center_safe", "upper_center_safe"],
         "position_change_policy": "scene_boundary_only_when_action_requires",
     }
+    FINAL_FRAME_VISUAL_QA_PROFILE = {
+        "profile": "similarstoic-final-frame-v4",
+        "inspection_scales": ["full_resolution", "normal_video", "phone"],
+        "repair_policy": "repair_dont_empty",
+        "structural_geometry_integrity": True,
+        "facial_expression_integrity": True,
+        "reuse_with_variation": True,
+        "exact_frame_repeat_requires_editorial_rationale": True,
+    }
 
     RENDER_SETTINGS = {
         "profile": "similarstoic-vertical-v2",
@@ -474,6 +483,7 @@ class MediaService:
         "default_motion": "static",
         "global_motion_policy": "static_anchored_default",
         "non_static_motion_requires_rationale": True,
+        "final_frame_visual_qa": FINAL_FRAME_VISUAL_QA_PROFILE,
         "crossfade_ms": 250,
         "duration_tolerance_ms": 100,
     }
@@ -722,6 +732,11 @@ class MediaService:
             raise MediaRuntimeError("Snapshot has incomplete frozen render settings.") from error
         if not isinstance(crossfade_ms, int) or crossfade_ms <= 0 or frame_rate != 30:
             raise MediaRuntimeError("Snapshot has unsupported frozen render settings.")
+        if (
+            settings.get("profile") == "similarstoic-vertical-v2"
+            and settings.get("final_frame_visual_qa") != cls.FINAL_FRAME_VISUAL_QA_PROFILE
+        ):
+            raise MediaRuntimeError("Snapshot has an unsupported final-frame visual QA profile.")
         filters = [cls._scene_filter(index, item, settings) for index, item in enumerate(scenes)]
         current = "v0"
         cumulative_ms = scenes[0]["duration_ms"]

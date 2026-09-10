@@ -3,9 +3,10 @@
 ## Last Updated
 
 10 September 2026 — Multi-authority visual-generation implementation is synchronized at
-`1284e344b376e550b0a06ee79e79e9ae478b96c2`. Production #5 v1 proved the reference-driven dynamic scene-generation
-architecture, but founder review rated the final artifact **MIXED / REVISE** and placed acceptance on hold. Its exact
-artifact and immutable evidence remain preserved while bounded v2 correction is active. Productions #2–#4 remain accepted.
+`1284e344b376e550b0a06ee79e79e9ae478b96c2`. Production #5 v3 establishes the reference-driven scene-generation
+method as the intended SimilarStoic default and reached approximately 85–90% of desired public-launch quality. Its
+artifact remains **MIXED / TARGETED FINAL REPAIR** and acceptance is on hold while bounded v4 precision cleanup is
+active. Exact v1–v3 artifacts and immutable evidence remain preserved. Productions #2–#4 remain accepted.
 
 ## Current State — Read This First
 

@@ -128,6 +128,22 @@ start, endpoint, uninterrupted route, correct attachment, sensible perspective a
 pass impossibly through solid objects or continue unexplained after an occlusion. Handmade imperfection is welcome;
 physical impossibility and generation corruption fail QA.
 
+### Structural geometry integrity
+
+Structured objects must remain geometrically intelligible. For towers, utility poles, rails, barriers, buildings,
+server racks, machinery, furniture, plugs, connectors, cables, pipes, conduits, vehicles and repeated engineered
+objects, verify that major members connect, conductors attach to credible points, perspective and repeated scale are
+internally coherent, supports actually support the object, and no member floats, disappears or continues accidentally.
+Repair a local infrastructure defect while preserving the infrastructure and scene richness; do not disguise malformed
+topology as hand-drawn imperfection.
+
+### Facial-expression integrity
+
+Every mascot face must show one intentional, readable expression. Inspect eyes, pupils, nose, mouth, any intentional
+teeth, cheeks and whiskers against Core v3 identity. Closed, smiling, surprised, worried, strained and neutral mouths are
+all valid when scene-appropriate. Ambiguous open/closed cavities, tooth-like residue, doubled mouth lines, malformed
+lips or jaws, and expressions that cannot be parsed fail final character QA.
+
 Final visual QA uses the actual rendered frame at full resolution and phone scale. It inspects path topology, complete
 outlines, attachments, intersections, duplicated or disappearing fragments, fills, perspective, anatomy, repeated-object
 consistency and continuity between related beats. A written rationale or technical image check cannot make a visibly weak
@@ -201,6 +217,12 @@ existing assets force an unnatural composition, or a new metaphor materially imp
 Do not force reuse merely to reduce provider cost. Do not generate assets merely to create variety. Quality and
 narrative fit come first.
 
+Reuse normally advances visually. Retain a successful environment or plate for continuity while changing a relevant
+pose, expression, prop state, object position, crop, camera distance, foreground state, environmental activity or
+reveal so the viewer reads **same place, next beat**. Exact finished-frame repetition is allowed only as an intentional
+callback, comedic repetition, before/after comparison or purposeful visual pause, and its editorial reason must be
+recorded. Convenience alone is not a reason to repeat an exact frame.
+
 ## Validated production assembly
 
 The best currently validated method is:
@@ -271,8 +293,8 @@ giant asset library in advance.
 
 ## Cost discipline
 
-The active visual-quality envelope is `$10`; conservative exposure after Production #5 v1 is `$5.68`, remaining
-authorization is `$4.32`, and
+The active visual-quality envelope is `$10`; conservative exposure before Production #5 v4 is `$7.18`, remaining
+authorization is `$2.82`, and
 top-up is not required. Remaining authorization is not a spending target. Paid generation remains bounded,
 evidence-driven, quality-first, and accounted for. Account funding is not spend.
 
@@ -281,6 +303,8 @@ authorization is below `$2` and more paid work is proposed.
 
 ## Current experiment boundary
 
-Reference-driven dynamic scene generation passed architecturally in Production #5 v1, but the v1 final artifact is
-**MIXED / REVISE** and acceptance remains on hold. Its immutable evidence is preserved while a bounded v2 applies the
-finish gates above. This document does not accept or authorize publication of either artifact.
+Reference-driven visual generation is the intended default after Production #5 v3, whose founder-visible quality is
+approximately 85–90% of the desired public-launch standard. The v3 artifact remains **MIXED / TARGETED FINAL REPAIR**
+and acceptance is on hold while a bounded v4 repairs infrastructure geometry, facial-expression integrity and
+unintentional exact-frame reuse. V1–v3 evidence remains immutable. This document does not accept or authorize
+publication of any Production #5 artifact.

@@ -138,6 +138,27 @@ def test_default_social_caption_profile_is_mobile_readable_and_safe() -> None:
     assert profile["position_change_policy"] == "scene_boundary_only_when_action_requires"
     assert settings["default_motion"] == "static"
     assert settings["global_motion_policy"] == "static_anchored_default"
+    assert settings["final_frame_visual_qa"] == {
+        "profile": "similarstoic-final-frame-v4",
+        "inspection_scales": ["full_resolution", "normal_video", "phone"],
+        "repair_policy": "repair_dont_empty",
+        "structural_geometry_integrity": True,
+        "facial_expression_integrity": True,
+        "reuse_with_variation": True,
+        "exact_frame_repeat_requires_editorial_rationale": True,
+    }
+
+
+def test_modern_render_rejects_a_weakened_final_frame_visual_qa_profile() -> None:
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    settings = dict(MediaService.RENDER_SETTINGS)
+    settings["final_frame_visual_qa"] = {
+        **MediaService.FINAL_FRAME_VISUAL_QA_PROFILE,
+        "structural_geometry_integrity": False,
+    }
+
+    with pytest.raises(MediaRuntimeError, match="final-frame visual QA profile"):
+        MediaService._composition_filters(scenes, 1000, settings)
 
 
 def test_social_caption_filter_freezes_profile_and_preserves_legacy_snapshots() -> None:

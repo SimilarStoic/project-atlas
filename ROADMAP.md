@@ -487,22 +487,23 @@ one public pilot item per week, with founder approval for each exact external pu
 sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
 decisions/identities, performance snapshots and learning assessments. Migration 24 is now assigned to the bounded
 multi-authority visual-reference implementation; a later publishing implementation will use the next available
-migration, currently expected to be 25. Production #5 v1 brings active-envelope exposure to `$5.68 / $10`, leaving
-`$4.32`. Do not begin
+migration, currently expected to be 25. The pre-v4 Production #5 envelope exposure is `$7.18 / $10`, leaving `$2.82`.
+Do not begin
 Production #6 or implement publishing/analytics architecture from this design alone.
 
 Production-method validation is **PASSED**, but public-launch quality is **NOT YET PASSED**. Founder assessment places
-current output at approximately **50%** of desired mature quality, with an approximately **80–85%** target before
-public launch. [Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
+Production #5 v3 at approximately **85–90%** of desired public-launch quality; bounded v4 is precision cleanup rather
+than another visual-R&D phase. [Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
 minimum provider-neutral bridge from approved visual-DNA examples to new scene-specific generation: keep existing
 character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per
 execution, and require one shared global illustration authority across scene components.
 
 The bounded Migration 24 implementation is synchronized and validates authority selection, digest freezing, provider
-translation and immutable execution provenance. Production #5 proved the reference-driven dynamic scene-generation
-architecture, but founder review rated both v1 and v2 **MIXED / REVISE**. Acceptance remains on hold while v3 applies
-the stronger repair-don't-empty, connected-object topology, self-evident semantic-grounding, social-mobile-v3 caption
-hierarchy, static-camera-default and rendered-frame vision gates. Public-launch quality remains not passed.
+translation and immutable execution provenance. Production #5 v3 establishes reference-driven scene generation as the
+intended SimilarStoic default and reached approximately 85–90% of desired public-launch quality. Acceptance remains on
+hold for bounded v4 precision cleanup of structural geometry, facial-expression integrity and reuse-with-variation.
+Repair-don't-empty, semantic grounding, social-mobile-v3 captions, static-camera default and rendered-frame vision QA
+remain mandatory. Public-launch quality remains not passed.
 
 The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
 

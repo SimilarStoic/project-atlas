@@ -30,9 +30,9 @@ acting-pose method, the approved separated environment/composition method, the a
 approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
 `1284e344b376e550b0a06ee79e79e9ae478b96c2`; Production #4, the controlled publishing/learning design and the
 [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) are synchronized. Migration 24
-is operational. Production #5 v1 proves the reference-driven generation architecture, while founder review records its
-final artifact as **MIXED / REVISE** with acceptance on hold. Its immutable v1 evidence is preserved and bounded v2
-correction is active. Rejected experimental implementation remains excluded from canonical history.
+is operational. Production #5 v3 establishes reference-driven generation as the intended default, while its exact
+artifact remains **MIXED / TARGETED FINAL REPAIR** with acceptance on hold. Immutable v1–v3 evidence is preserved and
+bounded v4 precision cleanup is active. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -206,15 +206,16 @@ Forward production lesson: labels, checklists and diagrams may support the actio
 should remain the primary illustration whenever possible; avoid slide-deck or infographic drift. Production #4 remains
 accepted without revision.
 
-### Production #5 v1 review state
+### Production #5 review state
 
-Production #5 proves the Migration 24 reference-driven dynamic scene-generation path, but founder review rates both v1
-and v2 **MIXED / REVISE** and acceptance remains on hold. Preserve both exact MP4s and immutable lineage. V3 is the only
-active correction. It must repair rather than empty scenes, enforce coherent connected-object topology, make important
-visual relationships understandable from the rendered frame, use social-mobile-v3 captions with predictable zones and
-keep the camera static unless a specific beat justifies motion. Marin remains provisional and replaceable. The v2
-envelope state is `$6.43 / $10` used with `$3.57` remaining. Production #6, Migration 25, publishing implementation and
-publication remain absent.
+Production #5 v3 establishes the Migration 24 reference-driven scene-generation path as the intended SimilarStoic
+default and reached approximately 85–90% of desired public-launch quality. Its exact artifact remains **MIXED /
+TARGETED FINAL REPAIR** and acceptance is on hold. Preserve exact v1–v3 MP4s and immutable lineage. V4 is the only active
+correction: retain v3 richness and repair only structural geometry, facial-expression integrity and unintentional exact
+finished-frame reuse. Repair-don't-empty, connected-object topology, semantic grounding, social-mobile-v3 captions,
+static-camera default and full-resolution/normal/phone rendered-frame inspection remain mandatory. Marin remains
+provisional and replaceable. The pre-v4 envelope state is `$7.18 / $10` used with `$2.82` remaining. Production #6,
+Migration 25, publishing implementation and publication remain absent.
 
 ### Controlled publishing and performance learning loop
 
