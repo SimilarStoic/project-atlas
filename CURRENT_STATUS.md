@@ -3,10 +3,12 @@
 ## Last Updated
 
 10 September 2026 — Multi-authority visual-generation implementation is synchronized at
-`1284e344b376e550b0a06ee79e79e9ae478b96c2`. Production #5 v3 establishes the reference-driven scene-generation
-method as the intended SimilarStoic default and reached approximately 85–90% of desired public-launch quality. Its
-artifact remains **MIXED / TARGETED FINAL REPAIR** and acceptance is on hold while bounded v4 precision cleanup is
-active. Exact v1–v3 artifacts and immutable evidence remain preserved. Productions #2–#4 remain accepted.
+`1284e344b376e550b0a06ee79e79e9ae478b96c2`, with production-quality gates synchronized through
+`144a201e6484ceec778d5fd8dee94bd2f935dc31`. Production #5 v4 and reference-driven dynamic SimilarStoic generation are
+**ACCEPTED**. Founder assessment places the exact artifact at approximately 95% of desired public-launch production
+quality. Exact v1–v4 artifacts and immutable evidence remain preserved; the accepted v4 SHA-256 is
+`c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`. Public launch remains unauthorized, and
+narrator naturalness is the primary remaining pre-launch quality track. Productions #2–#4 remain accepted.
 
 ## Current State — Read This First
 
@@ -18,9 +20,8 @@ The [multi-authority visual-generation design](docs/MULTI_AUTHORITY_VISUAL_GENER
 provider-neutral bridge from those approved visual-DNA authorities to scene-specific generation. The local
 implementation preserves `VisualStyleProfile`, `CharacterProfile` and `CharacterReferenceSet`; Migration 24 adds typed,
 digest-backed non-character authorities plus immutable per-execution recipe provenance; composition remains
-guidance/local assembly rather than a new executable asset type. The persistent runtime is migrated and the minimum
-approved authorities are materialized, but this implementation is not canonical until its pending commit is reviewed
-and pushed.
+guidance/local assembly rather than a new executable asset type. The persistent runtime is migrated, the minimum
+approved authorities are materialized, and the implementation is synchronized.
 
 The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records the reviewed continuity findings and
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1's original Hazel, Marin v2 and presentation

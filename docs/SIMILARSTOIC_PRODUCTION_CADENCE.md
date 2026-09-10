@@ -129,15 +129,15 @@ does not change the cadence or founder gates automatically.
 
 ## Current boundary
 
-Productions #2, #3 and #4 are accepted. Production #4's execution and acceptance record is in
+Productions #2, #3, #4 and #5 are accepted. Production #4's execution and acceptance record is in
 [Production #4 — Design and Acceptance](PRODUCTION_4_DESIGN.md). It validates the cadence on a third consecutive full
 production across a non-finance topic, while its visual result supplies the illustration-hierarchy lesson above.
 
-The internal production-method objective is satisfied. Production #5 v3 establishes reference-driven scene generation
-as the intended default method, while its exact artifact remains **MIXED / TARGETED FINAL REPAIR** and acceptance is on
-hold pending v4.
+The internal production-method objective is satisfied. Production #5 v4 and reference-driven dynamic SimilarStoic
+scene generation are **ACCEPTED** as the default visual-production method. Approved references remain generative
+authorities rather than a finite content inventory.
 Keep the five-working-day pace for the initial live pilot and
 publish no more than one item per week; do not accelerate volume until publishing reliability and repeated learning are
-proven. Production #5 v4 is the only active production correction. Active-envelope exposure before v4 is `$7.18 / $10`,
-leaving `$2.82`. The verified runtime is migrated through 24 for multi-authority visual
-references; Production #6, v0.28 and a rig remain absent.
+proven. Production #5 is accepted at final conservative exposure of `$7.43 / $10`, leaving `$2.57`. Public launch is
+not authorized; narrator naturalness is the next focused quality track. The verified runtime is migrated through 24
+for multi-authority visual references; Production #6, v0.28 and a rig remain absent.

@@ -144,6 +144,8 @@ def test_default_social_caption_profile_is_mobile_readable_and_safe() -> None:
         "repair_policy": "repair_dont_empty",
         "structural_geometry_integrity": True,
         "facial_expression_integrity": True,
+        "residual_facial_lines_rejected": True,
+        "occlusion_layer_integrity": True,
         "reuse_with_variation": True,
         "exact_frame_repeat_requires_editorial_rationale": True,
     }

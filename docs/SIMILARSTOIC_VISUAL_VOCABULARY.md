@@ -142,7 +142,15 @@ topology as hand-drawn imperfection.
 Every mascot face must show one intentional, readable expression. Inspect eyes, pupils, nose, mouth, any intentional
 teeth, cheeks and whiskers against Core v3 identity. Closed, smiling, surprised, worried, strained and neutral mouths are
 all valid when scene-appropriate. Ambiguous open/closed cavities, tooth-like residue, doubled mouth lines, malformed
-lips or jaws, and expressions that cannot be parsed fail final character QA.
+lips or jaws, stray residual mouth or chin lines, and expressions that cannot be parsed fail final character QA.
+
+### Occlusion and layer integrity
+
+Depth ordering and contact relationships must remain understandable. Reject or repair character or bag portions that
+incorrectly appear in front of a solid tabletop, wall or other occluder; props that pass through anatomy; foreground and
+background layers in the wrong order; floating objects; impossible contact surfaces; bad masks at furniture/character
+intersections; generated lines continuing through occluding objects; and ambiguous depth caused by compositing. A
+deliberately simple hand-drawn scene may remain visually wonky, but its layer order and physical contact must make sense.
 
 Final visual QA uses the actual rendered frame at full resolution and phone scale. It inspects path topology, complete
 outlines, attachments, intersections, duplicated or disappearing fragments, fills, perspective, anatomy, repeated-object
@@ -293,8 +301,8 @@ giant asset library in advance.
 
 ## Cost discipline
 
-The active visual-quality envelope is `$10`; conservative exposure before Production #5 v4 is `$7.18`, remaining
-authorization is `$2.82`, and
+The active visual-quality envelope is `$10`; final Production #5 conservative exposure is `$7.43`, remaining
+authorization is `$2.57`, and
 top-up is not required. Remaining authorization is not a spending target. Paid generation remains bounded,
 evidence-driven, quality-first, and accounted for. Account funding is not spend.
 
@@ -303,8 +311,10 @@ authorization is below `$2` and more paid work is proposed.
 
 ## Current experiment boundary
 
-Reference-driven visual generation is the intended default after Production #5 v3, whose founder-visible quality is
-approximately 85–90% of the desired public-launch standard. The v3 artifact remains **MIXED / TARGETED FINAL REPAIR**
-and acceptance is on hold while a bounded v4 repairs infrastructure geometry, facial-expression integrity and
-unintentional exact-frame reuse. V1–v3 evidence remains immutable. This document does not accept or authorize
-publication of any Production #5 artifact.
+Production #5 v4 and the reference-driven dynamic SimilarStoic generation method are **ACCEPTED**. The method uses
+approved visual authorities as generative DNA for materially new script-specific scenes, backgrounds, acting poses,
+props, metaphors and compositions while preserving recognizable identity and shared authorship; the references are not
+a finite content inventory. Founder assessment places the artifact at approximately 95% of desired public-launch
+production quality. A small residual mouth line and one bag/table occlusion-depth inconsistency are accepted,
+non-blocking historical observations preserved in provenance. Public launch remains unauthorized, and narrator
+naturalness is the primary remaining pre-launch quality track.

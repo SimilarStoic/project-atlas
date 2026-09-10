@@ -27,12 +27,13 @@ For findings reviewed on 8 September 2026, read [Production #1 quality-cycle con
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
 actual alignment, Cedar's relative preference/rejection, the failed full-scene image method, the successful isolated
 acting-pose method, the approved separated environment/composition method, the accepted abstract scene and the first
-approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. Current canonical `main` is
-`1284e344b376e550b0a06ee79e79e9ae478b96c2`; Production #4, the controlled publishing/learning design and the
+approved hand-drawn gross-up break-frame, qualified spend and reference-set provenance. The synchronized parent
+checkpoint for Production #5 acceptance is `144a201e6484ceec778d5fd8dee94bd2f935dc31`; Production #4, the controlled publishing/learning design and the
 [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) are synchronized. Migration 24
-is operational. Production #5 v3 establishes reference-driven generation as the intended default, while its exact
-artifact remains **MIXED / TARGETED FINAL REPAIR** with acceptance on hold. Immutable v1–v3 evidence is preserved and
-bounded v4 precision cleanup is active. Rejected experimental implementation remains excluded from canonical history.
+is operational. Production #5 v4 and reference-driven dynamic SimilarStoic generation are **ACCEPTED** as the default
+visual-production method. Immutable v1–v4 evidence is preserved. Founder assessment places v4 at approximately 95% of
+desired public-launch production quality; public launch remains unauthorized and narrator naturalness is the primary
+remaining pre-launch quality track. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -208,20 +209,20 @@ accepted without revision.
 
 ### Production #5 review state
 
-Production #5 v3 establishes the Migration 24 reference-driven scene-generation path as the intended SimilarStoic
-default and reached approximately 85–90% of desired public-launch quality. Its exact artifact remains **MIXED /
-TARGETED FINAL REPAIR** and acceptance is on hold. Preserve exact v1–v3 MP4s and immutable lineage. V4 is the only active
-correction: retain v3 richness and repair only structural geometry, facial-expression integrity and unintentional exact
-finished-frame reuse. Repair-don't-empty, connected-object topology, semantic grounding, social-mobile-v3 captions,
-static-camera default and full-resolution/normal/phone rendered-frame inspection remain mandatory. Marin remains
-provisional and replaceable. The pre-v4 envelope state is `$7.18 / $10` used with `$2.82` remaining. Production #6,
-Migration 25, publishing implementation and publication remain absent.
+Production #5 v4 and the Migration 24 reference-driven scene-generation path are **ACCEPTED**. The accepted exact MP4
+has SHA-256 `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`; preserve exact v1–v4 artifacts and immutable
+lineage. The method is the SimilarStoic default: approved authorities are generative DNA for new script-specific scenes,
+not a finite content inventory. Repair-don't-empty, connected topology, structural geometry, facial-expression and
+occlusion/layer integrity, reuse-with-variation, semantic grounding, social-mobile-v3 captions, static-camera default
+and full-resolution/normal/phone inspection remain mandatory. Founder accepted two non-blocking historical observations:
+a small residual line beneath the mouth in one frame and one bag/table occlusion-depth inconsistency. Marin remains
+provisional and replaceable. Final exposure is `$7.43 / $10` with `$2.57` remaining. Public launch is unauthorized;
+Production #6, Migration 25, publishing implementation and publication remain absent.
 
 ### Controlled publishing and performance learning loop
 
-Productions #2–#4 satisfy the current production-method validation objective. The next bounded question is whether
-Conveyor can publish an exact founder-approved item under control, ingest attributable aggregate performance and apply
-conservative evidence to future content decisions. The canonical candidate
+Productions #2–#5 satisfy the current production-method validation objective. Narrator naturalness is the next focused
+quality task. Publishing remains unauthorized; when separately authorized, the canonical candidate
 [Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube Shorts as the
 sole initial pilot platform, retains one founder decision for each exact public action and keeps the existing pace at no
 more than one pilot Short per week.
