@@ -21,6 +21,24 @@ existing GitHub roadmap and specification remain authoritative.
 
 ## Current canonical synchronisation state
 
+### Current canonical snapshot
+
+- Git checkpoint: `58c69ffad0bc5523c9a23ad25f5076aab0d330b0` — `production: accept SimilarStoic Production 5`.
+- Phase 1 is complete; Phase 2 — Content Operating Model is **ACTIVE / INCOMPLETE**.
+- Productions #2–#5 are accepted. Production #5 v4 is the accepted artifact, SHA-256
+  `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`; v1–v3 remain historical iteration evidence.
+- Reference-driven dynamic SimilarStoic generation is **DEFAULT / ACCEPTED**. Approved visual references are generative
+  DNA for new script-specific scenes, not a finite content inventory.
+- Migrations 1–24 are contiguous. Migration 24 adds multi-authority visual-reference persistence; Migration 25 is
+  absent. Publishing/learning is approved in design only and is not implemented.
+- Public launch is unauthorized and Production #6 has not started.
+- Marin is the provisional production-development baseline; the permanent narrator is unresolved. Narrator naturalness
+  is the next focused pre-launch objective: **CHANGE VOICE WITHOUT REBUILD**.
+- Active quality-envelope exposure is `$7.43 / $10`; `$2.57` remains.
+- Founder owns final product, quality, spend, publication and push decisions; ChatGPT owns product architecture and
+  canonical specification stewardship; Codex performs bounded inspection, implementation and validation.
+- Governing principle: **CHANGE WITHOUT REBUILD**.
+
 ### Fresh-chat instruction
 
 For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
@@ -68,7 +86,7 @@ historical context.
 Phase 2 is ACTIVE /
 INCOMPLETE; v0.27 — First-Run Operability Bridge remains the latest named accepted implementation milestone, v0.26 is
 its accepted predecessor, and no successor milestone is selected. Source and verified runtime migrations are contiguous
-through 24 in the pending implementation candidate: Migration 22 adds generated-narration provenance and
+through 24 in the synchronized implementation: Migration 22 adds generated-narration provenance and
 `local_system_speech` execution support; Migration 23 adds truthful `openai_tts` support; Migration 24 adds
 multi-authority visual-reference persistence. These post-v0.27 changes do not constitute an accepted v0.28 milestone.
 
@@ -236,7 +254,7 @@ strategy; repeated evidence across comparable items is required before even a bo
 Current migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities, but have
 no publishing-package, publication, performance-snapshot or learning-assessment persistence. A future additive
 publishing migration is justified before an automated live pilot and will use the next available number, currently
-expected to be 25. No platform API, credential, external publication or Production #5 execution has occurred.
+expected to be 25. No platform API, credential or external publication has occurred.
 Subsequent founder direction assigns Production
 #5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later
 serve as the first live-loop item after publishing implementation and exact publication authority. Production #6 must
@@ -307,12 +325,13 @@ Conveyor composition is visually validated for this one scene, but is not accept
 cumulative experiment spend is `$24.107475`, leaving `$0.892525` under the existing cumulative `$25` authorization,
 with the billing qualifications in the quality-cycle note unchanged.
 
-### Hard stop and next action
+### Historical pre-Production #5 gate — superseded
 
-Review and push the validated Migration 24 multi-authority implementation candidate. Production #5 remains reserved
-and must not start until this implementation is accepted, pushed and synchronized. Publishing/learning persistence
-will use the next available migration, currently expected to be 25. No platform call, external publication,
-Production #5 execution, Production #6, successor milestone, v0.28 or rig is part of this candidate.
+Before Migration 24 and Production #5 were accepted, the required gate was to review and synchronize the
+multi-authority implementation before beginning Production #5. That gate is satisfied and is retained only as
+chronology. Publishing/learning persistence remains unimplemented and, if separately authorized, will use the next
+available migration number, currently expected to be 25. No platform call or external publication has occurred;
+Production #6, a successor milestone, v0.28 and a rig remain absent/unauthorized.
 
 Historical accepted-checkpoint detail below is retained as historical context; it does not supersede this current
 canonical state.

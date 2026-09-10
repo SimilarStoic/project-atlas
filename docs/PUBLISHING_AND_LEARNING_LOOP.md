@@ -2,18 +2,19 @@
 
 ## Decision and boundary
 
-Productions #2, #3 and #4 are founder-accepted. The production-method validation objective is therefore **SATISFIED**.
-The next validation target is the smallest controlled loop that can publish an exact accepted artifact, observe real
+Productions #2–#5 are founder-accepted. Production #5 v4 also satisfies the reference-driven visual-generation proof.
+The next focused pre-launch objective is narrator naturalness; public launch remains unauthorized. This document retains
+the approved design for a later smallest controlled loop that can publish an exact accepted artifact, observe real
 audience behaviour and apply conservative evidence to later content decisions:
 
 > idea → research → script → production → founder final review → controlled publication → performance ingestion →
 > interpretation → learning applied to future content
 
 This document is design authority only. It implements no platform API, credential, publication, metric collection,
-Production #5, publishing migration or autonomous optimiser. Migration 24 is assigned to multi-authority visual
-references. Production #5 is reserved as the
-**FIRST LIVE-LOOP VALIDATION PRODUCTION** and must not begin until the publishing/learning implementation and exact pilot
-authority are separately accepted. Production #6 must not begin.
+publishing migration or autonomous optimiser. Migration 24 is operational for multi-authority visual references;
+publishing/learning persistence remains unimplemented and, if authorized, will use Migration 25. Accepted Production
+#5 v4 may later become the first live-loop item only after the implementation and exact pilot/publication authority are
+separately accepted. Production #6 must not begin.
 
 ## Pilot platform scope
 
@@ -203,5 +204,5 @@ policy ambiguity, corrupt metric attribution or evidence that cannot be reconstr
 existing envelope rules. Routine package generation, private processing checks, aggregate metric ingestion, confidence
 assessment and bounded reversible recommendations do not create founder gates once their implementation is authorized.
 
-Current quality-envelope state is `$4.39 / $10` used and `$5.61` remaining. This design used `$0` and made no provider
+Current quality-envelope state is `$7.43 / $10` used and `$2.57` remaining. This design used `$0` and made no provider
 or platform call.

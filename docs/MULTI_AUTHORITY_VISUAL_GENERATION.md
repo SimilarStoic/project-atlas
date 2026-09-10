@@ -8,10 +8,10 @@ poses, environments, props, metaphors and compositions. They are not a finite li
 This design closes the gap between that creative rule and canonical runtime provenance. It preserves the working
 character-reference path and adds the smallest provider-neutral authority model needed for other visual roles.
 
-Implementation status on 10 September 2026: a bounded local candidate implements this design as Migration 24,
-materializes the minimum approved authority set in the verified persistent runtime, and passes copied-runtime and
-provider-neutral fake-adapter validation. The candidate awaits founder review and push. It made no provider call,
-generated no media, and did not start Production #5 or publishing work.
+Current status on 10 September 2026: Migration 24 implements this design and is accepted, synchronized and operational
+in the verified persistent runtime. The minimum approved authority set is materialized, and copied-runtime plus
+provider-neutral fake-adapter validation passed. Production #5 v4 subsequently passed the quality-uplift proof and is
+accepted. Publishing remains unimplemented and no publication/platform call has occurred.
 
 ## Current-state gap
 
@@ -241,7 +241,7 @@ Founder approval assigned Migration 24 to this visual-authority persistence impl
 persistence remains a separate future change and will use the next available migration number, currently expected to
 be 25. No Migration 25 is created by this implementation.
 
-## Bounded implementation plan
+## Historical bounded implementation plan — completed
 
 1. Add immutable domain records and repository APIs for authority creation, read/list and ordered membership.
 2. Add the three additive tables, restrictive indexes/foreign keys and legacy-preserving migration tests.
@@ -253,10 +253,10 @@ be 25. No Migration 25 is created by this implementation.
    before provider invocation, historical compatibility and successful multi-authority execution.
 8. Exercise one zero-spend local/fake-adapter proof before any paid Production #5 call.
 
-## Production #5 readiness threshold
+## Historical Production #5 readiness threshold — satisfied
 
-Production #5 remains **RESERVED / NOT STARTED**. It becomes implementation-ready for its
-**REFERENCE-DRIVEN DYNAMIC SCENE GENERATION / QUALITY-UPLIFT PROOF** only after Conveyor can:
+Before execution, Production #5 was **RESERVED / NOT STARTED** until Conveyor could satisfy the following
+**REFERENCE-DRIVEN DYNAMIC SCENE GENERATION / QUALITY-UPLIFT PROOF** threshold:
 
 - autonomously select one exact global authority and relevant family/composition authorities;
 - resolve verified managed reference bytes and freeze every supplied member/digest;
@@ -266,8 +266,8 @@ Production #5 remains **RESERVED / NOT STARTED**. It becomes implementation-read
 - generate materially new scene-specific assets and run the bounded identity/style/environment/composition QA above.
 
 Perfect automated visual scoring, a complete family catalogue and a broad reusable asset inventory are not required.
-The proof should use the smallest authority set needed for one Production #5 scene and judge visible improvement against
-the current approximately 50% mature-quality assessment. The target remains approximately 80–85% before public launch.
+The proof used the smallest sufficient authority set and is now satisfied by accepted Production #5 v4. The earlier
+approximately 50% assessment and 80–85% target are retained here as pre-proof planning history, not current quality.
 
 ## Alternatives rejected
 
@@ -284,9 +284,11 @@ the current approximately 50% mature-quality assessment. The target remains appr
 
 - Production-method validation: **PASSED**.
 - Public-launch quality: **NOT YET PASSED**.
-- Founder assessment: approximately **50%** of desired mature production quality.
-- Public-launch target: approximately **80–85%**.
-- Production #5: **RESERVED / NOT STARTED**.
+- Founder assessment of accepted Production #5 v4: approximately **95%** of desired public-launch production quality.
+- Production #5 v4: **ACCEPTED**; v1–v3 are historical iteration evidence.
 - Production #6: absent.
 - Design spend: **$0**.
-- Active media-quality envelope: **$4.39 / $10 used; $5.61 remaining**.
+- Migration 24: **ACCEPTED / OPERATIONAL** for multi-authority visual-reference persistence.
+- Migration 25 and publishing implementation: absent.
+- Next focused pre-launch objective: narrator naturalness; Marin remains provisional.
+- Active media-quality envelope: **$7.43 / $10 used; $2.57 remaining**.

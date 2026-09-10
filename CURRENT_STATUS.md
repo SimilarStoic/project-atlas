@@ -63,18 +63,18 @@ and is accepted. Its exact design, execution and acceptance record are in
 [Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md). It promises no career outcome, requires human
 verification of important output and keeps sensitive information out of unapproved tools.
 
-The production-method validation objective is **PASSED**, while public-launch quality is **NOT YET PASSED**. Production
-#5 establishes **REFERENCE-DRIVEN DYNAMIC SCENE GENERATION: PASS**, while both exact v1 and v2 final artifacts remain
-**MIXED / REVISE** and **ACCEPTANCE: HOLD**. V3 is the only active correction. It must repair physical cable topology,
-make the grid-connection queue self-explanatory, preserve scene richness, use materially larger stable captions, keep the
-camera static by default and pass actual full-frame plus phone-scale vision review before a new founder gate.
-Marin remains usable for development but narrator quality is **PROVISIONAL / UPGRADE REQUIRED BEFORE OR DURING
-LAUNCH-QUALITY FINALIZATION**. The active envelope after v2 is `$6.43 / $10` with `$3.57` remaining.
+The production-method validation objective and reference-driven dynamic-scene proof are **PASSED**. Production #5 v4 is
+**ACCEPTED**; v1, v2, v3 and v3-final remain immutable historical review/iteration evidence. Reference-driven dynamic
+SimilarStoic generation is the default production method, using approved references as generative visual DNA rather
+than a finite inventory. Founder assessment places v4 at approximately 95% of desired public-launch quality. Public
+launch remains unauthorized. Marin remains a provisional production-development baseline; the permanent narrator is
+unresolved, and narrator naturalness is the next focused pre-launch objective. The active envelope is `$7.43 / $10`,
+with `$2.57` remaining.
 
 [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
 YouTube Shorts-only pilot, one founder gate for the exact external publication action, and append-only performance and
-learning provenance. It is synchronized design authority only: no platform implementation, API call, publication,
-publishing migration or Production #5 execution has occurred.
+learning provenance. It is synchronized design authority only: no platform implementation, API call, publication or
+publishing migration has occurred. Migration 25 remains absent, and Production #6 has not started.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -92,14 +92,14 @@ implementation, testing and validation agent. Governing principle: **CHANGE WITH
 
 ### Current canonical state and historical pre-reconciliation context
 
-- **Base before this publishing/learning design candidate:** local `main` and `origin/main` both resolved to
+- **Historical base before the publishing/learning design candidate:** local `main` and `origin/main` both resolved to
   `48c79b7216e4793b1d9d7dfcb939aeebaf3038c6`, ahead/behind `0 / 0`, with the tracked tree clean. Rejected
   `ad52ab38ad32f97b933099ef98a32dc8fd268662` remains preserved separately and is not an ancestor of this candidate.
   The earlier 2 September synchronization recorded `f44f65b` with ahead/behind `0 / 0` immediately before its
   documentation commit; that remains historical checkpoint context. Phase 2 is ACTIVE /
-  INCOMPLETE; v0.27 remains the latest named accepted implementation milestone; source and verified runtime migrations
-  are contiguous through 24 in the pending implementation candidate. The post-v0.27 changes do not imply acceptance
-  of v0.28 or a successor milestone.
+  INCOMPLETE; v0.27 remained the latest named accepted implementation milestone. Migration 24 was later accepted and
+  synchronized as the multi-authority visual-reference persistence change; it does not imply acceptance of v0.28 or a
+  successor milestone.
 - **Historical pre-reconciliation context:** remote `origin/main` was
   `5220320ef81e422dec338b8410ad80b5491c0f31`, with Migration 21 then latest. Local `HEAD` was
   `2358f244b48db9cae49e0a0bc8b1ec9ce0525811`, four commits ahead and zero behind, before founder review and the
@@ -210,10 +210,12 @@ architecture.
 
 ## Exact Next Action
 
-Review and push the validated Migration 24 multi-authority visual-generation implementation candidate. Production #5
-remains reserved and must not start until this implementation is accepted, pushed and synchronized. Publishing and
-learning persistence remains unimplemented and will use the next available migration, currently expected to be 25.
-No external publication, Production #5 execution, Production #6, v0.28 or rig is part of this candidate.
+The next focused pre-launch objective is narrator naturalness. Marin remains the provisional production-development
+baseline and the permanent narrator remains unresolved. A narrator/provider change must regenerate narration,
+completeness transcription, actual speech alignment, captions, duration-dependent edit timing and final media while
+preserving the accepted script and visual-production method: **CHANGE VOICE WITHOUT REBUILD**. No narrator work is
+authorized by this status record. Publishing/learning persistence remains designed but unimplemented; if separately
+authorized, its next migration number is 25. Production #6, publication, v0.28 and a rig remain unauthorized/absent.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.
@@ -1393,13 +1395,11 @@ successor after v0.27 is selected.
 
 # Next Step
 
-Reference-grounded generation and explicit first-reference bootstrap are complete through v0.14. Phase 1 is
-formally closed: the final production-ready SimilarStoic brand identity is **APPROVED**, and the visual
-decision remains **PASS WITH DEFERRED VISUAL REFINEMENT** under the immutable SimilarStoic Core v3 baseline.
-Phase 2 remains active and incomplete. v0.27 — First-Run Operability Bridge is the latest named accepted implementation
-milestone; current canonical source/runtime migrations are through 23. Production #1 has occurred as a
-technical/end-to-end trial but is not accepted final quality. Reconciliation is complete; the next product action
-requires a new founder + ChatGPT decision.
+Phase 1 is formally closed and Phase 2 remains active/incomplete. Current source and runtime migrations are contiguous
+through 24. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
+the default SimilarStoic visual-production method. Public launch remains unauthorized; Production #6, Migration 25 and
+publishing implementation remain absent. Narrator naturalness is the next focused pre-launch objective, with Marin
+provisional and the permanent narrator unresolved. No narrator implementation is authorized by this status record.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

@@ -8,6 +8,7 @@ build/
 dist/
 *.egg-info/
 .pytest_cache/
+.pytest-tmp*/
 .ruff_cache/
 .coverage
 coverage.xml
@@ -36,6 +37,7 @@ logs/*
 
 # Docker and tooling
 .docker/
+.tools/
 work/
 outputs/
 

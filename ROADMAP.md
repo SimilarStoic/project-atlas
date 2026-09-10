@@ -475,10 +475,11 @@ Production #4 passed, with one forward production lesson: future episodes should
 as the primary illustration and use labels, checklists and diagrams only as support, avoiding slide-deck or infographic
 drift. This lesson does not reopen or revise the accepted artifact.
 
-With Productions #2–#4 accepted, the current production-method validation objective is satisfied. Do not continue
-internal productions merely to prove another acceptable render. [Controlled Publishing and Performance Learning
-Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) defines the next bounded target: one-platform controlled publication,
-attributable aggregate performance snapshots and conservative evidence applied to future content decisions.
+Productions #2–#5 are accepted, and the production-method validation objective plus reference-driven visual-generation
+proof are satisfied. Do not continue internal productions merely to prove another acceptable render. The next focused
+pre-launch objective is narrator naturalness. [Controlled Publishing and Performance Learning
+Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) remains approved design authority for a later one-platform controlled
+publication and learning loop; it is not the immediate objective and does not authorize implementation or publication.
 
 The publishing design initially reserved Production #5 as the first live-loop item. Subsequent founder direction gives
 Production #5 the immediate role of reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may
@@ -1097,7 +1098,7 @@ are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
 Status: ACTIVE / INCOMPLETE. **v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation
 milestone; **v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Current source and
-verified runtime migrations are contiguous through 24 in the pending implementation candidate: Migration 22 adds
+verified runtime migrations are contiguous through 24 in the synchronized implementation: Migration 22 adds
 generated-narration provenance, Migration 23 adds OpenAI TTS provenance/support, and Migration 24 adds multi-authority
 visual-reference persistence. These post-v0.27 changes do not accept v0.28 or select a successor.
 
@@ -1120,7 +1121,7 @@ Implement:
 Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
 **v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation milestone; **v0.26 —
 Narrated Final Media Production** is its accepted historical predecessor. Current source and verified runtime
-migrations are contiguous through 24 in the pending implementation candidate; Migrations 22–24 are post-v0.27
+migrations are contiguous through 24 in the synchronized implementation; Migrations 22–24 are post-v0.27
 provenance/support changes, not a v0.28 acceptance. Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is
 unimplemented and no later phase is activated. No successor after v0.27 is selected.
 Activation does not complete Phase 2, authorize all of its scope at once,
@@ -2084,8 +2085,9 @@ At the v0.27 acceptance checkpoint, Migration 21 was latest and Migration 22 was
 22–23 add narration provenance/support only; they do not accept a v0.28 milestone or select a successor. Phase 2
 remains ACTIVE / INCOMPLETE. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
 in-process equivalence across 12 Python files with `would_change=0`; the documented Windows Black CLI worker/process
-completion behavior remains a host-runtime exception. No production trial, paid provider, cost/spend, renderer, UI,
-publishing, analytics/Learning, queue/worker or successor scope is added. Migration 24 is absent and unauthorized.
+completion behavior remains a host-runtime exception. At that historical v0.27 checkpoint, no production trial, paid
+provider, cost/spend, renderer, UI, publishing, analytics/Learning, queue/worker or successor scope was added, and
+Migration 24 was absent. Migration 24 was subsequently accepted for multi-authority visual-reference persistence.
 
 ## Phase 3 — Technical Architecture
 
@@ -2261,7 +2263,7 @@ toward:
   v0.25 — Operational Visual Production Inputs is its accepted historical predecessor;
   v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
   at v0.27 acceptance, migration 21 was latest and migration 22 was absent; current canonical source/runtime
-  migrations are through 24 in the pending implementation candidate, with Migrations 22–24 adding bounded
+  migrations are through 24 in the synchronized implementation, with Migrations 22–24 adding bounded
   provenance/support only; no successor after v0.27 is selected;
   activation does not pull forward later phases.
 - **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
