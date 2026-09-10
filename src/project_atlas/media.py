@@ -777,8 +777,7 @@ class MediaService:
                 raise MediaRuntimeError("Social caption profile fails mobile readability bounds.")
             if caption_style.endswith("v3") and (
                 profile.get("default_zone") != "lower_center_safe"
-                or profile.get("alternate_zones")
-                != ["middle_center_safe", "upper_center_safe"]
+                or profile.get("alternate_zones") != ["middle_center_safe", "upper_center_safe"]
                 or profile.get("position_change_policy")
                 != "scene_boundary_only_when_action_requires"
             ):

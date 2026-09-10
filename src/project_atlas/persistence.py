@@ -1905,8 +1905,7 @@ class AtlasRepository:
 
     def latest_research_pack(self, opportunity_id: str) -> ResearchPack | None:
         row = self.connection.execute(
-            "SELECT * FROM research_packs WHERE opportunity_id = ? "
-            "ORDER BY version DESC LIMIT 1",
+            "SELECT * FROM research_packs WHERE opportunity_id = ? ORDER BY version DESC LIMIT 1",
             (opportunity_id,),
         ).fetchone()
         return self._research_pack(row) if row else None
@@ -3665,8 +3664,7 @@ class AtlasRepository:
         """Return immutable execution history in stable creation order."""
 
         rows = self.connection.execute(
-            "SELECT * FROM generation_executions WHERE asset_spec_id = ? "
-            "ORDER BY created_at, id",
+            "SELECT * FROM generation_executions WHERE asset_spec_id = ? ORDER BY created_at, id",
             (asset_spec_id,),
         )
         return [self._generation_execution(row) for row in rows]
@@ -4556,8 +4554,7 @@ class AtlasRepository:
 
         if role is None:
             rows = self.connection.execute(
-                "SELECT * FROM visual_reference_authorities "
-                "ORDER BY role, authority_key, version"
+                "SELECT * FROM visual_reference_authorities ORDER BY role, authority_key, version"
             )
         else:
             if role not in VISUAL_REFERENCE_AUTHORITY_ROLES:
@@ -5024,13 +5021,15 @@ class AtlasRepository:
         if not isinstance(content, bytes) or not content:
             raise ValueError("Imported Asset content must be non-empty bytes.")
         signatures = {
-            "image/png": lambda value: value.startswith(b"\x89PNG\r\n\x1a\n")
-            and b"IHDR" in value[:32],
-            "image/jpeg": lambda value: value.startswith(b"\xff\xd8")
-            and value.endswith(b"\xff\xd9"),
-            "image/webp": lambda value: len(value) >= 12
-            and value.startswith(b"RIFF")
-            and value[8:12] == b"WEBP",
+            "image/png": lambda value: (
+                value.startswith(b"\x89PNG\r\n\x1a\n") and b"IHDR" in value[:32]
+            ),
+            "image/jpeg": lambda value: (
+                value.startswith(b"\xff\xd8") and value.endswith(b"\xff\xd9")
+            ),
+            "image/webp": lambda value: (
+                len(value) >= 12 and value.startswith(b"RIFF") and value[8:12] == b"WEBP"
+            ),
         }
         validator = signatures.get(media_type)
         if validator is None:
@@ -6440,7 +6439,7 @@ class AtlasRepository:
 
         with self.connection:
             self.connection.execute(
-                "INSERT OR IGNORE INTO character_profiles " "VALUES (?, ?, ?, ?, ?, ?, '{}', ?)",
+                "INSERT OR IGNORE INTO character_profiles VALUES (?, ?, ?, ?, ?, ?, '{}', ?)",
                 (
                     "character-profile-similarstoic-hamster-core-v1",
                     "similarstoic-hamster-core",
@@ -6683,8 +6682,7 @@ class AtlasRepository:
         stamp = now()
         with self.connection:
             self.connection.execute(
-                "INSERT OR IGNORE INTO visual_style_profiles "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                "INSERT OR IGNORE INTO visual_style_profiles VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
                 (
                     "visual-style-profile-similarstoic-core-v1",
                     "similarstoic-core",
@@ -6697,8 +6695,7 @@ class AtlasRepository:
                 ),
             )
             self.connection.execute(
-                "INSERT OR IGNORE INTO visual_style_profiles "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                "INSERT OR IGNORE INTO visual_style_profiles VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
                 (
                     "visual-style-profile-similarstoic-core-v3",
                     "similarstoic-core",
@@ -6720,17 +6717,13 @@ class AtlasRepository:
                 ),
             )
             self.connection.execute(
-                "INSERT OR IGNORE INTO visual_style_profiles "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                "INSERT OR IGNORE INTO visual_style_profiles VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
                 (
                     "visual-style-profile-similarstoic-core-v2",
                     "similarstoic-core",
                     2,
                     "SimilarStoic Core",
-                    (
-                        "The sparse, visibly hand-drawn editorial sketch direction for "
-                        "SimilarStoic."
-                    ),
+                    ("The sparse, visibly hand-drawn editorial sketch direction for SimilarStoic."),
                     (
                         "Use a visibly hand-drawn editorial sketch with organic, imperfect "
                         "linework and simple readable forms."

@@ -170,8 +170,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert {
             row["name"]
             for row in repository.connection.execute(
-                "SELECT name FROM sqlite_master WHERE type='index' "
-                "AND name LIKE 'idx_idea_gate_%'"
+                "SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_idea_gate_%'"
             )
         } == {
             "idx_idea_gate_review_snapshots_opportunity_created",
