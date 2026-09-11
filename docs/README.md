@@ -14,6 +14,10 @@ Use [Conveyor Business and Vendor Strategy](BUSINESS_AND_VENDOR_STRATEGY.md) for
 SaaS/API, portability, cost-discipline and commercial-capability decisions. It is decision authority, not authorization
 to integrate a provider, purchase a service, increase spend or change roadmap sequencing.
 
+Apply the [Founder / Product Operating Doctrine](FOUNDER_PRODUCT_OPERATING_DOCTRINE.md) when making consequential
+recommendations; it defines durable product/business judgment, experiment, evidence, automation and critical-thinking
+principles without changing current project state or authorization.
+
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 
 For the reviewed post-production findings and preservation checkpoint, read

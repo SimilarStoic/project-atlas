@@ -19,6 +19,11 @@ Future build-vs-buy, provider, SaaS/API and commercial-capability decisions must
 [Conveyor Business and Vendor Strategy](BUSINESS_AND_VENDOR_STRATEGY.md). That authority guides evaluation but does not
 itself authorize integration, purchasing, spend, architecture changes, production or publication.
 
+Fresh sessions making consequential product, architecture, experiment, provider, automation or business-priority
+recommendations must also read and apply the
+[Founder / Product Operating Doctrine](FOUNDER_PRODUCT_OPERATING_DOCTRINE.md). It guides judgment where canon permits
+choice without overriding repository facts, roadmap/specification authority or existing authorization boundaries.
+
 A roadmap or specification change becomes canonical only when the founder explicitly approves it with
 ChatGPT, it is explicitly identified as such a change, canonical GitHub documentation is deliberately
 updated, the change is reviewed and accepted, and that update is committed and pushed. Until then, the
