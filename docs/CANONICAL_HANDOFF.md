@@ -96,9 +96,14 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
 - Migrations 1–24 are contiguous. Migration 24 adds multi-authority visual-reference persistence; Migration 25 is
   absent. Publishing/learning is approved in design only and is not implemented.
 - Public launch is unauthorized and Production #6 has not started.
-- Marin is the provisional production-development baseline; the permanent narrator is unresolved. Narrator naturalness
-  is the next focused pre-launch objective: **CHANGE VOICE WITHOUT REBUILD**.
-- Active quality-envelope exposure is `$7.43 / $10`; `$2.57` remains.
+- Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
+  baseline, not the permanent narrator. The founder-approved
+  [Narrator Naturalness Stage-1 Disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) records passage-dependent,
+  unresolved quality and pauses further prompt/provider experimentation pending explicit authorization:
+  **CHANGE VOICE WITHOUT REBUILD**.
+- Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`, leaving `$0.30305668` unspent; remaining budget is
+  not spending authorization. Active quality-envelope exposure is `$7.62694332 / $10`; `$2.37305668` remains.
+  Provider-reported exact billed totals are unavailable.
 - Founder owns final product, quality, spend, publication and push decisions; ChatGPT owns product architecture and
   canonical specification stewardship; Codex performs bounded inspection, implementation and validation.
 - Governing principle: **CHANGE WITHOUT REBUILD**.
@@ -211,10 +216,12 @@ foreground effects, simple reveals and idea-led cuts. Its six compact caption cu
 timings, and all 45 words of the selected canonical excerpt were recovered from the mastered narration. It is materially
 closer to publishable SimilarStoic quality than Hazel or Marin v2 without claiming automatic readiness for later videos.
 
-OpenAI `gpt-4o-mini-tts-2025-12-15`, voice `marin`, is now the **PROVISIONAL ACCEPTED PRODUCTION-DEVELOPMENT
-BASELINE**. It is good enough to continue production development but is not the permanent channel voice. Permanent
-narrator identity remains open; a future founder-derived custom voice requires founder-provided recordings, explicit
-consent and separately authorized provider work.
+OpenAI `gpt-4o-mini-tts-2025-12-15`, voice `marin`, **uninstructed**, remains the **PROVISIONAL ACCEPTED
+PRODUCTION-DEVELOPMENT BASELINE**. It is good enough to continue production development but is not the permanent
+channel voice. The [Stage-1 narrator disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested
+instruction as a universal default; narrator quality remains passage-dependent and further prompt/provider testing is
+paused. Permanent narrator identity remains open; a future founder-derived custom voice requires founder-provided
+recordings, explicit consent and separately authorized provider work.
 
 Narrator identity and TTS provider are separate concerns. Either may later change without rebuilding script, visual
 plan, approved imagery, composition grammar, motion design or editorial structure. Any voice replacement requires new
@@ -304,9 +311,10 @@ Production #6, Migration 25, publishing implementation and publication remain ab
 
 ### Controlled publishing and performance learning loop
 
-Productions #2–#5 satisfy the current production-method validation objective. Narrator naturalness is the next focused
-quality task. Publishing remains unauthorized; when separately authorized, the canonical candidate
-[Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube Shorts as the
+Productions #2–#5 satisfy the current production-method validation objective. Narrator naturalness remains the primary
+unresolved pre-launch quality track, but [Stage-1 experimentation is paused](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md)
+pending explicit founder authorization. Publishing remains unauthorized; when separately authorized, the canonical
+candidate [Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube Shorts as the
 sole initial pilot platform, retains one founder decision for each exact public action and keeps the existing pace at no
 more than one pilot Short per week.
 

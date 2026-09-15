@@ -18,6 +18,11 @@ Apply the [Founder / Product Operating Doctrine](FOUNDER_PRODUCT_OPERATING_DOCTR
 recommendations; it defines durable product/business judgment, experiment, evidence, automation and critical-thinking
 principles without changing current project state or authorization.
 
+Use the founder-approved [Narrator Naturalness Stage-1 Disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) for the
+provisional uninstructed Marin production-development baseline, failed instruction-generalization and opening-only
+gates, passage-dependent unresolved narrator quality, paused experimentation and current conservative spend. It does
+not authorize a permanent narrator, another experiment or production use of a tested prompt.
+
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 
 For the reviewed post-production findings and preservation checkpoint, read
@@ -32,4 +37,4 @@ The accepted Production #2–#5 method is operationalized in the
 one-platform pilot. The [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) defines
 the provider-neutral reference-authority bridge implemented and accepted in Migration 24. Production #5 v4 passed its
 quality-uplift proof; public launch remains unauthorized, publishing implementation and Migration 25 remain absent, and
-narrator naturalness is the next focused pre-launch objective.
+narrator naturalness remains the primary unresolved pre-launch quality track with Stage-1 experimentation paused.

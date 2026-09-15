@@ -412,12 +412,15 @@ Characteristics:
 - Never robotic, corporate or excessively theatrical
 - Natural rather than obviously AI-generated
 
-One consistent narrator voice should be used within a production. OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin is the
-provisional accepted production-development baseline, not the permanent SimilarStoic narrator identity. Narrator
-identity and provider remain replaceable: changing either requires regenerated narration, completeness transcription,
-actual speech alignment, captions, duration-dependent edit timing and final media, while script and visual design remain
-stable. Any founder-derived custom voice requires explicit consent and separate authorization. The narrator is not
-visually present.
+One consistent narrator voice should be used within a production. Uninstructed OpenAI
+`gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional accepted production-development baseline, not the
+permanent SimilarStoic narrator identity. The founder-approved
+[Narrator Naturalness Stage-1 Disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested
+instruction as a universal production default or opening fix; quality remains passage-dependent and further Stage-1
+prompt/provider experimentation is paused pending explicit authorization. Narrator identity and provider remain
+replaceable: changing either requires regenerated narration, completeness transcription, actual speech alignment,
+captions, duration-dependent edit timing and final media, while script and visual design remain stable. Any
+founder-derived custom voice requires explicit consent and separate authorization. The narrator is not visually present.
 
 Audio quality has its own QA process. Pronunciation, pacing and processing should remain consistent. Music and sound effects are optional and should only enhance storytelling.
 
@@ -476,8 +479,10 @@ as the primary illustration and use labels, checklists and diagrams only as supp
 drift. This lesson does not reopen or revise the accepted artifact.
 
 Productions #2–#5 are accepted, and the production-method validation objective plus reference-driven visual-generation
-proof are satisfied. Do not continue internal productions merely to prove another acceptable render. The next focused
-pre-launch objective is narrator naturalness. [Controlled Publishing and Performance Learning
+proof are satisfied. Do not continue internal productions merely to prove another acceptable render. Narrator
+naturalness remains the primary unresolved pre-launch quality track, but
+[Stage-1 experimentation is paused](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) pending a new explicit founder
+authorization. [Controlled Publishing and Performance Learning
 Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) remains approved design authority for a later one-platform controlled
 publication and learning loop; it is not the immediate objective and does not authorize implementation or publication.
 
@@ -488,13 +493,16 @@ one public pilot item per week, with founder approval for each exact external pu
 sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
 decisions/identities, performance snapshots and learning assessments. Migration 24 is now assigned to the bounded
 multi-authority visual-reference implementation; a later publishing implementation will use the next available
-migration, currently expected to be 25. Final Production #5 envelope exposure is `$7.43 / $10`, leaving `$2.57`.
-Do not begin
-Production #6 or implement publishing/analytics architecture from this design alone.
+migration, currently expected to be 25. Final Production #5 envelope exposure was `$7.43 / $10`, leaving `$2.57`
+at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
+`$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
+is not authorization to spend; provider-reported exact billed totals are unavailable. Do not begin Production #6 or
+implement publishing/analytics architecture from this design alone.
 
 Production-method validation and the reference-driven visual-generation proof are **PASSED**. Production #5 v4 is
 accepted, and founder assessment places it at approximately **95%** of desired public-launch production quality. Public
-launch remains unauthorized; narrator naturalness is the primary remaining pre-launch quality track.
+launch remains unauthorized; narrator naturalness is the primary remaining pre-launch quality track, with further
+Stage-1 experimentation paused and no permanent narrator selected.
 [Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
 minimum provider-neutral bridge from approved visual-DNA examples to new scene-specific generation: keep existing
 character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per

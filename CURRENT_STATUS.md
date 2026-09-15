@@ -2,13 +2,16 @@
 
 ## Last Updated
 
-10 September 2026 — Multi-authority visual-generation implementation is synchronized at
+15 September 2026 — Multi-authority visual-generation implementation remains synchronized at
 `1284e344b376e550b0a06ee79e79e9ae478b96c2`, with production-quality gates synchronized through
 `144a201e6484ceec778d5fd8dee94bd2f935dc31`. Production #5 v4 and reference-driven dynamic SimilarStoic generation are
 **ACCEPTED**. Founder assessment places the exact artifact at approximately 95% of desired public-launch production
 quality. Exact v1–v4 artifacts and immutable evidence remain preserved; the accepted v4 SHA-256 is
 `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`. Public launch remains unauthorized, and
-narrator naturalness is the primary remaining pre-launch quality track. Productions #2–#4 remain accepted.
+narrator naturalness is the primary remaining pre-launch quality track. The founder-approved
+[Narrator Naturalness Stage-1 Disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) preserves uninstructed
+Marin as the provisional production-development narrator baseline and pauses further experiments. Productions #2–#4
+remain accepted.
 
 ## Current State — Read This First
 
@@ -67,9 +70,13 @@ The production-method validation objective and reference-driven dynamic-scene pr
 **ACCEPTED**; v1, v2, v3 and v3-final remain immutable historical review/iteration evidence. Reference-driven dynamic
 SimilarStoic generation is the default production method, using approved references as generative visual DNA rather
 than a finite inventory. Founder assessment places v4 at approximately 95% of desired public-launch quality. Public
-launch remains unauthorized. Marin remains a provisional production-development baseline; the permanent narrator is
-unresolved, and narrator naturalness is the next focused pre-launch objective. The active envelope is `$7.43 / $10`,
-with `$2.57` remaining.
+launch remains unauthorized. Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional
+production-development narrator baseline, not the permanent narrator. The
+[Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested instruction as a universal
+production default or opening fix; narrator quality remains passage-dependent and further prompt/provider experiments
+are paused pending explicit founder authorization. Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`,
+leaving `$0.30305668` unspent; this is not authorization to spend. The active quality envelope is
+`$7.62694332 / $10`, with `$2.37305668` remaining. Provider-reported exact billed totals are unavailable.
 
 [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
 YouTube Shorts-only pilot, one founder gate for the exact external publication action, and append-only performance and
@@ -210,10 +217,13 @@ architecture.
 
 ## Exact Next Action
 
-The next focused pre-launch objective is narrator naturalness. Marin remains the provisional production-development
-baseline and the permanent narrator remains unresolved. A narrator/provider change must regenerate narration,
-completeness transcription, actual speech alignment, captions, duration-dependent edit timing and final media while
-preserving the accepted script and visual-production method: **CHANGE VOICE WITHOUT REBUILD**. No narrator work is
+Narrator naturalness remains the primary unresolved pre-launch quality track, but further Stage-1 experimentation is
+paused pending a new explicit founder authorization. Uninstructed Marin remains the provisional production-development
+baseline and the permanent narrator remains unresolved. The local single-passage delivery-refinement win did not
+generalize; the opening-only instruction failed its opening target and is not a default. A narrator/provider change
+must regenerate narration, completeness transcription, actual speech alignment, captions, duration-dependent edit
+timing and final media. Preserve the accepted script and visual-production method: **CHANGE VOICE WITHOUT REBUILD**.
+No narrator work is
 authorized by this status record. Publishing/learning persistence remains designed but unimplemented; if separately
 authorized, its next migration number is 25. Production #6, publication, v0.28 and a rig remain unauthorized/absent.
 
@@ -1398,8 +1408,9 @@ successor after v0.27 is selected.
 Phase 1 is formally closed and Phase 2 remains active/incomplete. Current source and runtime migrations are contiguous
 through 24. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
 the default SimilarStoic visual-production method. Public launch remains unauthorized; Production #6, Migration 25 and
-publishing implementation remain absent. Narrator naturalness is the next focused pre-launch objective, with Marin
-provisional and the permanent narrator unresolved. No narrator implementation is authorized by this status record.
+publishing implementation remain absent. Narrator naturalness remains the primary unresolved pre-launch quality track,
+but Stage-1 experimentation is paused. Uninstructed Marin remains provisional, no tested instruction is a universal
+default, and the permanent narrator remains unresolved. No narrator implementation is authorized by this status record.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 
