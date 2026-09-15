@@ -93,15 +93,17 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`; v1–v3 remain historical iteration evidence.
 - Reference-driven dynamic SimilarStoic generation is **DEFAULT / ACCEPTED**. Approved visual references are generative
   DNA for new script-specific scenes, not a finite content inventory.
-- Migrations 1–24 are contiguous. Migration 24 adds multi-authority visual-reference persistence; Migration 25 is
-  absent. Publishing/learning is approved in design only and is not implemented.
+- Source migrations 1–25 are contiguous. Migration 24 adds multi-authority visual-reference persistence; additive
+  Migration 25 and the guarded **offline** controlled-publishing/learning foundation exist in source and tests only.
+  The verified persistent runtime remains at Migration 24; no persistent DB was migrated by this implementation.
 - Controlled YouTube pilot-readiness is **PASS** for prospective accepted Production #5 v4, with no identified
   pilot-quality veto. The intended Shorts channel is `@Similar-stoic`, ID `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder Studio
   access is confirmed. The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) is canonical
   design authority for exact founder publication approval, authenticated channel verification, private-first API/
   Studio routes, uncertain-outcome recovery, receipt/observation lineage and provider-data retention boundaries.
-  PASS does not authorize implementation, OAuth setup, upload, public publication or broad launch. A separate offline
-  publishing implementation stage may be considered only under new exact authority.
+  PASS does not authorize OAuth setup, upload, public publication or broad launch. The first offline foundation is
+  implemented; a live read-only OAuth/exact-channel preflight is the next possible separately authorized step, not
+  transfer or publication.
 - Public launch is unauthorized and Production #6 has not started.
 - Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
   baseline, not the permanent narrator. The founder-approved
@@ -321,7 +323,7 @@ and full-resolution/normal/phone inspection remain mandatory. Founder accepted t
 a small residual line beneath the mouth in one frame and one bag/table occlusion-depth inconsistency. Marin remains
 provisional and replaceable. At the **historical final Production #5 checkpoint**, exposure was `$7.43 / $10` with
 `$2.57` remaining; the current post-Stage-1 envelope is stated in the current snapshot above. Public launch is unauthorized;
-Production #6, Migration 25, publishing implementation and publication remain absent.
+At that historical checkpoint, Production #6, Migration 25, publishing implementation and publication were absent.
 
 ### Controlled publishing and performance learning loop
 
@@ -342,13 +344,13 @@ subscribers gained, captured at nominal append-only checkpoints approximately 24
 after public publication. Returned analytics coverage and provider-data retention are separately constrained. One item cannot change
 strategy; repeated evidence across comparable items is required before even a bounded routine adjustment.
 
-Current migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities, but have
-no publishing-package, publication, performance-snapshot or learning-assessment persistence. A future additive
-publishing migration is justified before an authorized controlled live pilot and will use the next available number, currently
-expected to be 25. No platform API, credential or external publication has occurred.
+Runtime migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities. Source
+Migration 25 now adds offline publishing-package, publication, performance-snapshot and learning-assessment
+persistence, validated only in disposable tests. Live OAuth/channel preflight, platform integration and exact
+publication authority remain separate gates. No platform API, credential or external publication has occurred.
 Subsequent founder direction assigns Production
 #5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later
-serve as the first live-loop item after publishing implementation and exact publication authority. Production #6 must
+serve as the first live-loop item after live publishing integration and exact publication authority. Production #6 must
 not begin.
 
 ### Approved secondary acting-pose reference

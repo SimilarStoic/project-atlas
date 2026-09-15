@@ -161,7 +161,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -2178,7 +2178,7 @@ def test_migration_22_preserves_imported_narration_and_adds_generation_provenanc
             for row in repository.connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         tables = {
             row[0]
             for row in repository.connection.execute(
@@ -2787,7 +2787,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -2825,7 +2825,7 @@ def test_migration_24_adds_visual_authority_schema_without_backfill(tmp_path) ->
             for row in repository.connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         tables = {
             row["name"]
             for row in repository.connection.execute(
@@ -3518,7 +3518,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -3712,7 +3712,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -3857,7 +3857,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
     try:
         failing_migration = (
             (
-                25,
+                26,
                 (
                     "CREATE TABLE should_not_survive (id TEXT PRIMARY KEY)",
                     "THIS IS NOT VALID SQL",
@@ -3879,7 +3879,7 @@ def test_failed_migration_is_atomic_and_not_recorded(tmp_path) -> None:
         )
         assert (
             repository.connection.execute(
-                "SELECT version FROM schema_migrations WHERE version = 25"
+                "SELECT version FROM schema_migrations WHERE version = 26"
             ).fetchone()
             is None
         )
@@ -5927,7 +5927,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 25))
+        ] == list(range(1, 26))
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

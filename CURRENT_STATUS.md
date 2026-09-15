@@ -84,9 +84,11 @@ and learning provenance. Controlled pilot-readiness is **PASS** for prospective 
 veto has been identified. The target is `@Similar-stoic`, channel ID `UC1cX-OTF9-LZeNo5TaFgrgQ`, with founder Studio
 access confirmed. The reviewed [Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md)
 governs the private-first API/Studio routes, authenticated channel checks, operation uncertainty and API-data
-boundaries. PASS does not authorize implementation, transfer, public publication or broad launch. This reconciliation
-created no Google project or OAuth credential and made no YouTube API call/upload; platform implementation is absent.
-Migration 25 remains absent, and Production #6 has not started.
+boundaries. PASS does not authorize transfer, public publication or broad launch. The separately authorized first
+**offline** publishing milestone adds Migration 25 in source, immutable publication/learning lineage, guarded local
+operations and a provider-neutral service exercised with a test-only fake adapter. Persistent runtime remains at
+Migration 24; this pass migrated only disposable test databases. No Google project, OAuth credential, real YouTube
+adapter, YouTube call, upload or publication was created or performed. Production #6 has not started.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -222,14 +224,15 @@ architecture.
 
 ## Exact Next Action
 
-The controlled YouTube pilot architecture is reviewed and canonicalized, and pilot-readiness is **PASS**. The next
-separately authorized work may be an **offline publishing implementation stage** for Migration 25/persistence,
-package/operation logic and a mocked lifecycle, without live YouTube mutation. This status record authorizes none of
-that work, no OAuth setup, upload, publication or Production #6. Narrator naturalness remains unresolved and
+The controlled YouTube pilot architecture is reviewed and pilot-readiness is **PASS**. Migration 25 and the first
+offline publishing persistence/lifecycle foundation now exist in source, validated only on disposable databases with
+a test-only fake adapter. The next possible separately authorized step is a **live read-only OAuth/exact-channel
+preflight**, not upload or publication. This status record authorizes no OAuth setup, YouTube call, transfer,
+publication or Production #6. Narrator naturalness remains unresolved and
 passage-dependent, with Stage-1 experimentation paused. Uninstructed Marin remains provisional; no tested instruction
 is a universal production default, and the permanent narrator remains unresolved. Publishing accepted Production #5
-must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Migration 25, public
-publication, v0.28 and a rig remain unauthorized/absent.
+must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Runtime Migration 25,
+public publication, v0.28 and a rig remain unauthorized/absent.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

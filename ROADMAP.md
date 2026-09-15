@@ -493,16 +493,16 @@ later one-platform loop. PASS authorizes neither implementation nor upload nor p
 The publishing design initially reserved Production #5 as the first live-loop item. Subsequent founder direction gives
 Production #5 the immediate role of reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may
 later serve as the first live-loop item. The initial publishing platform remains YouTube Shorts only, at no more than
-one public pilot item per week, with founder approval for each exact external publication. Existing persistence is
-sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
-decisions, durable external operations, remote identities, status/receipts, performance snapshots and learning
-assessments. Migration 24 is now assigned to the bounded
-multi-authority visual-reference implementation; a later publishing implementation will use the next available
-migration, currently expected to be 25. Final Production #5 envelope exposure was `$7.43 / $10`, leaving `$2.57`
+one public pilot item per week, with founder approval for each exact external publication. Persistence through
+`FinalMediaArtifact` is extended **in source only** by additive Migration 25 for frozen packages, founder decisions,
+durable external operations, remote identities, status/receipts, performance snapshots, learning assessments and
+explicit later applications. Migration 24 remains the operational multi-authority visual-reference endpoint in the
+verified runtime. The first offline publishing service/lifecycle is tested with a fake adapter; live OAuth/YouTube
+integration, upload and publication remain absent. Final Production #5 envelope exposure was `$7.43 / $10`, leaving `$2.57`
 at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
 `$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
 is not authorization to spend; provider-reported exact billed totals are unavailable. Do not begin Production #6 or
-implement publishing/analytics architecture from this design alone.
+implement further publishing/analytics architecture from this design alone.
 The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
 pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
 state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio

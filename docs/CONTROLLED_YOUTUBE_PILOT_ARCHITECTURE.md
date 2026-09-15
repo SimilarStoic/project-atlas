@@ -1,8 +1,9 @@
 # Controlled YouTube Pilot — Architecture Authority
 
 Founder-approved canonical reconciliation, 15 September 2026. This record defines the smallest controlled
-publishing and learning architecture for the initial SimilarStoic YouTube Shorts pilot. It does not implement
-publishing, create Migration 25 or OAuth credentials, authorize a YouTube call or upload, or approve public publication.
+publishing and learning architecture for the initial SimilarStoic YouTube Shorts pilot. Source Migration 25 and a
+provider-neutral offline persistence/lifecycle foundation were subsequently implemented under separate authority.
+This record does not authorize OAuth credentials, a YouTube call or upload, or public publication.
 The [publishing and learning design](PUBLISHING_AND_LEARNING_LOOP.md) supplies the editorial package, pilot cadence
 and conservative learning rules; this record governs execution, external-action safety and evidence boundaries.
 
@@ -14,7 +15,7 @@ Production #5 v4, SHA-256 `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440
 the prospective first pilot item, with no identified pilot-quality veto. The pilot is YouTube Shorts only, initially
 three controlled public items at no more than one per week. One item is an observation, not proof of product or
 audience fit. Readiness PASS authorizes neither implementation nor transfer nor publication. Broad public launch,
-Production #6 and Migration 25 remain unauthorized or absent.
+Production #6 remains absent. Migration 25 exists in source/tests only, not in the verified persistent runtime.
 
 Every item needs one **exact founder publication approval before platform transfer**. The frozen package and decision
 bind the exact `FinalMediaArtifact` and SHA-256, package version/digest, platform and channel ID, public title,
@@ -34,13 +35,14 @@ and record consequential operations in short DB transactions, then perform netwo
 bounded polling/retries and local concurrency protection. No general worker, queue or publishing scheduler is needed.
 Keep the boundary extendable without building speculative infrastructure.
 
-When separately authorized, additive Migration 25 should preserve these **semantics**, not a prematurely fixed SQL
-schema: immutable `PublishingPackage`; immutable/append-only `PublicationGateDecision`; durable
+The separately authorized additive Migration 25 preserves these **semantics** in source, not in a deployed pilot:
+immutable `PublishingPackage`; immutable/append-only `PublicationGateDecision`; durable
 `PublicationOperation` and append-only `PublicationOperationEvent`; stable `PlatformPublication` remote identity;
 append-only `PublicationStatusSnapshot`; actual public-publication `PublicationReceipt`; append-only
 `PerformanceSnapshot`; immutable/versioned `LearningAssessment` with exact links to supporting observations; and an
-explicit record when a later content decision applies an assessment. Exact keys, fields and constraints remain for
-bounded Migration-25 design. Existing migrations 1–24 and production artifacts are unchanged.
+explicit record when a later content decision applies an assessment. Exact keys, fields and constraints are encoded
+in source Migration 25; its deployment and any real adapter remain separately gated. Existing migrations 1–24 and
+production artifacts are unchanged.
 
 Keep distinct what Conveyor **intended**, what the founder **approved**, what external action was reserved and
 attempted, whether its outcome became **uncertain**, which remote object was identified, what remote state was
@@ -124,6 +126,6 @@ universal default; Stage-1 experimentation is paused and narrator quality remain
 Conservative Stage-1 exposure is `$0.19694332 / $0.50`; `$0.30305668` remains unspent. The active quality envelope
 is `$7.62694332 / $10`; `$2.37305668` remains. Remaining budget is not spending authorization.
 
-The next separately authorized work may be an **offline publishing implementation stage** for additive Migration 25,
-package/operation persistence and a mocked lifecycle. This architecture document itself authorizes none of that,
-no live YouTube action and no public publication.
+The first offline source implementation now exists. The next possible separately authorized step is live **read-only
+OAuth/exact-channel preflight**, not upload or publication. This architecture document authorizes no live YouTube
+action and no public publication.

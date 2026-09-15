@@ -14,11 +14,12 @@ audience behaviour and apply conservative evidence to later content decisions:
 > idea → research → script → production → founder final review → controlled publication → performance ingestion →
 > interpretation → learning applied to future content
 
-This document is design authority only. It implements no platform API, credential, publication, metric collection,
-publishing migration or autonomous optimiser. Migration 24 is operational for multi-authority visual references;
-publishing/learning persistence remains unimplemented and, if authorized, will use Migration 25. Accepted Production
-#5 v4 may later become the first live-loop item only after the implementation and exact pilot/publication authority are
-separately accepted. Readiness PASS authorizes no implementation, upload or publication. Production #6 must not begin.
+This document remains design authority. Source Migration 25 now contains the separately authorized **offline**
+publishing/learning persistence foundation, validated with a test-only fake adapter. It implements no live platform
+API, credential, upload, publication, metric collection or autonomous optimiser; the verified persistent runtime
+remains at Migration 24. Accepted Production #5 v4 may later become the first live-loop item only after live
+integration and exact publication authority are separately accepted. Readiness PASS authorizes no upload or
+publication. Production #6 must not begin.
 The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) governs external-action safety,
 manual routes, operation evidence, analytics coverage and API-data retention; this design does not override it.
 
@@ -179,17 +180,17 @@ artifact or publication history. A learning assessment names every snapshot and 
 learning changes a later Opportunity, hook, Script, duration, visual treatment, payoff or CTA, that later record cites
 the assessment ID and describes the bounded change.
 
-## Persistence conclusion and future additive migration
+## Persistence conclusion and additive source migration
 
-Migrations 1–24 already preserve the chain from Opportunity through accepted `FinalMediaArtifact` and visual-reference
-authority provenance. They contain no
+Runtime migrations 1–24 preserve the chain from Opportunity through accepted `FinalMediaArtifact` and visual-reference
+authority provenance. By themselves they contain no
 durable publishing package, publication approval, platform-publication identity, performance snapshot or learning
 assessment tables. JSON in existing metadata could hold a temporary note, but it cannot safely represent append-only
 platform state and repeated metric observations without blurring immutable provenance.
 
-A **future additive migration is justified before the first automated live-loop pilot**. It will use the next available
-migration number, currently expected to be 25; it is not implemented by this design. The smallest future persistence
-proposal should cover these concepts:
+Additive **source Migration 25** now implements the offline publishing/learning persistence needed before any live
+loop. It has not been applied to the verified persistent runtime and this design does not authorize live integration.
+The source foundation covers these concepts:
 
 - immutable `PublishingPackage` tied to one `FinalMediaArtifact`;
 - immutable `PublicationGateDecision` tied to the exact package and founder decision;

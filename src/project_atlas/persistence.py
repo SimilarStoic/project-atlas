@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from project_atlas.demo_data import OPPORTUNITIES, content_payload
+from project_atlas.publishing_schema import MIGRATION_25
+from project_atlas.publishing_state import PublishingRepositoryMixin
 
 
 def now() -> str:
@@ -21,9 +23,9 @@ def now() -> str:
 
 
 def default_database_path() -> Path:
-    """Return the configured local database location."""
+    """Return a portable development path, never the protected historical DB."""
 
-    return Path(os.environ.get("ATLAS_DB_PATH", "data/atlas.db"))
+    return Path(os.environ.get("ATLAS_DB_PATH", "data/atlas-local.db"))
 
 
 @dataclass(frozen=True)
@@ -1496,13 +1498,14 @@ MIGRATIONS: tuple[Migration, ...] = (
         """,
         ),
     ),
+    MIGRATION_25,
 )
 
 
 MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23})
 
 
-class AtlasRepository:
+class AtlasRepository(PublishingRepositoryMixin):
     """A small application/repository boundary over SQLite."""
 
     def __init__(
@@ -1511,6 +1514,11 @@ class AtlasRepository:
         asset_storage_root: Path | str | None = None,
     ) -> None:
         self.database_path = Path(database_path or default_database_path())
+        # Historical atlas.db is a preserved artifact, not an application runtime.
+        # Derive its path from the package root; do not encode a machine/drive name.
+        protected_legacy_path = Path(__file__).resolve().parents[2] / "data" / "atlas.db"
+        if self.database_path.resolve() == protected_legacy_path.resolve():
+            raise ValueError("The protected legacy database cannot be opened or migrated.")
         self.asset_storage_root = Path(
             asset_storage_root or os.environ.get("ATLAS_ASSET_STORAGE_ROOT", "data/assets")
         ).resolve()
