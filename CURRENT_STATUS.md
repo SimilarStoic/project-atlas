@@ -79,9 +79,14 @@ leaving `$0.30305668` unspent; this is not authorization to spend. The active qu
 `$7.62694332 / $10`, with `$2.37305668` remaining. Provider-reported exact billed totals are unavailable.
 
 [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
-YouTube Shorts-only pilot, one founder gate for the exact external publication action, and append-only performance and
-learning provenance. It is synchronized design authority only: no platform implementation, API call, publication or
-publishing migration has occurred. Migration 25 remains absent, and Production #6 has not started.
+YouTube Shorts-only pilot, one founder gate for each exact external publication proposition, and attributed performance
+and learning provenance. Controlled pilot-readiness is **PASS** for prospective Production #5 v4; no artifact-quality
+veto has been identified. The target is `@Similar-stoic`, channel ID `UC1cX-OTF9-LZeNo5TaFgrgQ`, with founder Studio
+access confirmed. The reviewed [Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md)
+governs the private-first API/Studio routes, authenticated channel checks, operation uncertainty and API-data
+boundaries. PASS does not authorize implementation, transfer, public publication or broad launch. This reconciliation
+created no Google project or OAuth credential and made no YouTube API call/upload; platform implementation is absent.
+Migration 25 remains absent, and Production #6 has not started.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -217,15 +222,14 @@ architecture.
 
 ## Exact Next Action
 
-Narrator naturalness remains the primary unresolved pre-launch quality track, but further Stage-1 experimentation is
-paused pending a new explicit founder authorization. Uninstructed Marin remains the provisional production-development
-baseline and the permanent narrator remains unresolved. The local single-passage delivery-refinement win did not
-generalize; the opening-only instruction failed its opening target and is not a default. A narrator/provider change
-must regenerate narration, completeness transcription, actual speech alignment, captions, duration-dependent edit
-timing and final media. Preserve the accepted script and visual-production method: **CHANGE VOICE WITHOUT REBUILD**.
-No narrator work is
-authorized by this status record. Publishing/learning persistence remains designed but unimplemented; if separately
-authorized, its next migration number is 25. Production #6, publication, v0.28 and a rig remain unauthorized/absent.
+The controlled YouTube pilot architecture is reviewed and canonicalized, and pilot-readiness is **PASS**. The next
+separately authorized work may be an **offline publishing implementation stage** for Migration 25/persistence,
+package/operation logic and a mocked lifecycle, without live YouTube mutation. This status record authorizes none of
+that work, no OAuth setup, upload, publication or Production #6. Narrator naturalness remains unresolved and
+passage-dependent, with Stage-1 experimentation paused. Uninstructed Marin remains provisional; no tested instruction
+is a universal production default, and the permanent narrator remains unresolved. Publishing accepted Production #5
+must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Migration 25, public
+publication, v0.28 and a rig remain unauthorized/absent.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.
@@ -1407,9 +1411,11 @@ successor after v0.27 is selected.
 
 Phase 1 is formally closed and Phase 2 remains active/incomplete. Current source and runtime migrations are contiguous
 through 24. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
-the default SimilarStoic visual-production method. Public launch remains unauthorized; Production #6, Migration 25 and
-publishing implementation remain absent. Narrator naturalness remains the primary unresolved pre-launch quality track,
-but Stage-1 experimentation is paused. Uninstructed Marin remains provisional, no tested instruction is a universal
+the default SimilarStoic visual-production method. Controlled YouTube pilot-readiness is **PASS**, and the target channel
+and [controlled pilot architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) are documented; PASS authorizes no
+implementation or publication. Public launch remains unauthorized; Production #6, Migration 25 and publishing
+implementation remain absent. Narrator naturalness remains the primary unresolved pre-launch quality track, but
+Stage-1 experimentation is paused. Uninstructed Marin remains provisional, no tested instruction is a universal
 default, and the permanent narrator remains unresolved. No narrator implementation is authorized by this status record.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).

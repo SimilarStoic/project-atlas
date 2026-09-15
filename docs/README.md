@@ -23,6 +23,13 @@ provisional uninstructed Marin production-development baseline, failed instructi
 gates, passage-dependent unresolved narrator quality, paused experimentation and current conservative spend. It does
 not authorize a permanent narrator, another experiment or production use of a tested prompt.
 
+The [Controlled YouTube Pilot Architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) is the canonical execution,
+publication-authority, recovery and provider-data boundary for the reviewed three-item Shorts pilot. Controlled
+pilot-readiness is PASS for prospective Production #5 v4; the target is `@Similar-stoic`, channel
+`UC1cX-OTF9-LZeNo5TaFgrgQ`. The [publishing and learning design](PUBLISHING_AND_LEARNING_LOOP.md) supplies package,
+cadence and conservative learning details. PASS and these records authorize no implementation, OAuth setup, upload
+or public release; Migration 25 and publishing implementation remain absent.
+
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 
 For the reviewed post-production findings and preservation checkpoint, read

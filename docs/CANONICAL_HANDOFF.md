@@ -95,6 +95,13 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   DNA for new script-specific scenes, not a finite content inventory.
 - Migrations 1–24 are contiguous. Migration 24 adds multi-authority visual-reference persistence; Migration 25 is
   absent. Publishing/learning is approved in design only and is not implemented.
+- Controlled YouTube pilot-readiness is **PASS** for prospective accepted Production #5 v4, with no identified
+  pilot-quality veto. The intended Shorts channel is `@Similar-stoic`, ID `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder Studio
+  access is confirmed. The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) is canonical
+  design authority for exact founder publication approval, authenticated channel verification, private-first API/
+  Studio routes, uncertain-outcome recovery, receipt/observation lineage and provider-data retention boundaries.
+  PASS does not authorize implementation, OAuth setup, upload, public publication or broad launch. A separate offline
+  publishing implementation stage may be considered only under new exact authority.
 - Public launch is unauthorized and Production #6 has not started.
 - Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
   baseline, not the permanent narrator. The founder-approved
@@ -109,6 +116,12 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
 - Governing principle: **CHANGE WITHOUT REBUILD**.
 
 ### Fresh-chat instruction
+
+For controlled publishing decisions, read the reviewed
+[Controlled YouTube Pilot Architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) after this handoff. It reconciles
+pilot-readiness PASS with no implementation/publication authority, the exact channel, Studio upload fallback,
+operation uncertainty, observation coverage and API-data obligations. The
+[publishing and learning design](PUBLISHING_AND_LEARNING_LOOP.md) remains the package/cadence/learning companion.
 
 For findings reviewed on 8 September 2026, read [Production #1 quality-cycle continuity](QUALITY_CYCLE_20260902.md)
 and its [evidence manifest](QUALITY_CYCLE_20260902_MANIFEST.json). They record proof rejection, incomplete Marin audio,
@@ -306,27 +319,32 @@ not a finite content inventory. Repair-don't-empty, connected topology, structur
 occlusion/layer integrity, reuse-with-variation, semantic grounding, social-mobile-v3 captions, static-camera default
 and full-resolution/normal/phone inspection remain mandatory. Founder accepted two non-blocking historical observations:
 a small residual line beneath the mouth in one frame and one bag/table occlusion-depth inconsistency. Marin remains
-provisional and replaceable. Final exposure is `$7.43 / $10` with `$2.57` remaining. Public launch is unauthorized;
+provisional and replaceable. At the **historical final Production #5 checkpoint**, exposure was `$7.43 / $10` with
+`$2.57` remaining; the current post-Stage-1 envelope is stated in the current snapshot above. Public launch is unauthorized;
 Production #6, Migration 25, publishing implementation and publication remain absent.
 
 ### Controlled publishing and performance learning loop
 
 Productions #2–#5 satisfy the current production-method validation objective. Narrator naturalness remains the primary
 unresolved pre-launch quality track, but [Stage-1 experimentation is paused](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md)
-pending explicit founder authorization. Publishing remains unauthorized; when separately authorized, the canonical
-candidate [Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube Shorts as the
-sole initial pilot platform, retains one founder decision for each exact public action and keeps the existing pace at no
-more than one pilot Short per week.
+pending explicit founder authorization. Controlled pilot-readiness is **PASS** for prospective Production #5 v4;
+the exact channel and recovery/learning boundaries are governed by the
+[Controlled YouTube Pilot Architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md). Publishing remains unauthorized;
+the companion [Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube
+Shorts as the sole initial pilot platform, retains one exact founder approval before platform transfer for each item
+and keeps the public pace at no more than one pilot Short per week.
 
-The pilot uses local package preparation, founder approval of the exact artifact/package/account/time, private upload,
-remote processing/metadata verification and only then the approved public transition. Core observations are engaged
+The pilot uses local package preparation, founder approval of the exact artifact/package/account/time and routes,
+approved private transfer by API or Studio, remote processing/metadata verification and only then an eligible approved
+public transition. Core observations are engaged
 views/views, watch time, average duration/percentage, the time-normalized retention curve, likes, comments, shares and
-subscribers gained, captured append-only at approximately 24 hours, 72 hours, 7 days and 28 days. One item cannot change
+subscribers gained, captured at nominal append-only checkpoints approximately 24 hours, 72 hours, 7 days and 28 days
+after public publication. Returned analytics coverage and provider-data retention are separately constrained. One item cannot change
 strategy; repeated evidence across comparable items is required before even a bounded routine adjustment.
 
 Current migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities, but have
 no publishing-package, publication, performance-snapshot or learning-assessment persistence. A future additive
-publishing migration is justified before an automated live pilot and will use the next available number, currently
+publishing migration is justified before an authorized controlled live pilot and will use the next available number, currently
 expected to be 25. No platform API, credential or external publication has occurred.
 Subsequent founder direction assigns Production
 #5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later

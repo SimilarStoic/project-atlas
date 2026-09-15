@@ -3,7 +3,11 @@
 ## Decision and boundary
 
 Productions #2–#5 are founder-accepted. Production #5 v4 also satisfies the reference-driven visual-generation proof.
-The next focused pre-launch objective is narrator naturalness; public launch remains unauthorized. This document retains
+Controlled YouTube pilot-readiness is **PASS**, while public launch remains unauthorized. Uninstructed OpenAI
+`gpt-4o-mini-tts-2025-12-15` / Marin is the provisional production-development narrator baseline, not the permanent
+narrator. Narrator quality remains passage-dependent; no tested instruction is a universal production default, and
+further Stage-1 experimentation is paused pending new explicit founder authority. Publishing accepted Production #5
+must not regenerate its narration. This document retains
 the approved design for a later smallest controlled loop that can publish an exact accepted artifact, observe real
 audience behaviour and apply conservative evidence to later content decisions:
 
@@ -14,12 +18,21 @@ This document is design authority only. It implements no platform API, credentia
 publishing migration or autonomous optimiser. Migration 24 is operational for multi-authority visual references;
 publishing/learning persistence remains unimplemented and, if authorized, will use Migration 25. Accepted Production
 #5 v4 may later become the first live-loop item only after the implementation and exact pilot/publication authority are
-separately accepted. Production #6 must not begin.
+separately accepted. Readiness PASS authorizes no implementation, upload or publication. Production #6 must not begin.
+The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) governs external-action safety,
+manual routes, operation evidence, analytics coverage and API-data retention; this design does not override it.
 
 ## Pilot platform scope
 
 Use **YouTube Shorts only** for the first pilot. Do not cross-post the pilot to TikTok, Instagram or another platform.
 One platform removes cross-platform audience and metric-definition confounds while the loop itself is unproven.
+The intended pilot is initially **three** controlled public items, at no more than **one per week**. One item is an
+observation, not proof of audience or product fit. Production #5 v4, SHA-256
+`c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`, has no identified pilot-quality
+veto and is the prospective first item. The intended target is [`@Similar-stoic`](https://www.youtube.com/@Similar-stoic),
+channel ID `UC1cX-OTF9-LZeNo5TaFgrgQ`. Founder access to that exact channel in Studio is confirmed; authenticated
+OAuth identity must still independently resolve to that channel before any API mutation. Token validity, handle,
+public channel lookup and Studio access alone are insufficient.
 
 YouTube is the strongest initial fit because:
 
@@ -36,7 +49,7 @@ Current official capability references:
 - [YouTube video upload](https://developers.google.com/youtube/v3/docs/videos/insert)
 - [YouTube Analytics metrics](https://developers.google.com/youtube/analytics/metrics)
 - [YouTube Analytics dimensions and elapsed-video retention](https://developers.google.com/youtube/analytics/dimensions)
-- [Three-minute YouTube Shorts eligibility](https://support.google.com/youtube/answer/15424877)
+- [Three-minute YouTube Shorts eligibility](https://support.google.com/youtube/answer/15424877?hl=en)
 - [YouTube custom thumbnails](https://support.google.com/youtube/answer/72431)
 
 TikTok and Instagram remain later platform adapters. Do not add them until the YouTube loop has at least three
@@ -56,6 +69,8 @@ contains:
 - a separate timed caption file derived from the accepted final-audio alignment, while keeping burned-in captions;
 - one 9:16 cover image derived from an accepted video frame, its digest and fallback frame timestamp;
 - intended privacy transition, publication timestamp and `Europe/London` timezone;
+- approved transfer route, approved API/manual public-transition route, pilot slot and bounded manual execution window
+  where applicable;
 - package version, digest and creation timestamp.
 
 The title states the useful proposition without manufacturing urgency. The description gives one concise explanation,
@@ -70,15 +85,20 @@ publication record.
 ## Controlled upload and publication workflow
 
 1. **Local package:** produce and validate the exact publishing package without contacting YouTube.
-2. **Founder publication gate:** founder approves the exact artifact digest, package digest, target channel, public
-   title/description/cover, privacy transition and publication time in one decision.
-3. **Private upload:** only after that approval, upload the approved MP4 as `private`; never upload directly as public.
+2. **Founder publication gate:** before platform transfer, founder approves the exact artifact and package digests,
+   target channel, public proposition, declarations, privacy transition, transfer/public-transition routes, pilot slot
+   and publication time/timezone or bounded manual window in one immutable decision. Readiness and accepted render
+   status are not publication authority. A changed proposition requires new authority.
+3. **Private upload:** only after that approval, transfer the verified approved MP4 as `private` through the approved
+   API or Studio route; never upload directly as public. Reserve durable operation identity before external mutation.
 4. **Remote verification:** wait for successful processing, then verify remote video identity, duration, privacy,
    title, description, caption availability, cover result and target channel. A mismatch fails closed.
-5. **Public transition:** when remote verification passes, Conveyor may perform the exact approved `private → public`
-   transition at the approved time. It may use YouTube's private-video scheduling field when available and verified.
-6. **Publication receipt:** preserve platform video ID, URL, actual publication timestamp, package/approval linkage and
-   the platform response digest before metric ingestion begins.
+5. **Public transition:** when remote verification passes, Conveyor may perform or reconcile the exact approved
+   eligible `private → public` transition at the approved time. It may use verified private-video scheduling where
+   specifically approved. Studio execution is recorded as a human action, not a Conveyor API action.
+6. **Publication receipt:** after independently observing public state, preserve platform video ID, URL, actual public
+   publication timestamp and its source/precision, package/approval/action linkage and retainable response evidence
+   before metric ingestion begins. Private upload time is not public publication time.
 
 The default pilot slot is **Tuesday at 18:30 Europe/London**, once per week. Hold that slot for the first three pilot
 publications to reduce timing variance. If the exact slot cannot be met, keep the item private and move to the next
@@ -89,16 +109,29 @@ state. `Unlisted` is not part of the default path and requires an explicit reaso
 review group. `Public` is permitted only by the exact founder publication decision above. During the pilot, no standing
 approval or automatic-public default replaces that decision.
 
-An unverified YouTube API project may restrict API uploads to private viewing. Implementation must discover this before
-the pilot. If public API transition is unavailable, the founder may perform the final public action in YouTube Studio
-against the same approved package; Conveyor records the resulting platform identity and timestamp. Do not weaken the
-gate or use another platform as a workaround.
+An unverified YouTube API service may cause an uploaded video to be **locked private**. Unlike an ordinary eligible
+private upload, that lock cannot necessarily be undone with a Studio public click. Current guidance requires re-upload
+through a verified API service or YouTube's own app/site. Therefore an explicitly approved **Studio private upload**
+is a controlled fallback, alongside Studio private-to-public transition for an eligible ordinary private video.
+Preserve a blocked API-upload object; never automatically create a replacement that could duplicate it. Reconcile
+outcome and obtain an explicit recovery decision. [YouTube private-lock guidance](https://support.google.com/youtube/answer/7300965?hl=en).
+
+Local idempotency does not guarantee remote exactly-once execution. Durable deterministic operation reservation and
+append-only events distinguish intended, approved, attempted, uncertain, remotely identified and observed outcomes.
+An ambiguous upload is `outcome_unknown` (or equivalent), **not failure**; no replacement upload is permitted until
+reconciliation establishes safety. Protected resumable-session state is separate from ordinary provenance, and
+YouTube's acknowledged byte range governs resumption. The narrow adapter and explicit local CLI/service execution
+model are defined in the [architecture authority](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md).
 
 ## Minimum performance ingestion
 
 Collect aggregate, content-level signals only. Do not collect viewer identities or raw personal data. Use append-only
 snapshots at approximately **24 hours, 72 hours, 7 days and 28 days** after actual publication. Store the observation
-time, metric window, API definition/version where available, raw response digest and missing-data reason.
+time, nominal checkpoint and due time, actual collection time, requested and returned platform coverage, metric
+availability/maturity, API definition/version where available, retainable response digest and missing-data reason.
+These are **collection checkpoints**, not guarantees of exact 24h/72h/7d/28d analytics coverage. YouTube reports by
+platform periods and may return only through the latest date for which all requested metrics are available.
+Unavailable or immature values are **not zero**. [Analytics query coverage](https://developers.google.com/youtube/analytics/reference/reports/query).
 
 ### Core signals
 
@@ -108,17 +141,28 @@ time, metric window, API definition/version where available, raw response digest
 | `estimatedMinutesWatched` | Total attention earned; interpret with reach. |
 | `averageViewDuration` and `averageViewPercentage` | Pacing and length fit. |
 | `audienceWatchRatio` by `elapsedVideoTimeRatio` | Hook hold, scene-level drops, payoff hold and rewatch spikes. |
-| likes, comments and shares | Secondary resonance signals, normalized by engaged views where possible. |
-| `subscribersGained` | High-value audience-fit signal, normalized by engaged views and treated cautiously at low counts. |
+| likes, comments and shares | Raw platform secondary-resonance observations, interpreted cautiously at low counts. |
+| `subscribersGained` | Raw platform high-value audience-fit observation, interpreted cautiously at low counts. |
 
 Impressions and click-through rate are optional diagnostics when the API provides a relevant surface-specific value;
 they are not primary Shorts-feed metrics. Saves are not part of the YouTube pilot because no reliable equivalent is
 assumed. Comment text is not ingested by default; founder does not review routine comments or dashboards. A later
 moderation/qualitative design is required before storing comment content.
 
-Map the 100-point retention series to the accepted final-media timeline and scene boundaries. This allows a drop or
-rewatch to be associated with the actual hook, visual beat, claim, payoff or CTA without claiming causation from one
-curve.
+When available, map returned time-normalized retention points to the accepted final-media timeline and scene
+boundaries. This allows an observed drop or rewatch to be associated with the actual hook, visual beat, claim, payoff
+or CTA without claiming causation from one curve or assuming a complete 100-point series.
+Do not create engagement, conversion or composite metrics from YouTube API Data by default. Current policy requires
+the applicable additional-derived-metrics permission, which is not established for Conveyor. Preserve supported raw
+platform metrics and distinct authored qualitative interpretations.
+[YouTube Developer Policies](https://developers.google.com/youtube/terms/developer-policies) and
+[additional derived-metric policy](https://developers.google.com/youtube/terms/derived-metrics-policy).
+
+Append-only **Conveyor-authored** provenance does not authorize permanent storage of raw YouTube API Data. Authorized
+statistics may be retained while current consent and required periodic checks remain valid; other API Data requires
+refresh/deletion as applicable, and revocation/deletion requests must be honored. Provider payloads and prohibited
+disguised hashes/tombstones must be removable without rewriting permissible authored history. Exact retention controls
+remain an implementation task. [YouTube API-data policies](https://developers.google.com/youtube/terms/developer-policies).
 
 ## End-to-end attribution
 
@@ -126,7 +170,8 @@ Every platform observation must resolve through immutable identifiers and digest
 
 > Opportunity → ResearchPack / Claims / Sources → EditorialAngle → title/hook → Script/version → VisualPlan →
 > FinalMediaInputSnapshot → FinalMediaArtifact → PublishingPackage → founder PublicationGateDecision →
-> PlatformPublication → PerformanceSnapshot → LearningAssessment → future content decision
+> PublicationOperation / events → PlatformPublication → PublicationStatusSnapshot → PublicationReceipt →
+> PerformanceSnapshot → LearningAssessment / supporting observations → later LearningApplication / content decision
 
 The publishing package freezes exactly what was intended. The publication record freezes where and when it actually
 appeared. Performance snapshots preserve later-changing platform totals as observations rather than mutating the
@@ -148,13 +193,16 @@ proposal should cover these concepts:
 
 - immutable `PublishingPackage` tied to one `FinalMediaArtifact`;
 - immutable `PublicationGateDecision` tied to the exact package and founder decision;
+- durable `PublicationOperation` and append-only `PublicationOperationEvent` for external action and uncertainty;
 - stable `PlatformPublication` identity tied to one package and target account;
-- append-only `PublicationStatusSnapshot` and `PerformanceSnapshot` records;
-- immutable `LearningAssessment` plus an explicit record when a future content decision applies it.
+- append-only `PublicationStatusSnapshot` and actual-publication `PublicationReceipt`;
+- append-only `PerformanceSnapshot` records;
+- immutable/versioned `LearningAssessment` with exact supporting-observation links, plus an explicit record when a
+  future content decision applies it.
 
 Provider adapters, OAuth/credential storage, retry policy, quota handling, schema fields, uniqueness rules and
 transaction semantics belong to the later implementation design. Credentials must never be stored in provenance JSON
-or Git. Existing final-media history remains unchanged.
+or Git. Exact SQL DDL is not canonized by this conceptual list. Existing final-media history remains unchanged.
 
 ## Conservative learning rules
 
@@ -195,14 +243,19 @@ publishing reliability and repeated learning evidence; this document does not au
 
 Founder involvement during the pilot is limited to:
 
+- founder-operated OAuth/account authorization setup;
 - the exact final external publication approval;
+- the authorized Studio action if manual execution is selected, or an explicit recovery decision if another upload
+  might duplicate an uncertain or API-locked remote object;
 - consequential brand/editorial or strategy changes supported by performance evidence;
 - new spend authorization where the active envelope requires it.
 
 Stop at BLOCKER for wrong-account risk, missing approval/provenance, unavailable public transition, material platform
-policy ambiguity, corrupt metric attribution or evidence that cannot be reconstructed. Stop at SPEND GATE under the
+policy ambiguity, unknown upload success, duplicate-publication risk, corrupt metric attribution or evidence that
+cannot be reconstructed. Stop at SPEND GATE under the
 existing envelope rules. Routine package generation, private processing checks, aggregate metric ingestion, confidence
 assessment and bounded reversible recommendations do not create founder gates once their implementation is authorized.
 
-Current quality-envelope state is `$7.43 / $10` used and `$2.57` remaining. This design used `$0` and made no provider
-or platform call.
+Current conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, with `$0.30305668` unspent. The active
+quality envelope is `$7.62694332 / $10` used and `$2.37305668` remaining. Remaining budget is not spending
+authorization. This documentation design uses no provider or platform call.

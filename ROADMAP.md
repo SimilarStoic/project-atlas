@@ -482,22 +482,35 @@ Productions #2–#5 are accepted, and the production-method validation objective
 proof are satisfied. Do not continue internal productions merely to prove another acceptable render. Narrator
 naturalness remains the primary unresolved pre-launch quality track, but
 [Stage-1 experimentation is paused](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) pending a new explicit founder
-authorization. [Controlled Publishing and Performance Learning
-Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) remains approved design authority for a later one-platform controlled
-publication and learning loop; it is not the immediate objective and does not authorize implementation or publication.
+authorization. Controlled YouTube pilot-readiness is now **PASS** for prospective accepted Production #5 v4, with no
+identified pilot-quality veto. The intended target is `@Similar-stoic`, channel ID
+`UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access in Studio is confirmed, but API OAuth must still verify this exact
+channel independently. The [Controlled Publishing and Performance Learning
+Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) and reviewed
+[Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) are design authority for a
+later one-platform loop. PASS authorizes neither implementation nor upload nor public publication.
 
 The publishing design initially reserved Production #5 as the first live-loop item. Subsequent founder direction gives
 Production #5 the immediate role of reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may
 later serve as the first live-loop item. The initial publishing platform remains YouTube Shorts only, at no more than
 one public pilot item per week, with founder approval for each exact external publication. Existing persistence is
 sufficient through `FinalMediaArtifact`; a future additive migration is justified for publishing packages, publication
-decisions/identities, performance snapshots and learning assessments. Migration 24 is now assigned to the bounded
+decisions, durable external operations, remote identities, status/receipts, performance snapshots and learning
+assessments. Migration 24 is now assigned to the bounded
 multi-authority visual-reference implementation; a later publishing implementation will use the next available
 migration, currently expected to be 25. Final Production #5 envelope exposure was `$7.43 / $10`, leaving `$2.57`
 at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
 `$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
 is not authorization to spend; provider-reported exact billed totals are unavailable. Do not begin Production #6 or
 implement publishing/analytics architecture from this design alone.
+The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
+pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
+state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio
+private-to-public click only applies to an eligible ordinary private video. No automatic duplicate re-upload follows
+an uncertain or locked API transfer. Supported raw YouTube metrics remain unmodified unless additional derived-metric
+permission is obtained; provider-data retention/deletion constraints override indefinite raw-API archival. Exact
+Migration-25 schema and implementation remain separately governed. The next separately authorized step may be offline
+persistence/package/operation logic and a mocked lifecycle, without YouTube credentials or calls.
 
 Production-method validation and the reference-driven visual-generation proof are **PASSED**. Production #5 v4 is
 accepted, and founder assessment places it at approximately **95%** of desired public-launch production quality. Public
