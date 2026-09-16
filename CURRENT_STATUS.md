@@ -83,6 +83,16 @@ Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`,
 leaving `$0.30305668` unspent; this is not authorization to spend. The active quality envelope is
 `$7.62694332 / $10`, with `$2.37305668` remaining. Provider-reported exact billed totals are unavailable.
 
+The founder-approved [SimilarStoic Creative Reference Set](docs/SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) canonizes
+the interpretation of six directly reviewed founder-selected audiovisual excerpts without committing third-party
+media or inventing missing provenance. Existing SimilarStoic visuals remain foundational; reference F is the primary
+narrator-performance benchmark, B/C inform visual thought-density and audio-first progression, E scene development,
+D recognisable crude charm and A explanatory depth. The companion
+[Public-Launch Creative Calibration](docs/SIMILARSTOIC_CREATIVE_CALIBRATION.md) defines a future final-quality-cell,
+generalisation and stitch-test methodology only. It may be considered after successful exact private remote
+verification, but neither that success nor these documents authorize calibration execution, providers, spend,
+generation, Production #6 or publication.
+
 [Controlled Publishing and Performance Learning Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) separately defines a
 YouTube Shorts-only pilot, one founder gate for each exact external publication proposition, and attributed performance
 and learning provenance. Controlled pilot-readiness is **PASS** for prospective Production #5 v4; no artifact-quality

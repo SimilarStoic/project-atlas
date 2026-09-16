@@ -130,6 +130,13 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
 - Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`, leaving `$0.30305668` unspent; remaining budget is
   not spending authorization. Active quality-envelope exposure is `$7.62694332 / $10`; `$2.37305668` remains.
   Provider-reported exact billed totals are unavailable.
+- The [SimilarStoic Creative Reference Set](SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) preserves the founder's direct
+  review of six selected audiovisual excerpts as characteristic authorities; exact clips remain private and all
+  unavailable source/media provenance is `not yet recorded`, never invented. Existing SimilarStoic visuals remain the
+  foundation; F is the primary narrator-performance benchmark, not an imitation or visual-redesign target.
+- [Public-Launch Creative Calibration](SIMILARSTOIC_CREATIVE_CALIBRATION.md) is the intended future quality phase only
+  after successful exact private remote verification. Its final-quality cells, longer narrator generalisation, stitch
+  test and multi-passage/subject method are not execution, provider, spend, generation or Production #6 authority.
 - Founder owns final product, quality, spend, publication and push decisions; ChatGPT owns product architecture and
   canonical specification stewardship; Codex performs bounded inspection, implementation and validation.
 - Governing principle: **CHANGE WITHOUT REBUILD**.

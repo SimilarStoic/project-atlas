@@ -31,6 +31,11 @@ SimilarStoic's first public release, narrator quality must be materially improve
 later approved change must preserve accepted script and visual authorities and regenerate only the narration-dependent
 chain specified above.
 
+The [Public-Launch Creative Calibration](SIMILARSTOIC_CREATIVE_CALIBRATION.md) now defines the intended future
+methodology—short final-quality integrated cells followed by longer audio-only generalisation for narrator survivors
+and stitch testing—once separately authorized after successful exact private remote verification. This linkage does
+not change any Stage-1 finding or itself authorize a test.
+
 ## What Stage 1 established
 
 | Bounded test | Locked blind outcome | Disposition |

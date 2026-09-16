@@ -425,6 +425,13 @@ requires regenerated narration, completeness transcription, actual speech alignm
 captions, duration-dependent edit timing and final media, while script and visual design remain stable. Any
 founder-derived custom voice requires explicit consent and separate authorization. The narrator is not visually present.
 
+The [SimilarStoic Creative Reference Set](docs/SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) preserves the founder's direct
+audiovisual-review conclusions as characteristic authorities without redesigning SimilarStoic toward an external
+channel. The [Public-Launch Creative Calibration](docs/SIMILARSTOIC_CREATIVE_CALIBRATION.md) defines the intended
+future methodology: final-quality 6–9 second cells, controlled comparisons, founder elimination/recombination, longer
+audio-only narrator generalisation, stitch tests and multi-passage/subject proof. It is methodology only, not execution,
+provider, spend, generation, Production #6 or publication authority.
+
 Audio quality has its own QA process. Pronunciation, pacing and processing should remain consistent. Music and sound effects are optional and should only enhance storytelling.
 
 ---
@@ -523,7 +530,8 @@ Production #6 or implement further publishing/analytics
 architecture from this design alone.
 After successful private remote verification, the intended next local governance action is to revoke Production #5
 v4's effective publication approval before any release reservation. That later runtime mutation requires separate
-founder authorization.
+founder authorization. Creative Calibration is the intended next quality phase only after that successful exact remote
+verification; it does not begin automatically and requires separate bounded execution authority.
 The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
 pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
 state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio

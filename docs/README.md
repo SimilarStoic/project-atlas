@@ -23,6 +23,12 @@ provisional uninstructed Marin production-development baseline, failed instructi
 gates, passage-dependent unresolved narrator quality, paused experimentation and current conservative spend. It does
 not authorize a permanent narrator, another experiment or production use of a tested prompt.
 
+Use the [SimilarStoic Creative Reference Set](SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) for the two-layer private-evidence
+/ tracked-interpretation model and the characteristic lessons from six founder-selected audiovisual excerpts. Use
+[Public-Launch Creative Calibration](SIMILARSTOIC_CREATIVE_CALIBRATION.md) for the future final-quality-cell,
+narrator-generalisation, stitch-test and public-master methodology. Neither document authorizes media ingestion,
+experiments, provider calls, generation, spend, Production #6 or publication.
+
 The [Controlled YouTube Pilot Architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) is the canonical execution,
 publication-authority, recovery and provider-data boundary for the reviewed three-item Shorts pilot. Controlled
 pilot-readiness is PASS for prospective Production #5 v4; the target is `@Similar-stoic`, channel
