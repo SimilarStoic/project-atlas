@@ -2,16 +2,18 @@
 
 ## Last Updated
 
-15 September 2026 — Multi-authority visual-generation implementation remains synchronized at
+16 September 2026 — Multi-authority visual-generation implementation remains synchronized at
 `1284e344b376e550b0a06ee79e79e9ae478b96c2`, with production-quality gates synchronized through
 `144a201e6484ceec778d5fd8dee94bd2f935dc31`. Production #5 v4 and reference-driven dynamic SimilarStoic generation are
 **ACCEPTED**. Founder assessment places the exact artifact at approximately 95% of desired public-launch production
-quality. Exact v1–v4 artifacts and immutable evidence remain preserved; the accepted v4 SHA-256 is
-`c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`. Public launch remains unauthorized, and
-narrator naturalness is the primary remaining pre-launch quality track. The founder-approved
+quality at that historical review. Exact v1–v4 artifacts and immutable evidence remain preserved; the accepted v4
+SHA-256 is `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`. Founder re-review now places public
+release on hold because its narration is noticeably robotic and not suitable for SimilarStoic's public debut.
+Narrator naturalness is therefore a required pre-public track. The founder-approved
 [Narrator Naturalness Stage-1 Disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) preserves uninstructed
-Marin as the provisional production-development narrator baseline and pauses further experiments. Productions #2–#4
-remain accepted.
+Marin as the provisional production-development narrator baseline and the historical experiment pause. New founder
+direction makes narrator improvement a pre-public requirement without authorizing execution. Productions #2–#4 remain
+accepted.
 
 ## Current State — Read This First
 
@@ -69,12 +71,15 @@ verification of important output and keeps sensitive information out of unapprov
 The production-method validation objective and reference-driven dynamic-scene proof are **PASSED**. Production #5 v4 is
 **ACCEPTED**; v1, v2, v3 and v3-final remain immutable historical review/iteration evidence. Reference-driven dynamic
 SimilarStoic generation is the default production method, using approved references as generative visual DNA rather
-than a finite inventory. Founder assessment places v4 at approximately 95% of desired public-launch quality. Public
-launch remains unauthorized. Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional
+than a finite inventory. The approximately 95% public-quality assessment is historical; founder re-review identifies
+the narration as a public-debut veto. Public launch remains unauthorized. Uninstructed OpenAI
+`gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional
 production-development narrator baseline, not the permanent narrator. The
 [Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested instruction as a universal
-production default or opening fix; narrator quality remains passage-dependent and further prompt/provider experiments
-are paused pending explicit founder authorization. Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`,
+production default or opening fix; narrator quality remains passage-dependent. The former experimentation pause is
+superseded only as product direction: narrator-quality work is again required before first public release, but no
+experiment, generation, provider call, spend, permanent narrator selection or production regeneration is authorized.
+Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`,
 leaving `$0.30305668` unspent; this is not authorization to spend. The active quality envelope is
 `$7.62694332 / $10`, with `$2.37305668` remaining. Provider-reported exact billed totals are unavailable.
 
@@ -98,8 +103,10 @@ founder-approved. Exact manual upload operation
 `publication-operation-5cf19320f7693a22c97ca122b7733450dfb11d64e6aed691911632bb755e9fa6` is durably
 reserved but not dispatched; no transfer, upload, mutation or publication occurred. The founder-operated Studio
 private upload remains authorized only inside `2026-09-22 12:00–13:00 Europe/London`, with another exact-channel
-read-only identity check required immediately before upload. Public transition remains separately gated. Production
-#6 has not started.
+read-only identity check required immediately before upload. This unchanged private pilot tests the real Conveyor →
+YouTube → remote-verification loop and is not a public-quality endorsement of the narration. Successful private
+verification does not authorize public release: no release operation may be reserved or dispatched for Production #5
+v4 without new founder direction after narrator-quality work. Production #6 has not started.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -240,15 +247,18 @@ exact-channel preflight also passed for the sole authenticated channel, `UC1cX-O
 YouTube read-only scope. Migration 25 is active in the verified persistent runtime; the narrow read-only observation
 adapter exists, and the exact Pilot Item #1 package above is founder-approved but not transferred. The operation
 reservation is complete; performing the founder-operated manual private transfer remains limited to the frozen window
-and requires another immediate pre-upload exact-channel read-only check. Public transition remains separate. The
-current OAuth
+and requires another immediate pre-upload exact-channel read-only check. Public transition is separately held for
+narrator quality; no release operation may be reserved or dispatched without new founder direction. The current OAuth
 consent configuration is in Testing, so its refresh authorization is not suitable as durable pilot operations until
 the documented seven-day testing limitation is resolved. This status record authorizes no transfer, publication or
-Production #6. Narrator naturalness remains unresolved and
-passage-dependent, with Stage-1 experimentation paused. Uninstructed Marin remains provisional; no tested instruction
-is a universal production default, and the permanent narrator remains unresolved. Publishing accepted Production #5
-must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Transfer, public
-publication, v0.28 and a rig remain unauthorized/absent.
+Production #6. Narrator naturalness remains unresolved and passage-dependent. Product direction now requires material,
+separately founder-approved narrator improvement before SimilarStoic's first public release, while authorizing no new
+experiment or generation yet. Uninstructed Marin remains provisional; no tested instruction is a universal production
+default, and the permanent narrator remains unresolved. Production #5 v4 must remain byte-identical for the private
+test. A later approved voice change follows **CHANGE VOICE WITHOUT REBUILD**. After successful private verification,
+the intended next local governance action is a separately authorized revocation of the v2 package's effective
+publication approval before any release operation can be reserved. Public publication, v0.28 and a rig remain
+unauthorized/absent.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.
@@ -1429,13 +1439,11 @@ successor after v0.27 is selected.
 # Next Step
 
 Phase 1 is formally closed and Phase 2 remains active/incomplete. Current source and runtime migrations are contiguous
-through 24. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
-the default SimilarStoic visual-production method. Controlled YouTube pilot-readiness is **PASS**, and the target channel
-and [controlled pilot architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) are documented; PASS authorizes no
-implementation or publication. Public launch remains unauthorized; Production #6, Migration 25 and publishing
-implementation remain absent. Narrator naturalness remains the primary unresolved pre-launch quality track, but
-Stage-1 experimentation is paused. Uninstructed Marin remains provisional, no tested instruction is a universal
-default, and the permanent narrator remains unresolved. No narrator implementation is authorized by this status record.
+through 25. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
+the default SimilarStoic visual-production method. Private-transfer pilot-readiness is **PASS** and the exact manual
+upload operation is reserved, but no transfer has occurred. Public release is held for materially improved,
+separately founder-approved narration; the prior Stage-1 experiment pause is superseded only as product direction and
+no narrator execution is authorized. Production #6 remains unauthorized.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

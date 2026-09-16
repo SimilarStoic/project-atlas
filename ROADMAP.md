@@ -417,8 +417,11 @@ One consistent narrator voice should be used within a production. Uninstructed O
 permanent SimilarStoic narrator identity. The founder-approved
 [Narrator Naturalness Stage-1 Disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested
 instruction as a universal production default or opening fix; quality remains passage-dependent and further Stage-1
-prompt/provider experimentation is paused pending explicit authorization. Narrator identity and provider remain
-replaceable: changing either requires regenerated narration, completeness transcription, actual speech alignment,
+prompt/provider experimentation was paused for diminishing information value. Founder direction now makes materially
+improved, separately approved narrator quality a prerequisite for SimilarStoic's first public release. This supersedes
+the pause only at product-direction level: it authorizes no experiment, generation, provider call, spend, permanent
+narrator selection or production regeneration. Narrator identity and provider remain replaceable: changing either
+requires regenerated narration, completeness transcription, actual speech alignment,
 captions, duration-dependent edit timing and final media, while script and visual design remain stable. Any
 founder-derived custom voice requires explicit consent and separate authorization. The narrator is not visually present.
 
@@ -480,10 +483,11 @@ drift. This lesson does not reopen or revise the accepted artifact.
 
 Productions #2–#5 are accepted, and the production-method validation objective plus reference-driven visual-generation
 proof are satisfied. Do not continue internal productions merely to prove another acceptable render. Narrator
-naturalness remains the primary unresolved pre-launch quality track, but
-[Stage-1 experimentation is paused](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) pending a new explicit founder
-authorization. Controlled YouTube pilot-readiness is now **PASS** for prospective accepted Production #5 v4, with no
-identified pilot-quality veto. The intended target is `@Similar-stoic`, channel ID
+naturalness remains the primary unresolved pre-launch quality track. The
+[Stage-1 experimentation pause](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) remains historical evidence, while
+new founder direction requires materially improved narration before first public release without authorizing execution.
+Private-transfer pilot-readiness is **PASS** for accepted Production #5 v4; its narration is a public-release quality
+veto. The intended target is `@Similar-stoic`, channel ID
 `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access in Studio is confirmed, and the 16 September 2026 founder-operated
 read-only OAuth preflight independently resolved the sole authenticated channel to this exact ID. The
 [Controlled Publishing and Performance Learning
@@ -504,7 +508,9 @@ outside Git/provenance. A read-only manual-route observation adapter exists, and
 founder-approved. Its exact manual private-upload operation is durably reserved but not dispatched; no transfer,
 upload, mutation or publication occurred. The founder-operated Studio upload remains authorized only inside
 `2026-09-22 12:00–13:00 Europe/London`, after another immediate exact-channel read-only identity check. Public
-transition remains separate. The Testing consent
+transition is now explicitly held for narrator quality. The unchanged Production #5 v4 private pilot proves only the
+Conveyor → YouTube → remote-verification loop; it is not a public-quality narration endorsement. No release operation
+may be reserved or dispatched without new founder direction after narrator-quality work. The Testing consent
 configuration's
 documented seven-day refresh-token limitation must be resolved before durable pilot operations. Final Production #5
 envelope exposure was `$7.43 / $10`, leaving `$2.57`
@@ -515,6 +521,9 @@ is not authorization to spend; provider-reported exact billed totals are unavail
 operation is reserved; the actual private transfer remains a separate, window-bounded human action. Do not begin
 Production #6 or implement further publishing/analytics
 architecture from this design alone.
+After successful private remote verification, the intended next local governance action is to revoke Production #5
+v4's effective publication approval before any release reservation. That later runtime mutation requires separate
+founder authorization.
 The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
 pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
 state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio
@@ -525,9 +534,10 @@ Migration-25 schema and implementation remain separately governed. The next poss
 the narrow real YouTube adapter/private-transfer path, not automatic publication.
 
 Production-method validation and the reference-driven visual-generation proof are **PASSED**. Production #5 v4 is
-accepted, and founder assessment places it at approximately **95%** of desired public-launch production quality. Public
-launch remains unauthorized; narrator naturalness is the primary remaining pre-launch quality track, with further
-Stage-1 experimentation paused and no permanent narrator selected.
+accepted, and the approximately **95%** public-quality assessment is historical. Founder re-review identifies its
+narration as unsuitable for SimilarStoic's public debut while preserving the unchanged artifact for the private loop
+test. Public launch remains unauthorized; narrator improvement is required but not yet authorized for execution, and
+no permanent narrator is selected.
 [Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
 minimum provider-neutral bridge from approved visual-DNA examples to new scene-specific generation: keep existing
 character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per

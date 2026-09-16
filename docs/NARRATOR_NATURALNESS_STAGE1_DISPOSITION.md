@@ -16,6 +16,21 @@ authorities and production grammar; when a voice or narrator method is separatel
 and revalidate its narration, completeness, actual speech alignment, captions, duration-dependent edit timing and final
 media. Never reuse timing from a different take.
 
+## Additive founder direction — 16 September 2026
+
+The Stage-1 findings below remain unchanged historical evidence. Their prompt/provider experimentation pause is
+superseded only at product-direction level: narrator-quality work is again a required pre-public track because founder
+re-review finds Production #5 v4's narration noticeably robotic and unsuitable for SimilarStoic's public debut. This
+direction does **not** authorize a provider experiment, generation, spend, permanent narrator selection or production
+regeneration. No tested instruction becomes a production default.
+
+Production #5 v4 remains byte-identical and remains the exact approved artifact for the 22 September 2026 private
+Pilot Item #1 transfer test. That private test proves the Conveyor → YouTube → remote-verification loop; it is not a
+public-quality narration endorsement, and successful private verification does not authorize public release. Before
+SimilarStoic's first public release, narrator quality must be materially improved and separately founder-approved. Any
+later approved change must preserve accepted script and visual authorities and regenerate only the narration-dependent
+chain specified above.
+
 ## What Stage 1 established
 
 | Bounded test | Locked blind outcome | Disposition |
@@ -44,10 +59,12 @@ The active quality envelope is **`$7.62694332 / $10`**, leaving **`$2.37305668`*
 totals remain unavailable. The earlier **`$7.43 / $10`** figure is the historical final Production #5 checkpoint,
 not the current post-Stage-1 envelope. Documentation canonicalization adds no provider spend.
 
-Further Stage-1 narrator prompt/provider experimentation is **paused pending a new explicit founder authorization**:
-current prompt experiments show diminishing information value. Remaining budget is a ceiling, **not authorization to
-spend**. Uninstructed Marin may remain the production-development baseline while the permanent narrator, public launch,
-Production #6, Migration 25 and publishing implementation remain unauthorized or absent as separately governed.
+The Stage-1 conclusion remains that further prompt/provider experimentation was **paused pending a new explicit founder
+authorization** because current prompt experiments showed diminishing information value. The additive founder direction
+above makes narrator quality required before public release but is not that execution authorization. Remaining budget
+is a ceiling, **not authorization to spend**. Uninstructed Marin may remain the production-development baseline while
+the permanent narrator and public launch remain unresolved; Production #6 and further publishing actions remain
+separately governed.
 
 ## Evidence boundary
 

@@ -113,14 +113,19 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   operation `publication-operation-5cf19320f7693a22c97ca122b7733450dfb11d64e6aed691911632bb755e9fa6` is
   durably reserved with no dispatch; no transfer, upload or publication has occurred. The actual founder-operated
   Studio private upload remains authorized only inside `2026-09-22 12:00–13:00 Europe/London` and requires another
-  exact-channel read-only identity check immediately before upload. Public transition remains separate. The current
+  exact-channel read-only identity check immediately before upload. This unchanged-artifact private pilot tests the
+  Conveyor → YouTube → remote-verification loop; it is not a public-quality endorsement of Production #5 v4's
+  narration. Public transition is held: no release operation may be reserved or dispatched without new founder
+  direction after narrator-quality work. The current
   Testing consent configuration's
   documented seven-day refresh-token limitation must be resolved before durable pilot operations.
 - Public launch is unauthorized and Production #6 has not started.
 - Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
   baseline, not the permanent narrator. The founder-approved
   [Narrator Naturalness Stage-1 Disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) records passage-dependent,
-  unresolved quality and pauses further prompt/provider experimentation pending explicit authorization:
+  unresolved quality. Its experimentation pause is superseded only at product-direction level: materially improved,
+  separately founder-approved narrator quality is required before the first public release, while no experiment,
+  generation, provider call, spend, permanent selection or production regeneration is authorized yet. Preserve
   **CHANGE VOICE WITHOUT REBUILD**.
 - Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`, leaving `$0.30305668` unspent; remaining budget is
   not spending authorization. Active quality-envelope exposure is `$7.62694332 / $10`; `$2.37305668` remains.
@@ -145,9 +150,10 @@ approved hand-drawn gross-up break-frame, qualified spend and reference-set prov
 checkpoint for Production #5 acceptance is `144a201e6484ceec778d5fd8dee94bd2f935dc31`; Production #4, the controlled publishing/learning design and the
 [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) are synchronized. Migration 24
 is operational. Production #5 v4 and reference-driven dynamic SimilarStoic generation are **ACCEPTED** as the default
-visual-production method. Immutable v1–v4 evidence is preserved. Founder assessment places v4 at approximately 95% of
-desired public-launch production quality; public launch remains unauthorized and narrator naturalness is the primary
-remaining pre-launch quality track. Rejected experimental implementation remains excluded from canonical history.
+visual-production method. Immutable v1–v4 evidence is preserved. The approximately 95% public-quality assessment is
+historical; founder re-review identifies narration as a public-debut veto while preserving v4 unchanged for the private
+loop test. Public launch remains unauthorized and narrator naturalness is the primary remaining pre-launch quality
+track. Rejected experimental implementation remains excluded from canonical history.
 
 For the current compact creative vocabulary governing acting categories, environment families, props/effects,
 composition patterns, reuse, negative space and signature break-frames, read
@@ -246,9 +252,10 @@ closer to publishable SimilarStoic quality than Hazel or Marin v2 without claimi
 OpenAI `gpt-4o-mini-tts-2025-12-15`, voice `marin`, **uninstructed**, remains the **PROVISIONAL ACCEPTED
 PRODUCTION-DEVELOPMENT BASELINE**. It is good enough to continue production development but is not the permanent
 channel voice. The [Stage-1 narrator disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested
-instruction as a universal default; narrator quality remains passage-dependent and further prompt/provider testing is
-paused. Permanent narrator identity remains open; a future founder-derived custom voice requires founder-provided
-recordings, explicit consent and separately authorized provider work.
+instruction as a universal default; narrator quality remains passage-dependent. The historical testing pause is now
+superseded only at product-direction level by the requirement for material pre-public improvement; no testing or
+generation is authorized. Permanent narrator identity remains open; a future founder-derived custom voice requires
+founder-provided recordings, explicit consent and separately authorized provider work.
 
 Narrator identity and TTS provider are separate concerns. Either may later change without rebuilding script, visual
 plan, approved imagery, composition grammar, motion design or editorial structure. Any voice replacement requires new
@@ -334,14 +341,18 @@ occlusion/layer integrity, reuse-with-variation, semantic grounding, social-mobi
 and full-resolution/normal/phone inspection remain mandatory. Founder accepted two non-blocking historical observations:
 a small residual line beneath the mouth in one frame and one bag/table occlusion-depth inconsistency. Marin remains
 provisional and replaceable. At the **historical final Production #5 checkpoint**, exposure was `$7.43 / $10` with
-`$2.57` remaining; the current post-Stage-1 envelope is stated in the current snapshot above. Public launch is unauthorized;
+`$2.57` remaining; the current post-Stage-1 envelope is stated in the current snapshot above. Founder re-review finds
+the narration noticeably robotic and unsuitable for SimilarStoic's public debut. Production #5 v4 nevertheless remains
+the unchanged exact artifact for the approved private transfer test. Public launch is unauthorized;
 At that historical checkpoint, Production #6, Migration 25, publishing implementation and publication were absent.
 
 ### Controlled publishing and performance learning loop
 
 Productions #2–#5 satisfy the current production-method validation objective. Narrator naturalness remains the primary
-unresolved pre-launch quality track, but [Stage-1 experimentation is paused](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md)
-pending explicit founder authorization. Controlled pilot-readiness is **PASS** for prospective Production #5 v4;
+unresolved pre-launch quality track. [Stage-1 evidence and its prior pause](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md)
+remain historical truth, while new founder direction requires materially improved, separately approved narration
+before any first public release without yet authorizing experimentation or generation. Private-transfer pilot-readiness
+remains **PASS** for unchanged Production #5 v4;
 the exact channel and recovery/learning boundaries are governed by the
 [Controlled YouTube Pilot Architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md). Publishing remains unauthorized;
 the companion [Controlled Publishing and Performance Learning Loop](PUBLISHING_AND_LEARNING_LOOP.md) selects YouTube
@@ -350,7 +361,10 @@ and keeps the public pace at no more than one pilot Short per week.
 
 The pilot uses local package preparation, founder approval of the exact artifact/package/account/time and routes,
 approved private transfer by API or Studio, remote processing/metadata verification and only then an eligible approved
-public transition. Core observations are engaged
+public transition. For Production #5 v4, successful private verification explicitly does not create public-release
+eligibility: no release operation may be reserved or dispatched without new founder direction after narrator-quality
+work. After successful private verification, the intended next local governance action is a separately authorized
+revocation of the effective publication approval before any release reservation. Core observations are engaged
 views/views, watch time, average duration/percentage, the time-normalized retention curve, likes, comments, shares and
 subscribers gained, captured at nominal append-only checkpoints approximately 24 hours, 72 hours, 7 days and 28 days
 after public publication. Returned analytics coverage and provider-data retention are separately constrained. One item cannot change
