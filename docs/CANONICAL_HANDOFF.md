@@ -109,8 +109,9 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   transfer, upload, public publication or broad launch. A narrow real adapter now supports exact-channel and supplied
   video observation through read-only YouTube endpoints only; mutation methods remain unavailable. Pilot Item #1
   package `publishing-package-similarstoic-youtube-pilot-1-slot-1-v2`, digest
-  `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`, is an immutable proposition awaiting founder
-  approval before any private transfer. The current Testing consent configuration's
+  `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`, is founder-approved. Its immutable approval
+  is recorded, but no operation, transfer, upload or publication has occurred; those external steps remain separately
+  gated. The current Testing consent configuration's
   documented seven-day refresh-token limitation must be resolved before durable pilot operations.
 - Public launch is unauthorized and Production #6 has not started.
 - Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator

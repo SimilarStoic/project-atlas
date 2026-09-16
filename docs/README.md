@@ -32,8 +32,8 @@ offline publishing/learning foundation plus a narrow real read-only observation 
 authorized read-only OAuth
 preflight has since resolved the sole authenticated channel exactly to `UC1cX-OTF9-LZeNo5TaFgrgQ`; credentials remain
 outside Git/provenance, with the refresh token held by Windows Credential Locker rather than runtime JSON. Exact Pilot
-Item #1 package digest `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27` awaits founder review. This PASS and package
-preparation authorize no upload, mutation or public release.
+Item #1 package digest `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27` is founder-approved but not transferred.
+Approval recording authorizes no operation reservation, upload, mutation or public release.
 
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 

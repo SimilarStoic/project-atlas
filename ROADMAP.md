@@ -500,15 +500,17 @@ durable external operations, remote identities, status/receipts, performance sna
 explicit later applications. Migration 25 is active in the verified persistent runtime; Migration 24 remains its
 multi-authority visual-reference foundation. The publishing service/lifecycle remains fake-tested, and a narrow live
 read-only OAuth/channel-identity preflight now exists and passed using only `youtube.readonly`; credentials remain
-outside Git/provenance. A read-only manual-route observation adapter and exact Pilot Item #1 package proposition now
-exist, but no founder package approval, upload, mutation or publication occurred. The Testing consent configuration's
+outside Git/provenance. A read-only manual-route observation adapter exists, and exact Pilot Item #1 package v2 is
+founder-approved, but no operation, transfer, upload, mutation or publication occurred. The Testing consent
+configuration's
 documented seven-day refresh-token limitation must be resolved before durable pilot operations. Final Production #5
 envelope exposure was `$7.43 / $10`, leaving `$2.57`
 at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
 `$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
-is not authorization to spend; provider-reported exact billed totals are unavailable. The next gate is founder review
-of package digest `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`; do not begin Production #6 or implement
-further publishing/analytics architecture from this design alone.
+is not authorization to spend; provider-reported exact billed totals are unavailable. Package digest
+`bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27` is approved; any operation reservation or
+manual private transfer is a separate gate. Do not begin Production #6 or implement further publishing/analytics
+architecture from this design alone.
 The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
 pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
 state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio
