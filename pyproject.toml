@@ -16,7 +16,11 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    "google-auth>=2.58.0",
+    "google-auth-oauthlib>=1.4.1",
+    "keyring>=25.7.0",
+]
 
 [dependency-groups]
 dev = [

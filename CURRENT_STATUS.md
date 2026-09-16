@@ -82,13 +82,16 @@ leaving `$0.30305668` unspent; this is not authorization to spend. The active qu
 YouTube Shorts-only pilot, one founder gate for each exact external publication proposition, and attributed performance
 and learning provenance. Controlled pilot-readiness is **PASS** for prospective Production #5 v4; no artifact-quality
 veto has been identified. The target is `@Similar-stoic`, channel ID `UC1cX-OTF9-LZeNo5TaFgrgQ`, with founder Studio
-access confirmed. The reviewed [Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md)
+access confirmed. On 16 September 2026, a founder-operated desktop OAuth flow using only
+`https://www.googleapis.com/auth/youtube.readonly` independently resolved the sole authenticated `channels.list`
+`mine=true` result to that exact channel ID: **PASS**. Credentials remain outside Git and ordinary Conveyor
+provenance. The reviewed [Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md)
 governs the private-first API/Studio routes, authenticated channel checks, operation uncertainty and API-data
 boundaries. PASS does not authorize transfer, public publication or broad launch. The separately authorized first
 **offline** publishing milestone adds Migration 25 in source, immutable publication/learning lineage, guarded local
 operations and a provider-neutral service exercised with a test-only fake adapter. Persistent runtime remains at
-Migration 24; this pass migrated only disposable test databases. No Google project, OAuth credential, real YouTube
-adapter, YouTube call, upload or publication was created or performed. Production #6 has not started.
+Migration 24; this pass migrated no persistent database. No upload, mutation or publication occurred. Production #6
+has not started.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -224,11 +227,14 @@ architecture.
 
 ## Exact Next Action
 
-The controlled YouTube pilot architecture is reviewed and pilot-readiness is **PASS**. Migration 25 and the first
-offline publishing persistence/lifecycle foundation now exist in source, validated only on disposable databases with
-a test-only fake adapter. The next possible separately authorized step is a **live read-only OAuth/exact-channel
-preflight**, not upload or publication. This status record authorizes no OAuth setup, YouTube call, transfer,
-publication or Production #6. Narrator naturalness remains unresolved and
+The controlled YouTube pilot architecture is reviewed and pilot-readiness is **PASS**. The live read-only OAuth/
+exact-channel preflight also passed for the sole authenticated channel, `UC1cX-OTF9-LZeNo5TaFgrgQ`, using only the
+YouTube read-only scope. Migration 25 and the first offline publishing persistence/lifecycle foundation exist in
+source, validated only on disposable databases with a test-only fake adapter. The next possible separately authorized
+step is the narrow real YouTube adapter/private-transfer path, not automatic upload or publication. The current OAuth
+consent configuration is in Testing, so its refresh authorization is not suitable as durable pilot operations until
+the documented seven-day testing limitation is resolved. This status record authorizes no transfer, publication or
+Production #6. Narrator naturalness remains unresolved and
 passage-dependent, with Stage-1 experimentation paused. Uninstructed Marin remains provisional; no tested instruction
 is a universal production default, and the permanent narrator remains unresolved. Publishing accepted Production #5
 must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Runtime Migration 25,

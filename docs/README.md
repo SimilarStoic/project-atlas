@@ -28,8 +28,10 @@ publication-authority, recovery and provider-data boundary for the reviewed thre
 pilot-readiness is PASS for prospective Production #5 v4; the target is `@Similar-stoic`, channel
 `UC1cX-OTF9-LZeNo5TaFgrgQ`. The [publishing and learning design](PUBLISHING_AND_LEARNING_LOOP.md) supplies package,
 cadence and conservative learning details. Source Migration 25 and the first offline publishing/learning foundation
-now exist, with a test-only fake adapter and no persistent-runtime migration. PASS and these records authorize no
-OAuth setup, live YouTube action, upload or public release.
+now exist, with a test-only fake adapter and no persistent-runtime migration. A separately authorized read-only OAuth
+preflight has since resolved the sole authenticated channel exactly to `UC1cX-OTF9-LZeNo5TaFgrgQ`; credentials remain
+outside Git/provenance, with the refresh token held by Windows Credential Locker rather than runtime JSON. This PASS
+authorizes no upload, mutation or public release.
 
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 
@@ -42,7 +44,8 @@ The accepted Production #2–#5 method is operationalized in the
 [SimilarStoic minimum repeatable production cadence](SIMILARSTOIC_PRODUCTION_CADENCE.md) and governed creatively by the
 [SimilarStoic visual-production vocabulary](SIMILARSTOIC_VISUAL_VOCABULARY.md). The
 [controlled publishing and performance-learning design](PUBLISHING_AND_LEARNING_LOOP.md) defines the not-yet-live
-one-platform pilot. The [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) defines
+one-platform publication pilot; its read-only channel-identity preflight has passed, but transfer remains absent. The
+[multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) defines
 the provider-neutral reference-authority bridge implemented and accepted in Migration 24. Production #5 v4 passed its
-quality-uplift proof; public launch remains unauthorized, live YouTube integration remains absent, and
+quality-uplift proof; public launch remains unauthorized, live YouTube mutation integration remains absent, and
 narrator naturalness remains the primary unresolved pre-launch quality track with Stage-1 experimentation paused.

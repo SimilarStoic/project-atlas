@@ -3,14 +3,19 @@
 Founder-approved canonical reconciliation, 15 September 2026. This record defines the smallest controlled
 publishing and learning architecture for the initial SimilarStoic YouTube Shorts pilot. Source Migration 25 and a
 provider-neutral offline persistence/lifecycle foundation were subsequently implemented under separate authority.
-This record does not authorize OAuth credentials, a YouTube call or upload, or public publication.
+This record does not authorize upload, mutation or public publication. A later separately authorized read-only OAuth
+identity preflight is recorded below.
 The [publishing and learning design](PUBLISHING_AND_LEARNING_LOOP.md) supplies the editorial package, pilot cadence
 and conservative learning rules; this record governs execution, external-action safety and evidence boundaries.
 
 ## Pilot and authority boundary
 
 Controlled pilot-readiness is **PASS**. The intended channel is [`@Similar-stoic`](https://www.youtube.com/@Similar-stoic),
-ID `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access to this exact channel in YouTube Studio is confirmed. Accepted
+ID `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access to this exact channel in YouTube Studio is confirmed. On 16 September
+2026, the separately authorized founder-operated desktop OAuth preflight used only
+`https://www.googleapis.com/auth/youtube.readonly` and resolved the sole authenticated
+`channels.list(part=id,mine=true)` result to this exact ID: **PASS**. The refresh token is held by Windows Credential
+Locker; client configuration remains outside Git, and neither enters ordinary provenance. Accepted
 Production #5 v4, SHA-256 `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`, is
 the prospective first pilot item, with no identified pilot-quality veto. The pilot is YouTube Shorts only, initially
 three controlled public items at no more than one per week. One item is an observation, not proof of product or
@@ -75,11 +80,14 @@ Current YouTube guidance requires re-upload through a verified API service or Yo
 blocked remote object and seek an explicit recovery decision before any replacement upload. Do not infer authority
 for a duplicate from the original package. [YouTube private-lock guidance](https://support.google.com/youtube/answer/7300965?hl=en).
 
-Founder-operated OAuth 2.0 should use maintained Google OAuth libraries and only scopes needed for the current
+Founder-operated OAuth 2.0 uses maintained Google OAuth libraries and only scopes needed for the current
 capabilities: authenticated channel verification, aggregate analytics read and separately approved video/caption/
 publication mutations. Client configuration, tokens and protected upload-session material remain outside Git and
-ordinary provenance. Wrong channel, expired authorization or revoked consent stops mutation. OAuth is not implemented
-by this document.
+ordinary provenance. The identity-preflight refresh token is stored in Windows Credential Locker, never ordinary
+runtime JSON. Wrong channel, expired authorization or revoked consent stops mutation. The implemented
+identity-only preflight exposes no mutation method and grants only `youtube.readonly`. Its OAuth consent configuration
+is currently in Testing; Google's documented seven-day refresh-token lifetime for this configuration must be resolved
+before durable pilot operations.
 
 ## Observation, retention and learning
 
@@ -126,6 +134,7 @@ universal default; Stage-1 experimentation is paused and narrator quality remain
 Conservative Stage-1 exposure is `$0.19694332 / $0.50`; `$0.30305668` remains unspent. The active quality envelope
 is `$7.62694332 / $10`; `$2.37305668` remains. Remaining budget is not spending authorization.
 
-The first offline source implementation now exists. The next possible separately authorized step is live **read-only
-OAuth/exact-channel preflight**, not upload or publication. This architecture document authorizes no live YouTube
-action and no public publication.
+The first offline source implementation and the live **read-only OAuth/exact-channel preflight** now exist; the latter
+passed against the exact intended channel without upload or mutation. The next possible separately authorized step is
+the narrow real YouTube adapter/private-transfer path. This architecture document authorizes no transfer or public
+publication.

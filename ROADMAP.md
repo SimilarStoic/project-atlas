@@ -484,8 +484,9 @@ naturalness remains the primary unresolved pre-launch quality track, but
 [Stage-1 experimentation is paused](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) pending a new explicit founder
 authorization. Controlled YouTube pilot-readiness is now **PASS** for prospective accepted Production #5 v4, with no
 identified pilot-quality veto. The intended target is `@Similar-stoic`, channel ID
-`UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access in Studio is confirmed, but API OAuth must still verify this exact
-channel independently. The [Controlled Publishing and Performance Learning
+`UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access in Studio is confirmed, and the 16 September 2026 founder-operated
+read-only OAuth preflight independently resolved the sole authenticated channel to this exact ID. The
+[Controlled Publishing and Performance Learning
 Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) and reviewed
 [Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) are design authority for a
 later one-platform loop. PASS authorizes neither implementation nor upload nor public publication.
@@ -497,8 +498,11 @@ one public pilot item per week, with founder approval for each exact external pu
 `FinalMediaArtifact` is extended **in source only** by additive Migration 25 for frozen packages, founder decisions,
 durable external operations, remote identities, status/receipts, performance snapshots, learning assessments and
 explicit later applications. Migration 24 remains the operational multi-authority visual-reference endpoint in the
-verified runtime. The first offline publishing service/lifecycle is tested with a fake adapter; live OAuth/YouTube
-integration, upload and publication remain absent. Final Production #5 envelope exposure was `$7.43 / $10`, leaving `$2.57`
+verified runtime. The first offline publishing service/lifecycle is tested with a fake adapter. A narrow live
+read-only OAuth/channel-identity preflight now exists and passed using only `youtube.readonly`; credentials remain
+outside Git/provenance, and no upload, mutation or publication occurred. The Testing consent configuration's
+documented seven-day refresh-token limitation must be resolved before durable pilot operations. Final Production #5
+envelope exposure was `$7.43 / $10`, leaving `$2.57`
 at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
 `$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
 is not authorization to spend; provider-reported exact billed totals are unavailable. Do not begin Production #6 or
@@ -509,8 +513,8 @@ state. A Studio private upload is the approved-route fallback to design for an A
 private-to-public click only applies to an eligible ordinary private video. No automatic duplicate re-upload follows
 an uncertain or locked API transfer. Supported raw YouTube metrics remain unmodified unless additional derived-metric
 permission is obtained; provider-data retention/deletion constraints override indefinite raw-API archival. Exact
-Migration-25 schema and implementation remain separately governed. The next separately authorized step may be offline
-persistence/package/operation logic and a mocked lifecycle, without YouTube credentials or calls.
+Migration-25 schema and implementation remain separately governed. The next possible separately authorized step is
+the narrow real YouTube adapter/private-transfer path, not automatic publication.
 
 Production-method validation and the reference-driven visual-generation proof are **PASSED**. Production #5 v4 is
 accepted, and founder assessment places it at approximately **95%** of desired public-launch production quality. Public

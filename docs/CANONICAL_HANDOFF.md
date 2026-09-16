@@ -101,9 +101,13 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   access is confirmed. The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) is canonical
   design authority for exact founder publication approval, authenticated channel verification, private-first API/
   Studio routes, uncertain-outcome recovery, receipt/observation lineage and provider-data retention boundaries.
-  PASS does not authorize OAuth setup, upload, public publication or broad launch. The first offline foundation is
-  implemented; a live read-only OAuth/exact-channel preflight is the next possible separately authorized step, not
-  transfer or publication.
+  A founder-operated desktop OAuth preflight using only `https://www.googleapis.com/auth/youtube.readonly` passed on
+  16 September 2026: the sole authenticated `channels.list(part=id,mine=true)` result was exactly
+  `UC1cX-OTF9-LZeNo5TaFgrgQ`. The refresh token is held by Windows Credential Locker; client configuration remains
+  outside Git, and neither enters ordinary provenance. This PASS does not authorize
+  transfer, upload, public publication or broad launch. The next possible separately authorized step is the narrow
+  real YouTube adapter/private-transfer path, not automatic publication. The current Testing consent configuration's
+  documented seven-day refresh-token limitation must be resolved before durable pilot operations.
 - Public launch is unauthorized and Production #6 has not started.
 - Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
   baseline, not the permanent narrator. The founder-approved
@@ -346,8 +350,11 @@ strategy; repeated evidence across comparable items is required before even a bo
 
 Runtime migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities. Source
 Migration 25 now adds offline publishing-package, publication, performance-snapshot and learning-assessment
-persistence, validated only in disposable tests. Live OAuth/channel preflight, platform integration and exact
-publication authority remain separate gates. No platform API, credential or external publication has occurred.
+persistence, validated only in disposable tests. The separately authorized live read-only OAuth/channel preflight
+passed against the exact intended channel; its refresh token is protected by Windows Credential Locker and remains
+external to Git/provenance. Platform
+mutation integration and exact publication authority remain separate gates. No upload, mutation or external
+publication has occurred.
 Subsequent founder direction assigns Production
 #5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later
 serve as the first live-loop item after live publishing integration and exact publication authority. Production #6 must
