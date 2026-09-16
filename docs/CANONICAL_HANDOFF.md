@@ -94,8 +94,9 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
 - Reference-driven dynamic SimilarStoic generation is **DEFAULT / ACCEPTED**. Approved visual references are generative
   DNA for new script-specific scenes, not a finite content inventory.
 - Source migrations 1–25 are contiguous. Migration 24 adds multi-authority visual-reference persistence; additive
-  Migration 25 and the guarded **offline** controlled-publishing/learning foundation exist in source and tests only.
-  The verified persistent runtime remains at Migration 24; no persistent DB was migrated by this implementation.
+  Migration 25 and the guarded controlled-publishing/learning foundation exist in source and tests. Migration 25 is
+  active in the verified persistent runtime after an integrity-checked byte-for-byte Migration 24 backup; all prior
+  historical table contents were unchanged.
 - Controlled YouTube pilot-readiness is **PASS** for prospective accepted Production #5 v4, with no identified
   pilot-quality veto. The intended Shorts channel is `@Similar-stoic`, ID `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder Studio
   access is confirmed. The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) is canonical
@@ -105,8 +106,11 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   16 September 2026: the sole authenticated `channels.list(part=id,mine=true)` result was exactly
   `UC1cX-OTF9-LZeNo5TaFgrgQ`. The refresh token is held by Windows Credential Locker; client configuration remains
   outside Git, and neither enters ordinary provenance. This PASS does not authorize
-  transfer, upload, public publication or broad launch. The next possible separately authorized step is the narrow
-  real YouTube adapter/private-transfer path, not automatic publication. The current Testing consent configuration's
+  transfer, upload, public publication or broad launch. A narrow real adapter now supports exact-channel and supplied
+  video observation through read-only YouTube endpoints only; mutation methods remain unavailable. Pilot Item #1
+  package `publishing-package-similarstoic-youtube-pilot-1-slot-1-v2`, digest
+  `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`, is an immutable proposition awaiting founder
+  approval before any private transfer. The current Testing consent configuration's
   documented seven-day refresh-token limitation must be resolved before durable pilot operations.
 - Public launch is unauthorized and Production #6 has not started.
 - Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
@@ -348,13 +352,12 @@ subscribers gained, captured at nominal append-only checkpoints approximately 24
 after public publication. Returned analytics coverage and provider-data retention are separately constrained. One item cannot change
 strategy; repeated evidence across comparable items is required before even a bounded routine adjustment.
 
-Runtime migrations 1–24 preserve provenance through `FinalMediaArtifact` and visual generation authorities. Source
-Migration 25 now adds offline publishing-package, publication, performance-snapshot and learning-assessment
-persistence, validated only in disposable tests. The separately authorized live read-only OAuth/channel preflight
-passed against the exact intended channel; its refresh token is protected by Windows Credential Locker and remains
-external to Git/provenance. Platform
-mutation integration and exact publication authority remain separate gates. No upload, mutation or external
-publication has occurred.
+Runtime migrations 1–25 preserve provenance through `FinalMediaArtifact`, visual-generation authorities and the
+additive publishing/learning foundation. The separately authorized live read-only OAuth/channel preflight passed
+against the exact intended channel; its refresh token is protected by Windows Credential Locker and remains external
+to Git/provenance. The real manual-route observation adapter is read-only. The exact first package proposition above
+exists locally, but platform mutation and exact founder publication authority remain separate gates. No upload,
+mutation or external publication has occurred.
 Subsequent founder direction assigns Production
 #5's immediate role as the reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may later
 serve as the first live-loop item after live publishing integration and exact publication authority. Production #6 must

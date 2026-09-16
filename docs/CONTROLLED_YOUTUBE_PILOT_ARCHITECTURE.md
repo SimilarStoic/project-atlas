@@ -20,7 +20,8 @@ Production #5 v4, SHA-256 `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440
 the prospective first pilot item, with no identified pilot-quality veto. The pilot is YouTube Shorts only, initially
 three controlled public items at no more than one per week. One item is an observation, not proof of product or
 audience fit. Readiness PASS authorizes neither implementation nor transfer nor publication. Broad public launch,
-Production #6 remains absent. Migration 25 exists in source/tests only, not in the verified persistent runtime.
+Production #6 remains absent. Migration 25 is active in the verified persistent runtime after verified backup and
+integrity checks.
 
 Every item needs one **exact founder publication approval before platform transfer**. The frozen package and decision
 bind the exact `FinalMediaArtifact` and SHA-256, package version/digest, platform and channel ID, public title,
@@ -40,13 +41,15 @@ and record consequential operations in short DB transactions, then perform netwo
 bounded polling/retries and local concurrency protection. No general worker, queue or publishing scheduler is needed.
 Keep the boundary extendable without building speculative infrastructure.
 
-The separately authorized additive Migration 25 preserves these **semantics** in source, not in a deployed pilot:
+The separately authorized additive Migration 25 preserves these **semantics** in source and the verified runtime; the
+pilot itself is not deployed:
 immutable `PublishingPackage`; immutable/append-only `PublicationGateDecision`; durable
 `PublicationOperation` and append-only `PublicationOperationEvent`; stable `PlatformPublication` remote identity;
 append-only `PublicationStatusSnapshot`; actual public-publication `PublicationReceipt`; append-only
 `PerformanceSnapshot`; immutable/versioned `LearningAssessment` with exact links to supporting observations; and an
 explicit record when a later content decision applies an assessment. Exact keys, fields and constraints are encoded
-in source Migration 25; its deployment and any real adapter remain separately gated. Existing migrations 1–24 and
+in source Migration 25; a narrow read-only observation adapter now exists, while any mutation remains separately
+gated. Existing migrations 1–24 and
 production artifacts are unchanged.
 
 Keep distinct what Conveyor **intended**, what the founder **approved**, what external action was reserved and
@@ -134,7 +137,8 @@ universal default; Stage-1 experimentation is paused and narrator quality remain
 Conservative Stage-1 exposure is `$0.19694332 / $0.50`; `$0.30305668` remains unspent. The active quality envelope
 is `$7.62694332 / $10`; `$2.37305668` remains. Remaining budget is not spending authorization.
 
-The first offline source implementation and the live **read-only OAuth/exact-channel preflight** now exist; the latter
-passed against the exact intended channel without upload or mutation. The next possible separately authorized step is
-the narrow real YouTube adapter/private-transfer path. This architecture document authorizes no transfer or public
-publication.
+The offline source implementation, live **read-only OAuth/exact-channel preflight** and narrow read-only remote
+observation adapter now exist; the preflight passed against the exact intended channel without upload or mutation.
+Pilot Item #1 has an immutable local package proposition awaiting founder review. The next possible separately
+authorized step is exact package approval before any founder-operated private transfer. This architecture document
+authorizes no transfer or public publication.

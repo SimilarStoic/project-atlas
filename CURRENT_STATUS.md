@@ -88,10 +88,13 @@ access confirmed. On 16 September 2026, a founder-operated desktop OAuth flow us
 provenance. The reviewed [Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md)
 governs the private-first API/Studio routes, authenticated channel checks, operation uncertainty and API-data
 boundaries. PASS does not authorize transfer, public publication or broad launch. The separately authorized first
-**offline** publishing milestone adds Migration 25 in source, immutable publication/learning lineage, guarded local
-operations and a provider-neutral service exercised with a test-only fake adapter. Persistent runtime remains at
-Migration 24; this pass migrated no persistent database. No upload, mutation or publication occurred. Production #6
-has not started.
+**offline** publishing milestone added Migration 25 in source, immutable publication/learning lineage, guarded local
+operations and a provider-neutral service. Migration 25 is now active in the verified persistent runtime, after an
+integrity-checked byte-for-byte Migration 24 backup. A narrow real adapter can resolve the exact authenticated channel
+and observe one supplied video through read-only `channels.list`/`videos.list`; every mutation method remains
+unavailable. Pilot Item #1 package `publishing-package-similarstoic-youtube-pilot-1-slot-1-v2`, digest
+`bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`, freezes accepted Production #5 v4 for founder
+review only. No gate approval, operation, upload, mutation or publication occurred. Production #6 has not started.
 
 The [minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md) targets one
 founder-review-ready short per five working days with work in progress limited to one. It automates routine selection,
@@ -229,16 +232,16 @@ architecture.
 
 The controlled YouTube pilot architecture is reviewed and pilot-readiness is **PASS**. The live read-only OAuth/
 exact-channel preflight also passed for the sole authenticated channel, `UC1cX-OTF9-LZeNo5TaFgrgQ`, using only the
-YouTube read-only scope. Migration 25 and the first offline publishing persistence/lifecycle foundation exist in
-source, validated only on disposable databases with a test-only fake adapter. The next possible separately authorized
-step is the narrow real YouTube adapter/private-transfer path, not automatic upload or publication. The current OAuth
+YouTube read-only scope. Migration 25 is active in the verified persistent runtime; the narrow read-only observation
+adapter exists, and the exact Pilot Item #1 package above is awaiting founder review. The next possible separately
+authorized step is founder approval of that exact package before any manual private transfer. The current OAuth
 consent configuration is in Testing, so its refresh authorization is not suitable as durable pilot operations until
 the documented seven-day testing limitation is resolved. This status record authorizes no transfer, publication or
 Production #6. Narrator naturalness remains unresolved and
 passage-dependent, with Stage-1 experimentation paused. Uninstructed Marin remains provisional; no tested instruction
 is a universal production default, and the permanent narrator remains unresolved. Publishing accepted Production #5
-must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Runtime Migration 25,
-public publication, v0.28 and a rig remain unauthorized/absent.
+must not regenerate narration. A later voice change follows **CHANGE VOICE WITHOUT REBUILD**. Transfer, public
+publication, v0.28 and a rig remain unauthorized/absent.
 
 The [quality-cycle note](docs/QUALITY_CYCLE_20260902.md) also qualifies spend estimates and the reference-set ID reused
 across separate database histories. Use database + member + digest, not the set ID alone, when reporting provenance.

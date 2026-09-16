@@ -495,18 +495,20 @@ The publishing design initially reserved Production #5 as the first live-loop it
 Production #5 the immediate role of reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may
 later serve as the first live-loop item. The initial publishing platform remains YouTube Shorts only, at no more than
 one public pilot item per week, with founder approval for each exact external publication. Persistence through
-`FinalMediaArtifact` is extended **in source only** by additive Migration 25 for frozen packages, founder decisions,
+`FinalMediaArtifact` is extended by additive Migration 25 for frozen packages, founder decisions,
 durable external operations, remote identities, status/receipts, performance snapshots, learning assessments and
-explicit later applications. Migration 24 remains the operational multi-authority visual-reference endpoint in the
-verified runtime. The first offline publishing service/lifecycle is tested with a fake adapter. A narrow live
+explicit later applications. Migration 25 is active in the verified persistent runtime; Migration 24 remains its
+multi-authority visual-reference foundation. The publishing service/lifecycle remains fake-tested, and a narrow live
 read-only OAuth/channel-identity preflight now exists and passed using only `youtube.readonly`; credentials remain
-outside Git/provenance, and no upload, mutation or publication occurred. The Testing consent configuration's
+outside Git/provenance. A read-only manual-route observation adapter and exact Pilot Item #1 package proposition now
+exist, but no founder package approval, upload, mutation or publication occurred. The Testing consent configuration's
 documented seven-day refresh-token limitation must be resolved before durable pilot operations. Final Production #5
 envelope exposure was `$7.43 / $10`, leaving `$2.57`
 at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
 `$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
-is not authorization to spend; provider-reported exact billed totals are unavailable. Do not begin Production #6 or
-implement further publishing/analytics architecture from this design alone.
+is not authorization to spend; provider-reported exact billed totals are unavailable. The next gate is founder review
+of package digest `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`; do not begin Production #6 or implement
+further publishing/analytics architecture from this design alone.
 The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
 pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
 state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio

@@ -67,7 +67,7 @@ class FakePublishingAdapter:
         self.calls.append("resume")
         return self.resume
 
-    def observe_remote(self, remote_id: str) -> RemoteObservation:
+    def observe_remote(self, remote_id: str, package=None) -> RemoteObservation:
         self.calls.append("observe")
         return replace(self.remote, remote_id=remote_id)
 

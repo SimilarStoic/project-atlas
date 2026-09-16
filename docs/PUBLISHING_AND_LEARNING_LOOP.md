@@ -14,13 +14,15 @@ audience behaviour and apply conservative evidence to later content decisions:
 > idea → research → script → production → founder final review → controlled publication → performance ingestion →
 > interpretation → learning applied to future content
 
-This document remains design authority. Source Migration 25 now contains the separately authorized **offline**
-publishing/learning persistence foundation, validated with a test-only fake adapter. A separately authorized
+This document remains design authority. Source Migration 25 contains the separately authorized publishing/learning
+persistence foundation, validated with a test-only lifecycle adapter plus a narrow real read-only observation adapter.
+A separately authorized
 identity-only OAuth preflight now uses the minimum YouTube read-only scope and has resolved the sole authenticated
 channel exactly to `UC1cX-OTF9-LZeNo5TaFgrgQ`; its refresh token is protected by Windows Credential Locker and remains
 outside Git/provenance. The offline
 foundation still implements no live upload, publication, metric collection or autonomous optimiser; the verified
-persistent runtime remains at Migration 24. Accepted Production #5 v4 may later become the first live-loop item only after live
+persistent runtime is now at Migration 25. Accepted Production #5 v4 may later become the first live-loop item only
+after live
 integration and exact publication authority are separately accepted. Readiness PASS authorizes no upload or
 publication. Production #6 must not begin.
 The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) governs external-action safety,

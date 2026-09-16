@@ -3,10 +3,10 @@
 This directory is reserved for database documentation, schema assets, and migration history. Conveyor currently uses
 governed SQLite persistence with source-defined, transactionally applied migrations in
 `src/project_atlas/persistence.py`. Source-defined migrations are contiguous through **Migration 25**. Migration 24
-is operational in the verified persistent runtime for multi-authority visual-reference provenance; Migration 25 is
-the additive **offline** controlled-publishing/learning persistence foundation in source. This pass applied it only
-to disposable test databases, not the protected legacy database or persistent runtime. It adds no OAuth credentials,
-live YouTube adapter, upload, publication or runtime deployment authority.
+is the multi-authority visual-reference foundation; Migration 25 is the additive controlled-publishing/learning
+persistence foundation. Migration 25 is now active in the verified persistent runtime after a byte-for-byte Migration
+24 backup, with integrity and foreign keys clean and all earlier historical table contents unchanged. The protected
+legacy database remains untouched. This adds no OAuth credentials, upload, publication or runtime mutation authority.
 
 With no `ATLAS_DB_PATH`, ordinary local repository construction uses portable `data/atlas-local.db`; historical
 repository `data/atlas.db` is an exact protected legacy artifact and construction refuses that target. The persistent

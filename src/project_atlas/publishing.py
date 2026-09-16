@@ -1,4 +1,4 @@
-"""Bounded offline publishing orchestration; real Google/YouTube integration is absent."""
+"""Bounded publishing orchestration with separately gated adapter capabilities."""
 
 from __future__ import annotations
 
@@ -73,7 +73,9 @@ class PublishingAdapter(Protocol):
 
     def inspect_or_resume_transfer(self, operation: PublicationOperation) -> TransferResult: ...
 
-    def observe_remote(self, remote_id: str) -> RemoteObservation: ...
+    def observe_remote(
+        self, remote_id: str, package: PublishingPackage | None = None
+    ) -> RemoteObservation: ...
 
     def request_public_transition(
         self, publication: PlatformPublication, operation: PublicationOperation
@@ -369,7 +371,7 @@ class PublishingService:
         self._historical_authority(package, operation)
         if operation.action_kind != "upload" or operation.outcome != "unknown":
             raise ValueError("Only an uncertain upload may use identity reconciliation.")
-        observation = self.adapter.observe_remote(remote_id)
+        observation = self.adapter.observe_remote(remote_id, package)
         if (
             observation.remote_id != remote_id
             or observation.channel_id != package.channel_id
@@ -419,7 +421,7 @@ class PublishingService:
                 {"action": "founder-Studio-private-upload"},
             )
         try:
-            observation = self.adapter.observe_remote(remote_id)
+            observation = self.adapter.observe_remote(remote_id, package)
         except Exception:
             self.repository.append_publication_operation_event(
                 operation_id, "outcome_unknown", "Conveyor", {"reason": "manual-observation-lost"}
@@ -467,7 +469,8 @@ class PublishingService:
                 "Purged API identity requires fresh authorized binding before observation."
             )
         self._target(publication.channel_id)
-        result = self.adapter.observe_remote(publication.remote_id)
+        package = self.repository.get_publishing_package(publication.package_id)
+        result = self.adapter.observe_remote(publication.remote_id, package)
         if result.remote_id != publication.remote_id or result.channel_id != publication.channel_id:
             raise ValueError("Observed remote identity differs from bound lineage.")
         verification = (
@@ -538,7 +541,7 @@ class PublishingService:
         ):
             raise ValueError("API release requires one exact untouched reserved operation.")
         # Re-check immediately before dispatch; a prior private-ready snapshot can stale.
-        observed = self.adapter.observe_remote(publication.remote_id)
+        observed = self.adapter.observe_remote(publication.remote_id, package)
         if (
             observed.remote_id != publication.remote_id
             or observed.channel_id != publication.channel_id
@@ -625,7 +628,7 @@ class PublishingService:
                     {"action": "founder-Studio-private-to-public"},
                 )
         try:
-            observation = self.adapter.observe_remote(publication.remote_id)
+            observation = self.adapter.observe_remote(publication.remote_id, package)
         except Exception:
             if (
                 release.execution_mode == "manual"
