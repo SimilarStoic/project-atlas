@@ -33,7 +33,9 @@ authorized read-only OAuth
 preflight has since resolved the sole authenticated channel exactly to `UC1cX-OTF9-LZeNo5TaFgrgQ`; credentials remain
 outside Git/provenance, with the refresh token held by Windows Credential Locker rather than runtime JSON. Exact Pilot
 Item #1 package digest `bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27` is founder-approved but not transferred.
-Approval recording authorizes no operation reservation, upload, mutation or public release.
+Its exact manual private-upload operation is durably reserved but not dispatched. The human Studio upload remains
+limited to `2026-09-22 12:00–13:00 Europe/London`, after another immediate exact-channel read-only identity check;
+public transition remains separate.
 
 Create `docs/decisions/` when the first architecture decision record is needed. Each record should describe context, decision, consequences, and alternatives considered.
 
@@ -47,7 +49,7 @@ The accepted Production #2–#5 method is operationalized in the
 [SimilarStoic visual-production vocabulary](SIMILARSTOIC_VISUAL_VOCABULARY.md). The
 [controlled publishing and performance-learning design](PUBLISHING_AND_LEARNING_LOOP.md) defines the not-yet-live
 one-platform publication pilot; its read-only channel-identity preflight has passed and its first exact package is
-prepared, but founder transfer authority remains absent. The
+approved with the exact manual operation reserved, but no transfer has occurred. The
 [multi-authority visual-generation architecture](MULTI_AUTHORITY_VISUAL_GENERATION.md) defines
 the provider-neutral reference-authority bridge implemented and accepted in Migration 24. Production #5 v4 passed its
 quality-uplift proof; public launch remains unauthorized, live YouTube mutation integration remains absent, and
