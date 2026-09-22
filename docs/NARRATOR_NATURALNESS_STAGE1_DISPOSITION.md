@@ -1,5 +1,12 @@
 # SimilarStoic Narrator Naturalness — Stage-1 Disposition
 
+## Current authority — superseding selection, 22 September 2026
+
+[Daniel is now the founder-approved production narrator](SIMILARSTOIC_PRODUCTION_NARRATOR.md).
+The remaining sections preserve the historical Stage-1 disposition and later pre-selection direction unchanged.
+Marin's provisional baseline and the unresolved narrator search below are historical, not current instructions.
+Migration 26 is source/test-only until separately authorized for the persistent runtime; generation remains gated.
+
 Founder-approved documentation disposition, 15 September 2026. This record summarizes completed, privately preserved
 blind narrator experiments. It does not authorize narration generation, provider calls, production use of a new method,
 a permanent narrator decision, a spend top-up, Production #6, Migration 25, publishing or public launch.

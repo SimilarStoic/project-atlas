@@ -2,7 +2,10 @@
 
 This directory is reserved for database documentation, schema assets, and migration history. Conveyor currently uses
 governed SQLite persistence with source-defined, transactionally applied migrations in
-`src/project_atlas/persistence.py`. Source-defined migrations are contiguous through **Migration 25**. Migration 24
+`src/project_atlas/persistence.py`. Source-defined migrations are contiguous through **Migration 26**. Migration 26
+adds `inworld_tts` to the narration-execution constraint without reinterpreting historical rows, using the established
+transactional table-rebuild pattern. It is validated only on disposable databases; the persistent runtime remains at
+Migration 25 and must not be opened by the auto-migrating repository until separate migration authorization. Migration 24
 is the multi-authority visual-reference foundation; Migration 25 is the additive controlled-publishing/learning
 persistence foundation. Migration 25 is now active in the verified persistent runtime after a byte-for-byte Migration
 24 backup, with integrity and foreign keys clean and all earlier historical table contents unchanged. The protected

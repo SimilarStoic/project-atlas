@@ -412,15 +412,13 @@ Characteristics:
 - Never robotic, corporate or excessively theatrical
 - Natural rather than obviously AI-generated
 
-One consistent narrator voice should be used within a production. Uninstructed OpenAI
-`gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional accepted production-development baseline, not the
-permanent SimilarStoic narrator identity. The founder-approved
-[Narrator Naturalness Stage-1 Disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested
-instruction as a universal production default or opening fix; quality remains passage-dependent and further Stage-1
-prompt/provider experimentation was paused for diminishing information value. Founder direction now makes materially
-improved, separately approved narrator quality a prerequisite for SimilarStoic's first public release. This supersedes
-the pause only at product-direction level: it authorizes no experiment, generation, provider call, spend, permanent
-narrator selection or production regeneration. Narrator identity and provider remain replaceable: changing either
+One consistent narrator voice should be used within a production. [Inworld SYSTEM Daniel is now the founder-approved
+production narrator](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md), using the exact validated configuration and instruction.
+The [Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) preserves historical Marin findings, not
+current narrator-selection authority. Write natural spoken copy with ordinary contractions where appropriate; never
+permit provider paraphrasing. Source Migration 26 admits truthful Inworld execution provenance; persistent runtime
+migration remains separately gated. This selection authorizes no experiment, generation, provider call, spend or
+production regeneration. Narrator identity and provider remain replaceable: changing either
 requires regenerated narration, completeness transcription, actual speech alignment,
 captions, duration-dependent edit timing and final media, while script and visual design remain stable. Any
 founder-derived custom voice requires explicit consent and separate authorization. The narrator is not visually present.
@@ -489,10 +487,10 @@ as the primary illustration and use labels, checklists and diagrams only as supp
 drift. This lesson does not reopen or revise the accepted artifact.
 
 Productions #2–#5 are accepted, and the production-method validation objective plus reference-driven visual-generation
-proof are satisfied. Do not continue internal productions merely to prove another acceptable render. Narrator
-naturalness remains the primary unresolved pre-launch quality track. The
-[Stage-1 experimentation pause](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) remains historical evidence, while
-new founder direction requires materially improved narration before first public release without authorizing execution.
+proof are satisfied. Do not continue internal productions merely to prove another acceptable render.
+[Daniel is the approved production narrator](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md); the
+[Stage-1 experimentation pause](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) remains historical evidence.
+Production execution, integrated quality acceptance and release still need separate authority.
 Private-transfer pilot-readiness is **PASS** for accepted Production #5 v4; its narration is a public-release quality
 veto. The intended target is `@Similar-stoic`, channel ID
 `UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access in Studio is confirmed, and the 16 September 2026 founder-operated
@@ -544,8 +542,7 @@ the narrow real YouTube adapter/private-transfer path, not automatic publication
 Production-method validation and the reference-driven visual-generation proof are **PASSED**. Production #5 v4 is
 accepted, and the approximately **95%** public-quality assessment is historical. Founder re-review identifies its
 narration as unsuitable for SimilarStoic's public debut while preserving the unchanged artifact for the private loop
-test. Public launch remains unauthorized; narrator improvement is required but not yet authorized for execution, and
-no permanent narrator is selected.
+test. Public launch remains unauthorized; Daniel is selected and approved, but production regeneration is not authorized.
 [Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
 minimum provider-neutral bridge from approved visual-DNA examples to new scene-specific generation: keep existing
 character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per

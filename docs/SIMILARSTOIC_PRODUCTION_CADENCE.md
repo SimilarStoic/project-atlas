@@ -14,6 +14,12 @@ the roadmap's longer-term daily ambition.
 
 ## Proven Production #2–#4 method
 
+The historical method below used Marin. For new separately authorized narration, the
+[approved production narrator is Inworld SYSTEM Daniel](SIMILARSTOIC_PRODUCTION_NARRATOR.md), with exact configuration
+and no fallback. Source Migration 26 must be separately authorized for persistent runtime deployment first.
+Write ordinary spoken contractions and conversational clauses where appropriate without mechanical rewriting or
+provider paraphrasing. Exact approved script text remains authoritative.
+
 The repeatable core is:
 
 1. choose one useful, supportable idea from the existing Opportunity queue;
@@ -22,7 +28,7 @@ The repeatable core is:
 4. create a six-beat VisualPlan using the approved visual vocabulary;
 5. reuse canonical assets where they naturally fit and generate only script-required gaps;
 6. compose locally with character-first hierarchy, a static anchored camera by default and idea-led cuts;
-7. use Marin as the provisional accepted production baseline unless separately changed;
+7. use the approved narrator configuration (historically Marin; now Daniel) without hidden style additions;
 8. transcribe the final mastered narration, prove completeness and derive phone-readable captions from real speech timing;
 9. render one 1080×1920 H.264/AAC review master and run technical, factual, semantic, visual-integrity,
    motion-stability, phone-scale caption and brand QA;
@@ -51,7 +57,7 @@ Before a final artifact can pass internally:
   phone-scale review;
 - material quantitative or time-sensitive claims receive separate dated on-screen source attribution;
 - current claims pass a newest-primary-source comparison at research freeze, with any retained older source justified;
-- Marin remains explicitly provisional and replaceable rather than silently becoming the launch narrator.
+- Historical Marin remains replaceable; Daniel is the explicitly founder-approved production narrator.
 
 ## Five-working-day operating loop
 
@@ -77,7 +83,7 @@ Within the standing production authority and active quality envelope, Codex/Conv
 - drafting and revising the angle, title, hook and Script while preserving source meaning;
 - scene design, asset reuse decisions, provider/model/settings choices and attempt allocation;
 - local deterministic props, composition, motion, edit decisions and caption grouping;
-- Marin narration production, mastering, final-audio transcription, completeness and speech alignment;
+- approved-narrator production, mastering, final-audio transcription, completeness and speech alignment;
 - bounded provider retries within the exact attempt and spend ceilings;
 - technical, factual, visual, identity, brand and audio-only QA, plus routine defect correction;
 - provenance, hashes, runtime lineage, cost records, ignored review packaging and local commit preparation.
@@ -99,7 +105,7 @@ Founder judgement remains concentrated at consequential boundaries:
   visual canon, unusually risky claim, major brand exception or publication-policy change;
 - roadmap, milestone, migration, architecture, destructive Git and exceptional-risk decisions.
 
-Routine topic ranking, asset selection, voice settings within the Marin baseline, caption grouping, motion choices,
+Routine topic ranking, asset selection, exact approved narrator settings, caption grouping, motion choices,
 normal QA fixes, provenance and implementation mechanics do not create separate founder gates. A PUSH GATE remains a
 repository synchronization decision; it does not silently authorize paid production or publication unless the exact
 reviewed checkpoint says so.

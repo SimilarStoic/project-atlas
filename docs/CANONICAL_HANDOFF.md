@@ -93,7 +93,8 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`; v1–v3 remain historical iteration evidence.
 - Reference-driven dynamic SimilarStoic generation is **DEFAULT / ACCEPTED**. Approved visual references are generative
   DNA for new script-specific scenes, not a finite content inventory.
-- Source migrations 1–25 are contiguous. Migration 24 adds multi-authority visual-reference persistence; additive
+- Source migrations 1–26 are contiguous. Migration 26 adds truthful `inworld_tts` narration provenance in source/tests
+  only; persistent deployment is separately gated and has not occurred. Migration 24 adds multi-authority visual-reference persistence; additive
   Migration 25 and the guarded controlled-publishing/learning foundation exist in source and tests. Migration 25 is
   active in the verified persistent runtime after an integrity-checked byte-for-byte Migration 24 backup; all prior
   historical table contents were unchanged.
@@ -120,13 +121,12 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   Testing consent configuration's
   documented seven-day refresh-token limitation must be resolved before durable pilot operations.
 - Public launch is unauthorized and Production #6 has not started.
-- Uninstructed OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional production-development narrator
-  baseline, not the permanent narrator. The founder-approved
-  [Narrator Naturalness Stage-1 Disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) records passage-dependent,
-  unresolved quality. Its experimentation pause is superseded only at product-direction level: materially improved,
-  separately founder-approved narrator quality is required before the first public release, while no experiment,
-  generation, provider call, spend, permanent selection or production regeneration is authorized yet. Preserve
-  **CHANGE VOICE WITHOUT REBUILD**.
+- [Inworld SYSTEM Daniel is the founder-approved production narrator](SIMILARSTOIC_PRODUCTION_NARRATOR.md),
+  selected after short-cell casting and independent longer generalisation. The
+  [Stage-1 disposition](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) is historical Marin evidence, not current selection
+  authority. Migration 26 and the Inworld adapter are source/test support only; the persistent runtime remains at 25
+  pending separate migration authority. No generation, provider call, spend, production regeneration or release is
+  authorized. Preserve **CHANGE VOICE WITHOUT REBUILD**; accepted P5 v4 and Pilot #1 remain unchanged.
 - Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`, leaving `$0.30305668` unspent; remaining budget is
   not spending authorization. Active quality-envelope exposure is `$7.62694332 / $10`; `$2.37305668` remains.
   Provider-reported exact billed totals are unavailable.
@@ -292,7 +292,7 @@ SHA-256 `ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`; it i
 1080×1920, 30 fps H.264/AAC. Full decode passed, all 126 Script words are present and all 32 captions derive from
 final-master speech alignment. The UK-first claims preserve material geography and scoring-model distinctions.
 
-Marin remains the **PROVISIONAL ACCEPTED PRODUCTION BASELINE** and permanent narrator identity remains replaceable.
+At that historical checkpoint Marin was the provisional development baseline; the current Daniel decision supersedes it.
 Six-scene visual continuity passed. Current conservative envelope exposure is `$3.81`,
 leaving `$6.19` of the authorized `$10`; Production #2 added `$0.781255` conservative exposure and no exact
 provider-reported dollar charge. This acceptance creates no v0.28 milestone, Migration 24, rig or architecture change
@@ -318,7 +318,7 @@ The runtime-managed MP4 at
 SHA-256 `8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`; it is 48.450 seconds, 1080×1920,
 30 fps H.264/AAC. Full decode, complete narration, final-duration caption timing and six-scene visual continuity passed.
 Production #3 added `$0.0170125` conservative/calculable exposure, bringing the active envelope to `$3.83 / $10` with
-`$6.17` remaining. Canonicalization added no provider call or spend. Marin remains provisional and replaceable.
+`$6.17` remaining. Canonicalization added no provider call or spend. Marin was provisional and replaceable at that checkpoint.
 
 ### Accepted Production #4
 
@@ -332,7 +332,7 @@ The runtime-managed MP4 at
 `a9a15ec24be9ed11df601c61a6dd5ff5e42a983b81449fc2dffefe795c7118ac`; it is 65.400 seconds, 1080×1920,
 30 fps H.264/AAC. Full decode, 144/144 normalized narration words, final-audio caption timing and six-scene quality
 checks passed. Production #4 added `$0.557925` conservative/calculable exposure, bringing the active envelope to
-`$4.39 / $10` with `$5.61` remaining. Canonicalization added no provider call or spend. Marin remains provisional.
+`$4.39 / $10` with `$5.61` remaining. Canonicalization added no provider call or spend. Marin was provisional at that checkpoint.
 
 Forward production lesson: labels, checklists and diagrams may support the action, but the hamster and visual metaphor
 should remain the primary illustration whenever possible; avoid slide-deck or infographic drift. Production #4 remains
@@ -346,8 +346,8 @@ lineage. The method is the SimilarStoic default: approved authorities are genera
 not a finite content inventory. Repair-don't-empty, connected topology, structural geometry, facial-expression and
 occlusion/layer integrity, reuse-with-variation, semantic grounding, social-mobile-v3 captions, static-camera default
 and full-resolution/normal/phone inspection remain mandatory. Founder accepted two non-blocking historical observations:
-a small residual line beneath the mouth in one frame and one bag/table occlusion-depth inconsistency. Marin remains
-provisional and replaceable. At the **historical final Production #5 checkpoint**, exposure was `$7.43 / $10` with
+a small residual line beneath the mouth in one frame and one bag/table occlusion-depth inconsistency. Marin was
+provisional and replaceable then. At the **historical final Production #5 checkpoint**, exposure was `$7.43 / $10` with
 `$2.57` remaining; the current post-Stage-1 envelope is stated in the current snapshot above. Founder re-review finds
 the narration noticeably robotic and unsuitable for SimilarStoic's public debut. Production #5 v4 nevertheless remains
 the unchanged exact artifact for the approved private transfer test. Public launch is unauthorized;
@@ -355,10 +355,10 @@ At that historical checkpoint, Production #6, Migration 25, publishing implement
 
 ### Controlled publishing and performance learning loop
 
-Productions #2–#5 satisfy the current production-method validation objective. Narrator naturalness remains the primary
-unresolved pre-launch quality track. [Stage-1 evidence and its prior pause](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md)
-remain historical truth, while new founder direction requires materially improved, separately approved narration
-before any first public release without yet authorizing experimentation or generation. Private-transfer pilot-readiness
+Productions #2–#5 satisfy the current production-method validation objective. [Daniel is the approved production
+narrator](SIMILARSTOIC_PRODUCTION_NARRATOR.md); the narrator search is resolved, but generation, production acceptance
+and public release remain separately gated. [Stage-1 evidence](NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md)
+remains historical truth. Private-transfer pilot-readiness
 remains **PASS** for unchanged Production #5 v4;
 the exact channel and recovery/learning boundaries are governed by the
 [Controlled YouTube Pilot Architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md). Publishing remains unauthorized;

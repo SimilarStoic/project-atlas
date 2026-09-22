@@ -1,6 +1,15 @@
 # Conveyor — Current Status
 
-## Last Updated
+## Current narrator decision — 22 September 2026
+
+[Inworld SYSTEM Daniel is the founder-approved SimilarStoic production narrator](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md).
+The narrator search is resolved after short-cell casting and independent longer generalisation. Source Migration 26,
+the explicit brand resolver and the isolated Inworld adapter support truthful provenance; the persistent runtime is
+still Migration 25, unchanged, awaiting separate migration authorization. No generation or production is authorized.
+Earlier dated quality assessments and spend below are historical; Daniel's selection does not approve P5 v4 for public
+release, alter Pilot #1 or begin Production #6. Preserve **CHANGE VOICE WITHOUT REBUILD**.
+
+## Historical status — 16 September 2026
 
 16 September 2026 — Multi-authority visual-generation implementation remains synchronized at
 `1284e344b376e550b0a06ee79e79e9ae478b96c2`, with production-quality gates synchronized through
@@ -32,8 +41,8 @@ The [post-production quality-cycle note](docs/QUALITY_CYCLE_20260902.md) records
 [evidence manifest](docs/QUALITY_CYCLE_20260902_MANIFEST.json). Production #1's original Hazel, Marin v2 and presentation
 proofs remain founder-rejected for final quality. The later 18.03-second audiovisual integration proof is accepted: it
 combined approved stills with restrained motion, idea-led cuts, subordinate speech-aligned captions and complete
-narration. OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin is the **PROVISIONAL ACCEPTED PRODUCTION BASELINE**,
-not the permanent SimilarStoic narrator. The earlier GPT Image 2 full-scene reference-board method failed, while the later isolated-character
+narration. At that historical checkpoint OpenAI `gpt-4o-mini-tts-2025-12-15` / Marin was the provisional
+development baseline; Daniel now supersedes it. The earlier GPT Image 2 full-scene reference-board method failed, while the later isolated-character
 method passed: founder + ChatGPT accepted
 `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` as the first approved
 secondary acting-pose reference. Founder + ChatGPT subsequently selected
@@ -72,13 +81,10 @@ The production-method validation objective and reference-driven dynamic-scene pr
 **ACCEPTED**; v1, v2, v3 and v3-final remain immutable historical review/iteration evidence. Reference-driven dynamic
 SimilarStoic generation is the default production method, using approved references as generative visual DNA rather
 than a finite inventory. The approximately 95% public-quality assessment is historical; founder re-review identifies
-the narration as a public-debut veto. Public launch remains unauthorized. Uninstructed OpenAI
-`gpt-4o-mini-tts-2025-12-15` / Marin remains the provisional
-production-development narrator baseline, not the permanent narrator. The
-[Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) approves no tested instruction as a universal
-production default or opening fix; narrator quality remains passage-dependent. The former experimentation pause is
-superseded only as product direction: narrator-quality work is again required before first public release, but no
-experiment, generation, provider call, spend, permanent narrator selection or production regeneration is authorized.
+the narration as a public-debut veto. Public launch remains unauthorized. Daniel is now the approved production
+narrator under the [current decision](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md); the
+[Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) remains historical evidence, not a current
+Marin default. No experiment, generation, provider call, spend or production regeneration is authorized by selection.
 Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`,
 leaving `$0.30305668` unspent; this is not authorization to spend. The active quality envelope is
 `$7.62694332 / $10`, with `$2.37305668` remaining. Provider-reported exact billed totals are unavailable.
@@ -224,7 +230,7 @@ Founder + ChatGPT accepted the local audiovisual integration proof at
 SHA-256 `1267f9c05c3431ee2d71fe73433f318efc9bfb935616a13fd56593500f7d55ca`, 18.03 seconds, 1080×1920 H.264/AAC.
 This acceptance proves the validated static language can support restrained motion, idea-led cuts, subordinate captions
 aligned to actual speech and complete narration while preserving identity. It does not make all future videos ready.
-Marin is accepted for current production development only; permanent narrator identity remains open and replaceable.
+Historically Marin was accepted for production development only; Daniel now supersedes it as the approved narrator.
 
 `D:\ProjectAtlas\data\atlas.db` is protected legacy/local historical state, distinct from the runtime, with verified
 SHA-256 `5B414FBE03BF86765FFCB095715B12F3CCDBC064E797552C41D140E6B6B3320E`.
@@ -261,10 +267,8 @@ and requires another immediate pre-upload exact-channel read-only check. Public 
 narrator quality; no release operation may be reserved or dispatched without new founder direction. The current OAuth
 consent configuration is in Testing, so its refresh authorization is not suitable as durable pilot operations until
 the documented seven-day testing limitation is resolved. This status record authorizes no transfer, publication or
-Production #6. Narrator naturalness remains unresolved and passage-dependent. Product direction now requires material,
-separately founder-approved narrator improvement before SimilarStoic's first public release, while authorizing no new
-experiment or generation yet. Uninstructed Marin remains provisional; no tested instruction is a universal production
-default, and the permanent narrator remains unresolved. Production #5 v4 must remain byte-identical for the private
+Production #6. Daniel is now founder-approved; selection does not itself authorize generation, regeneration or public
+release. Historical Marin instruction findings remain unchanged. Production #5 v4 must remain byte-identical for the private
 test. A later approved voice change follows **CHANGE VOICE WITHOUT REBUILD**. After successful private verification,
 the intended next local governance action is a separately authorized revocation of the v2 package's effective
 publication approval before any release operation can be reserved. Public publication, v0.28 and a rig remain
@@ -1448,12 +1452,12 @@ successor after v0.27 is selected.
 
 # Next Step
 
-Phase 1 is formally closed and Phase 2 remains active/incomplete. Current source and runtime migrations are contiguous
-through 25. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
+Phase 1 is formally closed and Phase 2 remains active/incomplete. Source migrations are contiguous through 26;
+persistent runtime remains at 25 pending separate migration authority. Productions #2–#5 are accepted, with Production #5 v4 establishing reference-driven dynamic generation as
 the default SimilarStoic visual-production method. Private-transfer pilot-readiness is **PASS** and the exact manual
-upload operation is reserved, but no transfer has occurred. Public release is held for materially improved,
-separately founder-approved narration; the prior Stage-1 experiment pause is superseded only as product direction and
-no narrator execution is authorized. Production #6 remains unauthorized.
+upload operation is reserved, but no transfer has occurred in that historical canonical pilot snapshot. Daniel is now
+the approved narrator; no narrator execution or production regeneration is authorized. Public release remains held
+pending separate production-quality and release approval. Production #6 remains unauthorized.
 The roadmap remains governed by canonical GitHub documentation and the explicit change protocol in
 [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
 

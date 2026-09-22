@@ -1,5 +1,10 @@
 # SimilarStoic Public-Launch Creative Calibration
 
+Current narrator milestone, 22 September 2026: [Daniel is founder-approved for production](SIMILARSTOIC_PRODUCTION_NARRATOR.md)
+after short-cell casting and independent longer generalisation. Narrator search below is historical methodology,
+not an instruction to continue casting. Remaining calibration, production generation and public release are separately
+authorized; this selection does not reopen visuals or approve a newly assembled production.
+
 Founder-approved future methodology, 16 September 2026. Creative Calibration is the intended quality phase after
 **successful exact private remote verification of Pilot Item #1**. This specification grants no experiment,
 generation, provider, subscription, spend, production or publication authority.

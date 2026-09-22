@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from project_atlas.persistence import (
     AtlasRepository,
@@ -354,6 +354,15 @@ finally {
         )
 
 
+class NarrationSynthesizer(Protocol):
+    engine_kind: str
+    engine_identity: str
+    voice_identity: str
+    locale: str
+
+    def synthesize(self, text: str) -> NarrationSynthesis: ...
+
+
 class OpenAINarrationSynthesizer:
     """Generate one WAV through OpenAI's authorized speech endpoint."""
 
@@ -512,14 +521,46 @@ class MediaService:
             self.storage.remove(path)
             raise
 
+    def generate_brand_narration(
+        self,
+        execution_id: str,
+        narration_id: str,
+        script_id: str,
+        *,
+        brand_key: str,
+        execution_authorized: bool = False,
+    ) -> NarrationGenerationResult:
+        """Use approved brand configuration through the existing immutable lifecycle.
+
+        Callers must obtain separate execution/spend authority and migrate the
+        target database before invoking this explicit, non-default entry point.
+        """
+        from project_atlas.narration import resolve_narrator
+
+        if not execution_authorized:
+            raise NarrationSynthesisError("Separate narration spend authorization is required.")
+        if (
+            self.repository.connection.execute(
+                "SELECT 1 FROM schema_migrations WHERE version = 26"
+            ).fetchone()
+            is None
+        ):
+            raise NarrationSynthesisError("Migration 26 is required before Inworld execution.")
+        return self.generate_local_narration(
+            execution_id,
+            narration_id,
+            script_id,
+            synthesizer=resolve_narrator(brand_key, execution_authorized=True),
+        )
+
     def generate_local_narration(
         self,
         execution_id: str,
         narration_id: str,
         script_id: str,
-        synthesizer: LocalSystemSpeechSynthesizer | None = None,
+        synthesizer: NarrationSynthesizer | None = None,
     ) -> NarrationGenerationResult:
-        """Synthesize exact Script text locally and record one immutable terminal attempt."""
+        """Synthesize exact Script text and record one immutable terminal attempt."""
 
         script = self.repository.get_script(script_id)
         engine = synthesizer or LocalSystemSpeechSynthesizer()
