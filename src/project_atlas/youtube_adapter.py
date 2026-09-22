@@ -184,7 +184,7 @@ class YouTubeReadOnlyObservationAdapter:
             "description": snippet.get("description") == manifest.get("description"),
             "tags": snippet.get("tags", []) == manifest.get("tags", []),
             "category": snippet.get("categoryId") == str(category.get("id")),
-            "language": snippet.get("defaultLanguage") == manifest.get("language"),
+            "language": snippet.get("defaultAudioLanguage") == manifest.get("language"),
             "audience": bool(made_for_kids) is bool(audience.get("made_for_kids")),
             "altered_or_synthetic_media": bool(status.get("containsSyntheticMedia", False))
             is declared_synthetic,

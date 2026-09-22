@@ -45,7 +45,7 @@ class Client:
                 "description": "Exact description",
                 "tags": ["AI infrastructure", "data centres", "power grid"],
                 "categoryId": "27",
-                "defaultLanguage": "en-GB",
+                "defaultAudioLanguage": "en-GB",
             },
             "status": {
                 "privacyStatus": "private",
@@ -104,6 +104,8 @@ def test_exact_channel_and_private_observation_are_sanitized():
     assert observed.privacy == "private"
     assert observed.processing == "succeeded"
     assert observed.metadata_matches is True
+    assert "defaultLanguage" not in client.resource["snippet"]
+    assert observed.provider_payload["metadata_checks"]["language"] is True
     evidence = repr(observed.provider_payload)
     assert "must-not-survive" not in evidence
     assert "authorization" not in evidence.lower()
@@ -139,6 +141,21 @@ def test_remote_wrong_channel_and_metadata_mismatch_fail_closed():
     )
     assert observed.metadata_matches is False
     assert observed.provider_payload["metadata_checks"]["title"] is False
+
+
+def test_wrong_or_missing_default_audio_language_does_not_fall_back():
+    client = Client()
+    client.resource["snippet"]["defaultLanguage"] = "en-GB"
+    client.resource["snippet"]["defaultAudioLanguage"] = "fr-FR"
+    adapter = YouTubeReadOnlyObservationAdapter(Provider(), client)
+    observed = adapter.observe_remote("remote-1", package())
+    assert observed.provider_payload["metadata_checks"]["language"] is False
+    assert observed.metadata_matches is False
+
+    del client.resource["snippet"]["defaultAudioLanguage"]
+    observed = adapter.observe_remote("remote-1", package())
+    assert observed.provider_payload["metadata_checks"]["language"] is False
+    assert observed.metadata_matches is False
 
 
 def test_scope_is_exact_and_mutations_are_unavailable():
