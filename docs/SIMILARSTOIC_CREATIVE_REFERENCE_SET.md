@@ -12,10 +12,10 @@ selected characteristic and quality authorities, not proof of commercial success
 
 ### Layer A — private exact audiovisual evidence
 
-The founder-selected third-party excerpts belong outside tracked Git history. If later supplied and separately handled,
-the preferred private convention is `D:\ConveyorRuntime\creative-references\similarstoic\`; this task does not create
-or populate that directory. Exact stored clips, verified hashes and approved anchors are the strongest evidence for
-future re-grounding.
+The six founder-supplied exact reviewed excerpts were privately ingested under separate founder authority at
+`D:\ConveyorRuntime\creative-references\similarstoic\`, outside tracked Git history. The private
+`reference_inventory.json` there is local provenance evidence; Git contains no third-party reference media. Exact
+stored clips, verified hashes and approved anchors are the strongest evidence for future re-grounding.
 
 Each private evidence record supports:
 
@@ -31,15 +31,20 @@ No unavailable value may be reconstructed from memory or invented. Current evide
 
 | ID | Source URL | Source/video label | Excerpt duration | Private evidence path | SHA-256 | Incorporated | Approved anchors | Provenance status |
 |---|---|---|---|---|---|---|---|---|
-| `SS-CR-A-001` | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded |
-| `SS-CR-B-001` | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded |
-| `SS-CR-C-001` | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded |
-| `SS-CR-D-001` | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded |
-| `SS-CR-E-001` | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded |
-| `SS-CR-F-001` | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded | not yet recorded |
+| `SS-CR-A-001` | https://www.youtube.com/watch?v=DgbHW0IqHrI&t=448s | Founder-reviewed source A — YouTube video DgbHW0IqHrI | 31.125s | `D:\ConveyorRuntime\creative-references\similarstoic\SS-CR-A-001.mp4` | `ae26280f38db6238001fbbc1c3234117740d0d6c8835aa0977e6373fd6fe9881` | 2026-09-22 | 06:58.000–07:29.125 | founder-supplied exact reviewed clip |
+| `SS-CR-B-001` | https://www.youtube.com/watch?v=Xtxscxi83XA | Founder-reviewed source B — YouTube video Xtxscxi83XA | 31.040s | `D:\ConveyorRuntime\creative-references\similarstoic\SS-CR-B-001.mp4` | `33182ad748bb4c0bbd9a65993a71e5c1f7f7996b72d55013c792667b15d98f37` | 2026-09-22 | 02:42.000–03:13.040 | founder-supplied exact reviewed clip |
+| `SS-CR-C-001` | https://www.youtube.com/watch?v=cF5iP-P67fg | Founder-reviewed source C — YouTube video cF5iP-P67fg | 31.211s | `D:\ConveyorRuntime\creative-references\similarstoic\SS-CR-C-001.mp4` | `701642c23183cbba02e39e75bbc51dbf2025ff4a06a749b3280edb4ec4fa2055` | 2026-09-22 | 00:19.000–00:50.211 | founder-supplied exact reviewed clip |
+| `SS-CR-D-001` | https://www.youtube.com/watch?v=xa-4IAR_9Yw | Founder-reviewed source D — YouTube video xa-4IAR_9Yw | 30.720s | `D:\ConveyorRuntime\creative-references\similarstoic\SS-CR-D-001.mp4` | `21ecb5e1ba59cdfc3ac3e8e853c31a514ac28e9772b5214c222acd31418747bb` | 2026-09-22 | 01:19.000–01:49.720 | founder-supplied exact reviewed clip |
+| `SS-CR-E-001` | https://www.youtube.com/watch?v=DWgUYdqZxe8 | Founder-reviewed source E — YouTube video DWgUYdqZxe8 | 30.869s | `D:\ConveyorRuntime\creative-references\similarstoic\SS-CR-E-001.mp4` | `48456c72faabf906ca68fbfab51b2fd3b3f2edc42ff064047d44fc382ce48306` | 2026-09-22 | 02:28.000–02:58.869 | founder-supplied exact reviewed clip |
+| `SS-CR-F-001` | https://www.youtube.com/watch?v=f1gkkzHZxNg | Founder-reviewed source F — YouTube video f1gkkzHZxNg | 30.805s | `D:\ConveyorRuntime\creative-references\similarstoic\SS-CR-F-001.mp4` | `984e0fbe16dff6911ee5c92771ebcba78fdc29f2df87050850a35df01f432fef` | 2026-09-22 | 00:37.000–01:07.805 | founder-supplied exact reviewed clip |
+
+The founder-confirmed start timestamps are exact. Earlier end timestamps were rough estimates and are not competing
+anchors; each approved endpoint above is the exact start plus the measured duration of the corresponding
+founder-supplied evidence file.
 
 The actual private media is evidence. It must not be committed to Git, redistributed as project material or treated as
-owned SimilarStoic source art.
+owned SimilarStoic source art. Recording its provenance does not authorize Creative Calibration execution,
+narrator/provider testing, generation, spend, Production #6 or publication.
 
 ### Layer B — tracked canonical interpretation
 
@@ -159,7 +164,7 @@ revisable defaults; none should silently become an immutable mechanical rule.
 
 ## Future exact anchors
 
-Once a verified private excerpt exists, a separately reviewed evidence record may identify exact intervals for narrator
+Separately reviewed evidence may identify more specific intervals within the verified private excerpts for narrator
 cadence/naturalness, scene mutation, rapid visual turnover, audio-first explanation, sustained rhythm or recognisable
 identity. Do not invent anchors. Prefer “compare against `SS-CR-F-001` at approved interval X–Y” over imitation language.
 
