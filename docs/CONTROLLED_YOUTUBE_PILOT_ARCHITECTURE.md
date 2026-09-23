@@ -1,5 +1,10 @@
 # Controlled YouTube Pilot — Architecture Authority
 
+Current state, 23 September 2026: the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
+supersedes historical pending-package/transfer/runtime-25/narrator summaries below, not the architecture.
+Pilot #1 is reconciled and privately verified; effective approval is revoked; no release operation or public receipt
+exists. Runtime is Migration 26 and Daniel is approved. No new external action is authorized by this reconciliation.
+
 Founder-approved canonical reconciliation, 15 September 2026. This record defines the smallest controlled
 publishing and learning architecture for the initial SimilarStoic YouTube Shorts pilot. Source Migration 25 and a
 provider-neutral offline persistence/lifecycle foundation were subsequently implemented under separate authority.

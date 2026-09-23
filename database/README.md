@@ -4,8 +4,11 @@ This directory is reserved for database documentation, schema assets, and migrat
 governed SQLite persistence with source-defined, transactionally applied migrations in
 `src/project_atlas/persistence.py`. Source-defined migrations are contiguous through **Migration 26**. Migration 26
 adds `inworld_tts` to the narration-execution constraint without reinterpreting historical rows, using the established
-transactional table-rebuild pattern. It is validated only on disposable databases; the persistent runtime remains at
-Migration 25 and must not be opened by the auto-migrating repository until separate migration authorization. Migration 24
+transactional table-rebuild pattern. Separately authorized persistent migration 25 -> 26 completed on 22 September
+2026 with a verified SQLite backup and preserved historical business data. The
+[23 September reconciliation](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026) verified
+migrations 1–26, integrity `ok`, zero FK violations and the unchanged post-migration hash. No migration was performed
+by that read-only audit. Do not use auto-migrating/seeding repository construction for inspection. Migration 24
 is the multi-authority visual-reference foundation; Migration 25 is the additive controlled-publishing/learning
 persistence foundation. Migration 25 is now active in the verified persistent runtime after a byte-for-byte Migration
 24 backup, with integrity and foreign keys clean and all earlier historical table contents unchanged. The protected

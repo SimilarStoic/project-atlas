@@ -1,5 +1,11 @@
 # Controlled Publishing and Performance Learning Loop
 
+Current state, 23 September 2026: see the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026).
+Pilot #1 completed the recorded private systems-proof loop and its effective publication approval is revoked.
+There is no public receipt or release operation. Runtime is Migration 26; Daniel is the approved narrator.
+Earlier Marin/runtime-25/prospective-transfer descriptions below are historical, not current execution authority.
+The publishing and learning design remains unchanged; no public release, new production or provider call is authorized.
+
 ## Decision and boundary
 
 Productions #2–#5 are founder-accepted. Production #5 v4 also satisfies the reference-driven visual-generation proof.

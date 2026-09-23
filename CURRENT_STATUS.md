@@ -1,11 +1,42 @@
 # Conveyor — Current Status
 
+## Verified pilot and runtime state — 23 September 2026
+
+Read-only inspection of the persistent runtime establishes **Case A: already durably reconciled**.
+Pilot #1 package v2 (`bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27`) and
+P5 v4 (`c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440d50028ea2bd`) remain unchanged.
+The existing manual upload operation `5cf19320f7693a22c97ca122b7733450dfb11d64e6aed691911632bb755e9fa6`
+has `reserved -> dispatch_started -> outcome_unknown -> reconciled` history, with resolution `succeeded`.
+Its existing PlatformPublication binds remote `hgZyEpoPlCU` to channel `UC1cX-OTF9-LZeNo5TaFgrgQ`.
+The preserved 22 September 11:53:34 UTC snapshot records private visibility, successful processing and passed
+adapter metadata verification. This is historical authenticated-observation evidence, not a fresh remote check.
+Exact remote media, SRT and cover bytes were not independently hashed; founder manual-transfer lineage and the
+adapter's supported observations remain distinct evidence. The service's hard-coded `offline-adapter-v1` status
+label does not identify the actual transport; its preserved payload is `youtube-readonly-observation-v1`.
+
+The subsequent founder revocation is already recorded at sequence 2. Effective publication authority is revoked;
+there are no release operations or public-publication receipts. The recorded outcome is private systems proof,
+not public launch or creative-quality acceptance. No continuous remote-visibility surveillance is claimed.
+Counts: 2 packages, 2 gate decisions, 1 upload operation, 4 events, 1 PlatformPublication, 1 status snapshot,
+0 receipts. This audit appended no runtime rows and required no reconciliation backup.
+
+Persistent migrations are exactly **1–26**, integrity `ok`, foreign-key violations `0`. The DB still matches the
+preserved post-Migration-26 SHA-256 `ba08c7f76a1deb7587662da83559b4e7a0e352719e211b8af3390ce05f4e51ec`.
+The prior separately authorized migration evidence and private Cell 1 state audit preserve detailed provenance.
+No migration was executed by this reconciliation.
+
+The private-proof prerequisite for separately authorized Creative Calibration is satisfied. The bounded Cell 1
+authorization permits only the specified zero-spend visual comparison after asset/quality gates; it does not accept
+a visual grammar or authorize providers. Daniel remains approved; P5 v4 remains unchanged; Production #6 is not
+started; regeneration and public release remain unauthorized. Older pending-transfer/revocation/runtime-25 wording
+below describes earlier checkpoints and is superseded by this verified state.
+
 ## Current narrator decision — 22 September 2026
 
 [Inworld SYSTEM Daniel is the founder-approved SimilarStoic production narrator](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md).
 The narrator search is resolved after short-cell casting and independent longer generalisation. Source Migration 26,
-the explicit brand resolver and the isolated Inworld adapter support truthful provenance; the persistent runtime is
-still Migration 25, unchanged, awaiting separate migration authorization. No generation or production is authorized.
+the explicit brand resolver and the isolated Inworld adapter support truthful provenance. The persistent runtime was
+subsequently migrated under separate authority; see the verified state above. No generation or production is authorized.
 Earlier dated quality assessments and spend below are historical; Daniel's selection does not approve P5 v4 for public
 release, alter Pilot #1 or begin Production #6. Preserve **CHANGE VOICE WITHOUT REBUILD**.
 

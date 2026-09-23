@@ -1,5 +1,14 @@
 # SimilarStoic Public-Launch Creative Calibration
 
+## Entry-gate reconciliation — 23 September 2026
+
+The [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
+establishes the successful private systems-proof prerequisite from existing durable ledger evidence (Case A).
+No duplicate events were appended. P5 v4 and package v2 are unchanged; the upload is reconciled, and its publication
+approval has subsequently been revoked. The reserved-only and future-revocation wording below is historical.
+Daniel remains approved. Cell 1 has separate bounded zero-spend execution authority, subject to asset/quality gates;
+this does not approve any resulting cell or canonize a visual grammar. No production or public release is authorized.
+
 Current narrator milestone, 22 September 2026: [Daniel is founder-approved for production](SIMILARSTOIC_PRODUCTION_NARRATOR.md)
 after short-cell casting and independent longer generalisation. Narrator search below is historical methodology,
 not an instruction to continue casting. Remaining calibration, production generation and public release are separately

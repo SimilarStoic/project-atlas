@@ -1,5 +1,14 @@
 # Conveyor — SimilarStoic Roadmap
 
+## Current operational reconciliation — 23 September 2026
+
+The [verified pilot/runtime record](CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
+supersedes earlier pending-transfer, future-revocation and runtime-25 wording below without changing phase order.
+Pilot #1's existing manual upload is reconciled to passed private verification; its effective approval is revoked.
+Persistent runtime is Migration 26. Daniel remains approved. Creative Calibration's private-proof prerequisite is
+satisfied, but execution remains separately bounded; no visual grammar is accepted by this update. No public release,
+P5 regeneration or Production #6 is authorized. Earlier operational statements are preserved as checkpoint history.
+
 ## Mission
 
 Build an AI-powered content operating system for SimilarStoic that can research relevant topics, develop high-quality content, produce short-form and long-form videos, distribute them across YouTube, TikTok and Instagram, analyse performance and progressively optimise the content strategy.

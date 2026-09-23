@@ -56,9 +56,11 @@ Existing explicit local/OpenAI adapters remain available for other callers; they
 Credentials remain in `INWORLD_API_KEY`, never ordinary provenance. No live verification is performed by this task.
 
 Source Migration 26 admits truthful Inworld execution provenance using the established constraint-rebuild pattern.
-The persistent runtime remains at Migration 25, unchanged. **Separate founder authorization is required to migrate it
-before production execution.** Existing repository construction auto-migrates its selected database: do not point it
-at the persistent runtime until that authorization exists.
+The persistent runtime was subsequently migrated to 26 under separate founder authority on 22 September 2026.
+The [23 September read-only reconciliation](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
+verified migrations 1–26, integrity `ok`, zero FK violations and the preserved post-migration hash. No further migration
+is needed or authorized here. Repository construction still auto-migrates/seeds: never use it merely to inspect runtime
+state or to build private calibration media. Runtime readiness is not synthesis authorization.
 
 This decision grants no provider call, generation, spend, Production #6, P5 regeneration, upload or release authority.
 P5 v4 and Pilot #1 remain unchanged and public release remains held. Approved narrator quality is not acceptance of

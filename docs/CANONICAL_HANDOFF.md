@@ -1,5 +1,18 @@
 # Conveyor — Canonical Handoff and Governance
 
+## Current operational reconciliation — 23 September 2026
+
+Read the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
+before using older operational checkpoints below. Case A applies: the existing manual upload already has successful
+reconciliation, exact remote binding and a private/processing-succeeded/verification-passed snapshot. The later
+founder revocation is already effective; no release operation or public receipt exists. Do not duplicate events,
+reconcile again, or treat the historical approval as current release authority.
+
+Persistent runtime is already Migration 26, healthy and hash-identical to its preserved post-migration evidence.
+This supersedes the runtime-25 and reserved-only summaries below; no migration or runtime write was needed here.
+The private systems-proof entry gate is satisfied, not public creative acceptance. Daniel remains approved;
+separately bounded zero-spend Cell 1 work does not authorize providers, P5 regeneration, Production #6 or release.
+
 ## Purpose and authority
 
 This document is the durable cross-chat re-grounding guide for Conveyor. GitHub is the canonical
