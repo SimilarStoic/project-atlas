@@ -26,10 +26,15 @@ The prior separately authorized migration evidence and private Cell 1 state audi
 No migration was executed by this reconciliation.
 
 The private-proof prerequisite for separately authorized Creative Calibration is satisfied. The bounded Cell 1
-authorization permits only the specified zero-spend visual comparison after asset/quality gates; it does not accept
-a visual grammar or authorize providers. Daniel remains approved; P5 v4 remains unchanged; Production #6 is not
-started; regeneration and public release remain unauthorized. Older pending-transfer/revocation/runtime-25 wording
-below describes earlier checkpoints and is superseded by this verified state.
+comparison produced useful progression evidence but is **INVALID FOR VISUAL-GRAMMAR SELECTION** because both concealed
+candidates fell below the independent P5 v4 visual-production quality floor. No grammar winner was selected and the
+mapping remains private. The canonical
+[P5 v4 visual non-regression gate](docs/SIMILARSTOIC_CREATIVE_CALIBRATION.md#p5-v4-visual-non-regression-gate) now makes
+visual-production quality a hard prerequisite to temporal/spatial grammar, requires direct rendered comparison, and
+stops rather than improvising downward when bespoke visual work is needed. Daniel remains approved; P5 v4 remains
+unchanged; Production #6 is not started; rebuild, regeneration and public release remain unauthorized. Older
+pending-transfer/revocation/runtime-25 wording below describes earlier checkpoints and is superseded by this verified
+state.
 
 ## Current narrator decision — 22 September 2026
 

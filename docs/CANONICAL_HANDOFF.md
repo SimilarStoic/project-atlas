@@ -11,7 +11,12 @@ reconcile again, or treat the historical approval as current release authority.
 Persistent runtime is already Migration 26, healthy and hash-identical to its preserved post-migration evidence.
 This supersedes the runtime-25 and reserved-only summaries below; no migration or runtime write was needed here.
 The private systems-proof entry gate is satisfied, not public creative acceptance. Daniel remains approved;
-separately bounded zero-spend Cell 1 work does not authorize providers, P5 regeneration, Production #6 or release.
+Visual Grammar Cell 1 is **INVALID FOR VISUAL-GRAMMAR SELECTION — USEFUL PROGRESSION EVIDENCE ONLY** because both
+concealed candidates fell below the independent P5 v4 visual-quality floor; no winner was selected and the mapping
+remains private. The canonical
+[P5 v4 visual non-regression gate](SIMILARSTOIC_CREATIVE_CALIBRATION.md#p5-v4-visual-non-regression-gate) makes that
+baseline a hard prerequisite to temporal/spatial grammar and requires direct final-frame comparison. This does not
+authorize providers, a rebuild, P5 regeneration, Production #6 or release.
 
 ## Purpose and authority
 
@@ -149,7 +154,10 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   foundation; F is the primary narrator-performance benchmark, not an imitation or visual-redesign target.
 - [Public-Launch Creative Calibration](SIMILARSTOIC_CREATIVE_CALIBRATION.md) is the intended future quality phase only
   after successful exact private remote verification. Its final-quality cells, longer narrator generalisation, stitch
-  test and multi-passage/subject method are not execution, provider, spend, generation or Production #6 authority.
+  test and multi-passage/subject method are not execution, provider, spend, generation or Production #6 authority. Its
+  P5 v4 visual non-regression gate separates visual-production quality from temporal/spatial grammar: quality is the
+  hard prerequisite, actual rendered comparison and caption-profile inspection are required, human visual judgement
+  outranks checklist compliance, and visibly weaker zero-cost reuse must stop rather than improvise downward.
 - Founder owns final product, quality, spend, publication and push decisions; ChatGPT owns product architecture and
   canonical specification stewardship; Codex performs bounded inspection, implementation and validation.
 - Governing principle: **CHANGE WITHOUT REBUILD**.

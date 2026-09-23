@@ -86,6 +86,82 @@ Mark genuinely irrelevant dimensions **NON-APPLICABLE**. These are review dimens
 Founder comparative judgement and explicit rationale remain primary unless a later bounded experiment predefines a
 quantitative decision rule.
 
+## P5 v4 visual non-regression gate
+
+Production #5 v4 is the current accepted SimilarStoic **visual-production quality baseline** for Creative Calibration.
+It remains the hard control condition until the founder explicitly replaces it with a better accepted baseline.
+
+Calibration separates two layers:
+
+- **Layer A — visual production quality:** authored-frame coherence, shared-illustrator treatment, character-world
+  integration, physical integrity, appropriate richness, caption-profile identity and final composite quality.
+- **Layer B — temporal/spatial grammar:** scene progression, composition turnover, persistent visual memory, mutation
+  logic, pacing and related experimental variables.
+
+Layer A is a hard prerequisite. Layer B strength cannot compensate for Layer A failure. A treatment is not a valid
+final-publication-quality calibration candidate merely because it progresses better while looking visibly weaker than
+the accepted baseline.
+
+Apply this gate to every meaningful final state of a final-quality visual-grammar cell:
+
+1. **Direct baseline comparison.** Inspect the actual composite beside representative P5 v4 visual evidence at full
+   resolution, ordinary viewing scale/playback and phone scale. Checklist-only approval is insufficient.
+2. **Authored-frame test.** The frame must read as one deliberate SimilarStoic illustration, not independent cutouts or
+   components arranged on a template.
+3. **Same-illustrator coherence.** Character, props, environment, overlays and compositing must remain coherent in line
+   weight, texture, rendering density, palette, perspective, polish and applicable lighting/treatment.
+4. **Character-world integration.** The hamster must credibly occupy and act inside the illustrated situation. Floating
+   props, detached UI modules and pasted character cutouts fail unless an intentionally abstract beat genuinely
+   requires that language.
+5. **Physical integrity.** Anatomy, contact, occlusion, depth, connected topology and structural geometry must remain
+   credible.
+6. **Appropriate richness.** Do not remove useful environmental context, semantic objects, depth layers, physical
+   relationships or scene specificity merely to simplify repair, reuse available stock or avoid generation. Preserve
+   **REPAIR — DO NOT EMPTY**.
+7. **Graphical restraint.** Labels, arrows, cards and diagrams may support an illustration, but must not replace a
+   physical or illustrated relationship merely because local deterministic assembly is cheaper or easier.
+   Intentionally abstract explanatory scenes remain valid where genuinely appropriate.
+8. **Caption-profile identity.** Wording and timing parity do not establish visual-profile parity. When
+   `similarstoic-social-mobile-v3` is required, inspect the actual bold dark text, warm off-white high-contrast box,
+   short one/two-line semantic grouping, safe-zone placement and phone readability.
+9. **Progression without degradation.** Every meaningful mutation or cut state must independently retain the quality
+   floor. A scene cannot begin at public quality and visibly degrade as states or objects are added.
+10. **Reuse with variation.** Reuse succeeds only when the integrated result intentionally advances action, expression,
+    prop state, object relationship, crop, composition or visual understanding. Template repetition or pose swapping
+    alone is insufficient.
+11. **Quality before cost.** If zero-cost reuse or local adaptation visibly falls below the accepted baseline, stop at
+    **BLOCKED — P5 V4 QUALITY FLOOR REQUIRES BESPOKE VISUAL WORK**. Do not improvise downward or force reuse to save
+    provider cost.
+12. **Human visual judgement outranks technical compliance.** Hashes, resolution, successful decode, timing, anatomy
+    checks, semantic presence, collision checks and other deterministic QA cannot make a visibly weak frame pass.
+    Final judgement operates on the actual composite frame.
+
+For each meaningful state, record `PASS`, `FAIL` or `NOT ENOUGH EVIDENCE` for authored-frame coherence,
+same-illustrator coherence, character-world integration, contact/occlusion/geometry, appropriate richness, caption
+integration, phone-scale hierarchy, direct P5 v4 equivalence, semantic arrival and progression/visual memory. Any Layer A
+`FAIL` blocks grammar selection and founder-review-ready status.
+
+Deterministic local work remains valid for bounded compositing, layout, annotation, cleanup, crops, masks, prop-state
+changes and other work that preserves this quality floor. It must not become a cost-driven substitute for integrated
+visual authorship when the result is visibly weaker.
+
+### Visual Grammar Cell 1 disposition
+
+Visual Grammar Cell 1 is **INVALID FOR VISUAL-GRAMMAR SELECTION — USEFUL PROGRESSION EVIDENCE ONLY**. Both concealed
+candidates demonstrated useful progression mechanics but fell below the independent P5 v4 visual-production quality
+floor, so no grammar winner may be selected and neither treatment is canonized. The concealed mapping remains private.
+
+Preserve Cell 1 as evidence about coherent composition turnover, persistent spatial memory, cumulative state mutation
+and semantic pacing. Those mechanisms remain hypotheses for a future same-cell high-fidelity retest; this decision
+does not authorize that retest, a rebuild, generation, provider work or spend.
+
+The controlled comparison failed because zero-spend/local availability became stronger than visual quality; available
+components were treated as sufficient final scenes; deterministic compositing exceeded its supporting role; component
+provenance was mistaken for perceptual-quality equivalence; technical/checklist QA displaced direct authored-frame P5
+v4 comparison; progression displaced scene richness/coherence; component-level checks missed composite-level
+Frankensteining; and caption wording/timing parity was mistaken for visual-profile parity. These findings do not reject
+deterministic composition generally; they bound it to work that preserves the accepted quality floor.
+
 ## Controlled comparisons and founder search
 
 Avoid random candidate batches. Where practical, change one or two meaningful variables:

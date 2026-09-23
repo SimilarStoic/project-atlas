@@ -7,6 +7,12 @@ creative and production-design authority, not runtime architecture, a database s
 exhaustive inventory, or an instruction to pre-generate assets. Apply **CHANGE WITHOUT
 REBUILD** through a small reusable core plus script-driven expansion.
 
+For Creative Calibration, Production #5 v4 is the current accepted visual-production quality baseline. The detailed
+[P5 v4 visual non-regression gate](SIMILARSTOIC_CREATIVE_CALIBRATION.md#p5-v4-visual-non-regression-gate) makes this
+vocabulary a hard production-quality prerequisite to temporal/spatial grammar testing: stronger progression cannot
+compensate for visibly weaker frames. The baseline remains controlling until the founder explicitly replaces it with a
+better accepted baseline.
+
 ## Narration and visual roles
 
 > **THE NARRATOR EXPLAINS. THE HAMSTER ILLUSTRATES.**
