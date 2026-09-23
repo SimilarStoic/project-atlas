@@ -150,6 +150,38 @@ teeth, cheeks and whiskers against Core v3 identity. Closed, smiling, surprised,
 all valid when scene-appropriate. Ambiguous open/closed cavities, tooth-like residue, doubled mouth lines, malformed
 lips or jaws, stray residual mouth or chin lines, and expressions that cannot be parsed fail final character QA.
 
+### Character Model Continuity gate
+
+A recurring SimilarStoic mascot must remain the **same underlying canonical character model** across pose, action,
+expression, crop and scene. Recognisability alone is insufficient: every instance must read as Core v3 performing a new
+action, not as an independently recognisable reinterpretation of the hamster. Core v3 remains the primary identity
+authority; approved acting-pose references demonstrate valid performance and deformation; P5 v4 remains the current
+visual-production quality baseline. This continuity gate connects those authorities across sequential states without
+replacing them.
+
+Review the perceptual model rather than enforce rigid pixel ratios. Preserve the canonical head/body relationship,
+compact body construction, facial and muzzle topology, ear construction, limb and paw logic, signature bag/body anchors,
+markings, silhouette identity and character scale relative to the world. The sling bag must adapt physically to pose;
+its scale, strap attachment and route must not float independently or attach to a newly interpreted torso.
+
+Standing, sitting, leaning, reaching, turning, document handling, foreshortening, perspective, squash/stretch,
+expression changes, emotional deformation, approved exaggerated acting, crop changes, furniture occlusion and
+pose-specific compression or extension are legitimate. They pass only when the same underlying body and face model
+remains perceptually present.
+
+Fail continuity when pose or perspective cannot explain a changing head/body ratio, progressively longer or narrower
+torso, altered muzzle or face construction, inconsistent mouth/jaw topology, materially changed limb or paw scale,
+unstable bag/body anchors, or recurring instances that resemble separate interpretations. If a mouth, chin, torso,
+limb, face or bag defect indicates wider model drift, repair the recurring character model rather than patching the
+visible symptom. A genuinely isolated stray line remains eligible for ordinary targeted cleanup when the underlying
+model is demonstrably stable.
+
+Any production or calibration sequence containing multiple materially different mascot states requires a cross-state
+continuity review before founder-review-ready status. Create a comparison/contact sheet sufficient to inspect the
+complete character, face, body/torso and bag relationship across the sequence and against canonical authority where
+useful. Isolated per-frame anatomy and recognisability checks cannot establish continuity. As a final perceptual check,
+ask whether the silhouettes still read as the same hamster performing different actions.
+
 ### Occlusion and layer integrity
 
 Depth ordering and contact relationships must remain understandable. Reject or repair character or bag portions that
@@ -160,8 +192,8 @@ deliberately simple hand-drawn scene may remain visually wonky, but its layer or
 
 Final visual QA uses the actual rendered frame at full resolution and phone scale. It inspects path topology, complete
 outlines, attachments, intersections, duplicated or disappearing fragments, fills, perspective, anatomy, repeated-object
-consistency and continuity between related beats. A written rationale or technical image check cannot make a visibly weak
-frame pass.
+consistency, Character Model Continuity and continuity between related beats. A written rationale or technical image
+check cannot make a visibly weak frame pass.
 
 ## Composition patterns v1
 

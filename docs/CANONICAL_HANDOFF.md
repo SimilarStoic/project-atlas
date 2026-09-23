@@ -15,8 +15,15 @@ Visual Grammar Cell 1 is **INVALID FOR VISUAL-GRAMMAR SELECTION — USEFUL PROGR
 concealed candidates fell below the independent P5 v4 visual-quality floor; no winner was selected and the mapping
 remains private. The canonical
 [P5 v4 visual non-regression gate](SIMILARSTOIC_CREATIVE_CALIBRATION.md#p5-v4-visual-non-regression-gate) makes that
-baseline a hard prerequisite to temporal/spatial grammar and requires direct final-frame comparison. This does not
-authorize providers, a rebuild, P5 regeneration, Production #6 or release.
+baseline a hard prerequisite to temporal/spatial grammar and requires direct final-frame comparison.
+
+The subsequent high-fidelity same-cell retest improved scene integration but is **BLOCKED — CHARACTER MODEL CONTINUITY
+UNDER REVIEW**: its recurring mascot remains recognisable while the underlying Core v3 model drifts across generated
+states. No grammar winner may be selected and the A/B mapping remains concealed. The
+[Character Model Continuity gate](SIMILARSTOIC_VISUAL_VOCABULARY.md#character-model-continuity-gate) now requires the
+same underlying mascot model across pose and performance plus cross-state contact-sheet QA where applicable; legitimate
+acting deformation remains allowed. This documentation does not authorize providers, repair, regeneration, a rebuild,
+P5 regeneration, Production #6 or release.
 
 ## Purpose and authority
 

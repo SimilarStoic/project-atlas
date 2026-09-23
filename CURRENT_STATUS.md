@@ -31,7 +31,15 @@ candidates fell below the independent P5 v4 visual-production quality floor. No 
 mapping remains private. The canonical
 [P5 v4 visual non-regression gate](docs/SIMILARSTOIC_CREATIVE_CALIBRATION.md#p5-v4-visual-non-regression-gate) now makes
 visual-production quality a hard prerequisite to temporal/spatial grammar, requires direct rendered comparison, and
-stops rather than improvising downward when bespoke visual work is needed. Daniel remains approved; P5 v4 remains
+stops rather than improvising downward when bespoke visual work is needed.
+
+The later high-fidelity same-cell retest improved integrated scene quality but is **BLOCKED — CHARACTER MODEL
+CONTINUITY UNDER REVIEW**. Its three generated mascot states are recognisable yet do not consistently preserve one
+underlying Core v3 model; no grammar winner may be selected and the A/B mapping remains concealed. The canonical
+[Character Model Continuity gate](docs/SIMILARSTOIC_VISUAL_VOCABULARY.md#character-model-continuity-gate) now makes
+same-model persistence a hard Layer A concern and requires cross-state character contact-sheet review where applicable.
+Scene-quality improvements, environments and semantic construction remain useful evidence. No repair, provider work or
+regeneration is authorized by this documentation state. Daniel remains approved; P5 v4 remains
 unchanged; Production #6 is not started; rebuild, regeneration and public release remain unauthorized. Older
 pending-transfer/revocation/runtime-25 wording below describes earlier checkpoints and is superseded by this verified
 state.

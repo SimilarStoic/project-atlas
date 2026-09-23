@@ -94,7 +94,8 @@ It remains the hard control condition until the founder explicitly replaces it w
 Calibration separates two layers:
 
 - **Layer A — visual production quality:** authored-frame coherence, shared-illustrator treatment, character-world
-  integration, physical integrity, appropriate richness, caption-profile identity and final composite quality.
+  integration, physical integrity, [Character Model Continuity](SIMILARSTOIC_VISUAL_VOCABULARY.md#character-model-continuity-gate),
+  appropriate richness, caption-profile identity and final composite quality.
 - **Layer B — temporal/spatial grammar:** scene progression, composition turnover, persistent visual memory, mutation
   logic, pacing and related experimental variables.
 
@@ -113,33 +114,40 @@ Apply this gate to every meaningful final state of a final-quality visual-gramma
 4. **Character-world integration.** The hamster must credibly occupy and act inside the illustrated situation. Floating
    props, detached UI modules and pasted character cutouts fail unless an intentionally abstract beat genuinely
    requires that language.
-5. **Physical integrity.** Anatomy, contact, occlusion, depth, connected topology and structural geometry must remain
+5. **Character Model Continuity.** Where a mascot recurs across materially different states, it must remain the same
+   underlying canonical character model across pose, action, expression, crop and scene. Recognisability and plausible
+   isolated anatomy are insufficient. Review the complete character, face, body/torso and bag relationship together on
+   a cross-state comparison/contact sheet. Legitimate pose, perspective, foreshortening, squash/stretch and approved
+   acting deformation remain allowed; unexplained drift in head/body balance, facial construction, silhouette, limbs or
+   bag/body anchors is a Layer A failure.
+6. **Physical integrity.** Anatomy, contact, occlusion, depth, connected topology and structural geometry must remain
    credible.
-6. **Appropriate richness.** Do not remove useful environmental context, semantic objects, depth layers, physical
+7. **Appropriate richness.** Do not remove useful environmental context, semantic objects, depth layers, physical
    relationships or scene specificity merely to simplify repair, reuse available stock or avoid generation. Preserve
    **REPAIR — DO NOT EMPTY**.
-7. **Graphical restraint.** Labels, arrows, cards and diagrams may support an illustration, but must not replace a
+8. **Graphical restraint.** Labels, arrows, cards and diagrams may support an illustration, but must not replace a
    physical or illustrated relationship merely because local deterministic assembly is cheaper or easier.
    Intentionally abstract explanatory scenes remain valid where genuinely appropriate.
-8. **Caption-profile identity.** Wording and timing parity do not establish visual-profile parity. When
+9. **Caption-profile identity.** Wording and timing parity do not establish visual-profile parity. When
    `similarstoic-social-mobile-v3` is required, inspect the actual bold dark text, warm off-white high-contrast box,
    short one/two-line semantic grouping, safe-zone placement and phone readability.
-9. **Progression without degradation.** Every meaningful mutation or cut state must independently retain the quality
+10. **Progression without degradation.** Every meaningful mutation or cut state must independently retain the quality
    floor. A scene cannot begin at public quality and visibly degrade as states or objects are added.
-10. **Reuse with variation.** Reuse succeeds only when the integrated result intentionally advances action, expression,
-    prop state, object relationship, crop, composition or visual understanding. Template repetition or pose swapping
-    alone is insufficient.
-11. **Quality before cost.** If zero-cost reuse or local adaptation visibly falls below the accepted baseline, stop at
-    **BLOCKED — P5 V4 QUALITY FLOOR REQUIRES BESPOKE VISUAL WORK**. Do not improvise downward or force reuse to save
-    provider cost.
-12. **Human visual judgement outranks technical compliance.** Hashes, resolution, successful decode, timing, anatomy
-    checks, semantic presence, collision checks and other deterministic QA cannot make a visibly weak frame pass.
-    Final judgement operates on the actual composite frame.
+11. **Reuse with variation.** Reuse succeeds only when the integrated result intentionally advances action, expression,
+     prop state, object relationship, crop, composition or visual understanding. Template repetition or pose swapping
+     alone is insufficient.
+12. **Quality before cost.** If zero-cost reuse or local adaptation visibly falls below the accepted baseline, stop at
+     **BLOCKED — P5 V4 QUALITY FLOOR REQUIRES BESPOKE VISUAL WORK**. Do not improvise downward or force reuse to save
+     provider cost.
+13. **Human visual judgement outranks technical compliance.** Hashes, resolution, successful decode, timing, anatomy
+     checks, semantic presence, collision checks and other deterministic QA cannot make a visibly weak frame pass.
+     Final judgement operates on the actual composite frame.
 
 For each meaningful state, record `PASS`, `FAIL` or `NOT ENOUGH EVIDENCE` for authored-frame coherence,
 same-illustrator coherence, character-world integration, contact/occlusion/geometry, appropriate richness, caption
-integration, phone-scale hierarchy, direct P5 v4 equivalence, semantic arrival and progression/visual memory. Any Layer A
-`FAIL` blocks grammar selection and founder-review-ready status.
+integration, phone-scale hierarchy, direct P5 v4 equivalence, semantic arrival and progression/visual memory. Where the
+mascot recurs, also record one sequence-level Character Model Continuity result supported by the required contact sheet.
+Any Layer A `FAIL` blocks grammar selection and founder-review-ready status; Layer B cannot rescue a continuity failure.
 
 Deterministic local work remains valid for bounded compositing, layout, annotation, cleanup, crops, masks, prop-state
 changes and other work that preserves this quality floor. It must not become a cost-driven substitute for integrated
