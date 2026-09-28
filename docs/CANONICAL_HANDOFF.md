@@ -1,5 +1,17 @@
 # Conveyor — Canonical Handoff and Governance
 
+## Persistent Scene Model canonical milestone — 29 September 2026
+
+The zero-spend isolated mechanical prototype at `25fd94d65fde9d06a0fe05062a2638f327d159e0` passed adversarial
+world-content and immutable-variant-admission review. The primary
+[Persistent Scene Model authority](PERSISTENT_SCENE_MODEL.md) governs future continuing visual worlds: exact world
+content, append-only exact variant admission and resolved-state selection are separate identity layers; unchanged
+entities inherit exactly; and only explicit authorized deltas may change state.
+
+Production persistence, Migration 27, production-path activation and provider-backed entity acquisition are not
+implemented or authorized. No final-quality visual proof or Cell 1 rebuild has begun. The next gate is a separately
+authorized production-integration and visual-proof decision; Production #6 and public release remain unauthorized.
+
 ## Current operational reconciliation — 23 September 2026
 
 Read the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)

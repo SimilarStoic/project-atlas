@@ -1,5 +1,19 @@
 # Conveyor — Current Status
 
+## Persistent Scene Model mechanical architecture — 29 September 2026
+
+The isolated zero-spend Persistent Scene Model prototype is proven and synchronized at
+`25fd94d65fde9d06a0fe05062a2638f327d159e0`. Adversarial review passed after repairs for exact world-content binding
+and immutable admission of selected and unselected entity variants. The canonical
+[Persistent Scene Model](docs/PERSISTENT_SCENE_MODEL.md) now records the durable rules: continuing beats resolve states
+of an exact world; unchanged entities inherit exactly; admitted variant identities cannot be rebound; and generation
+demand, candidate creation, review, admission and selection remain distinct.
+
+This is mechanical architecture evidence only. Production persistence and Migration 27 are not started; no production
+path is activated; no provider was called and spend was `$0`; final-quality visual proof and a Cell 1 rebuild have not
+started. Cell 1 remains blocked/not rebuilt under this architecture. Production #6 and public release remain
+unauthorized.
+
 ## Verified pilot and runtime state — 23 September 2026
 
 Read-only inspection of the persistent runtime establishes **Case A: already durably reconciled**.

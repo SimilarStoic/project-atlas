@@ -125,6 +125,12 @@ inform the generation. This avoids rewriting or renaming historical character pr
 
 ## Scene-driven authority selection
 
+For an already established persistent world, first resolve the exact state delta and generation demand under the
+[Persistent Scene Model](PERSISTENT_SCENE_MODEL.md). Authority-guided generation is then scoped only to missing entity
+realizations. Invoking a provider for one new pose or prop state must not regenerate or replace unchanged wall,
+furniture, camera, geometry or other admitted content. A successful generated Asset remains a candidate until it passes
+review and receives explicit immutable admission; Asset existence alone grants no state authority.
+
 For each script beat, the production service performs this bounded flow:
 
 1. resolve scene intent, action, metaphor, location family and required AssetSpecs;

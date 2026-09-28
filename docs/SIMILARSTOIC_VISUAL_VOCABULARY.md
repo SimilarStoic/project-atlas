@@ -121,6 +121,12 @@ recurring props must retain coherent dimensions and function; and unrelated line
 important prop. Use a targeted repair or regeneration for the diagnosed defect. Preserve clean components and rejected
 attempt provenance rather than resampling a successful scene blindly.
 
+For a production path that adopts a continuing world, the canonical
+[Persistent Scene Model](PERSISTENT_SCENE_MODEL.md) makes this continuity structural: unchanged entities inherit exact
+approved content and spatial relationships, and only an explicit authorized delta may change them. A new editorial
+Scene does not itself create a new visual world. This does not require persistent-world decomposition for unrelated
+one-off frames, and it does not replace Character Model Continuity or perceptual visual QA.
+
 ### Repair, do not empty
 
 A local generation defect is normally repaired while the intended scene richness, semantic objects, depth and

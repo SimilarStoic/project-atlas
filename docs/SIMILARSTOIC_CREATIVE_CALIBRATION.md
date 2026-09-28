@@ -95,13 +95,19 @@ Calibration separates two layers:
 
 - **Layer A — visual production quality:** authored-frame coherence, shared-illustrator treatment, character-world
   integration, physical integrity, [Character Model Continuity](SIMILARSTOIC_VISUAL_VOCABULARY.md#character-model-continuity-gate),
-  appropriate richness, caption-profile identity and final composite quality.
+  structural [Persistent Scene Model](PERSISTENT_SCENE_MODEL.md) continuity where the cell deliberately uses a
+  continuing world, appropriate richness, caption-profile identity and final composite quality.
 - **Layer B — temporal/spatial grammar:** scene progression, composition turnover, persistent visual memory, mutation
   logic, pacing and related experimental variables.
 
 Layer A is a hard prerequisite. Layer B strength cannot compensate for Layer A failure. A treatment is not a valid
 final-publication-quality calibration candidate merely because it progresses better while looking visibly weaker than
 the accepted baseline.
+
+Where a judged sequence uses a persistent world, individually attractive frames cannot pass Layer A if established
+objects, geometry, camera, scale, approved variant content or spatial relationships drift without an authorized cause.
+Unchanged content must inherit exactly and adjacent changes must be explainable. This requirement does not force a
+persistent-world model onto unrelated single frames.
 
 Apply this gate to every meaningful final state of a final-quality visual-grammar cell:
 
