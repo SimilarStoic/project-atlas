@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
 from typing import Any
@@ -40,6 +40,17 @@ from project_atlas.scene_model import (
 )
 
 RESOLVER_VERSION = "persistent-scene-domain-v1"
+
+
+@dataclass(frozen=True)
+class PersistentSceneMediaContext:
+    """Exact immutable aggregate required by a final-media consumer."""
+
+    world_id: str
+    admission_catalog_id: str
+    transition_intent_id: str
+    world: PersistentWorld
+    state: ResolvedState
 
 
 def _now() -> str:
@@ -1180,3 +1191,23 @@ class PersistentSceneRepositoryMixin:
             "admission_digest": state.variant_admission_digest,
             "state_digest": state.state_digest,
         }
+
+    def get_persistent_scene_media_context(self, state_id: str) -> PersistentSceneMediaContext:
+        """Load one exact sealed state and its relational media bindings."""
+
+        row = self.connection.execute(
+            "SELECT world_revision_id, admission_catalog_id, transition_intent_id "
+            "FROM persistent_scene_resolved_states WHERE id=?",
+            (state_id,),
+        ).fetchone()
+        if row is None:
+            raise KeyError(state_id)
+        world = self.get_persistent_scene_world(row["world_revision_id"])
+        state = self.get_persistent_scene_state(state_id)
+        return PersistentSceneMediaContext(
+            row["world_revision_id"],
+            row["admission_catalog_id"],
+            row["transition_intent_id"],
+            world,
+            state,
+        )

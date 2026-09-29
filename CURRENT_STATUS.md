@@ -19,12 +19,18 @@ Migration 27 has now been applied safely to the protected persistent runtime at
 are `0`, all 51 pre-27 application-table row counts are unchanged and all ten new persistent-scene tables exist and
 remain empty. Verified pre- and post-migration backups exist under `D:\ConveyorRuntime\backups\migration-27`.
 
-Production persistence is not activated. MediaService integration and FinalMediaInputSnapshot v2 remain deferred; no
-provider was called and spend was `$0`; final-quality visual proof and a Cell 1 rebuild have not started. Cell 1 remains
-blocked/not rebuilt under this architecture. Runtime migration does not activate production persistence; no production
-persistent-scene rows exist. The next phase is separately authorized production-integration planning/execution, not
-further persistence architecture. Provider calls/spend remain `0 / $0`; Production #6, publishing and public release
-remain unauthorized.
+The persistent-state → `MediaService` bridge and strict `FinalMediaInputSnapshot` v2 semantics are now implemented and
+proven on disposable data. Exact persisted world/state/admission/source-byte bindings are revalidated at render time;
+the pure scene-model compositor deterministically produces the frozen frame supplied to the existing caption,
+narration, timeline, FFmpeg, RenderExecution and FinalMediaArtifact lifecycle. A three-state local audiovisual proof
+passed at 1080×1920 H.264/AAC. Snapshot v1 and the legacy `AssetSelection` path remain unchanged; Migration 28 was not
+required.
+
+Production persistent-scene data is not activated. The protected runtime remains hash-identical after proof and all ten
+persistent-scene tables remain empty. No provider was called and spend was `$0`; final creative quality is not inferred
+from the synthetic mechanical proof. Cell 1 remains blocked/not rebuilt, Production #6 has not started, and publishing
+and public release remain unauthorized. The next consequential gate is a separately authorized final-quality Cell 1
+video proof against the existing visual quality authorities.
 
 ## Verified pilot and runtime state — 23 September 2026
 

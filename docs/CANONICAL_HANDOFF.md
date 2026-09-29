@@ -18,11 +18,17 @@ schema-26 backup. Its post-migration SHA-256 is
 are `0`, all 51 pre-27 application-table row counts are unchanged and all ten new persistent-scene tables exist and are
 empty. Verified pre- and post-migration backups exist under `D:\ConveyorRuntime\backups\migration-27`.
 
-Production persistence is not activated and no production persistent-scene rows exist. MediaService integration,
-FinalMediaInputSnapshot v2, provider-backed entity acquisition, final-quality visual proof and the Cell 1 rebuild remain
-deferred/not started. Runtime migration does not activate production persistence; the next phase is separately
-authorized production-integration planning/execution, not further persistence architecture. Provider calls/spend remain
-`0 / $0`; Production #6, publishing and public release remain unauthorized.
+The persistent-state → `MediaService` bridge and strict `FinalMediaInputSnapshot` v2 semantics are implemented and
+proven on disposable data. Rendering reloads and verifies the exact persisted world, state, branch-scoped admission
+catalog, source bytes, scene-model snapshot and compositor contract before deterministic RGBA/PNG composition, then
+reuses the existing caption, narration, timeline, FFmpeg, RenderExecution and FinalMediaArtifact lifecycle. The
+three-state local audiovisual proof passed at 1080×1920 H.264/AAC. Snapshot v1 and legacy `AssetSelection` semantics
+remain unchanged; Migration 28 was not required.
+
+Production persistent-scene data is not activated; all ten protected-runtime scene tables remain empty and the runtime
+is hash-identical after proof. Provider calls/spend remain `0 / $0`. Mechanical proof is not creative-quality
+acceptance: Cell 1 remains not rebuilt, Production #6 has not started, and publishing/public release remain
+unauthorized. The next consequential gate is a separately authorized final-quality Cell 1 video proof.
 
 ## Current operational reconciliation — 23 September 2026
 
@@ -32,8 +38,8 @@ reconciliation, exact remote binding and a private/processing-succeeded/verifica
 founder revocation is already effective; no release operation or public receipt exists. Do not duplicate events,
 reconcile again, or treat the historical approval as current release authority.
 
-Persistent runtime is already Migration 26, healthy and hash-identical to its preserved post-migration evidence.
-This supersedes the runtime-25 and reserved-only summaries below; no migration or runtime write was needed here.
+Persistent runtime is already Migration 27, healthy and hash-identical to its preserved post-migration evidence.
+This supersedes the runtime-25/26 and reserved-only summaries below; no migration or runtime write was needed here.
 The private systems-proof entry gate is satisfied, not public creative acceptance. Daniel remains approved;
 Visual Grammar Cell 1 is **INVALID FOR VISUAL-GRAMMAR SELECTION — USEFUL PROGRESSION EVIDENCE ONLY** because both
 concealed candidates fell below the independent P5 v4 visual-quality floor; no winner was selected and the mapping

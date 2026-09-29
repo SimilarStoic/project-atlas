@@ -23,6 +23,12 @@ from project_atlas.persistence import (
     NarrationAsset,
     NarrationGenerationExecution,
 )
+from project_atlas.scene_media import (
+    SNAPSHOT_SCHEMA_VERSION,
+    compositor_contract,
+    load_persistent_scene_frame,
+)
+from project_atlas.scene_model import canonical_json, digest
 
 
 class MediaRuntimeError(RuntimeError):
@@ -500,6 +506,38 @@ class MediaService:
     }
     MOTIONS = frozenset({"static", "slow_zoom_in", "slow_zoom_out"})
     TRANSITIONS = frozenset({"cut", "crossfade"})
+    PERSISTENT_SCENE_INPUT_KEYS = frozenset(
+        {
+            "scene_id",
+            "visual_plan_id",
+            "sequence",
+            "narration_excerpt",
+            "visual_intent",
+            "on_screen_text",
+            "render_source_kind",
+            "world_revision_id",
+            "world_key",
+            "world_revision",
+            "world_definition_digest",
+            "resolved_state_id",
+            "complete_state_digest",
+            "admission_catalog_id",
+            "variant_admission_digest",
+            "transition_intent_id",
+            "scene_model_snapshot",
+            "scene_model_snapshot_digest",
+            "source_assets",
+            "compositor",
+            "compositor_digest",
+            "frame_width",
+            "frame_height",
+            "composited_frame_digest",
+            "encoded_frame_digest",
+            "duration_ms",
+            "motion",
+            "transition_to_next",
+        }
+    )
 
     def __init__(
         self, repository: AtlasRepository, runtime: FfmpegRuntime, storage: LocalMediaStorage
@@ -712,6 +750,154 @@ class MediaService:
             dict(self.RENDER_SETTINGS),
         )
 
+    def create_persistent_scene_snapshot(
+        self,
+        snapshot_id: str,
+        visual_plan_id: str,
+        narration_id: str,
+        scene_inputs: list[dict[str, Any]],
+    ) -> FinalMediaInputSnapshot:
+        """Freeze exact persisted scene states as first-class v2 render inputs."""
+
+        plan = self.repository._require_gate_authorized_visual_plan(visual_plan_id)
+        narration = self.repository.get_narration_asset(narration_id)
+        if narration.script_id != plan.script_id:
+            raise ValueError("NarrationAsset must belong to the exact VisualPlan Script.")
+        scenes = self.repository.list_scenes_for_visual_plan(plan.id)
+        if len(scene_inputs) != len(scenes):
+            raise ValueError("Every current VisualPlan Scene must appear exactly once.")
+        contract = compositor_contract()
+        frozen = []
+        seen_states: set[str] = set()
+        for index, (scene, supplied) in enumerate(zip(scenes, scene_inputs, strict=True)):
+            if supplied.get("scene_id") != scene.id:
+                raise ValueError("Scene inputs must use canonical VisualPlan sequence order.")
+            state_id = supplied.get("resolved_state_id")
+            if not isinstance(state_id, str) or not state_id or state_id in seen_states:
+                raise ValueError("Every Scene requires one unique exact persistent state.")
+            seen_states.add(state_id)
+            duration = supplied.get("duration_ms")
+            motion = supplied.get("motion")
+            transition = supplied.get("transition_to_next")
+            if not isinstance(duration, int) or duration <= 0 or motion != "static":
+                raise ValueError("Persistent-scene proof inputs require positive static durations.")
+            if index == len(scenes) - 1:
+                if transition is not None:
+                    raise ValueError("The final Scene must not specify a transition.")
+            elif transition not in self.TRANSITIONS:
+                raise ValueError("Scene transition is invalid.")
+            context = self.repository.get_persistent_scene_media_context(state_id)
+            if context.world.bindings.visual_plan_id != plan.id:
+                raise ValueError("Persistent state belongs to another VisualPlan.")
+            if context.state.editorial_scene_id != scene.id:
+                raise ValueError("Persistent state belongs to another editorial Scene.")
+            frame = load_persistent_scene_frame(self.repository, state_id)
+            payload = frame.scene_model_snapshot
+            frozen.append(
+                {
+                    "scene_id": scene.id,
+                    "visual_plan_id": plan.id,
+                    "sequence": scene.sequence,
+                    "narration_excerpt": scene.narration_excerpt,
+                    "visual_intent": scene.visual_intent,
+                    "on_screen_text": scene.on_screen_text,
+                    "render_source_kind": "persistent_scene_state",
+                    "world_revision_id": frame.world_id,
+                    "world_key": context.world.world_key,
+                    "world_revision": context.world.revision,
+                    "world_definition_digest": context.state.world_definition_digest,
+                    "resolved_state_id": context.state.state_id,
+                    "complete_state_digest": context.state.state_digest,
+                    "admission_catalog_id": frame.admission_catalog_id,
+                    "variant_admission_digest": context.state.variant_admission_digest,
+                    "transition_intent_id": frame.transition_intent_id,
+                    "scene_model_snapshot": payload,
+                    "scene_model_snapshot_digest": frame.scene_model_snapshot_digest,
+                    "source_assets": payload["assets"],
+                    "compositor": contract,
+                    "compositor_digest": digest(contract),
+                    "frame_width": frame.width,
+                    "frame_height": frame.height,
+                    "composited_frame_digest": frame.rgba_digest,
+                    "encoded_frame_digest": frame.png_digest,
+                    "duration_ms": duration,
+                    "motion": motion,
+                    "transition_to_next": transition,
+                }
+            )
+        if sum(item["duration_ms"] for item in frozen) != narration.duration_ms:
+            raise ValueError("Scene durations must equal the exact NarrationAsset duration.")
+        script = self.repository.get_script(plan.script_id)
+        settings = dict(self.RENDER_SETTINGS)
+        settings["persistent_scene_compositor"] = contract
+        return self.repository.create_persistent_final_media_input_snapshot(
+            snapshot_id,
+            plan.id,
+            narration.id,
+            frozen,
+            self.caption_cues(script.narration_text, narration.duration_ms),
+            settings,
+        )
+
+    def _persistent_scene_frame(
+        self, item: dict[str, Any], visual_plan_id: str | None = None
+    ) -> bytes:
+        """Revalidate every frozen v2 binding and return exact deterministic PNG bytes."""
+
+        if set(item) != self.PERSISTENT_SCENE_INPUT_KEYS:
+            raise MediaRuntimeError("Persistent snapshot has unknown or missing scene fields.")
+        if item["render_source_kind"] != "persistent_scene_state":
+            raise MediaRuntimeError("Persistent snapshot has an invalid render source kind.")
+        if item["motion"] != "static":
+            raise MediaRuntimeError("Persistent snapshot motion must remain static.")
+        frame = load_persistent_scene_frame(self.repository, item["resolved_state_id"])
+        context = self.repository.get_persistent_scene_media_context(item["resolved_state_id"])
+        scene = self.repository.get_scene(item["scene_id"])
+        expected_plan_id = visual_plan_id or item["visual_plan_id"]
+        if (
+            item["visual_plan_id"] != expected_plan_id
+            or context.world.bindings.visual_plan_id != expected_plan_id
+            or scene.visual_plan_id != expected_plan_id
+        ):
+            raise MediaRuntimeError("Persistent snapshot VisualPlan binding differs.")
+        editorial = {
+            "sequence": scene.sequence,
+            "narration_excerpt": scene.narration_excerpt,
+            "visual_intent": scene.visual_intent,
+            "on_screen_text": scene.on_screen_text,
+        }
+        if any(item[key] != value for key, value in editorial.items()):
+            raise MediaRuntimeError("Persistent snapshot editorial Scene content differs.")
+        expected = {
+            "world_revision_id": frame.world_id,
+            "world_key": context.world.world_key,
+            "world_revision": context.world.revision,
+            "world_definition_digest": context.state.world_definition_digest,
+            "complete_state_digest": context.state.state_digest,
+            "admission_catalog_id": frame.admission_catalog_id,
+            "variant_admission_digest": context.state.variant_admission_digest,
+            "transition_intent_id": frame.transition_intent_id,
+            "scene_model_snapshot_digest": frame.scene_model_snapshot_digest,
+            "compositor_digest": digest(compositor_contract()),
+            "frame_width": frame.width,
+            "frame_height": frame.height,
+            "composited_frame_digest": frame.rgba_digest,
+            "encoded_frame_digest": frame.png_digest,
+        }
+        if any(item[key] != value for key, value in expected.items()):
+            raise MediaRuntimeError("Persistent snapshot identity or digest no longer matches.")
+        if item["scene_id"] != context.state.editorial_scene_id:
+            raise MediaRuntimeError("Persistent snapshot Scene binding differs.")
+        if canonical_json(item["scene_model_snapshot"]) != canonical_json(
+            frame.scene_model_snapshot
+        ):
+            raise MediaRuntimeError("Persistent scene-model snapshot payload differs.")
+        if item["source_assets"] != frame.scene_model_snapshot["assets"]:
+            raise MediaRuntimeError("Persistent snapshot source Asset set differs.")
+        if item["compositor"] != compositor_contract():
+            raise MediaRuntimeError("Persistent snapshot compositor contract differs.")
+        return frame.png
+
     @staticmethod
     def _srt(cues: list[dict[str, Any]]) -> str:
         def stamp(milliseconds: int) -> str:
@@ -882,14 +1068,24 @@ class MediaService:
             self.storage.read_verified(narration.storage_path, narration.content_digest)
             subtitle = temporary_root / "captions.srt"
             subtitle.write_text(self._srt(snapshot.caption_cues), encoding="utf-8")
+            if snapshot.snapshot_schema_version not in {"v1", SNAPSHOT_SCHEMA_VERSION}:
+                raise MediaRuntimeError("Final-media snapshot schema version is unsupported.")
+            if snapshot.snapshot_schema_version == SNAPSHOT_SCHEMA_VERSION and (
+                render_settings.get("persistent_scene_compositor") != compositor_contract()
+            ):
+                raise MediaRuntimeError("Snapshot has an unsupported persistent compositor.")
             arguments = [self.runtime.ffmpeg_path, "-y"]
-            for item in snapshot.scene_inputs:
-                asset = self.repository.get_asset(item["asset_id"])
-                path = self.repository.managed_asset_path(asset.id)
-                if sha256(path.read_bytes()).hexdigest() != item["content_digest"]:
-                    raise MediaRuntimeError(
-                        "Managed selected Asset bytes do not match their frozen digest."
-                    )
+            for index, item in enumerate(snapshot.scene_inputs):
+                if snapshot.snapshot_schema_version == "v1":
+                    asset = self.repository.get_asset(item["asset_id"])
+                    path = self.repository.managed_asset_path(asset.id)
+                    if sha256(path.read_bytes()).hexdigest() != item["content_digest"]:
+                        raise MediaRuntimeError(
+                            "Managed selected Asset bytes do not match their frozen digest."
+                        )
+                else:
+                    path = temporary_root / f"persistent-scene-{index:04d}.png"
+                    path.write_bytes(self._persistent_scene_frame(item, snapshot.visual_plan_id))
                 source_duration_ms = item["duration_ms"] + (
                     render_settings["crossfade_ms"]
                     if item["transition_to_next"] == "crossfade"

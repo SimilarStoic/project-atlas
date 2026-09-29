@@ -4098,6 +4098,51 @@ class AtlasRepository(PersistentSceneRepositoryMixin, PublishingRepositoryMixin)
         render_settings: dict[str, Any],
     ) -> FinalMediaInputSnapshot:
         """Persist an already-derived immutable render contract below an approved VisualPlan."""
+        return self._create_final_media_input_snapshot(
+            snapshot_id,
+            visual_plan_id,
+            narration_asset_id,
+            scene_inputs,
+            caption_cues,
+            render_settings,
+            "v1",
+        )
+
+    def create_persistent_final_media_input_snapshot(
+        self,
+        snapshot_id: str,
+        visual_plan_id: str,
+        narration_asset_id: str,
+        scene_inputs: list[dict[str, Any]],
+        caption_cues: list[dict[str, Any]],
+        render_settings: dict[str, Any],
+    ) -> FinalMediaInputSnapshot:
+        """Persist one strict v2 contract whose inputs are sealed scene states."""
+
+        if not scene_inputs or any(
+            item.get("render_source_kind") != "persistent_scene_state" for item in scene_inputs
+        ):
+            raise ValueError("A v2 snapshot requires only persistent-scene state inputs.")
+        return self._create_final_media_input_snapshot(
+            snapshot_id,
+            visual_plan_id,
+            narration_asset_id,
+            scene_inputs,
+            caption_cues,
+            render_settings,
+            "v2",
+        )
+
+    def _create_final_media_input_snapshot(
+        self,
+        snapshot_id: str,
+        visual_plan_id: str,
+        narration_asset_id: str,
+        scene_inputs: list[dict[str, Any]],
+        caption_cues: list[dict[str, Any]],
+        render_settings: dict[str, Any],
+        snapshot_schema_version: str,
+    ) -> FinalMediaInputSnapshot:
         plan = self._require_gate_authorized_visual_plan(visual_plan_id)
         narration = self.get_narration_asset(narration_asset_id)
         if narration.script_id != plan.script_id:
@@ -4111,12 +4156,13 @@ class AtlasRepository(PersistentSceneRepositoryMixin, PublishingRepositoryMixin)
                 "INSERT INTO final_media_input_snapshots "
                 "(id, visual_plan_id, script_id, narration_asset_id, snapshot_schema_version, "
                 "scene_inputs_json, caption_cues_json, render_settings_json, created_at) "
-                "VALUES (?, ?, ?, ?, 'v1', ?, ?, ?, ?)",
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     snapshot_id.strip(),
                     plan.id,
                     plan.script_id,
                     narration.id,
+                    snapshot_schema_version,
                     json.dumps(scene_inputs, sort_keys=True, separators=(",", ":")),
                     json.dumps(caption_cues, sort_keys=True, separators=(",", ":")),
                     json.dumps(render_settings, sort_keys=True, separators=(",", ":")),

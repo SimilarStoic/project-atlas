@@ -1,8 +1,8 @@
 """Isolated persistent-scene mechanical prototype.
 
-This module is deliberately disconnected from AtlasRepository, generation, media,
-and publishing services.  It proves immutable world resolution and deterministic
-local raster assembly with synthetic fixtures only.
+This pure domain module remains independent of SQLite, FFmpeg, generation and
+publishing. Persistence and media adapters may reconstruct its immutable inputs
+and consume its deterministic local raster output without duplicating resolution.
 """
 
 from __future__ import annotations
