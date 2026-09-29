@@ -11,13 +11,18 @@ entities inherit exactly; and only explicit authorized deltas may change state.
 Migration 27 and the minimum repository persistence boundary are implemented in source and proven on disposable
 databases only. Exact sealed world, variant, admission-catalog and resolved-state aggregates round-trip through SQLite;
 predecessor-linked catalogs prevent future or sibling admissions from leaking into another state lineage; rollback and
-ownership attacks fail closed. Source migrations are exactly **1–27**, while the protected persistent runtime remains
-byte-identical at schema **26**. Applying Migration 27 to that runtime is the next consequential gate and requires
-separate authorization.
+ownership attacks fail closed. Source and protected-runtime migration heads are both exactly **27**, and Migration 27 is
+now safely applied to the protected persistent runtime at `D:\ConveyorRuntime\conveyor.db` from an exact verified
+schema-26 backup. Its post-migration SHA-256 is
+`9B41FEEA8E1B2D1C264A09966CE7AA4225634E7CE9994BD167DD4FFA2051DFEE`; integrity is `ok`, foreign-key violations
+are `0`, all 51 pre-27 application-table row counts are unchanged and all ten new persistent-scene tables exist and are
+empty. Verified pre- and post-migration backups exist under `D:\ConveyorRuntime\backups\migration-27`.
 
-Production persistence is not activated. MediaService integration, FinalMediaInputSnapshot v2, provider-backed entity
-acquisition, final-quality visual proof and the Cell 1 rebuild remain deferred/not started. No provider call or spend
-occurred. Production #6 and public release remain unauthorized.
+Production persistence is not activated and no production persistent-scene rows exist. MediaService integration,
+FinalMediaInputSnapshot v2, provider-backed entity acquisition, final-quality visual proof and the Cell 1 rebuild remain
+deferred/not started. Runtime migration does not activate production persistence; the next phase is separately
+authorized production-integration planning/execution, not further persistence architecture. Provider calls/spend remain
+`0 / $0`; Production #6, publishing and public release remain unauthorized.
 
 ## Current operational reconciliation — 23 September 2026
 

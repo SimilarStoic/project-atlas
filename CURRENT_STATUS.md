@@ -12,13 +12,19 @@ demand, candidate creation, review, admission and selection remain distinct.
 Migration 27 is now implemented in source and the minimum persistent-scene durability milestone is proven on disposable
 databases only. The proof covers exact world/variant/state round trips, immutable sealing, explicit predecessor-linked
 admission catalogs, sibling/history isolation, same-plan cross-Scene Asset reuse without provenance rewriting,
-cross-plan rejection and atomic rollback. Source migrations are therefore exactly **1–27**; the protected persistent
-runtime remains byte-identical at schema **26** and Migration 27 has not been applied there.
+cross-plan rejection and atomic rollback. Source and protected-runtime migration heads are both exactly **27**.
+Migration 27 has now been applied safely to the protected persistent runtime at
+`D:\ConveyorRuntime\conveyor.db` from an exact verified schema-26 backup. Its post-migration SHA-256 is
+`9B41FEEA8E1B2D1C264A09966CE7AA4225634E7CE9994BD167DD4FFA2051DFEE`; integrity is `ok`, foreign-key violations
+are `0`, all 51 pre-27 application-table row counts are unchanged and all ten new persistent-scene tables exist and
+remain empty. Verified pre- and post-migration backups exist under `D:\ConveyorRuntime\backups\migration-27`.
 
 Production persistence is not activated. MediaService integration and FinalMediaInputSnapshot v2 remain deferred; no
 provider was called and spend was `$0`; final-quality visual proof and a Cell 1 rebuild have not started. Cell 1 remains
-blocked/not rebuilt under this architecture. The next consequential gate is explicit authorization to apply Migration
-27 to the protected runtime. Production #6 and public release remain unauthorized.
+blocked/not rebuilt under this architecture. Runtime migration does not activate production persistence; no production
+persistent-scene rows exist. The next phase is separately authorized production-integration planning/execution, not
+further persistence architecture. Provider calls/spend remain `0 / $0`; Production #6, publishing and public release
+remain unauthorized.
 
 ## Verified pilot and runtime state — 23 September 2026
 
