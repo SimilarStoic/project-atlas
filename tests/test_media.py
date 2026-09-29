@@ -166,16 +166,17 @@ def test_modern_render_rejects_a_weakened_final_frame_visual_qa_profile() -> Non
 def test_social_caption_filter_freezes_profile_and_preserves_legacy_snapshots() -> None:
     scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
     modern = MediaService._composition_filters(scenes, 1000)
-    assert "FontSize=92" in modern[-1]
-    assert "MarginV=320" in modern[-1]
+    assert "FontSize=13.8" in modern[-1]
+    assert "MarginV=48" in modern[-1]
+    assert "OutlineColour=&H08FFFDF8" in modern[-1]
     assert "BorderStyle=3" in modern[-1]
 
     legacy_settings = dict(MediaService.RENDER_SETTINGS)
     legacy_settings["caption_style"] = "similarstoic-readable-v1"
     legacy_settings.pop("caption_profile")
     legacy = MediaService._composition_filters(scenes, 1000, legacy_settings)
-    assert "FontSize=42" in legacy[-1]
-    assert "MarginV=130" in legacy[-1]
+    assert "FontSize=6.3" in legacy[-1]
+    assert "MarginV=19.5" in legacy[-1]
 
     v2_settings = dict(MediaService.RENDER_SETTINGS)
     v2_settings["profile"] = "similarstoic-vertical-v1"
@@ -183,8 +184,63 @@ def test_social_caption_filter_freezes_profile_and_preserves_legacy_snapshots() 
     v2_settings["caption_profile"] = MediaService.SOCIAL_CAPTION_PROFILE_V2
     v2_settings.pop("global_motion_policy")
     v2 = MediaService._composition_filters(scenes, 1000, v2_settings)
-    assert "FontSize=68" in v2[-1]
-    assert "MarginV=250" in v2[-1]
+    assert "FontSize=10.2" in v2[-1]
+    assert "MarginV=37.5" in v2[-1]
+
+
+@pytest.mark.parametrize(
+    "caption_style", ["similarstoic-social-mobile-v3", "similarstoic-readable-v1"]
+)
+def test_caption_filter_changes_rendered_pixels_during_active_cue(
+    tmp_path: Path, caption_style: str
+) -> None:
+    """A successful command is insufficient: active captions must alter output pixels."""
+
+    runtime = _runtime_or_skip()
+    settings = dict(MediaService.RENDER_SETTINGS)
+    settings["caption_style"] = caption_style
+    if caption_style == "similarstoic-readable-v1":
+        settings.pop("caption_profile")
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    (tmp_path / "captions.srt").write_text(
+        MediaService._srt([{"text": "Caption pixel proof", "start_ms": 0, "end_ms": 1000}]),
+        encoding="utf-8",
+    )
+    output = tmp_path / "captioned.rgb"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "color=c=white:s=1080x1920:r=30:d=1",
+            "-filter_complex",
+            ";".join(MediaService._composition_filters(scenes, 1000, settings)),
+            "-map",
+            "[captioned]",
+            "-frames:v",
+            "1",
+            "-pix_fmt",
+            "rgb24",
+            "-f",
+            "rawvideo",
+            str(output),
+        ],
+        cwd=tmp_path,
+    )
+    pixels = output.read_bytes()
+    assert len(pixels) == 1080 * 1920 * 3
+    dark_by_row = [
+        sum(
+            1
+            for offset in range(row * 1080 * 3, (row + 1) * 1080 * 3, 3)
+            if max(pixels[offset : offset + 3]) < 80
+        )
+        for row in range(1920)
+    ]
+    assert sum(dark_by_row[1200:1900]) > 1_000
+    assert sum(dark_by_row[:1000]) == 0
 
 
 def _ready_visual_plan(repository: AtlasRepository, prefix: str):

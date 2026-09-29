@@ -506,6 +506,10 @@ class MediaService:
     }
     MOTIONS = frozenset({"static", "slow_zoom_in", "slow_zoom_out"})
     TRANSITIONS = frozenset({"cut", "crossfade"})
+    # FFmpeg/libass converts SRT input to an internal 384x288 ASS script.  Pixel
+    # values from the frozen output profile must be expressed in that coordinate
+    # system or large mobile-safe margins can move the caption entirely off-frame.
+    SRT_ASS_PLAY_RESOLUTION = (384, 288)
     PERSISTENT_SCENE_INPUT_KEYS = frozenset(
         {
             "scene_id",
@@ -992,10 +996,19 @@ class MediaService:
             f"[{current}]trim=duration={total_duration_ms / 1000:.3f},setpts=PTS-STARTPTS[composed]"
         )
         caption_style = settings.get("caption_style")
+        ass_width, ass_height = cls.SRT_ASS_PLAY_RESOLUTION
+
+        def ass_x(value: int | float) -> str:
+            return f"{value * ass_width / settings['width']:.6f}".rstrip("0").rstrip(".")
+
+        def ass_y(value: int | float) -> str:
+            return f"{value * ass_height / settings['height']:.6f}".rstrip("0").rstrip(".")
+
         if caption_style == "similarstoic-readable-v1":
             force_style = (
-                "FontSize=42,Alignment=2,MarginV=130,PrimaryColour=&H00FFFFFF,"
-                "OutlineColour=&H00101010,BorderStyle=1,Outline=3"
+                f"FontSize={ass_y(42)},Alignment=2,MarginV={ass_y(130)},"
+                "PrimaryColour=&H00FFFFFF,OutlineColour=&H00101010,"
+                f"BorderStyle=1,Outline={ass_y(3)}"
             )
         elif caption_style in {
             "similarstoic-social-mobile-v2",
@@ -1027,12 +1040,16 @@ class MediaService:
             ):
                 raise MediaRuntimeError("Social caption profile has an unsafe position hierarchy.")
             force_style = (
-                f"FontName={profile['font_name']},FontSize={profile['font_size']},"
+                f"FontName={profile['font_name']},FontSize={ass_y(profile['font_size'])},"
                 f"Bold={-1 if profile['bold'] else 0},Alignment=2,"
-                f"MarginL={profile['margin_left']},MarginR={profile['margin_right']},"
-                f"MarginV={profile['margin_bottom']},PrimaryColour={profile['primary_colour']},"
-                f"BackColour={profile['background_colour']},BorderStyle={profile['border_style']},"
-                f"Outline={profile['outline']},Shadow={profile['shadow']}"
+                f"MarginL={ass_x(profile['margin_left'])},"
+                f"MarginR={ass_x(profile['margin_right'])},"
+                f"MarginV={ass_y(profile['margin_bottom'])},"
+                f"PrimaryColour={profile['primary_colour']},"
+                f"OutlineColour={profile['background_colour']},"
+                f"BackColour={profile['background_colour']},"
+                f"BorderStyle={profile['border_style']},"
+                f"Outline={ass_y(profile['outline'])},Shadow={ass_y(profile['shadow'])}"
             )
         else:
             raise MediaRuntimeError("Snapshot has an unsupported caption style.")
