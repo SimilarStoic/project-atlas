@@ -8,9 +8,16 @@ world-content and immutable-variant-admission review. The primary
 content, append-only exact variant admission and resolved-state selection are separate identity layers; unchanged
 entities inherit exactly; and only explicit authorized deltas may change state.
 
-Production persistence, Migration 27, production-path activation and provider-backed entity acquisition are not
-implemented or authorized. No final-quality visual proof or Cell 1 rebuild has begun. The next gate is a separately
-authorized production-integration and visual-proof decision; Production #6 and public release remain unauthorized.
+Migration 27 and the minimum repository persistence boundary are implemented in source and proven on disposable
+databases only. Exact sealed world, variant, admission-catalog and resolved-state aggregates round-trip through SQLite;
+predecessor-linked catalogs prevent future or sibling admissions from leaking into another state lineage; rollback and
+ownership attacks fail closed. Source migrations are exactly **1–27**, while the protected persistent runtime remains
+byte-identical at schema **26**. Applying Migration 27 to that runtime is the next consequential gate and requires
+separate authorization.
+
+Production persistence is not activated. MediaService integration, FinalMediaInputSnapshot v2, provider-backed entity
+acquisition, final-quality visual proof and the Cell 1 rebuild remain deferred/not started. No provider call or spend
+occurred. Production #6 and public release remain unauthorized.
 
 ## Current operational reconciliation — 23 September 2026
 

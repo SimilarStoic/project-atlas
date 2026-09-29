@@ -9,10 +9,16 @@ and immutable admission of selected and unselected entity variants. The canonica
 of an exact world; unchanged entities inherit exactly; admitted variant identities cannot be rebound; and generation
 demand, candidate creation, review, admission and selection remain distinct.
 
-This is mechanical architecture evidence only. Production persistence and Migration 27 are not started; no production
-path is activated; no provider was called and spend was `$0`; final-quality visual proof and a Cell 1 rebuild have not
-started. Cell 1 remains blocked/not rebuilt under this architecture. Production #6 and public release remain
-unauthorized.
+Migration 27 is now implemented in source and the minimum persistent-scene durability milestone is proven on disposable
+databases only. The proof covers exact world/variant/state round trips, immutable sealing, explicit predecessor-linked
+admission catalogs, sibling/history isolation, same-plan cross-Scene Asset reuse without provenance rewriting,
+cross-plan rejection and atomic rollback. Source migrations are therefore exactly **1–27**; the protected persistent
+runtime remains byte-identical at schema **26** and Migration 27 has not been applied there.
+
+Production persistence is not activated. MediaService integration and FinalMediaInputSnapshot v2 remain deferred; no
+provider was called and spend was `$0`; final-quality visual proof and a Cell 1 rebuild have not started. Cell 1 remains
+blocked/not rebuilt under this architecture. The next consequential gate is explicit authorization to apply Migration
+27 to the protected runtime. Production #6 and public release remain unauthorized.
 
 ## Verified pilot and runtime state — 23 September 2026
 

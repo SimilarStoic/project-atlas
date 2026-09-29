@@ -14,6 +14,8 @@ from typing import Any
 from project_atlas.demo_data import OPPORTUNITIES, content_payload
 from project_atlas.publishing_schema import MIGRATION_25
 from project_atlas.publishing_state import PublishingRepositoryMixin
+from project_atlas.scene_persistence import PersistentSceneRepositoryMixin
+from project_atlas.scene_schema import MIGRATION_27
 
 
 def now() -> str:
@@ -1536,13 +1538,14 @@ MIGRATIONS: tuple[Migration, ...] = (
             "ON narration_generation_executions (script_id, created_at, id)",
         ),
     ),
+    MIGRATION_27,
 )
 
 
 MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23, 26})
 
 
-class AtlasRepository(PublishingRepositoryMixin):
+class AtlasRepository(PersistentSceneRepositoryMixin, PublishingRepositoryMixin):
     """A small application/repository boundary over SQLite."""
 
     def __init__(
