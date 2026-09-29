@@ -1,5 +1,36 @@
 # Conveyor — Current Status
 
+## Cell 1 post-proof current state — 29 September 2026
+
+The final-quality persistent-world Cell 1 proof has now occurred privately. The real 8.8-second Daniel-backed failed
+founder-review MP4 is preserved at SHA-256
+`F1C4D600910BF2BD4E223AFA3F014D046615990B89A97D13D7D6E9D8188246FD`. Mechanical persistent-world continuity
+**PASSED**, with `0` adjacent unexpected changes: the architecture faithfully preserved the selected world and assets.
+This does not establish creative or Character Model Continuity acceptance. Founder visual review found P5-v4 visual
+equivalence **FAILED**, Character Model Continuity **FAILED**, physical integrity **FAILED** and overall creative
+acceptance **FAILED**. The Persistent Scene Model remains mechanically successful and closed unless new structural
+evidence emerges.
+
+The proof's missing captions were a real shared v1/v2 SRT/libass coordinate defect, not a persistent-state defect.
+The bounded repair is synchronized at `96e5114a619fcbfc2500745f1024a7754b27f012`; actual rendered-pixel checks now
+pass for the modern path and legacy v1, so caption integration is **REPAIRED**. The incomplete laptop was localized to
+the deterministic raw-sheet-to-candidate crop: admission, state resolution, composition and delivery faithfully
+preserved an already-clipped candidate. No production-code repair was required. A zero-spend re-extraction from the
+existing source bytes is available but would require separate review and admission; the historical failed proof remains
+unchanged.
+
+The creative correction route is **PARTIAL**. Core v3, approved acting poses, P5-v4 and approved environment/composition
+evidence remain reference authorities, not automatically reusable final Cell 1 assets. The smallest identified bespoke
+requirement is a matched persistent-compatible hamster performance set preserving Core v3 construction and P5-v4-level
+illustrated depth, physical contact, coherent occlusion and world integration. This diagnosis authorizes no generation
+or spend. The historical pre-proof working exposure was `$7.62694332 / $10`; the real proof consumed `$0.35`, making
+current conservative working exposure `$7.97694332 / $10` with `$2.02305668` remaining. The subsequent diagnostic and
+caption repair used `0` provider calls and `$0`.
+
+The current gate is to determine and explicitly authorize the smallest credible creative correction before any further
+provider spend. Do not presume a full rebuild, produce another candidate or reopen the persistent architecture.
+Production #6 remains not started; publishing and public release remain unauthorized.
+
 ## Persistent Scene Model mechanical architecture — 29 September 2026
 
 The isolated zero-spend Persistent Scene Model prototype is proven and synchronized at
@@ -28,9 +59,9 @@ required.
 
 Production persistent-scene data is not activated. The protected runtime remains hash-identical after proof and all ten
 persistent-scene tables remain empty. No provider was called and spend was `$0`; final creative quality is not inferred
-from the synthetic mechanical proof. Cell 1 remains blocked/not rebuilt, Production #6 has not started, and publishing
-and public release remain unauthorized. The next consequential gate is a separately authorized final-quality Cell 1
-video proof against the existing visual quality authorities.
+from the synthetic mechanical proof. The later real Cell 1 proof and its failed creative disposition are recorded in
+the superseding current-state section above. Production #6 has not started, and publishing and public release remain
+unauthorized.
 
 ## Verified pilot and runtime state — 23 September 2026
 
@@ -162,8 +193,9 @@ narrator under the [current decision](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md);
 [Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) remains historical evidence, not a current
 Marin default. No experiment, generation, provider call, spend or production regeneration is authorized by selection.
 Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`,
-leaving `$0.30305668` unspent; this is not authorization to spend. The active quality envelope is
-`$7.62694332 / $10`, with `$2.37305668` remaining. Provider-reported exact billed totals are unavailable.
+leaving `$0.30305668` unspent; this is not authorization to spend. The active quality envelope is now
+`$7.97694332 / $10`, with `$2.02305668` remaining after the `$0.35` real Cell 1 proof. The historical pre-proof
+figure was `$7.62694332 / $10`. Provider-reported exact billed totals are unavailable.
 
 The founder-approved [SimilarStoic Creative Reference Set](docs/SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) canonizes
 the interpretation of six directly reviewed founder-selected audiovisual excerpts without committing third-party

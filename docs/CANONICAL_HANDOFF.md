@@ -1,5 +1,32 @@
 # Conveyor — Canonical Handoff and Governance
 
+## Cell 1 post-proof fresh-session handoff — 29 September 2026
+
+Do not repeat the final-quality persistent-world Cell 1 proof or reopen Persistent Scene Model architecture. A real
+8.8-second Daniel-backed proof occurred privately; its failed founder-review MP4 is preserved at SHA-256
+`F1C4D600910BF2BD4E223AFA3F014D046615990B89A97D13D7D6E9D8188246FD`. Mechanical world/state continuity
+**PASSED** with `0` adjacent unexpected changes, but founder creative acceptance **FAILED**: P5-v4 equivalence,
+Character Model Continuity and physical integrity all remain **FAILED**. Mechanical identity persistence proves that
+the chosen assets stayed exact; it does not prove that those performances are valid Core v3 interpretations.
+
+Caption integration is **REPAIRED** at `96e5114a619fcbfc2500745f1024a7754b27f012`. The defect was shared v1/v2
+SRT/libass coordinate conversion; actual rendered-pixel checks pass for modern and legacy v1 captions. Laptop clipping
+was instead a deterministic raw-sheet-to-candidate crop defect: the already-clipped candidate was faithfully preserved
+through admission, persistent state, composition and delivery. The available zero-spend action is to re-extract the
+complete laptop from existing bytes and separately review/admit a corrected variant; do not overwrite historical
+evidence.
+
+The remaining route is **PARTIAL**, not an authorized rebuild. Existing Core v3, acting-pose, P5-v4 and
+environment/composition authorities remain useful reference evidence, but exact reuse does not solve the actor-model
+failure. The smallest identified bespoke requirement is a matched persistent-compatible hamster performance set with
+Core v3 construction and P5-v4-level depth, contact, occlusion and integration. Current conservative working exposure
+is `$7.97694332 / $10`, leaving `$2.02305668`; the historical `$7.62694332 / $10` figure predates the `$0.35` proof.
+No remaining budget is spending authority.
+
+The next gate is to determine and explicitly authorize the smallest credible creative correction before any provider
+spend, then—and only then—produce another founder-review candidate. Production #6 remains not started; publishing and
+public release remain unauthorized.
+
 ## Persistent Scene Model canonical milestone — 29 September 2026
 
 The zero-spend isolated mechanical prototype at `25fd94d65fde9d06a0fe05062a2638f327d159e0` passed adversarial
@@ -27,8 +54,8 @@ remain unchanged; Migration 28 was not required.
 
 Production persistent-scene data is not activated; all ten protected-runtime scene tables remain empty and the runtime
 is hash-identical after proof. Provider calls/spend remain `0 / $0`. Mechanical proof is not creative-quality
-acceptance: Cell 1 remains not rebuilt, Production #6 has not started, and publishing/public release remain
-unauthorized. The next consequential gate is a separately authorized final-quality Cell 1 video proof.
+acceptance. The later real Cell 1 proof and current failed creative disposition are recorded in the superseding
+fresh-session section above. Production #6 has not started, and publishing/public release remain unauthorized.
 
 ## Current operational reconciliation — 23 September 2026
 
@@ -47,9 +74,10 @@ remains private. The canonical
 [P5 v4 visual non-regression gate](SIMILARSTOIC_CREATIVE_CALIBRATION.md#p5-v4-visual-non-regression-gate) makes that
 baseline a hard prerequisite to temporal/spatial grammar and requires direct final-frame comparison.
 
-The subsequent high-fidelity same-cell retest improved scene integration but is **BLOCKED — CHARACTER MODEL CONTINUITY
-UNDER REVIEW**: its recurring mascot remains recognisable while the underlying Core v3 model drifts across generated
-states. No grammar winner may be selected and the A/B mapping remains concealed. The
+The historical high-fidelity same-cell retest improved scene integration but remained blocked by Character Model
+Continuity: its recurring mascot was recognisable while the underlying Core v3 model drifted across generated states.
+No grammar winner was selected and the A/B mapping remains concealed. The later real persistent-world proof and its
+founder-reviewed disposition supersede that pending-review wording; see the current handoff section above. The
 [Character Model Continuity gate](SIMILARSTOIC_VISUAL_VOCABULARY.md#character-model-continuity-gate) now requires the
 same underlying mascot model across pose and performance plus cross-state contact-sheet QA where applicable; legitimate
 acting deformation remains allowed. This documentation does not authorize providers, repair, regeneration, a rebuild,
@@ -183,8 +211,9 @@ checkpoint. An unexpected remote change is not automatically wrong and must not 
   pending separate migration authority. No generation, provider call, spend, production regeneration or release is
   authorized. Preserve **CHANGE VOICE WITHOUT REBUILD**; accepted P5 v4 and Pilot #1 remain unchanged.
 - Conservative Stage-1 narrator exposure is `$0.19694332 / $0.50`, leaving `$0.30305668` unspent; remaining budget is
-  not spending authorization. Active quality-envelope exposure is `$7.62694332 / $10`; `$2.37305668` remains.
-  Provider-reported exact billed totals are unavailable.
+  not spending authorization. Active quality-envelope exposure is `$7.97694332 / $10`; `$2.02305668` remains after
+  the `$0.35` real Cell 1 proof. The historical pre-proof figure was `$7.62694332 / $10`. Provider-reported exact
+  billed totals are unavailable.
 - The [SimilarStoic Creative Reference Set](SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) preserves the founder's direct
   review of six selected audiovisual excerpts as characteristic authorities; exact clips remain private and all
   unavailable source/media provenance is `not yet recorded`, never invented. Existing SimilarStoic visuals remain the
