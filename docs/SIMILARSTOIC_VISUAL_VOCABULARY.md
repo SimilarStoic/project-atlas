@@ -22,9 +22,11 @@ better accepted baseline.
 Visuals strengthen explanations, dramatize ideas, create metaphor and humour, add emotional emphasis, and maintain
 attention. They must not carry essential information missing from narration.
 
-The hamster should usually be doing something. It is primarily the actor, viewer proxy, metaphor carrier, and emotional
-reaction point. Avoid defaulting to a hamster standing beside a diagram, acting as a presenter, sitting beside
-explanatory text, or following generic talking-head grammar.
+The hamster should usually be doing something when present. It is primarily the actor, viewer proxy, metaphor carrier,
+and emotional reaction point, but it is optional in any beat where it adds no meaning, blocks explanatory artwork or
+would only repeat a familiar pose as foreground branding. Reduce it, reposition it, change the performance or omit it.
+Avoid defaulting to a hamster standing beside a diagram, acting as a presenter, sitting beside explanatory text, or
+following generic talking-head grammar.
 
 Every scene must have a written internal rationale tying one exact spoken idea to an action, metaphor, environment or
 prop. The visual must make that idea easier to interpret. Attractive but semantically unrelated novelty fails final QA.
@@ -127,6 +129,14 @@ approved content and spatial relationships, and only an explicit authorized delt
 Scene does not itself create a new visual world. This does not require persistent-world decomposition for unrelated
 one-off frames, and it does not replace Character Model Continuity or perceptual visual QA.
 
+Persistence is not stillness. Keep a world when continuity helps comprehension, while allowing actor performance or
+position, actor presence, prop state, environmental emphasis, explanatory objects and composition/focus to evolve with
+the narration. A continuing world is not permission for a long stretch of unchanged visual information.
+
+When a stateful explanatory variant replaces another, the compositor must render only the selected variant; previous
+temporary layers must not accumulate. Structural replacement and `unexpected == ()` are necessary but not sufficient:
+inspect actual adjacent frames for stale numbers, ghost circles, old highlights or residue baked into a new source.
+
 ### Repair, do not empty
 
 A local generation defect is normally repaired while the intended scene richness, semantic objects, depth and
@@ -157,6 +167,9 @@ all valid when scene-appropriate. Ambiguous open/closed cavities, tooth-like res
 lips or jaws, stray residual mouth or chin lines, and expressions that cannot be parsed fail final character QA.
 
 ### Character Model Continuity gate
+
+Every newly generated character performance must pass this gate before admission. Pose novelty, clean edges or a
+strong composition cannot compensate for a changed face, body construction or identity.
 
 A recurring SimilarStoic mascot must remain the **same underlying canonical character model** across pose, action,
 expression, crop and scene. Recognisability alone is insufficient: every instance must read as Core v3 performing a new
@@ -200,6 +213,11 @@ Final visual QA uses the actual rendered frame at full resolution and phone scal
 outlines, attachments, intersections, duplicated or disappearing fragments, fills, perspective, anatomy, repeated-object
 consistency, Character Model Continuity and continuity between related beats. A written rationale or technical image
 check cannot make a visibly weak frame pass.
+
+For every admitted actor path, compare **source actor → resolved composite → final encoded frame** at useful zoom. A
+clean source that acquires a light matte, blurred contour, double edge or halo downstream is an integration failure.
+Correct the first responsible extraction, resampling, alpha-composite or encode stage; do not regenerate a good actor to
+hide a pipeline defect.
 
 ## Composition patterns v1
 
@@ -269,11 +287,12 @@ existing assets force an unnatural composition, or a new metaphor materially imp
 Do not force reuse merely to reduce provider cost. Do not generate assets merely to create variety. Quality and
 narrative fit come first.
 
-Reuse normally advances visually. Retain a successful environment or plate for continuity while changing a relevant
+Reuse normally advances visually and must add semantic value. Retain a successful environment or plate for continuity while changing a relevant
 pose, expression, prop state, object position, crop, camera distance, foreground state, environmental activity or
 reveal so the viewer reads **same place, next beat**. Exact finished-frame repetition is allowed only as an intentional
 callback, comedic repetition, before/after comparison or purposeful visual pause, and its editorial reason must be
-recorded. Convenience alone is not a reason to repeat an exact frame.
+recorded. A callback normally shows a changed performance, resolved state, completed action or new emphasis. Convenience
+alone is not a reason to repeat an exact frame.
 
 ## Validated production assembly
 
@@ -320,6 +339,26 @@ predefined middle-centre or upper-centre safe zone at a scene boundary and keep 
 make viewers chase captions, bounce words individually or move text continuously. Validate full frames, busy and
 close-up scenes, and a 270×480 phone preview where the equivalent type is at least 23 px. Final caption timing comes from
 the verified final narration rather than estimated word counts.
+
+Caption placement is composition-aware. It must not cover actor action, explanatory objects, state markers or important
+world relationships. Safe-zone changes are explicit, happen only at scene boundaries and use available negative space;
+the actual encoded frame, not a coordinate assumption, determines whether placement passes.
+
+## Semantic progression and whole-video gate
+
+Visual change follows meaning rather than a fixed cut interval. A change in idea, tone, emphasis, action or explanatory
+step normally receives a meaningful visual response: a performance or position change, actor exit/entry, prop or
+environment state, emphasis/focus change, explanatory-object change, or genuinely new world. Do not manufacture cuts or
+motion when the meaning has not changed.
+
+Every acquired world must answer **what does this world help the viewer understand?** Attractive but weakly related
+scenery fails the raw-world gate and cannot be rescued by captions or a foreground mascot. Likewise, a reused actor
+performance passes only when that exact action materially illustrates the current narration.
+
+After cell QA, review the complete master at normal playback and phone scale. Fail founder-review readiness for long
+unjustified static stretches, repeated poses without semantic gain, actor overuse, irrelevant worlds, obscured
+explanatory art, stale state residue, weak callbacks, insufficient visual development or lack of payoff. Meaningful
+stillness remains valid when its editorial purpose is recorded; meaningless motion does not rescue a weak sequence.
 
 Material quantitative or time-sensitive claims also receive a separate concise source line such as `IEA, Apr 2025` or
 `Source: Ofgem, Jul 2026`. Attribution is smaller and visually distinct from speech captions; it does not replace full

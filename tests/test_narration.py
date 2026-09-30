@@ -19,6 +19,8 @@ from project_atlas.media import (
 )
 from project_atlas.narration import (
     SIMILARSTOIC_INSTRUCTION_SHA256,
+    SIMILARSTOIC_PRONUNCIATION_ALIASES,
+    apply_pronunciation_aliases,
     resolve_narrator,
 )
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
@@ -127,6 +129,9 @@ def test_daniel_offline_configuration_and_no_fallback(monkeypatch):
     assert settings["timestampType"] == "WORD"
     assert settings["applyTextNormalization"] == "ON"
     assert settings["enhanceGeneration"] is False
+    assert settings["pronunciationAliases"] == [
+        {"written": "ISA", "spoken": "eye-suh"}
+    ]
     assert sha256(settings["instruction"].encode()).hexdigest() == SIMILARSTOIC_INSTRUCTION_SHA256
     settings["audioConfig"]["speakingRate"] = 2
     assert engine.settings["audioConfig"]["speakingRate"] == 1.0
@@ -148,14 +153,17 @@ def test_exact_request_and_truthful_output(monkeypatch):
         wav.writeframes(b"\0\0" * 100)
     engine = resolve_narrator("similarstoic", execution_authorized=True)
     calls = []
-    text = "Exact approved text.\nDon't paraphrase."
+    text = "An ISA keeps the exact approved text.\nDon't paraphrase."
     monkeypatch.setenv("INWORLD_API_KEY", "fixture-secret")
 
     def respond(request, **kwargs):
         calls.append(request)
         assert request.full_url == "https://api.inworld.ai/tts/v1/voice"
         assert request.get_header("Authorization") == "Basic fixture-secret"
-        assert json.loads(request.data) == {"text": text, **engine.settings}
+        assert json.loads(request.data) == {
+            "text": "An eye-suh keeps the exact approved text.\nDon't paraphrase.",
+            **engine.provider_settings,
+        }
         return io.BytesIO(
             json.dumps({"audioContent": base64.b64encode(audio.getvalue()).decode()}).encode()
         )
@@ -164,8 +172,22 @@ def test_exact_request_and_truthful_output(monkeypatch):
     result = engine.synthesize(text)
     assert result.engine_kind == "inworld_tts"
     assert result.content == audio.getvalue()
+    assert result.settings["pronunciationAliases"] == [
+        {"written": "ISA", "spoken": "eye-suh"}
+    ]
+    assert text == "An ISA keeps the exact approved text.\nDon't paraphrase."
     assert "fixture-secret" not in repr(result)
     assert len(calls) == 1
+
+
+def test_pronunciation_alias_is_token_bound_and_does_not_rewrite_editorial_text() -> None:
+    editorial = "ISA guidance differs from ISAs and MISALIGNED labels."
+
+    spoken = apply_pronunciation_aliases(editorial)
+
+    assert SIMILARSTOIC_PRONUNCIATION_ALIASES == (("ISA", "eye-suh"),)
+    assert spoken == "eye-suh guidance differs from ISAs and MISALIGNED labels."
+    assert editorial == "ISA guidance differs from ISAs and MISALIGNED labels."
 
 
 def test_failure_is_sanitized_and_not_retried(monkeypatch):

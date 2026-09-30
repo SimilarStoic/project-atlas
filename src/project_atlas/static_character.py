@@ -25,13 +25,16 @@ class StaticCharacterExtraction:
     foreground_bbox: tuple[int, int, int, int]
     background_min_channel: int
     background_max_channel_spread: int
+    edge_matte_min_channel: int
+    edge_matte_max_channel_spread: int
+    edge_matte_passes: int
 
     def provenance(self) -> dict[str, object]:
         """Return the exact, serializable derivation record for a managed Asset."""
 
         return {
             "derivation": "deterministic-boundary-connected-background-extraction",
-            "method_version": "v1",
+            "method_version": "v2",
             "source_sha256": self.source_digest,
             "output_sha256": self.output_digest,
             "source_dimensions": {"width": self.width, "height": self.height},
@@ -40,6 +43,12 @@ class StaticCharacterExtraction:
                 "connected_to_image_boundary": True,
                 "minimum_rgb_channel": self.background_min_channel,
                 "maximum_rgb_channel_spread": self.background_max_channel_spread,
+            },
+            "edge_matte_cleanup": {
+                "boundary_connected_only": True,
+                "minimum_rgb_channel": self.edge_matte_min_channel,
+                "maximum_rgb_channel_spread": self.edge_matte_max_channel_spread,
+                "passes": self.edge_matte_passes,
             },
             "alpha": "binary; retained pixels preserve source RGBA exactly",
         }
@@ -50,6 +59,9 @@ def extract_boundary_connected_background(
     *,
     background_min_channel: int = 250,
     background_max_channel_spread: int = 5,
+    edge_matte_min_channel: int = 235,
+    edge_matte_max_channel_spread: int = 20,
+    edge_matte_passes: int = 1,
 ) -> StaticCharacterExtraction:
     """Turn only bright, neutral exterior background pixels into transparency.
 
@@ -62,6 +74,12 @@ def extract_boundary_connected_background(
         raise ValueError("background_min_channel must be between 0 and 255.")
     if not 0 <= background_max_channel_spread <= 255:
         raise ValueError("background_max_channel_spread must be between 0 and 255.")
+    if not 0 <= edge_matte_min_channel <= 255:
+        raise ValueError("edge_matte_min_channel must be between 0 and 255.")
+    if not 0 <= edge_matte_max_channel_spread <= 255:
+        raise ValueError("edge_matte_max_channel_spread must be between 0 and 255.")
+    if not isinstance(edge_matte_passes, int) or not 0 <= edge_matte_passes <= 4:
+        raise ValueError("edge_matte_passes must be an integer between 0 and 4.")
 
     width, height, pixels = _decode_rgba_png(source_png)
     background = _boundary_connected_background(
@@ -70,6 +88,15 @@ def extract_boundary_connected_background(
         height,
         background_min_channel,
         background_max_channel_spread,
+    )
+    background = _expand_boundary_matte(
+        pixels,
+        background,
+        width,
+        height,
+        edge_matte_min_channel,
+        edge_matte_max_channel_spread,
+        edge_matte_passes,
     )
     output = bytearray(pixels)
     for index, is_background in enumerate(background):
@@ -91,6 +118,9 @@ def extract_boundary_connected_background(
         foreground_bbox=bbox,
         background_min_channel=background_min_channel,
         background_max_channel_spread=background_max_channel_spread,
+        edge_matte_min_channel=edge_matte_min_channel,
+        edge_matte_max_channel_spread=edge_matte_max_channel_spread,
+        edge_matte_passes=edge_matte_passes,
     )
 
 
@@ -103,6 +133,9 @@ def verify_static_character_extraction(
         source_png,
         background_min_channel=extraction.background_min_channel,
         background_max_channel_spread=extraction.background_max_channel_spread,
+        edge_matte_min_channel=extraction.edge_matte_min_channel,
+        edge_matte_max_channel_spread=extraction.edge_matte_max_channel_spread,
+        edge_matte_passes=extraction.edge_matte_passes,
     )
     if repeated != extraction:
         raise ValueError("Static character extraction does not reproduce exactly.")
@@ -153,6 +186,45 @@ def _boundary_connected_background(
         if index + width < width * height:
             add(index + width)
     return mask
+
+
+def _expand_boundary_matte(
+    pixels: bytes,
+    background: bytearray,
+    width: int,
+    height: int,
+    minimum: int,
+    spread: int,
+    passes: int,
+) -> bytearray:
+    """Remove only bright neutral fringe touching the already-proven exterior matte."""
+
+    expanded = bytearray(background)
+    for _pass in range(passes):
+        additions: list[int] = []
+        for index, removed in enumerate(expanded):
+            if removed:
+                continue
+            offset = index * 4
+            red, green, blue, alpha = pixels[offset : offset + 4]
+            if (
+                alpha != 255
+                or min(red, green, blue) < minimum
+                or max(red, green, blue) - min(red, green, blue) > spread
+            ):
+                continue
+            x = index % width
+            neighbors = (
+                index - 1 if x else None,
+                index + 1 if x + 1 < width else None,
+                index - width if index >= width else None,
+                index + width if index + width < width * height else None,
+            )
+            if any(neighbor is not None and expanded[neighbor] for neighbor in neighbors):
+                additions.append(index)
+        for index in additions:
+            expanded[index] = 1
+    return expanded
 
 
 def _validate_extraction(

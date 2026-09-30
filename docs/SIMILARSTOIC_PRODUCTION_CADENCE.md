@@ -25,8 +25,10 @@ The repeatable core is:
 1. choose one useful, supportable idea from the existing Opportunity queue;
 2. freeze current UK-first evidence, Claims and sources under the exact authorized Opportunity;
 3. prepare one audio-complete Script and approve its editorial package;
-4. create a six-beat VisualPlan using the approved visual vocabulary;
-5. reuse canonical assets where they naturally fit and generate only script-required gaps;
+4. create a meaning-led VisualPlan using the approved visual vocabulary; visual change follows a change in meaning,
+   not a fixed cut interval;
+5. reuse canonical assets only where the reuse adds meaning, omit the mascot where it does not, and generate only
+   script-required gaps;
 6. compose locally with character-first hierarchy, a static anchored camera by default and idea-led cuts;
 7. use the approved narrator configuration (historically Marin; now Daniel) without hidden style additions;
 8. transcribe the final mastered narration, prove completeness and derive phone-readable captions from real speech timing;
@@ -47,8 +49,14 @@ Before a final artifact can pass internally:
 
 - every scene visibly communicates the subject, action, acted-on object and causal relationship at a glance; a written
   rationale cannot substitute for a weak rendered frame;
+- every world has an explicit explanatory job; actor presence and reused performances must add semantic value rather
+  than merely fill the frame, and explanatory artwork must remain unobscured;
+- a persistent world evolves as the narration advances; a long unchanged stretch requires an explicit editorial
+  reason, while meaningless motion cannot substitute for semantic progression;
 - generated artwork passes full-resolution and phone-scale vision review for cleanliness, topology, complete geometry,
   attachments, perspective, anatomy, repeated-object consistency, paired-scene continuity and collisions;
+- actor edges pass source, composite and final-encode inspection; state replacement leaves no ghost circles, stale
+  markers or superseded layers;
 - repair preserves useful semantic objects, environmental depth and character interaction rather than emptying the scene;
 - the camera is static by default; any global motion has a recorded purpose, remains monotonic and anchored, and contains
   no micro-wiggle, faux handheld movement, loop seam, lag or snapback;
@@ -57,6 +65,8 @@ Before a final artifact can pass internally:
   phone-scale review;
 - material quantitative or time-sensitive claims receive separate dated on-screen source attribution;
 - current claims pass a newest-primary-source comparison at research freeze, with any retained older source justified;
+- the whole video passes normal-speed and phone-scale review for meaning-led progression, useful actor presence,
+  composition-aware captions, progressive callbacks and the absence of unexplained static stretches;
 - Historical Marin remains replaceable; Daniel is the explicitly founder-approved production narrator.
 
 ## Five-working-day operating loop
@@ -65,7 +75,7 @@ Before a final artifact can pass internally:
 | --- | --- | --- | --- |
 | Day 1 — select and bound | ranked candidate, rejection notes, exact title/angle, risk and likely spend | automatic/routine | one low-ambiguity design candidate with no false urgency |
 | Day 1–2 — evidence and editorial | sources, Claims, readiness, title, hook, exact Script and editorial QA | automatic preparation | every consequential sentence supported or explicitly framed as illustration/opinion |
-| Day 2 — production design | six-beat VisualPlan, reuse map, generation gaps, motion/caption plan and attempt ceiling | automatic preparation | audio-only story works; each scene has one job; spend is bounded |
+| Day 2 — production design | meaning-led VisualPlan, reuse-or-omission map, generation gaps, motion/caption plan and attempt ceiling | automatic preparation | audio-only story works; each scene has one job; visual changes track meaning; spend is bounded |
 | Day 3 — assets and narration | selected/reused assets, only necessary new assets, mastered narration and provenance | automatic after authority | identity and Same-illustrator QA pass; narration has no clipping or missing line |
 | Day 4 — assembly and alignment | deterministic composition, final-master alignment, mobile-safe captions, dated attribution and stable motion | automatic | exact Script-word completeness passes; all timing uses final audio; phone-scale preview passes |
 | Day 5 — final QA and review | technical/editorial/semantic/cleanliness/continuity/motion report, cost record and founder-review package | automatic preparation, founder decision | one exact artifact is accepted, revised or rejected |
@@ -145,5 +155,6 @@ authorities rather than a finite content inventory.
 Keep the five-working-day pace for the initial live pilot and
 publish no more than one item per week; do not accelerate volume until publishing reliability and repeated learning are
 proven. Production #5 is accepted at final conservative exposure of `$7.43 / $10`, leaving `$2.57`. Public launch is
-not authorized; narrator naturalness is the next focused quality track. The verified runtime is migrated through 24
-for multi-authority visual references; Production #6, v0.28 and a rig remain absent.
+not authorized. Production #6 is retained unchanged as diagnostic evidence: it passed the system path but failed
+founder creative acceptance. Its forward lessons are incorporated into the existing planning, composition, caption,
+character and whole-video QA stages; they do not authorize a rebuild, another provider call or Production #7.

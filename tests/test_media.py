@@ -148,6 +148,25 @@ def test_default_social_caption_profile_is_mobile_readable_and_safe() -> None:
         "occlusion_layer_integrity": True,
         "reuse_with_variation": True,
         "exact_frame_repeat_requires_editorial_rationale": True,
+        "actor_presence_requires_semantic_role": True,
+        "character_model_continuity": True,
+        "explanatory_artwork_unobscured": True,
+        "caption_collision_free": True,
+        "source_composite_encode_edge_proof": True,
+        "state_replacement_residue_free": True,
+    }
+    assert settings["whole_video_qa"] == {
+        "profile": "similarstoic-whole-video-v1",
+        "semantic_change_requires_visual_response": True,
+        "persistent_world_evolves_with_meaning": True,
+        "long_static_stretch_requires_editorial_rationale": True,
+        "actor_optional_and_semantically_justified": True,
+        "performance_reuse_requires_semantic_gain": True,
+        "world_relevance_required": True,
+        "caption_composition_aware": True,
+        "callback_requires_progression": True,
+        "meaningless_motion_rejected": True,
+        "review_scales": ["normal_playback", "phone"],
     }
 
 
@@ -161,6 +180,67 @@ def test_modern_render_rejects_a_weakened_final_frame_visual_qa_profile() -> Non
 
     with pytest.raises(MediaRuntimeError, match="final-frame visual QA profile"):
         MediaService._composition_filters(scenes, 1000, settings)
+
+
+def test_modern_render_rejects_a_weakened_whole_video_qa_profile() -> None:
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    settings = dict(MediaService.RENDER_SETTINGS)
+    settings["whole_video_qa"] = {
+        **MediaService.WHOLE_VIDEO_QA_PROFILE,
+        "persistent_world_evolves_with_meaning": False,
+    }
+
+    with pytest.raises(MediaRuntimeError, match="whole-video QA profile"):
+        MediaService._composition_filters(scenes, 1000, settings)
+
+
+def test_caption_safe_zone_changes_are_explicit_and_scene_bound() -> None:
+    scenes = [
+        {"duration_ms": 1000, "motion": "static", "transition_to_next": "cut"},
+        {"duration_ms": 1000, "motion": "static", "transition_to_next": None},
+    ]
+    cues = MediaService._validated_caption_cues(
+        [
+            {"text": "Lower cue", "start_ms": 0, "end_ms": 900},
+            {
+                "text": "Upper cue",
+                "start_ms": 1000,
+                "end_ms": 1900,
+                "zone": "upper_center_safe",
+            },
+        ],
+        scenes,
+        MediaService.RENDER_SETTINGS,
+    )
+
+    assert cues[0]["zone"] == "lower_center_safe"
+    assert r"{\an8}Upper cue" in MediaService._srt(cues)
+
+    with pytest.raises(MediaRuntimeError, match="Scene boundary"):
+        MediaService._validated_caption_cues(
+            [
+                {"text": "Lower cue", "start_ms": 0, "end_ms": 400},
+                {
+                    "text": "Early upper cue",
+                    "start_ms": 500,
+                    "end_ms": 900,
+                    "zone": "upper_center_safe",
+                },
+            ],
+            scenes,
+            MediaService.RENDER_SETTINGS,
+        )
+
+
+def test_caption_cues_reject_raw_positioning_and_more_than_two_lines() -> None:
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    for text in (r"{\an8}Raw override", "one\ntwo\nthree"):
+        with pytest.raises(MediaRuntimeError, match="Caption cue text"):
+            MediaService._validated_caption_cues(
+                [{"text": text, "start_ms": 0, "end_ms": 1000}],
+                scenes,
+                MediaService.RENDER_SETTINGS,
+            )
 
 
 def test_social_caption_filter_freezes_profile_and_preserves_legacy_snapshots() -> None:

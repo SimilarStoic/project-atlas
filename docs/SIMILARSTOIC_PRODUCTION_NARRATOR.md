@@ -43,6 +43,11 @@ appropriate (`that doesn't`, `you're`, `you've`, `didn't`, `hasn't`). Founder fo
 writing more natural than conspicuously formal readout. This is not mechanical contraction or permission for the
 provider to paraphrase. Exact approved script text remains authoritative; preserve meaning, claims and tone.
 
+Pronunciation control is a provider-facing rendering layer, not an editorial rewrite. The canonical Script and captions
+retain `ISA`; synthesis sends the token-bound alias `eye-suh`, and provenance records the alias used. Aliases must not
+alter substrings inside other words. Any new alias requires an explicit canonical addition and an offline regression
+test; the provider receives no discretion to improvise pronunciation or wording.
+
 **CHANGE VOICE WITHOUT REBUILD**: narrator configuration remains separate from scripts, visual authorities,
 scene plans and publication metadata. A separately authorized voice change regenerates only the narration-dependent
 chain: narration, completeness validation, alignment, captions, duration-dependent timing and final media.

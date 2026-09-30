@@ -479,6 +479,19 @@ def test_actor_change_does_not_change_static_rasters(world, states):
     assert layer_hashes(before)["chair.top"] == layer_hashes(after)["chair.top"]
 
 
+def test_stateful_variant_replacement_does_not_retain_old_layers(world, states):
+    """A state change renders only the selected variant, never accumulated marker residue."""
+
+    before = render(world, states[1])
+    after = render(world, states[2])
+
+    assert "laptop.main" in layer_hashes(before)
+    assert "laptop.on" not in layer_hashes(before)
+    assert "laptop.main" not in layer_hashes(after)
+    assert "laptop.on" in layer_hashes(after)
+    assert states[2].diff.unexpected == ()
+
+
 def test_rejected_actor_variant_does_not_mutate_state(world, states):
     original = states[0]
     with pytest.raises(SceneModelError, match="variant not admitted"):

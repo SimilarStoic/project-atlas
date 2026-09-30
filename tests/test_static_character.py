@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from project_atlas.static_character import (
+    _decode_rgba_png,
     _encode_rgba_png,
     extract_boundary_connected_background,
     verify_static_character_extraction,
@@ -47,3 +48,30 @@ def test_extraction_rejects_invalid_png_content() -> None:
         assert "PNG" in str(error)
     else:
         raise AssertionError("Unsupported source content was accepted.")
+
+
+def test_boundary_matte_cleanup_removes_only_connected_light_fringe() -> None:
+    """One bounded pass removes baked background halo without erasing dark contour pixels."""
+
+    pixels = bytearray()
+    for y in range(5):
+        for x in range(5):
+            if x in {0, 4} or y in {0, 4}:
+                color = (254, 254, 254, 255)
+            elif x in {1, 3} or y in {1, 3}:
+                color = (244, 242, 243, 255)
+            else:
+                color = (20, 20, 20, 255)
+            pixels.extend(color)
+    source = _encode_rgba_png(5, 5, bytes(pixels))
+
+    extraction = extract_boundary_connected_background(source)
+    width, height, output = _decode_rgba_png(extraction.content)
+
+    assert (width, height) == (5, 5)
+    assert extraction.transparent_pixels == 24
+    assert extraction.foreground_bbox == (2, 2, 2, 2)
+    assert output[(2 * width + 2) * 4 : (2 * width + 2) * 4 + 4] == bytes(
+        (20, 20, 20, 255)
+    )
+    assert extraction.provenance()["edge_matte_cleanup"]["passes"] == 1

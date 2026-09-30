@@ -10,6 +10,7 @@ import base64
 import io
 import json
 import os
+import re
 import urllib.request
 import wave
 from hashlib import sha256
@@ -25,6 +26,25 @@ SIMILARSTOIC_INSTRUCTION = (
     "Do not add, omit or paraphrase words."
 )
 SIMILARSTOIC_INSTRUCTION_SHA256 = "4334ac0e0cb2e5c0870a8ef7f0b1d5f40bf0afc8381b108d7916e7d1e6f3b5cb"
+SIMILARSTOIC_PRONUNCIATION_ALIASES = (("ISA", "eye-suh"),)
+
+
+def apply_pronunciation_aliases(
+    text: str,
+    aliases: tuple[tuple[str, str], ...] = SIMILARSTOIC_PRONUNCIATION_ALIASES,
+) -> str:
+    """Return provider-facing speech text without changing the editorial Script."""
+
+    spoken = text
+    for written, pronunciation in sorted(aliases, key=lambda item: len(item[0]), reverse=True):
+        if not written or not pronunciation or any(character.isspace() for character in written):
+            raise ValueError("Pronunciation aliases require one written token and spoken text.")
+        spoken = re.sub(
+            rf"(?<![\w]){re.escape(written)}(?![\w])",
+            lambda _match: pronunciation,
+            spoken,
+        )
+    return spoken
 
 
 class InworldNarrationSynthesizer:
@@ -54,7 +74,19 @@ class InworldNarrationSynthesizer:
             "timestampType": "WORD",
             "applyTextNormalization": "ON",
             "enhanceGeneration": False,
+            "pronunciationAliases": [
+                {"written": written, "spoken": spoken}
+                for written, spoken in SIMILARSTOIC_PRONUNCIATION_ALIASES
+            ],
         }
+
+    @property
+    def provider_settings(self) -> dict:
+        """Return only fields accepted by Inworld; aliases are applied to ``text``."""
+
+        settings = self.settings
+        settings.pop("pronunciationAliases")
+        return settings
 
     def synthesize(self, text: str) -> NarrationSynthesis:
         if not self.execution_authorized:
@@ -66,9 +98,12 @@ class InworldNarrationSynthesizer:
         credential = os.environ.get("INWORLD_API_KEY", "")
         if not credential:
             raise NarrationSynthesisError("INWORLD_API_KEY is required; no provider fallback.")
+        spoken_text = apply_pronunciation_aliases(text)
         request = urllib.request.Request(
             "https://api.inworld.ai/tts/v1/voice",
-            json.dumps({"text": text, **self.settings}, ensure_ascii=False).encode("utf-8"),
+            json.dumps({"text": spoken_text, **self.provider_settings}, ensure_ascii=False).encode(
+                "utf-8"
+            ),
             {"Authorization": f"Basic {credential}", "Content-Type": "application/json"},
             method="POST",
         )

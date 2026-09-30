@@ -483,6 +483,25 @@ class MediaService:
         "occlusion_layer_integrity": True,
         "reuse_with_variation": True,
         "exact_frame_repeat_requires_editorial_rationale": True,
+        "actor_presence_requires_semantic_role": True,
+        "character_model_continuity": True,
+        "explanatory_artwork_unobscured": True,
+        "caption_collision_free": True,
+        "source_composite_encode_edge_proof": True,
+        "state_replacement_residue_free": True,
+    }
+    WHOLE_VIDEO_QA_PROFILE = {
+        "profile": "similarstoic-whole-video-v1",
+        "semantic_change_requires_visual_response": True,
+        "persistent_world_evolves_with_meaning": True,
+        "long_static_stretch_requires_editorial_rationale": True,
+        "actor_optional_and_semantically_justified": True,
+        "performance_reuse_requires_semantic_gain": True,
+        "world_relevance_required": True,
+        "caption_composition_aware": True,
+        "callback_requires_progression": True,
+        "meaningless_motion_rejected": True,
+        "review_scales": ["normal_playback", "phone"],
     }
 
     RENDER_SETTINGS = {
@@ -501,6 +520,7 @@ class MediaService:
         "global_motion_policy": "static_anchored_default",
         "non_static_motion_requires_rationale": True,
         "final_frame_visual_qa": FINAL_FRAME_VISUAL_QA_PROFILE,
+        "whole_video_qa": WHOLE_VIDEO_QA_PROFILE,
         "crossfade_ms": 250,
         "duration_tolerance_ms": 100,
     }
@@ -902,8 +922,66 @@ class MediaService:
             raise MediaRuntimeError("Persistent snapshot compositor contract differs.")
         return frame.png
 
-    @staticmethod
-    def _srt(cues: list[dict[str, Any]]) -> str:
+    CAPTION_ZONE_OVERRIDES = {
+        "lower_center_safe": "",
+        "middle_center_safe": r"{\an5}",
+        "upper_center_safe": r"{\an8}",
+    }
+
+    @classmethod
+    def _validated_caption_cues(
+        cls,
+        cues: list[dict[str, Any]],
+        scenes: list[dict[str, Any]],
+        settings: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Validate explicit cue zones and allow changes only at Scene boundaries."""
+
+        profile = settings.get("caption_profile")
+        default_zone = (
+            profile.get("default_zone", "lower_center_safe")
+            if isinstance(profile, dict)
+            else "lower_center_safe"
+        )
+        allowed_zones = {default_zone, *(profile.get("alternate_zones", []) if profile else [])}
+        boundaries = []
+        elapsed = 0
+        for scene in scenes[:-1]:
+            elapsed += scene["duration_ms"]
+            boundaries.append(elapsed)
+        validated: list[dict[str, Any]] = []
+        previous_end = 0
+        previous_zone: str | None = None
+        for cue in cues:
+            text = cue.get("text")
+            start, end = cue.get("start_ms"), cue.get("end_ms")
+            zone = cue.get("zone", default_zone)
+            if (
+                not isinstance(text, str)
+                or not text.strip()
+                or "{\\" in text
+                or len(text.splitlines()) > 2
+            ):
+                raise MediaRuntimeError("Caption cue text is invalid or contains raw positioning.")
+            if (
+                not isinstance(start, int)
+                or not isinstance(end, int)
+                or start < previous_end
+                or end <= start
+            ):
+                raise MediaRuntimeError("Caption cue timing is invalid or overlapping.")
+            if zone not in allowed_zones or zone not in cls.CAPTION_ZONE_OVERRIDES:
+                raise MediaRuntimeError("Caption cue uses an unsupported safe zone.")
+            if previous_zone is not None and zone != previous_zone and not any(
+                abs(start - boundary) <= 150 for boundary in boundaries
+            ):
+                raise MediaRuntimeError("Caption zone changes must occur at a Scene boundary.")
+            validated.append({**cue, "text": text.strip(), "zone": zone})
+            previous_end, previous_zone = end, zone
+        return validated
+
+    @classmethod
+    def _srt(cls, cues: list[dict[str, Any]]) -> str:
         def stamp(milliseconds: int) -> str:
             seconds, millis = divmod(milliseconds, 1000)
             minutes, seconds = divmod(seconds, 60)
@@ -911,7 +989,9 @@ class MediaService:
             return f"{hours:02}:{minutes:02}:{seconds:02},{millis:03}"
 
         return "\n\n".join(
-            f"{index}\n{stamp(cue['start_ms'])} --> {stamp(cue['end_ms'])}\n{cue['text']}"
+            f"{index}\n{stamp(cue['start_ms'])} --> {stamp(cue['end_ms'])}\n"
+            f"{cls.CAPTION_ZONE_OVERRIDES.get(cue.get('zone', 'lower_center_safe'), '')}"
+            f"{cue['text']}"
             for index, cue in enumerate(cues, 1)
         )
 
@@ -970,6 +1050,11 @@ class MediaService:
             and settings.get("final_frame_visual_qa") != cls.FINAL_FRAME_VISUAL_QA_PROFILE
         ):
             raise MediaRuntimeError("Snapshot has an unsupported final-frame visual QA profile.")
+        if (
+            settings.get("profile") == "similarstoic-vertical-v2"
+            and settings.get("whole_video_qa") != cls.WHOLE_VIDEO_QA_PROFILE
+        ):
+            raise MediaRuntimeError("Snapshot has an unsupported whole-video QA profile.")
         filters = [cls._scene_filter(index, item, settings) for index, item in enumerate(scenes)]
         current = "v0"
         cumulative_ms = scenes[0]["duration_ms"]
@@ -1084,7 +1169,10 @@ class MediaService:
             narration_path = self.storage.path(narration.storage_path)
             self.storage.read_verified(narration.storage_path, narration.content_digest)
             subtitle = temporary_root / "captions.srt"
-            subtitle.write_text(self._srt(snapshot.caption_cues), encoding="utf-8")
+            caption_cues = self._validated_caption_cues(
+                snapshot.caption_cues, snapshot.scene_inputs, render_settings
+            )
+            subtitle.write_text(self._srt(caption_cues), encoding="utf-8")
             if snapshot.snapshot_schema_version not in {"v1", SNAPSHOT_SCHEMA_VERSION}:
                 raise MediaRuntimeError("Final-media snapshot schema version is unsupported.")
             if snapshot.snapshot_schema_version == SNAPSHOT_SCHEMA_VERSION and (
