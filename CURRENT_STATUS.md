@@ -1,5 +1,11 @@
 # Conveyor — Current Status
 
+> **Historical snapshot — not current operational authority.** This file preserves dated status and decision
+> provenance, including language that was current at the time it was written. For current repository, runtime,
+> production, schema, identity, and safe-start truth, read
+> [`docs/CONVEYOR_CURRENT_STATE.md`](docs/CONVEYOR_CURRENT_STATE.md). If this snapshot conflicts with that document,
+> `docs/CONVEYOR_CURRENT_STATE.md` governs current operation.
+
 ## Cell 1 post-proof current state — 29 September 2026
 
 The final-quality persistent-world Cell 1 proof has now occurred privately. The real 8.8-second Daniel-backed failed

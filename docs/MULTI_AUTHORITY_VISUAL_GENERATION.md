@@ -1,5 +1,9 @@
 # Multi-Authority SimilarStoic Visual Generation — Architecture Design
 
+> **Bounded architecture with historical implementation status.** This file remains useful for its visual-authority
+> design and provenance; it is not current repository, schema, production, or operational authority. Resolve those
+> questions through [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md).
+
 ## Decision and boundary
 
 Approved SimilarStoic images are **generative reference authorities**: visual DNA used to create new script-specific
@@ -8,7 +12,7 @@ poses, environments, props, metaphors and compositions. They are not a finite li
 This design closes the gap between that creative rule and canonical runtime provenance. It preserves the working
 character-reference path and adds the smallest provider-neutral authority model needed for other visual roles.
 
-Current status on 10 September 2026: Migration 24 implements this design and is accepted, synchronized and operational
+Historical implementation status recorded on 10 September 2026: Migration 24 implements this design and was accepted, synchronized and operational
 in the verified persistent runtime. The minimum approved authority set is materialized, and copied-runtime plus
 provider-neutral fake-adapter validation passed. Production #5 v4 subsequently passed the quality-uplift proof and is
 accepted. Publishing remains unimplemented and no publication/platform call has occurred.
@@ -286,7 +290,9 @@ approximately 50% assessment and 80–85% target are retained here as pre-proof 
 - **Persist provider-native request objects as canon:** couples SimilarStoic authority to one adapter.
 - **Automated ML style evaluator:** disproportionate to current evidence; deterministic checks plus vision QA suffice.
 
-## Current phase and spend
+## Historical phase and spend checkpoint
+
+The following list records the state at this design checkpoint; it is not a current operational summary:
 
 - Production-method validation: **PASSED**.
 - Public-launch quality: **NOT YET PASSED**.

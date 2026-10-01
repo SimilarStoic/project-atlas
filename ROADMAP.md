@@ -1,2380 +1,411 @@
-# Conveyor — SimilarStoic Roadmap
+# Conveyor Roadmap
 
-## Current operational reconciliation — 23 September 2026
+## Scope and authority
 
-The [verified pilot/runtime record](CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
-supersedes earlier pending-transfer, future-revocation and runtime-25 wording below without changing phase order.
-Pilot #1's existing manual upload is reconciled to passed private verification; its effective approval is revoked.
-Persistent runtime is Migration 26. Daniel remains approved. Creative Calibration's private-proof prerequisite is
-satisfied, but execution remains separately bounded; no visual grammar is accepted by this update. No public release,
-P5 regeneration or Production #6 is authorized. Earlier operational statements are preserved as checkpoint history.
+This document holds strategy and future sequencing only. It is not a live status report, execution plan, provider or
+spend authorization, production approval, or schema specification. Current operational truth resolves through
+[Conveyor Current State](docs/CONVEYOR_CURRENT_STATE.md). Historical implementation checkpoints remain in
+`CURRENT_STATUS.md` and `docs/CANONICAL_HANDOFF.md`.
+
+No roadmap item begins merely because it appears here. Dates, commitments, implementation milestones, production work,
+and phase activation require separate decisions.
 
 ## Mission
 
-Build an AI-powered content operating system for SimilarStoic that can research relevant topics, develop high-quality content, produce short-form and long-form videos, distribute them across YouTube, TikTok and Instagram, analyse performance and progressively optimise the content strategy.
+Build Conveyor into a production operating system that can support multiple channels and products through reliable,
+evidence-led content operations. SimilarStoic is the first pilot channel and proving ground, not the definition or
+owner of the platform.
 
-The long-term objective is for SimilarStoic to require minimal human intervention while maintaining high standards of accuracy, substance, visual quality and editorial integrity.
+For SimilarStoic, the long-term aim is to research relevant topics, develop high-quality content, produce short- and
+long-form video, distribute it across appropriate platforms, analyse performance, and improve strategy while
+maintaining accuracy, substance, visual quality, and editorial integrity.
 
-The founder should primarily:
-- Set strategic direction
-- Select and steer topics
-- Refine important scripts/content
-- Approve content where appropriate
-- Review performance
-- Make business decisions
+The directional target is approximately 95% automation of proven routine execution, not a human-free system. Founder
+judgement should remain concentrated where practical at three conceptual gates:
 
-The system should progressively automate everything else that can be reliably automated.
+- **Idea Gate** — approve, reject, steer, or reprioritise explained opportunities.
+- **Editorial Gate** — decide on titles, hooks, angles, scripts, evidence, risks, revisions, alternatives, and bounded
+  paid-production spend where separately authorized.
+- **Learning Gate** — review performance, evidence-backed hypotheses, proposed adaptations, and available economics
+  context.
 
----
+These are operating-model concepts. Their appearance here does not create database entities or authorize workflow
+changes.
 
-# Core Brand Position
+## Strategic principles
 
-## Audience
+- Quality and substance take priority over publishing volume.
+- Accuracy is more important than speed; evidence quality is a gate, not merely a score.
+- Creative/product quality, reproducibility/control, and audience progression must improve together.
+- Generation may be stochastic; accepted production state must be deterministic and reproducible.
+- Automate proven workflows, not uncertainty merely because automation is possible.
+- Keep implementation-specific providers and components replaceable behind stable boundaries.
+- Preserve historical provenance through additive, versioned evolution.
+- Keep consequential human approval until quality and operating behaviour are demonstrably reliable.
+- A perfectly persistent boring video is still a bad product.
 
-20–35-year-old ambitious people who want:
-- Greater financial literacy
-- More wealth
-- A better life
-- Greater independence
-- Simple, actionable information
+## SimilarStoic strategic frame
 
-The audience includes both young professionals and beginners.
-
-## Core Promise
-
-> Understand how to build wealth without spending hours researching it.
-
-## Broader Territory
-
-SimilarStoic operates across:
+SimilarStoic serves ambitious people, broadly 20–35, who want greater financial literacy, wealth, independence, and
+clear actionable explanations. Its core promise is to help people understand how to build wealth without spending
+hours researching it, within the broader territory:
 
 > MONEY + WORK + BEHAVIOUR + LIFE STRATEGY
 
-A useful high-level expression is:
-
 > Understand money. Understand yourself. Build a better life.
 
-SimilarStoic is not restricted to finance. Finance remains a major centre of gravity, an important commercial
-foundation, a core source of high-intent content and central to the SimilarStoic identity, but is not required
-for every piece. This is an expansion of the finance-centred strategy, not a pivot away from it.
+The channel is UK-first, Western-focused, and globally aware. UK examples should lead where jurisdiction matters;
+global concepts should remain accessible, and comparisons should appear only when useful.
 
-The broader editorial universe may include finance and economics; work and careers; time, psychology,
-behaviour and incentives; decision-making; society and social behaviour; life strategy; status and consumption;
-relationships or social decisions; energy and attention; mental models; modern adulthood; financial
-independence; and useful explanations of how systems or other parts of the world work. The editorial purpose
-is to make useful parts of the world understandable and entertaining for the target audience.
+Strategic editorial themes remain:
 
-These are strategic territories, not a final Conveyor Pillar taxonomy.
+1. Build and protect wealth.
+2. Keep more of what you earn.
+3. Increase income and leverage.
+4. Spot the next opportunity.
+5. Think and decide better.
 
-## Editorial inclusion test
+These themes guide the portfolio; they do not define a final persistent Conveyor Pillar taxonomy. Conveyor must retain
+the distinction between strategic **Pillars**, reusable **Subjects**, and specific editorial **Opportunities**.
 
-Use this strategic filter:
+### Portfolio mix and opportunity flow
 
-> Does understanding this help the audience understand or make better decisions about money, work, behaviour,
-> psychology, incentives, society, time, future, decision-making, or an important system or phenomenon?
+The initial content-mix target is directional rather than a rigid quota:
 
-If yes, the idea may belong within SimilarStoic.
-
-SimilarStoic must not drift into generic motivation/self-improvement without substantive explanatory value,
-miscellaneous trivia without meaningful relevance or insight, or random entertainment that does not fit the
-brand's explanatory purpose. Life design connected to money, time or work; the psychology of consumption or
-status; careers and income; and financial relationships are potentially strong fits.
-
-## Conveyor domain distinction
-
-Conveyor deliberately distinguishes:
-
-- **Pillars** — strategic portfolio organisation.
-- **Subjects** — reusable concepts and knowledge domains.
-- **Opportunities** — specific editorial possibilities that may involve multiple Subjects.
-
-These concepts must not be collapsed into a generic Topic model. The final Pillar taxonomy and its relationships remain deliberately deferred.
-
-## Long-Term Viewer Transformation
-
-SimilarStoic should help viewers build a compounding portfolio of:
-
-- Financial knowledge
-- Investment knowledge
-- Skills
-- Opportunities
-- Decision-making frameworks
-- Better financial habits
-
-The ultimate goal is better decisions, greater wealth and greater independence.
-
----
-
-# Brand Personality
-
-SimilarStoic should feel like:
-
-> A relaxed, knowledgeable Gen-Z friend who knows you well, explains complicated ideas confidently and simply, and keeps things interesting with humour, relatable analogies and relevant pop-culture references.
-
-The brand must never become:
-- A get-rich-quick guru
-- A crypto shill
-- Rage bait
-- Empty clickbait
-- Generic AI content
-- Corporate or unnecessarily academic
-- Sensationalist without substance
-- Constantly negative
-- Quantity-focused at the expense of quality
-- Pretending certainty where uncertainty exists
-
-Core principle:
-
-> Entertainment gets attention. Substance earns the follow.
-
-Another core principle:
-
-> SimilarStoic makes complex ideas simple without making them simplistic.
-
----
-
-# Content Pillars
-
-The following are current editorial portfolio themes. They guide strategy today but do not define the final persistent Conveyor Pillar taxonomy.
-
-## 1. Build & Protect Wealth
-
-Topics include:
-- Investing
-- ETFs and funds
-- Stocks
-- Diversification
-- Compounding
-- Risk
-- Portfolio construction
-- Bitcoin
-- Crypto
-- Savings
-- Emergency funds
-- Credit scores
-- Credit reports
-- Credit cards
-- Credit utilisation
-- Property
-- Mortgages
-- Property development
-- Renting vs buying
-- UK property
-
-## 2. Keep More of What You Earn
-
-Topics include:
-- UK income tax
-- 20%, 40% and 45% tax bands
-- Personal allowance
-- Salary sacrifice
-- ISAs
-- LISAs
-- Pensions
-- Pension tax relief
-- Workplace pensions
-- Employer contributions
-- Pension vs ISA
-- Student loans
-- Student loan repayment systems
-- Student loan interest
-- Overpaying vs investing
-
-## 3. Increase Income & Leverage
-
-Topics include:
-- Careers
-- Salary negotiation
-- Promotions
-- High-value skills
-- AI-assisted work
-- AI tools
-- Automation
-- Entrepreneurship
-- Side businesses
-- Digital businesses
-- Productivity
-- Working smarter
-
-## 4. Spot the Next Opportunity
-
-Topics include:
-- Emerging industries
-- AI
-- Robotics
-- Energy
-- Semiconductors
-- Biotech
-- Defence
-- Space
-- Infrastructure
-- Interesting companies
-- Disruptors
-- Business models
-- Macro trends
-- Economic changes
-- Consumer trends
-- Technology adoption
-
-## 5. Think & Decide Better
-
-Topics include:
-- Behavioural finance
-- Psychology
-- Risk
-- Long-term thinking
-- Opportunity cost
-- Financial mistakes
-- Cognitive biases
-- Lifestyle inflation
-- Discipline
-- Decision-making
-- Productivity
-
----
-
-# Editorial Geography
-
-SimilarStoic is:
-
-> UK-first, Western-focused and globally aware.
-
-UK examples should lead where jurisdiction matters.
-
-US comparisons should be included briefly when useful.
-
-Universal concepts should remain globally accessible.
-
-Do not force a US comparison where it adds no value.
-
----
-
-# Content Mix
-
-Initial target:
-
-| Content Type | Target |
-|---|---:|
+| Content type | Target |
+| --- | ---: |
 | Evergreen education | 35% |
 | Current/news-driven | 25% |
 | Opportunities/trends | 25% |
 | Actionable/personal | 15% |
 
-These are targets, not rigid quotas.
+Audience value takes priority over maintaining the percentages. Topic discovery should draw from current events,
+community signals, emerging trends, evergreen knowledge gaps, and existing SimilarStoic content.
 
-Audience value takes priority over maintaining percentages.
-
----
-
-# Topic Selection Philosophy
-
-SimilarStoic does not simply report the news.
-
-> SimilarStoic interprets the news for the viewer.
-
-Topic discovery should draw from:
-- Current events
-- Community signals
-- Emerging trends
-- Evergreen knowledge gaps
-- Existing SimilarStoic content
-
-Conveyor should produce a curated daily shortlist of 5–10 opportunities. Initially, Conveyor proposes and the founder approves or steers the selection. Research begins only after that approval.
-
-The core question is:
+Conveyor should produce a curated daily shortlist of **5–10 opportunities** with enough context to judge relevance,
+why-now value, viewer benefit, evidence quality, risk, portfolio fit, and visual potential. Initially, Conveyor proposes
+and the founder approves or steers the selection; research begins only after that approval. The governing question is:
 
 > Why does this matter to me?
 
-Topic and angle selection should prioritise:
-- Viewer relevance and benefit
-- Curiosity and emotional resonance
-- Timeliness
-- Substance and portfolio value
-- Brand and audience fit
-- Visual potential
+SimilarStoic should feel like a relaxed, knowledgeable Gen-Z friend: clear, confident, substantive, relatable, and
+occasionally witty. It must not become a get-rich-quick guru, crypto shill, rage-bait channel, empty clickbait, generic
+AI content, or a corporate/academic voice.
 
-Evidence quality is a minimum gate, not simply another score.
-
-Sources such as Reddit, TikTok, X, forums and comments can identify:
-- What people are talking about
-- What people are confused about
-- What people believe
-- What questions need answering
-
-However:
-
-> Community sources are signals, not authoritative sources.
-
-Editorial principle:
-
-> Listen to the internet. Verify with the source. Explain for the viewer.
-
----
-
-# Editorial Integrity
+## Editorial and evidence direction
 
 Core standard:
 
 > Accuracy before speed. Substance before engagement. Evidence before opinion.
 
-Official/primary sources should be preferred.
+Prefer official and primary sources. Independently corroborate important claims where appropriate, verify freshness for
+changeable claims, and distinguish facts, interpretation, forecasts, and opinion. Community sources can reveal signals
+and questions, but they are not authoritative evidence.
 
-Examples:
-- HMRC / GOV.UK
-- Student Loans Company
-- FCA
-- MoneyHelper
-- Bank of England
-- Company filings
-- Regulatory filings
-- Original research
-- Relevant US government/regulatory bodies
+> Listen to the internet. Verify with the source. Explain for the viewer.
 
-Important claims should be independently corroborated where appropriate.
+Research and evidence policy must support different claim types, jurisdictions, freshness needs, uncertainty, and risk.
+High-risk financial content requires human review. Unsupported material claims block publication; a disclaimer is not
+a substitute for legal, regulatory, evidence, or editorial quality.
 
-Changeable information must be checked for freshness.
+## Content operating model
 
-Facts, interpretation and opinion must be clearly distinguished.
-
-Unverified claims must not be presented as facts.
-
-Research Packs are required before scripting. They must identify contradictions, uncertainty and outdated information, and distinguish facts, interpretations and forecasts.
-
-High-risk financial content requires human review. Material unsupported or inaccurate claims block publication; substantive factual corrections must be surfaced rather than silently hidden.
-
-## Research and evidence direction
-
-The future Research & Evidence system must be flexible enough for different statement and content types to carry different evidence obligations.
-
-Current ISA rules may require current authoritative primary sources, jurisdiction-aware financial/tax evidence and strong freshness requirements. A behavioural piece such as “Why earning more doesn't make you feel richer” may combine economic evidence, behavioural research, statistics, academic or expert sources, illustrative examples and editorial interpretation. “How much money is enough?” may combine objective claims, calculations, research findings, editorial interpretation and philosophical framing.
-
-Conveyor must not assume every statement has the same evidence burden. The future system should support different claim/statement types, provenance, source relationships, verification states and freshness requirements without hard-coding a narrow financial-news workflow. The final Research & Evidence schema is intentionally deferred to the next architectural milestone.
-
----
-
-# Financial Content
-
-SimilarStoic should be practical and action-oriented.
-
-Where appropriate, the narrator can explain:
-
-> "Here's what I'd do."
-
-This should represent personal perspective and reasoning rather than pretending to provide personalised financial advice.
-
-The content should explain:
-- What the facts are
-- Important risks/trade-offs
-- How the narrator would approach the situation
-- Why
-- What could change that conclusion
-
-Higher-risk or product-specific financial content requires additional review and appropriate legal/compliance consideration.
-
-A disclaimer alone must not be treated as sufficient protection for regulated financial promotions.
-
----
-
-# Creative Format
-
-## Mascot-led hybrid animation
-
-The classic hamster is the canonical mascot. Its signature accessory is a small everyday crossbody/sling bag.
-
-The hamster should feel like an ordinary young adult: naturally relaxed, curious, intelligent, relatable and occasionally cheeky. It must not become a finance guru, a corporate mascot or a generic human with a hamster head.
-
-Controlled visual variations are allowed—small, large, squishy or exaggerated—provided the canonical identity remains clear.
-
-Hamster-native behaviour should be used for visual metaphors and humour where appropriate. The hamster does not need to speak; it acts out the story, represents the viewer, reacts to events and demonstrates concepts with props and environments.
-
-The format should use:
-- Consistent illustrated visual identity
-- Natural narration
-- Simple evolving scenes
-- Visual metaphors, charts, diagrams and typography
-- Selective real-world or original imagery where useful
-
-> **THE COMPLETE VIDEO MUST BE UNDERSTANDABLE FROM AUDIO ALONE.**
-
-Visuals may enhance, entertain, reinforce, provide humour and provide metaphor. They must not contain information required to understand the explanation. This remains a hard requirement for future script, scene and visual-planning architecture.
-
-Core creative principle:
-
-> The narrator explains. The hamster illustrates.
-
----
-
-# Narration
-
-The narrator is the knowledgeable friend.
-
-Characteristics:
-- Conversational
-- Confident
-- Relaxed
-- Warm
-- Gen-Z appropriate
-- Clear
-- Slightly witty where appropriate
-- Never patronising
-- Never "finance guru"
-- Never robotic, corporate or excessively theatrical
-- Natural rather than obviously AI-generated
-
-One consistent narrator voice should be used within a production. [Inworld SYSTEM Daniel is now the founder-approved
-production narrator](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md), using the exact validated configuration and instruction.
-The [Stage-1 disposition](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) preserves historical Marin findings, not
-current narrator-selection authority. Write natural spoken copy with ordinary contractions where appropriate; never
-permit provider paraphrasing. Source Migration 26 admits truthful Inworld execution provenance; persistent runtime
-migration remains separately gated. This selection authorizes no experiment, generation, provider call, spend or
-production regeneration. Narrator identity and provider remain replaceable: changing either
-requires regenerated narration, completeness transcription, actual speech alignment,
-captions, duration-dependent edit timing and final media, while script and visual design remain stable. Any
-founder-derived custom voice requires explicit consent and separate authorization. The narrator is not visually present.
-
-The [SimilarStoic Creative Reference Set](docs/SIMILARSTOIC_CREATIVE_REFERENCE_SET.md) preserves the founder's direct
-audiovisual-review conclusions as characteristic authorities without redesigning SimilarStoic toward an external
-channel. The [Public-Launch Creative Calibration](docs/SIMILARSTOIC_CREATIVE_CALIBRATION.md) defines the intended
-future methodology: final-quality 6–9 second cells, controlled comparisons, founder elimination/recombination, longer
-audio-only narrator generalisation, stitch tests and multi-passage/subject proof. It is methodology only, not execution,
-provider, spend, generation, Production #6 or publication authority.
-
-Audio quality has its own QA process. Pronunciation, pacing and processing should remain consistent. Music and sound effects are optional and should only enhance storytelling.
-
----
-
-# Short-Form Structure
-
-Default structure:
-
-1. Hook
-2. Setup / why the viewer should care
-3. Explanation
-4. Visual analogy / "oh, I get it" moment
-5. Payoff
-6. Optional CTA
-
-Typical duration:
-
-> 30–90 seconds.
-
-## Production #2 accepted production checkpoint
-
-Founder + ChatGPT accepted **Production #2**, **Why a paid-off credit card can still affect your score**. It completed
-the existing research, editorial and production lineage from the exact pushed design checkpoint
-`9fbf807e0148a177ba86902922d17c4851a5e200`; the full brief and acceptance record are in
-[Production #2 — Bounded Design](docs/PRODUCTION_2_DESIGN.md).
-
-The accepted runtime artifact is `final-media-artifact-similarstoic-production-2-founder-review-v1`, SHA-256
-`ea7f490c046eb424624fb5147d84e792dff561af76f345ecc1ca068c5f7a5493`: a 48.120-second, 1080×1920,
-30 fps H.264/AAC vertical short with complete 126-word narration and 32 final-master speech-aligned caption cues. It
-demonstrates the approved SimilarStoic visual vocabulary in a full UK-first production. It does not establish universal
-readiness, make Marin permanent, select v0.28, add a migration, expand architecture or authorize Production #3.
-
-## Minimum repeatable cadence and accepted Productions #3–#4
-
-The bounded operating method is the
-[SimilarStoic minimum repeatable production cadence](docs/SIMILARSTOIC_PRODUCTION_CADENCE.md): one active production,
-an initial target of one founder-review-ready short per five working days, automatic routine work between existing
-consequential gates, and measurement across at least three consecutive accepted pieces before any acceleration.
-
-The first completed candidate under that cadence is [Production #3 — Bounded Design](docs/PRODUCTION_3_DESIGN.md),
-**The £300 monthly upgrade that quietly adds up to £72,000 over 20 years**. Founder + ChatGPT accepted the exact
-runtime artifact `final-media-artifact-similarstoic-production-3-founder-review-v1`, SHA-256
-`8153d42cc006e79ddbd90502f2f9be3a0d4a7b6fe6226c01657a50bd65145dd4`. It is a 48.450-second, 1080×1920,
-30 fps H.264/AAC vertical short with complete narration and 21 final-duration speech-aligned caption cues. The visual
-pass used approved assets and deterministic local composition without an image-provider call.
-
-The next completed candidate is [Production #4 — Design and Acceptance](docs/PRODUCTION_4_DESIGN.md), **Three AI
-workflows that make a junior analyst more valuable**. Founder + ChatGPT accepted runtime artifact
-`final-media-artifact-similarstoic-production-4-founder-review-v1`, SHA-256
-`a9a15ec24be9ed11df601c61a6dd5ff5e42a983b81449fc2dffefe795c7118ac`. It is a 65.400-second, 1080×1920,
-30 fps H.264/AAC short with complete 144-word narration and 21 final-audio speech-aligned captions.
-
-Production #4 passed, with one forward production lesson: future episodes should keep the hamster and visual metaphor
-as the primary illustration and use labels, checklists and diagrams only as support, avoiding slide-deck or infographic
-drift. This lesson does not reopen or revise the accepted artifact.
-
-Productions #2–#5 are accepted, and the production-method validation objective plus reference-driven visual-generation
-proof are satisfied. Do not continue internal productions merely to prove another acceptable render.
-[Daniel is the approved production narrator](docs/SIMILARSTOIC_PRODUCTION_NARRATOR.md); the
-[Stage-1 experimentation pause](docs/NARRATOR_NATURALNESS_STAGE1_DISPOSITION.md) remains historical evidence.
-Production execution, integrated quality acceptance and release still need separate authority.
-Private-transfer pilot-readiness is **PASS** for accepted Production #5 v4; its narration is a public-release quality
-veto. The intended target is `@Similar-stoic`, channel ID
-`UC1cX-OTF9-LZeNo5TaFgrgQ`; founder access in Studio is confirmed, and the 16 September 2026 founder-operated
-read-only OAuth preflight independently resolved the sole authenticated channel to this exact ID. The
-[Controlled Publishing and Performance Learning
-Loop](docs/PUBLISHING_AND_LEARNING_LOOP.md) and reviewed
-[Controlled YouTube Pilot Architecture](docs/CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) are design authority for a
-later one-platform loop. PASS authorizes neither implementation nor upload nor public publication.
-
-The publishing design initially reserved Production #5 as the first live-loop item. Subsequent founder direction gives
-Production #5 the immediate role of reference-driven dynamic-scene/quality-uplift proof; only an accepted artifact may
-later serve as the first live-loop item. The initial publishing platform remains YouTube Shorts only, at no more than
-one public pilot item per week, with founder approval for each exact external publication. Persistence through
-`FinalMediaArtifact` is extended by additive Migration 25 for frozen packages, founder decisions,
-durable external operations, remote identities, status/receipts, performance snapshots, learning assessments and
-explicit later applications. Migration 25 is active in the verified persistent runtime; Migration 24 remains its
-multi-authority visual-reference foundation. The publishing service/lifecycle remains fake-tested, and a narrow live
-read-only OAuth/channel-identity preflight now exists and passed using only `youtube.readonly`; credentials remain
-outside Git/provenance. A read-only manual-route observation adapter exists, and exact Pilot Item #1 package v2 is
-founder-approved. Its exact manual private-upload operation is durably reserved but not dispatched; no transfer,
-upload, mutation or publication occurred. The founder-operated Studio upload remains authorized only inside
-`2026-09-22 12:00–13:00 Europe/London`, after another immediate exact-channel read-only identity check. Public
-transition is now explicitly held for narrator quality. The unchanged Production #5 v4 private pilot proves only the
-Conveyor → YouTube → remote-verification loop; it is not a public-quality narration endorsement. No release operation
-may be reserved or dispatched without new founder direction after narrator-quality work. The Testing consent
-configuration's
-documented seven-day refresh-token limitation must be resolved before durable pilot operations. Final Production #5
-envelope exposure was `$7.43 / $10`, leaving `$2.57`
-at that historical checkpoint. Conservative narrator Stage-1 exposure is `$0.19694332 / $0.50`, leaving
-`$0.30305668` unspent; the current quality envelope is `$7.62694332 / $10`, leaving `$2.37305668`. Remaining budget
-is not authorization to spend; provider-reported exact billed totals are unavailable. Package digest
-`bdf62753fc51c19865a32bd970c623a3997beebd07d6ea7b154bff28dc976a27` is approved and its deterministic manual upload
-operation is reserved; the actual private transfer remains a separate, window-bounded human action. Do not begin
-Production #6 or implement further publishing/analytics
-architecture from this design alone.
-After successful private remote verification, the intended next local governance action is to revoke Production #5
-v4's effective publication approval before any release reservation. That later runtime mutation requires separate
-founder authorization. Creative Calibration is the intended next quality phase only after that successful exact remote
-verification; it does not begin automatically and requires separate bounded execution authority.
-The architecture review favors explicit local CLI/service execution and a narrow YouTube adapter for the three-item
-pilot, with separate evidence for intended, approved, attempted, uncertain, remotely observed and publicly published
-state. A Studio private upload is the approved-route fallback to design for an API-locked private video; a Studio
-private-to-public click only applies to an eligible ordinary private video. No automatic duplicate re-upload follows
-an uncertain or locked API transfer. Supported raw YouTube metrics remain unmodified unless additional derived-metric
-permission is obtained; provider-data retention/deletion constraints override indefinite raw-API archival. Exact
-Migration-25 schema and implementation remain separately governed. The next possible separately authorized step is
-the narrow real YouTube adapter/private-transfer path, not automatic publication.
-
-Production-method validation and the reference-driven visual-generation proof are **PASSED**. Production #5 v4 is
-accepted, and the approximately **95%** public-quality assessment is historical. Founder re-review identifies its
-narration as unsuitable for SimilarStoic's public debut while preserving the unchanged artifact for the private loop
-test. Public launch remains unauthorized; Daniel is selected and approved, but production regeneration is not authorized.
-[Multi-Authority SimilarStoic Visual Generation](docs/MULTI_AUTHORITY_VISUAL_GENERATION.md) designs the
-minimum provider-neutral bridge from approved visual-DNA examples to new scene-specific generation: keep existing
-character-reference provenance, add typed digest-backed non-character authorities, freeze exact authority recipes per
-execution, and require one shared global illustration authority across scene components.
-
-The bounded Migration 24 implementation is synchronized and validates authority selection, digest freezing, provider
-translation and immutable execution provenance. Production #5 v4 establishes reference-driven dynamic SimilarStoic
-generation as the accepted default: approved references act as generative DNA for materially new scenes rather than a
-finite reused inventory. Repair-don't-empty, structural geometry, facial expression, occlusion/layer integrity,
-reuse-with-variation, semantic grounding, social-mobile-v3 captions, static-camera default and rendered-frame vision QA
-remain mandatory. Public launch is not authorized.
-
-The underlying verified angle/story comes before the hook. Generate multiple possible angles from verified research, then generate hooks that do not misrepresent, exaggerate or manufacture urgency.
-
-The structure is a framework, not a rigid template. Narration must be fully understandable without visuals; visuals enhance rather than carry essential information.
-
-The content should prioritise viewer value over artificial retention tricks.
-
-Pop-culture references may be used as analogies or references, but production must not depend on reproducing copyrighted footage or characters.
-
----
-
-# Publishing Strategy
-
-Initial target:
-
-> One high-quality short-form video per day.
-
-Each short should be adapted/distributed across:
-- TikTok
-- Instagram Reels
-- YouTube Shorts
-
-Long-form should be introduced after the short-form pipeline and brand are proven.
-
-Initial long-form:
-- 2–5 minute YouTube videos
-
-Later:
-- 8–15+ minute YouTube deep dives
-
----
-
-# Production Philosophy
-
-Core principle:
-
-> One research package → multiple pieces of content.
-
-The narration is the master timeline. Build one master video, then adapt it intelligently for relevant platforms.
-
-A single researched subject may generate:
-- Multiple Shorts
-- A 2–5 minute video
-- Eventually a long-form deep dive
-
-Quality and substance take priority over publishing volume.
-
-## Animation and visual production
-
-Production should use reusable illustrated assets and layered scenes rather than relying on single-pass generative video.
-
-Build a reusable asset library for the hamster, expressions, environments and props, while maintaining canonical character consistency across assets and videos.
-
-Animation is audio-first and visually enhanced. It should primarily use evolving illustrated scenes: build a scene and progressively add, remove, move or transform objects as narration develops.
-
-- Major changes in idea, location or concept trigger major scene changes.
-- Minor background animation is optional and only used when it adds relevance, atmosphere, humour or visual life.
-- Use simple baseline animation, exaggerated character states and occasional highly detailed hero frames.
-- Hero frames are visual peaks, not the default rendering style.
-- Scene changes should follow changes in ideas, not arbitrary time intervals.
-
-For most ordinary SimilarStoic scenes, the founder-approved default scene language is predominantly warm white or
-off-white, with generous negative space, sparse composition, simple imperfect hand-drawn outlines, restrained flat
-block colours and only enough environmental detail and props to establish the location, concept or action. Character,
-props and environment should appear to have been drawn by the same illustrator; environment line weight, complexity,
-colour treatment, shape language and rendering density must remain compatible with Core v3 and subordinate to the
-hamster. The approved environment-style reference represents approximately the upper normal detail boundary, while a
-more minimal treatment remains valid. Predominantly flat colour permits only unobtrusive tonal variation that does not
-create painterly, glossy, dimensional or stylistically separate scenery. Obvious gradients, realistic or volumetric
-lighting, photorealistic shading, detailed materials and painterly surface texture remain outside the ordinary style.
-
-Predominantly white/off-white is a default, not a universal requirement: night scenes, hero or break frames, intense
-moments, special diagrams and deliberate visual jokes may use purposeful exceptions. Visual simplicity is a
-SimilarStoic brand choice first and a production-efficiency advantage second. It should improve consistency,
-character/world matching, generation efficiency and reuse, but “simple on purpose” must never become “cheap-looking”;
-quality remains authoritative over marginal cost savings.
-
-Static composition should remain character-first: the environment supplies subordinate context, large warm-white or
-off-white areas remain deliberate, the mascot stays readable on mobile, and off-centre placement may give a pose or prop
-room to act. Grounding should use minimal illustrative contact treatment. Sparse rain, leaves, dust or motion marks may
-cross the character plane to make separately sourced assets feel co-authored, provided they remain unobtrusive. Character,
-props, environment and compositing treatments must share one illustrator's level of line weight, density, shading,
-texture, perspective, colour and polish. The approved composition examples support the bounded conclusion that the
-static visual-production method has demonstrated three capabilities: outdoor/high-action storm, calm indoor/explanatory
-sorting, and abstract explanatory metaphor without text-dependent meaning. This is not a universal repeatability claim.
-The compact creative rules are maintained in
-[`docs/SIMILARSTOIC_VISUAL_VOCABULARY.md`](docs/SIMILARSTOIC_VISUAL_VOCABULARY.md).
-
-Signature original break-frame/still devices may occasionally interrupt the normal sparse visual grammar to
-land a joke, dramatize an event, make an explanatory point or metaphor, convey a feeling, or make a concept
-memorable. They may be unusually detailed, exaggerated, uncanny, absurd, dramatically over-serious, visually
-intense or stylistically contrasting; the contrast may itself be part of the comedy or explanation. They are
-not the default treatment. Classic SpongeBob-era/older animated-comedy timing may inspire the mechanism, but
-no protected characters, artwork, frames, compositions, dialogue, backgrounds or franchise-specific visual
-identity may be copied.
-
-Numerical charts and data visualisations must be generated programmatically from verified data, rather than created by image generation.
-
----
-
-# Content Operating Model
-
-## Research and topic approval
+The durable strategic workflow is:
 
 1. Discover and shortlist opportunities.
-2. Founder approves or steers the topic.
+2. Obtain founder approval or steering for the topic.
 3. Build a structured Research Pack from official and primary sources.
-4. Corroborate important claims proportionately to their importance and risk.
-5. Identify contradictions, uncertainty, outdated information and required human review.
+4. Corroborate important claims in proportion to their importance and risk.
+5. Identify contradictions, uncertainty, outdated information, and required human review.
+6. Generate multiple angles from verified research and select using relevance, benefit, curiosity, timeliness,
+   substance, evidence, emotional resonance, visual potential, portfolio value, and brand fit.
+7. Prepare the content package, complete editorial QA, and progress only approved material into production.
 
-Community sources can provide signals, but not factual evidence.
+A content package is more than a script. It should contain:
 
-## Angle, hook and content package
+- narration;
+- scene plan;
+- hamster direction;
+- source and claim mapping;
+- a relevant US comparison where useful; and
+- an appropriate call to action or action.
 
-Generate multiple angles from verified research. Select the angle with the strongest combination of relevance, benefit, curiosity, timeliness, substance, evidence, emotional resonance, visual potential, portfolio value and brand fit.
+Before production, strategy requires claim-by-claim verification, meaning-preservation against the Research Pack,
+editorial/compliance review, visual fact checking, audio-only comprehension, and freshness checks for current or
+changeable claims.
 
-Create a structured content package, not only a script. It must include:
-- Narration
-- Scene plan
-- Hamster direction
-- Source and claim mapping
-- A relevant US comparison where useful
-- An appropriate CTA or action
+Before publication, strategy requires technical, audio, factual, visual, brand-consistency, audio-only comprehension,
+caption/on-screen-text, and chart/data-accuracy checks. Initially, every video requires human approval before
+publication. Automation may increase only after demonstrated reliability. Research, sources, scripts, assets, and
+version history should remain connected for every published item.
 
-Use the “here's what I'd do” perspective only where genuinely useful and keep it distinct from personalised financial advice.
+Performance should be linked, where available, to topic, pillar, angle, hook, format, visual approach, and other
+content attributes. Comments can become topic or content signals, but not factual evidence.
 
-## Script and editorial QA
+## Knowledge and coverage model
 
-Before production, complete:
-- Claim-by-claim verification
-- Meaning-preservation check against the Research Pack
-- Editorial and compliance review
-- Visual fact checking
-- Audio-only comprehension check
-- Freshness check for current or changeable claims
+Conveyor is intended to be a structured knowledge and content-intelligence system, not merely a content archive. Its
+strategic relationship is:
 
-## Final production QA and approval
+> Pillars → Subjects → Opportunities → Research → Sources → Claims → Scripts → Scenes/Assets → Publications →
+> Performance → Audience Signals → Learnings → Future Opportunities/Angles
 
-Before publication, complete:
-- Technical checks
-- Audio checks
-- Factual checks
-- Visual checks
-- Brand-consistency checks
-- Audio-only comprehension
-- Caption and on-screen-text accuracy checks
-- Chart and data-accuracy checks
+Claims should retain provenance, verification and freshness information, applicability context, and risk metadata.
+Previously researched knowledge should be reusable after appropriate freshness validation rather than requiring
+redundant research.
 
-Initially, every video requires human approval before publication. Automation may increase only after demonstrated reliability.
+Maintain a coverage knowledge map showing what SimilarStoic has covered, where knowledge gaps remain, and which areas
+need development or updating. Use it to support portfolio-gap analysis, inform future topic selection, and reduce
+unnecessary duplication without treating old research as current when freshness has expired.
 
-Preserve the research, sources, scripts, assets and version history for every published item.
+## Creative direction
 
-## Distribution
+SimilarStoic uses the recognizable Core v3 hamster with its crossbody bag as a viewer surrogate and illustrative actor.
+The hamster need not speak.
 
-Initial platforms are YouTube Shorts, TikTok and Instagram Reels.
+> THE NARRATOR EXPLAINS. THE HAMSTER ILLUSTRATES.
 
-Create once and adapt intelligently for each platform. One high-quality short per day remains the initial target, not a mandatory quota.
+The complete video should remain understandable from audio alone. Visuals add meaning, humour, reinforcement,
+metaphor, and clarity without carrying indispensable explanation.
 
-## Analytics and learning
+The ordinary visual language is sparse and intentionally hand-drawn: warm white/off-white negative space, restrained
+flat colour, useful props, simple imperfect outlines, and character-first composition. Avoid generic polished
+corporate/vector/cartoon appearance, gradients, painterly shading, glossy rendering, and unnecessary detail. Purposeful
+exceptions such as night scenes, hero frames, diagrams, or visual jokes remain possible.
 
-Collect, where available:
-- Reach
-- Retention
-- Engagement
-- Audience metrics
-- Commercial metrics
+Movement and visual change should follow meaning. Persistent state supports continuity but must not produce long static
+stretches, stale markers, or repeated poses. Captions belong to the composition. Whole-video review must happen at
+normal speed and phone scale before acceptance.
 
-Link performance to the topic, pillar, angle, hook, format, visual approach and other content attributes. Use this history to identify patterns and improve future content, without optimising purely for views or compromising editorial integrity and brand trust.
+The narrator should be conversational, warm, relaxed, clear, and consistent within a production. Narrator/provider
+choices remain replaceable and separately governed; changes require the corresponding narration, alignment, caption,
+timing, and final-media verification.
 
-Comments may become topic or content signals, but are not factual evidence.
+## Format and publishing strategy
 
-Maintain a knowledge map showing what SimilarStoic has covered and where knowledge gaps remain. The content system should progressively learn from its own history.
+The default short-form structure is:
 
----
+1. Hook.
+2. Setup / why the viewer should care.
+3. Explanation.
+4. Visual analogy / “oh, I get it” moment.
+5. Payoff.
+6. Optional call to action.
 
-# Architecture Principles and MVP Scope
+Typical short-form duration is **30–90 seconds**. The underlying verified angle and story come before the hook; the
+structure is a framework rather than a rigid template.
 
-## Knowledge and content intelligence
+The initial publishing target is one high-quality short-form video per day, adapted intelligently for YouTube Shorts,
+TikTok, and Instagram Reels. This is a strategic target, not a mandatory quota. Long-form should follow only after the
+short-form pipeline and brand are proven:
 
-Conveyor is specified as a structured knowledge and content-intelligence system, not merely a content archive.
+- initial long-form: **2–5 minute** YouTube videos;
+- later long-form: **8–15+ minute** YouTube deep dives.
 
-It should connect:
+## Pipeline direction
 
-> Pillars (portfolio) → Subjects (knowledge) → Opportunities → Research → Sources → Claims → Scripts → Scenes/Assets → Publications → Performance → Audience Signals → Learnings → Future Opportunities/Angles
+```text
+brief
+→ script
+→ visual beats
+→ canonical characters/worlds
+→ controlled animation/state
+→ narration
+→ captions
+→ render
+→ QA
+→ publish
+→ learn
+```
 
-Claims should retain appropriate provenance, verification and freshness information, applicability context and risk metadata.
+One researched subject may support multiple content pieces and formats. The narration is the master timeline. Reusable
+illustrated assets, layered scenes, controlled state, and replaceable production components are preferred over
+single-pass generative video.
 
-Pillars remain strategic portfolio organisation, Subjects remain reusable knowledge domains, and Opportunities remain specific editorial possibilities. This roadmap does not define the final Pillar taxonomy.
+## Product interface and bounded MVP
 
-Previously researched knowledge should be reusable after appropriate freshness validation rather than requiring redundant research. Community, forum and social sources remain audience/topic signals and must be kept distinct from authoritative factual evidence.
+The intended product interface is a hybrid **dashboard + conversational control** model. The dashboard provides
+visibility, approvals, workflow status, important changes, and useful performance information. Conversational Conveyor
+provides natural-language steering, investigation, and eventually actions. Both should prioritize decisions and
+exceptions over unnecessary technical complexity.
 
-The knowledge system should eventually support portfolio-gap analysis, including areas of SimilarStoic's coverage that require development or updating.
+The four initial interface areas are:
 
-## Hybrid user interface
+| Area | Strategic responsibility |
+| --- | --- |
+| **Command Centre** | Strongest opportunities, content requiring attention, Conveyor activity, important knowledge/source changes, lightweight performance summary, and access to Conveyor Chat. |
+| **Discover / Opportunities** | The 5–10 opportunity shortlist with relevance, why-now context, viewer benefit, suggested angle, evidence quality, risk, portfolio relevance, and visual potential. |
+| **Content Workspace** | One item's lifecycle, research, claims, sources, angle, script, visual plan, QA state, and approval controls. |
+| **Conveyor Chat** | Natural-language questions, steering, and eventually actions. |
 
-Conveyor is specified as a hybrid dashboard and conversational-control model.
-
-- The dashboard provides visibility, approvals, workflow status, important changes and useful performance information.
-- Conversational Conveyor provides natural-language steering, investigation and eventually actions.
-- The interface prioritises decisions and exceptions, rather than unnecessary technical complexity.
-
-The initial MVP screens are:
-
-1. **Command Centre** — strongest opportunities, content requiring attention, Conveyor activity, important knowledge/source changes, lightweight performance summary and access to Conveyor Chat.
-2. **Discover / Opportunities** — 5–10 opportunities with relevance, why-now context, viewer benefit, suggested angle, evidence quality, risk, portfolio relevance and visual potential.
-3. **Content Workspace** — an item's lifecycle, research, claims, sources, angle, script, visual plan, QA state and approval controls.
-4. **Conveyor Chat** — natural-language questions, steering and eventually actions.
-
-## MVP
-
-The MVP is limited to the editorial-intelligence workflow:
+The bounded first MVP workflow is:
 
 > Discover → Human Topic Selection/Steering → Research → Angle → Script → Automated QA → Human Review → Approval
 
 Its success criterion is a trustworthy, production-ready SimilarStoic content package with minimal manual management.
+Automated video production, automated publishing, and advanced analytics remain later capabilities relative to this
+bounded MVP.
 
-Automated video production, automated publishing and advanced analytics are later phases, not MVP functionality.
-
-## Modular and configuration-first architecture
-
-The architecture follows a **change without rebuild** principle. Data, capabilities, workflows, configuration and interface should remain loosely coupled.
-
-Future provider, tool, SaaS/API, build-vs-buy and commercial-integration choices must follow
-[Conveyor Business and Vendor Strategy](docs/BUSINESS_AND_VENDOR_STRATEGY.md); that authority does not alter roadmap
-sequencing or independently authorize integration or spend.
-
-Conveyor is a composable pipeline. Providers, research engines, model/provider adapters, narration/audio and
-image/visual providers, production stages, rendering components, publishing integrations, analytics
-integrations and other implementation-specific pipes should be replaceable behind stable boundaries, explicit
-inputs/outputs, loose coupling and preserved provenance. Replacing one pipe must not require reconstructing
-the end-to-end system solely because an underlying implementation changes.
+The fixed MVP workflow must not become a permanent hard-coded platform constraint. Workflow stages should remain
+independently addable, removable, reorderable, and configurable where practical as Conveyor evolves.
 
-Workflow stages should be independently addable, removable, reorderable and configurable where practical. The fixed MVP workflow must not become a permanent hard-coded constraint.
+## Future capability sequence
 
-New content formats should reuse the same underlying knowledge/content system and eventually support workflows such as short-form, long-form, newsletters and company deep dives.
+The original Phase 0–10 taxonomy remains the sequencing authority. This compact map preserves ownership and ordering
+without claiming that a phase is currently active or complete; current implementation state belongs in
+`docs/CONVEYOR_CURRENT_STATE.md` and historical acceptance detail belongs in the provenance documents.
 
-Where practical, V1 must externalise the following business rules from core application logic:
+| Phase | Capability boundary | Dependency meaning |
+| ---: | --- | --- |
+| 0 | Foundation | Project structure, Git/GitHub, testing, tooling, and documentation foundation. |
+| 1 | Product & Business Definition | Audience, promise, territory, personality, portfolio, editorial policy, creative format, publishing/monetisation direction, and human approval model. |
+| 2 | Content Operating Model | Human-led research, topic discovery/scoring, scripts, fact checking, visual planning, production, quality control, approval, publishing, analytics, and learning. |
+| 3 | Technical Architecture | Production-grade application, data, API, storage, authentication, scheduling, observability, security, deployment, and cost-control substrate. |
+| 4 | Research Engine | Automated discovery inputs, source monitoring, research, verification, claim extraction, freshness, scoring, and trend detection. |
+| 5 | Content Intelligence Engine | Opportunity analysis, angles, hooks, scripts, analogies, fact checking, source integration, calls to action, and platform adaptation. |
+| 6 | Video Production Engine | Narration, mascot animation, visual generation, charts/graphics, captions, editing, rendering, and platform formats. |
+| 7 | Distribution Engine | YouTube, TikTok, and Instagram upload, metadata, scheduling, publishing, status, and error handling. |
+| 8 | Analytics & Learning | Performance collection and evidence-led feedback into future content selection. |
+| 9 | Automation | Connect proven research, creation, review, approval, publication, measurement, and learning with human approval retained until reliability is demonstrated. |
+| 10 | Scale | Expand proven output, channels, topics, brands, products, revenue, and automation. |
 
-- Audience, geographic priorities, content pillars and topic preferences
-- Topic scoring criteria and target content duration
-- Tone and editorial direction
-- Source hierarchy, freshness requirements and risk levels
-- Research/corroboration and approval requirements
-- US-comparison, “here's what I'd do” and CTA rules
-- Visual/content rules and publishing-cadence targets
-- Budget/cost limits and automation level per stage
+The ordering is intentional: product and operating definitions guide the technical substrate; later engines build on
+that substrate; distribution produces the observations needed for analytics/learning; automation connects only proven
+capabilities; scale follows proof. A later phase must not be pulled forward merely because an isolated component is
+technically possible.
 
-Deeper workflow and capability configuration should be architecture-ready but does not require a full editor in V1.
+### Phases 0–2 — Foundation, product definition, and content operating model
 
-Protected safety, security and integrity constraints must not be disableable through ordinary configuration. Configuration must be versioned and auditable so historical content retains its production context.
+Keep product identity, audience, editorial policy, approval boundaries, production quality, and learning responsibilities
+explicit. Extend the human-led lifecycle only through bounded, reviewed milestones.
 
-Accepted phases, milestones, specifications, profiles and implementation choices remain evolvable after
-acceptance. Prefer additive changes, immutable new versions, explicit future selection and durable provenance
-that preserves which historical outputs used which version; do not destructively rewrite accepted historical
-records merely because the current design evolves. This does not make core domain/provenance invariants casually
-replaceable: ownership/provenance relationships, historical preservation, immutable/versioned reference
-semantics, execution semantics and established domain meaning remain stable by default. Changing such an
-invariant requires explicit founder + ChatGPT architecture/specification approval, deliberate canonical
-synchronization, review, acceptance, commit and push.
+### Phase 3 — Technical architecture
 
-## Cost tracking
+Strengthen APIs, storage, authentication, scheduling, observability, security, deployment, justified queues/workers,
+and cost/control infrastructure without coupling core domain meaning to a provider.
 
-Cost tracking is a first-class architectural requirement.
+### Phase 4 — Research engine
 
-Track AI/API operations and associate costs with individual content pieces where possible. The eventual cost model includes:
+Advance approved-policy discovery, official-source monitoring, community-signal monitoring, structured research,
+verification, claim/evidence support, freshness, uncertainty handling, scoring, and trend detection.
 
-- Input/output usage, model/provider and API cost
-- Research, writing, QA, narration, visual-generation and rendering costs
-- Total cost per content piece
-- Daily, weekly and monthly spend
-- Average cost per video
-- Cost per 1,000 views and per follower/subscriber
-- Revenue versus production cost where available
+### Phase 5 — Content intelligence engine
 
-The system should support configurable monthly and per-content budget targets and alerts.
+Advance opportunity analysis, angles, titles, hooks, scripts, analogies, fact checking, source integration, calls to
+action, editorial QA, revision proposals, and platform adaptation.
 
-### Approved future financial-control boundary
+### Phase 6 — Video production engine
 
-Future financial control is a conceptual boundary only; it does not authorize a schema, entities, formulas,
-integrations or implementation work.
+Advance replaceable narration, canonical character/world handling, visual generation, charts, graphics, animation,
+captions, editing, rendering, and media QA while preserving provenance and deterministic accepted state.
 
-- A durable **Cost Ledger** should record actual operating spend and, where appropriate, attribute it through
-  existing content and pipeline provenance. It must not embed mutable aggregate totals in immutable historical
-  GenerationExecution records.
-- A durable **Revenue Ledger** should record money earned from the already contemplated monetisation sources
-  and may attribute it, where available, to ContentPieces/videos, platforms/channels, periods and commercial
-  sources. Detailed ingestion and attribution rules remain unspecified.
-- A future **Economics / Control Centre** may derive spend, revenue, profitability, unit economics,
-  revenue-versus-production-cost, budget status, alerts, trends, efficiency and financial guardrails from the
-  two ledgers. Illustrative measures such as gross profit, contribution margin, break-even views and return
-  on content spend do not define formulas or implementation requirements.
-- Audience/content **Analytics** remains separate from the financial ledgers. Views, retention, engagement
-  and follower/subscriber growth may inform unit economics, but analytics is not the Revenue Ledger.
+### Phase 7 — Distribution engine
 
-Future financial controls should be capable of constraining automated spend through concepts such as budget
-limits, provider/model spend caps, alerts, escalation, pausing and founder exception approval. Exact
-thresholds, enforcement, kill-switch semantics, escalation rules and profitability-based automation decisions
-remain genuinely unspecified. The current progressive-automation and human-approval principles remain intact.
+Add separately authorized YouTube, TikTok, and Instagram upload, metadata, scheduling, publishing, status, recovery,
+and error-handling capabilities. Publication remains a distinct authority boundary.
 
-The approved pre-spend operating principle is that paid external production requires prior human authorization
-of a bounded maximum spend envelope tied to the approved editorial proposition. Actual spend may be lower;
-quality, brand, evidence and risk remain a floor rather than a variable silently reduced to stay cheap. When a
-future proposal compares feasible options, it should explain meaningful quality/capability/risk differences and
-whether additional cost is likely to produce useful value. Revenue or performance upside may inform a higher
-authorization, but must distinguish measured evidence, modelled expectation and speculation and must not
-override editorial or brand strategy.
+### Phase 8 — Analytics and learning
 
-The future Learning Gate may assess authorized versus actual spend, production choices, quality, performance,
-revenue/economics where available, and whether incremental spend produced useful value. This supports learning
-where premium providers materially help, cheaper alternatives perform equivalently, retries are wasteful, or
-higher quality appears justified. Financial/economic signals inform but do not automatically dominate strategy:
-**required quality / evidence / risk floor → editorial and brand objective → cost efficiency → revenue/profit
-optimization**. No financial schema, accounting rule, forecast formula or automated guardrail is approved.
+Track views, retention, watch time, completion, engagement, sharing, audience growth, and topic/hook/format/platform
+performance. Use evidence to propose future decisions without confusing correlation with certainty.
 
-This cross-cutting boundary preserves **change without rebuild**, provider independence and historical
-provenance: financial records must evolve additively and must not make provider-specific monetary assumptions
-part of core domain semantics. Existing execution/provider provenance is a future attribution anchor, not an
-approved financial record.
+### Phase 9 — Automation
 
-Roadmap ownership remains distributed: Phase 3 owns future cost-tracking architecture, budget/control
-infrastructure and technical guardrails; Phase 7 may later provide publication/platform data for revenue
-attribution; Phase 8 owns performance/commercial metrics separately from durable ledgers; Phase 9 may consume
-financial limits when automation is introduced; and Phase 10 may consume business/economic outcomes. No new
-phase, phase activation or sequencing change is implied.
+Connect proven components across research, creation, review, approval, publication, measurement, and learning.
+Automation must respect quality floors, provenance, spend limits, approval gates, and system-health controls.
 
-## Development stack
+### Phase 10 — Scale
 
-GPT and Codex are the current primary AI/development stack. Claude or another coding agent is not a dependency or requirement.
+Only after the operating system is proven, consider expanding output, channels, topics, brands, products, revenue, and
+automation.
 
-This is a current tooling choice, not an architectural lock-in. Provider abstraction should remain possible where practical.
+## Financial and commercial direction
 
----
+Cost tracking remains a first-class future architectural requirement. The existing conceptual boundary is:
 
-# Monetisation
+- a durable **Cost Ledger** for actual operating spend;
+- a durable **Revenue Ledger** for money earned; and
+- a derived **Economics / Control Centre** for budgets, unit economics, guardrails, and reporting.
 
-SimilarStoic is intended to eventually use a diversified revenue model:
+Audience/content analytics remains separate from financial ledgers. Exact schemas, accounting rules, formulas,
+thresholds, kill switches, and automation policies are not defined here.
 
-1. Platform revenue
-2. Sponsorships
-3. Appropriate affiliate revenue
-4. Proprietary digital products
-5. Software/tools
-6. Potential financial products/services subject to appropriate legal, regulatory and compliance requirements
+Future cost tracking should associate AI/API operations with individual content pieces where possible and support:
 
-Editorial independence must take priority over monetisation.
+- input/output usage, model/provider, and API cost;
+- research, writing, QA, narration, visual-generation, rendering, and total per-content cost;
+- daily, weekly, and monthly spend;
+- average cost per video;
+- cost per 1,000 views and per follower/subscriber;
+- revenue versus production cost where available; and
+- configurable monthly and per-content budget targets and alerts.
 
-Commercial relationships must never determine:
-- Factual conclusions
-- Topic selection
-- Investment opinions
-- Editorial decisions
+Future financial controls should be capable of provider/model spend caps, alerts, escalation, pausing, and founder
+exception approval. The exact thresholds, enforcement, kill-switch semantics, escalation rules, and
+profitability-based automation decisions remain deliberately unspecified.
 
----
+Paid external production requires prior human authorization of a bounded maximum spend envelope tied to an approved
+editorial proposition. Required quality, evidence, brand, and risk are floors; cost is optimized within them, never by
+silently lowering them.
 
-# Development Roadmap
+The Learning Gate may compare authorized and actual spend, production choices, quality, performance, and available
+revenue/economics evidence to learn where premium providers help, cheaper alternatives perform equivalently, retries
+are wasteful, or higher quality appears justified. Financial signals inform rather than automatically dominate:
 
-## Current implementation milestones
+> required quality / evidence / risk floor → editorial and brand objective → cost efficiency → revenue/profit optimization
 
-Verified checkpoint: `516884b8fab0a29e8e82973d684be1ae8a08bff6` (`feat: add character reference bootstrap`).
-Validation at this checkpoint: 75 passing tests and SQLite migrations 1–11. Roadmap governance and fresh-chat
-re-grounding are defined in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md); roadmap changes require
-explicit founder-approved canonical updates.
+Financial records should evolve additively, remain provider-independent, and preserve historical provenance. Existing
+execution/provider provenance is a future attribution anchor, not itself an approved financial record.
 
-### Atlas v0.1 — MVP Editorial Control Interface
-Status: COMPLETE
+Cross-phase ownership remains:
 
-The local browser shell for Command Centre, Discover, Content Workspace and Atlas Chat is established.
+- **Phase 3** owns cost-tracking architecture, budget/control infrastructure, and technical guardrails.
+- **Phase 7** may provide publication/platform data needed for revenue attribution.
+- **Phase 8** owns audience/performance and commercial metrics separately from durable financial ledgers.
+- **Phase 9** may consume financial limits when automation is introduced.
+- **Phase 10** may consume business and economic outcomes when scaling proven operation.
 
-### Atlas v0.2 — Persistent Discovery Foundation
-Status: COMPLETE
+Potential SimilarStoic revenue directions remain platform revenue, sponsorships, appropriate affiliate revenue,
+digital products, software/tools, and legally compliant future financial products/services. Commercial relationships
+must never determine factual conclusions or editorial decisions.
 
-Subjects, Opportunities and their relationships are now persistent through SQLite, explicit migrations and a repository layer. No generic Topics model was introduced. Pillars remain deliberately deferred.
+## Configuration and externalization strategy
 
-### Atlas v0.3 — Research & Evidence Foundation
-Status: COMPLETE
+Changeable channel, product, and business policy should not become unnecessary core-code rigidity. Where practical,
+the first product version should externalize:
 
-Implemented direction:
+- audience, geographic priorities, content pillars, and topic preferences;
+- topic-scoring criteria and target content duration;
+- tone and editorial direction;
+- source hierarchy, freshness requirements, and risk levels;
+- research/corroboration and approval requirements;
+- US-comparison, “here's what I'd do,” and call-to-action rules;
+- visual/content rules and publishing-cadence targets; and
+- budget/cost limits and automation level per stage.
 
-> Opportunity → Research Pack → Claims → Sources / Evidence → verification / provenance → editorial interpretation
+Deeper workflow and capability configuration should be architecture-ready without requiring a full editor in the first
+version. Protected safety, security, and integrity constraints must not be disableable through ordinary configuration.
+Configuration must be versioned and auditable so historical content retains its production context.
 
-This milestone established flexible claim types, provenance, source relationships, verification states and freshness requirements without assuming every statement carries the same evidence burden.
+## Architecture and governance
 
-### Atlas v0.4 — Editorial Angle Foundation
-Status: COMPLETE
+Conveyor follows **change without rebuild**: data, capabilities, workflows, configuration, and interfaces should remain
+loosely coupled. Providers, models, narration, visual generation, rendering, publication, analytics, and other pipes
+should remain replaceable where practical while preserving exact historical provenance.
 
-EditorialAngle and EditorialAngleClaim persist the editorial proposition and its grounded Claim roles without status, selection or approval workflow semantics.
+Protected safety, security, and integrity constraints must not be casually configurable. Configuration must be
+versioned and auditable so historical outputs retain their production context.
 
-### Atlas v0.5 — Content Piece + Script Foundation
-Status: COMPLETE
+Roadmap hierarchy:
 
-ContentPiece persists a concrete deliverable from an EditorialAngle; immutable Script versions preserve complete audio-first narration.
+> strategy → phase/capability boundaries → bounded design → implementation milestone → validation → review → commit
 
-### Atlas v0.6 — Visual Plan + Scene Foundation
-Status: COMPLETE
+Implementation milestones must not independently redefine product direction, sequencing, domain semantics, or deferred
+scope. A change at those levels requires explicit product and architecture decisions before implementation.
 
-VisualPlan now persistently links one ContentPiece to one exact Script version, with ordered Scenes that reinforce the narration without becoming semantically necessary for audio-only comprehension. QA remains demo-backed.
-
-### Atlas v0.7 — Asset Specification + Asset Foundation
-Status: COMPLETE
-
-AssetSpec now persistently records each provider-neutral visual requirement for one Scene, and immutable Asset versions register concrete outputs without generation, selection, approval or workflow semantics. QA remains demo-backed.
-
-### Atlas v0.8 — Generation Execution Foundation
-Status: COMPLETE
-
-GenerationExecution now records one immutable terminal synchronous attempt against one AssetSpec, including frozen input provenance. A successful operation registers one linked immutable Asset; failure records no Asset. OpenAI is the first replaceable image adapter; queues, retries, QA, workflow, rendering and publishing remain deferred.
-
-### Atlas v0.9 — Visual Style Control Foundation
-Status: COMPLETE
-
-VisualStyleProfile now provides immutable, versioned SimilarStoic visual direction between AssetSpec and
-provider-neutral GenerationInput. Atlas deterministically composes global and matching asset-type rules with
-the concrete AssetSpec requirement, freezes the resolved style in GenerationInput v2, and records direct
-GenerationExecution-to-profile lineage. Style selection is configuration-only; Character/StyleBible/reference
-continuity, profile editing, QA, workflow, production and publishing remained deferred at this checkpoint.
-
-### Atlas v0.10 — Visual Style Fidelity Refinement
-Status: COMPLETE
-
-SimilarStoic Core v2 is an immutable, self-contained VisualStyleProfile version that strengthens
-human-drawn dark-line rendering with mostly white/unfilled space and optional limited flat block
-colour, while preserving v0.9's sparse, light, asset-decomposed composition. V1 remains readable and selectable through
-`ATLAS_VISUAL_STYLE_PROFILE_ID`; v2 is the deterministic default. No migration or new style layer
-was required. V2 is the current text-guided production baseline, not the final SimilarStoic visual identity:
-future immutable profile versions may supersede it, and reference-grounded style fidelity may be explored
-later if justified. Style-reference images and canonical visual-reference continuity remain deferred.
-
-### Atlas v0.11 — Character Continuity Foundation
-Status: COMPLETE
-
-CharacterProfile now provides durable, immutable and versioned recurring-character identity. The seeded
-SimilarStoic Hamster Core v1 profile may be referenced by character AssetSpecs; GenerationInput v3 freezes
-the resolved character identity and GenerationExecution retains direct CharacterProfile lineage. At this
-v0.11 checkpoint, this was text-identity provenance only: no canonical visual-reference Asset relationship
-or provider-level reference-image/image-edit conditioning existed, so visual consistency across separate
-generations was not guaranteed.
-
-### Atlas v0.12 — Canonical Character Reference Foundation
-Status: COMPLETE
-
-CharacterReferenceSet now provides an immutable, versioned, ordered visual-reference basis for one exact
-CharacterProfile. The founder can review eligible generated hamster Assets as safe managed thumbnails and
-explicitly create a one-or-more Asset set. Newly generated managed Assets carry SHA-256 byte provenance;
-historical set versions preserve the exact selected Assets and original execution provenance without mutable
-current, best or approved state.
-
-At the v0.12 checkpoint this remained selection-only. Reference-image conditioning, GenerationInput
-consumption, and execution lineage were introduced by v0.13.
-
-### Atlas v0.13 — Reference-Grounded Character Generation
-Status: COMPLETE
-
-Character generation now resolves the highest exact-profile CharacterReferenceSet, freezes its ordered
-Asset/digest/media/position provenance in GenerationInput v4, verifies the managed bytes at provider time,
-and records direct GenerationExecution reference-set lineage. Grounded character requests use the OpenAI
-image-edit transport; missing references remain pre-provider failures.
-
-### Atlas v0.14 — Explicit Character Reference Bootstrap
-Status: COMPLETE
-
-An explicit bootstrap operation generates the first eligible Scene-owned character Asset only while an exact
-CharacterProfile has no CharacterReferenceSet. It reuses GenerationInput v3 and the non-reference provider
-path, never creates a set automatically, and is rejected once any exact-profile set exists. Ordinary
-character generation remains reference-grounded.
-
-Neutral CharacterProfile candidate generation, reusable AssetLibrary, imported/manual reference ingestion,
-named reference roles, similarity scoring or automated character-consistency QA, generic
-approval/current/best state, provider registry, queues/workers/batching, animation/rendering, publishing,
-analytics, compliance, citations/source attribution and exact Script-to-Claim/evidence work remain deferred.
-
-## Phase 0 — Foundation
-Status: COMPLETE
-
-- Project structure
-- Git
-- GitHub
-- Testing
-- Tooling
-- Documentation foundation
-
-Gate: PASSED
-
-## Phase 1 — Product & Business Definition
-Status: COMPLETE
-
-Complete:
-- Audience
-- Brand promise
-- Territory
-- Personality
-- Content pillars
-- Geography
-- Content mix
-- Editorial philosophy
-- Creative format
-- Narration
-- Publishing strategy
-- Monetisation direction
-- Content operating model
-- Topic discovery and approval model
-- Research Pack and verification standards
-- Angle, hook and content-package requirements
-- Script and final-production QA standards
-- Distribution and learning model
-- Initial human approval rule
-
-Closure record:
-- Final production-ready SimilarStoic brand identity — APPROVED.
-- Final production-ready mascot visual specification — **PASS WITH DEFERRED VISUAL REFINEMENT**. The residual
-  AI-clean/overly professional finish is non-blocking; the approved hamster identity, colours, sling-bag
-  treatment, proportions and reference continuity are preserved.
-- Final Phase 1 acceptance review — APPROVED. Phase 1 is formally closed.
-
-### Current product-identity clarification
-
-**Conveyor** is the current engine, project and operating-system identity. **Project Atlas** is the historical/legacy
-project name. **SimilarStoic** remains the outward-facing channel, editorial brand and mascot world: **SimilarStoic by
-Conveyor**. Legacy Atlas technical identifiers remain intentionally preserved for compatibility; historical Project
-Atlas records remain historical truth and are not rewritten. This rename creates no implementation milestone and does
-not change schema, migrations, package namespace, environment-variable names, DB path, API routes, GitHub repository
-name, or successor state.
-
-### Current approved hamster visual-specification clarification
-
-This current founder + ChatGPT clarification tightens the existing v1 mascot identity contract without rewriting
-the historical v0.14 record or creating a new milestone, CharacterReferenceSet version, VisualStyleProfile version,
-schema change or implementation authorization. The current core mascot identity is governed jointly by the immutable
-`character-reference-set-similarstoic-hamster-core-v1` reference asset and this approved visual-refinement contract.
-Where the contract deliberately tightens future depiction requirements beyond the literal original v1 pixels—more
-prominent rounded ears and whiskers, broad/soft hamster-like face, toothless mouths, fixed bag panel/layout rules,
-flat-colour rendering and mandatory consistency QA—it governs future conforming depictions without mutating,
-replacing or rewriting the historical reference asset. CharacterReferenceSet v2, replacement and silent substitution
-are not authorized.
-
-The core mascot remains unmistakably hamster-like, never mouse-like: broad soft rounded face/muzzle, compact rounded
-hamster-native body, visibly large rounded ears (slightly more prominent than v1 when pose allows), long distinct
-whiskers beyond the muzzle, dark alert eyes, mostly white/light body, warm tan/orange inner ears/nose/paws,
-minimal/no fur detail and crude hand-drawn anatomy. Expression may vary without identity, ear, whisker, proportion,
-colour or bag drift. Mouths are simple and toothless: teeth, dental detail, duplicate mouth lines, malformed
-inner-mouth shapes, inconsistent lips and extra mouth anatomy are generation errors.
-
-Only the main mascot wears the fixed genuinely crossbody bag: dark-gray strap; dark/black zipper band and outline;
-red/orange upper strip; green upper/central panel; blue lower-left panel; yellow lower-right panel; the approved
-curved silhouette; fixed panel adjacency/colour ordering; and consistent visible zipper/pull treatment. Supporting
-hamsters remain secondary, may vary as believable hamster types, and never wear the bag or duplicate the full core
-identity. A small recurring set of supporting hamster models may be established and reused across scenes and videos;
-each model's hamster type/colour pattern, body shape, size/scale, facial characteristics and other stable secondary
-traits must remain consistent once established. One-off background hamsters may vary within the approved language
-only if they do not become or imitate an established recurring model. All hamster rendering is flat block colour with
-sparse, dark, hand-drawn, slightly imperfect outlines:
-no gradients, shading, painterly blending, textured fur, cross-hatching, glossy highlights, AI-clean finish,
-missing/duplicate/stray contours or extra anatomy.
-
-Established recurring characters must use approved visual reference assets/models as concrete image/reference
-grounding whenever the generation mechanism supports it; they must not be materially reconstructed or reinterpreted
-from prose alone when an approved reference exists. The current mascot remains jointly governed by the immutable
-CharacterReferenceSet v1 asset, the current founder + ChatGPT-approved written refinement contract and mandatory
-visual QA; deliberate written refinements beyond literal v1 pixels govern only those refinements, while the reference
-governs the rest of the concrete appearance. The same rule applies to established recurring supporting models.
-One-off background hamsters need no persistent reference unless they later become recurring. Generated images never
-become approved references automatically: only founder + ChatGPT-approved visual exemplars may do so.
-Appearance in a group scene, comparison/specification sheet or other multi-character visual does not establish a
-recurring supporting character or approved identity model; explicit founder + ChatGPT approval and that character's
-own isolated visual reference are required.
-
-The current core mascot uses three isolated character-specific identity references and three supplementary
-scene/expression exemplars, recorded in the tracked [asset manifest](assets/README.md) and the canonical handoff.
-Identity references define the concrete model and must never be pooled across recurring characters; supporting
-characters require their own isolated approved references before stable reuse. Scene/expression exemplars are
-supplementary only and their props/context never become identity features. Automated reference selection,
-image-conditioning and QA remain deferred.
-
-Every generated core-mascot visual—including project and decorative graphics—requires consistency review against
-v1, the character, bag and flat-colour contracts before use. Non-conforming visuals must be corrected, regenerated
-or rejected and fail closed if consistency cannot be established. This is a mandatory product/production
-requirement, not an implementation of automated QA: manual, deterministic, model-based or hybrid mechanisms remain
-open, while automated character-consistency-QA architecture and implementation remain deferred. When a supporting
-hamster represents an established recurring model, review must also confirm its established colour pattern, body
-shape, scale and distinguishing facial/character traits; material drift is non-conforming and must be corrected,
-regenerated or rejected.
-
-Reference grounding is not acceptance by itself. Any generation that materially deviates from the approved reference
-+ written contract—including changed proportions, bag geometry/colour placement, whiskers, ear size, mouth anatomy,
-outlines, shading/gradients, core colours or supporting-character model—is non-conforming. If an approved reference
-is unavailable to a process expected to generate a recurring character, it must fail closed rather than silently
-approximate the character from text and treat the output as canonical or publishable. This does not choose refined-
-exemplar storage, implement image-conditioning/reference passing, automated QA or supporting-character entities; all
-such technical enforcement remains deferred.
-
-The full canonical contract, exact approved v1 asset provenance, runtime/replacement prohibition and review boundary
-are maintained in [docs/CANONICAL_HANDOFF.md](docs/CANONICAL_HANDOFF.md).
-
-## Phase 2 — Content Operating Model
-
-Status: ACTIVE / INCOMPLETE. **v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation
-milestone; **v0.26 — Narrated Final Media Production** is its accepted historical predecessor. Current source and
-verified runtime migrations are contiguous through 24 in the synchronized implementation: Migration 22 adds
-generated-narration provenance, Migration 23 adds OpenAI TTS provenance/support, and Migration 24 adds multi-authority
-visual-reference persistence. These post-v0.27 changes do not accept v0.28 or select a successor.
-
-Implement:
-- Research
-- Topic discovery
-- Topic scoring
-- Script creation
-- Fact checking
-- Visual planning
-- Production
-- Quality control
-- Approval
-- Publishing
-- Analytics
-- Learning
-
-### Approved Phase 2 operating-model specification
-
-Phase 2 is the current **ACTIVE** roadmap phase under founder + ChatGPT design/implementation stewardship.
-**v0.27 — First-Run Operability Bridge** remains the latest named accepted implementation milestone; **v0.26 —
-Narrated Final Media Production** is its accepted historical predecessor. Current source and verified runtime
-migrations are contiguous through 24 in the synchronized implementation; Migrations 22–24 are post-v0.27
-provenance/support changes, not a v0.28 acceptance. Phase 2 remains ACTIVE / INCOMPLETE, all remaining Phase 2 scope is
-unimplemented and no later phase is activated. No successor after v0.27 is selected.
-Activation does not complete Phase 2, authorize all of its scope at once,
-create a generic state machine, or approve database entities beyond separately defined milestone boundaries.
-
-### v0.15 — Persistent Idea Gate
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 — Editorial Gate + Approved VisualPlan Initiation
-is the latest accepted implementation milestone; v0.23, v0.22, v0.21, v0.20, v0.19, v0.18, v0.17, v0.16 and v0.15
-remain historical accepted predecessors. This is the first implementation milestone owned by Phase 2; it does not
-complete Phase 2 or activate a later phase.
-
-Purpose:
-
-> Implement the first real Phase 2 vertical slice by persisting immutable Idea Gate review snapshots and
-> immutable Idea Gate founder decisions for Opportunities, with a narrow API and minimal founder-facing
-> Discover interaction.
-
-#### Approved domain and persistence boundary
-
-- **IdeaGateReviewSnapshot** is the immutable representation of the Opportunity proposition/context actually
-  presented to the founder. Opportunity remains mutable. A snapshot has explicit stable identity/provenance,
-  an Opportunity reference, capture/review-preparation time, and a versioned frozen review payload. The payload
-  contains only human-visible review material—not a full metadata dump or fully versioned Opportunity.
-- The payload freezes, when presented, title, summary/viewer benefit, why-now, exact visible Subject context
-  (Subject ID, slug, name and primary/supporting relationship role), score/ranking, Atlas
-  recommendation/explanation, material risk/uncertainty and other displayed context. It does not give
-  `Opportunity.status` Idea Gate meaning or introduce snapshot-owned normalized Subject tables.
-- **IdeaGateDecision** is the immutable, additive founder decision about one exact snapshot. It carries a
-  stable ID, snapshot reference, outcome, founder actor/provenance and decision time. **Proceed** authorizes
-  the reviewed proposition in principle and may have a comment; **Reject** does not authorize it and may have
-  an explanation; **Steer** authorizes it subject to non-empty preserved founder direction. No fourth outcome
-  is authorized.
-- Both records are append-only: create/get/list/history only, no public update/delete, no current/latest/
-  active-approval/revocation state. Exactly one decision may exist per snapshot; a new judgement requires a
-  new snapshot. Any latest view is derived from history.
-
-Migration 12 contains only snapshot persistence, decision
-persistence, Opportunity and snapshot-decision foreign-key lineage, one-decision-per-snapshot uniqueness,
-outcome constraint and historical-read indexes. It must not change Opportunity or `Opportunity.status`, add
-approval flags, generic workflow/Approval/Decision tables, Subject redesign, ResearchPack/readiness/Editorial
-Gate records, queues, production, publishing, analytics, financial or automation tables.
-
-#### Approved repository, API and founder interaction
-
-v0.15 must create a snapshot from the current Opportunity plus selected displayed context; get a snapshot;
-list Opportunity snapshots chronologically; record/get one Proceed, Reject or Steer decision; retrieve a
-snapshot's decision; and retrieve complete chronological Idea Gate history. Snapshot and decision are separate
-operations: Atlas freezes the snapshot, shows it to the founder, then records the decision. An undecided
-snapshot is valid. For example, Snapshot A may retain a Steer decision and its direction after the Opportunity
-changes; a later Snapshot B may retain an independent Proceed decision. Neither review cycle rewrites the other.
-
-The real vertical slice uses narrow domain-qualified HTTP behavior equivalent to:
-
-- `POST /api/opportunities/{id}/idea-gate-review-snapshots`
-- `GET /api/idea-gate-review-snapshots/{id}`
-- `POST /api/idea-gate-review-snapshots/{id}/decisions`
-- `GET /api/opportunities/{id}/idea-gate-history`
-
-The existing Discover/Command Centre surface must provide a minimal founder interaction: display review
-material, create/use its frozen snapshot, allow Proceed/Reject/Steer, require direction for Steer, persist the
-decision, and show history clearly enough to prove the slice. It is not a UI redesign, workflow board,
-research queue, analytics dashboard, production control or financial control.
-
-#### Acceptance requirements
-
-v0.15 is accepted only when all of the following are demonstrated:
-
-1. An Opportunity produces an immutable Idea Gate review snapshot.
-2. Later Opportunity mutation leaves snapshot history unchanged.
-3. Exact visible Subject context remains historically readable.
-4. Proceed, Reject and Steer each record durably against one exact snapshot.
-5. Steer rejects empty founder direction.
-6. Steer preserves valid founder direction.
-7. Proceed and Reject retain optional rationale where the narrow model supports it.
-8. Only one decision is allowed per snapshot.
-9. A second review cycle creates independent additive history.
-10. `Opportunity.status` remains unchanged in meaning and data.
-11. No Opportunity approval/current/latest mutable field exists.
-12. No ResearchPack, job, queue, readiness or automation side effect occurs.
-13. Exact history reads through repository/API.
-14. The minimal founder UI reviews and persists all three outcomes.
-15. No generic Approval/Decision/workflow source of truth is introduced.
-16. Existing v0.1–v0.14 behavior remains compatible.
-17. The migration, repository, HTTP/UI and quality tests pass.
-
-Explicit exclusions are research automation and ResearchPack auto-creation; machine readiness; Editorial and
-Learning Gates; title/hook/script approval; production, rendering, publishing, analytics, cost/revenue or
-spend controls; generic workflow/approval/decision systems; queues/workers/retries; scoring/Pillar redesign;
-final Script-to-Claim architecture; orchestration; authentication redesign; and cloud/deployment expansion.
-v0.15 has no ResearchPack, `Opportunity.status`, research-job, queue, workflow-stage or automation side effect.
-Pre-spend authorization, spend proposals, provider pricing, cost estimation, ledgers and enforcement remain
-outside this milestone.
-
-Once this definition is reviewed, committed and pushed, v0.15 is authorized only for bounded implementation
-within this specification. Codex must return material ambiguity about domain semantics, migration scope,
-historical behavior, API meaning, founder decision semantics or deferred scope to founder + ChatGPT rather
-than infer it.
-
-### v0.16 — Authorized Research Initiation
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
-latest accepted implementation milestone; v0.24, v0.23, v0.22, v0.21, v0.20, v0.19, v0.18, v0.17 and v0.16 remain
-historical accepted predecessors. Migrations are canonical through 1–20; migration 21 is absent. v0.16 does not
-complete Phase 2 or activate a later phase.
-
-Purpose:
-
-> Implement deliberate creation of Opportunity-owned ResearchPack versions under explicit qualifying Idea Gate
-> provenance, preserving Proceed/Steer founder authority and Steer direction by reference without triggering
-> research automation or workflow state.
-
-#### Approved provenance and compatibility boundary
-
-The durable lineage is:
-
-> Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
-
-ResearchPack remains owned by its Opportunity. v0.16 adds an optional, immutable direct
-`idea_gate_decision_id` provenance reference to its version record; it is a foreign key to
-IdeaGateDecision, not a transfer of ResearchPack ownership or a generic authorization/progression/workflow
-relationship. The reference is nullable for historical/pre-v0.16 packs and required only through the new
-explicit Phase 2 lifecycle-creation path. Historical/demo rows remain valid, readable and unmodified with
-null provenance. Existing low-level seed/test/backward-compatible ResearchPack creation may remain available;
-it is not globally reinterpreted as requiring Idea Gate authorization.
-
-The lifecycle path accepts only an existing **Proceed** or **Steer** decision. **Reject** must fail. Its
-decision's immutable review snapshot must exist and belong to exactly the same Opportunity as the created
-ResearchPack; authorization must never be inferred from `Opportunity.status`, a latest decision, or a current
-authorization pointer. Founder Steer direction remains canonical only on IdeaGateDecision and is retrieved by
-lineage, never copied into ResearchPack summary, metadata, a mutable research-direction field or initiation
-state.
-
-Each lifecycle-created ResearchPack version independently stores its qualifying decision reference. One
-qualifying decision may support multiple versions; a later version may use a later qualifying decision. There
-is no consumed, one-use, current or mutable authorization state. Existing `(opportunity_id, version)`
-uniqueness remains authoritative, and callers continue to provide versions under the existing ResearchPack
-model.
-
-#### Approved repository, API and founder/operator interaction
-
-v0.16 adds a dedicated domain-specific operation equivalent to
-`create_research_pack_under_idea_gate_authorization(...)`. It requires the explicit decision ID, validates its
-outcome and same-Opportunity snapshot lineage, reuses the existing ResearchPack ID/version/summary/optional
-as-of-date/metadata inputs, creates one normal Opportunity-owned ResearchPack, and persists the decision
-reference. Required reads preserve ResearchPack get/list behavior and expose its linked decision, linked
-snapshot, complete provenance lineage and, where relevant, the Steer direction by reference. No derived
-current state is persisted.
-
-The narrow HTTP vertical slice is equivalent to:
-
-- `POST /api/opportunities/{opportunity_id}/research-packs`
-
-Its request explicitly supplies `idea_gate_decision_id` and the existing ResearchPack creation inputs. It
-rejects missing, invalid, Reject and cross-Opportunity decisions; creates only the ResearchPack; and returns
-enough provenance to prove the link. It is explicitly Opportunity/ResearchPack scoped, not a generic
-authorization, progression or workflow endpoint.
-
-The existing Discover/Idea Gate context provides a minimal founder/operator **Initiate Research** action after
-a qualifying Proceed or Steer decision. It identifies the Opportunity, collects only the minimum existing
-ResearchPack inputs, deliberately creates the pack, then displays its ID/version and Idea Gate provenance;
-Steer direction is visible by reference where applicable. This is not a research workspace, source/Claim
-editor, queue, agent control, readiness control or workflow board.
-
-Creating Proceed or Steer remains authorization only. It creates no ResearchPack until the separate deliberate
-initiation action occurs, and that action does not perform research, gather Sources, generate Claims, invoke a
-provider, enqueue work, create readiness evidence, mutate `Opportunity.status`, create workflow state or
-trigger automation.
-
-#### Migration 13 and acceptance requirements
-
-Migration 13 now provides only the nullable ResearchPack `idea_gate_decision_id`, its foreign key to
-IdeaGateDecision with `ON DELETE RESTRICT`, and an index for decision-to-ResearchPack lineage reads. It does
-not change ResearchPack ownership, existing version
-uniqueness, Claims, Sources, ClaimEvidence, Opportunities, Idea Gate semantics, or workflow/readiness schema.
-
-v0.16 is accepted only when all of the following are demonstrated:
-
-1. A Proceed decision can authorize deliberate ResearchPack creation.
-2. A Steer decision can authorize deliberate ResearchPack creation.
-3. A Reject decision cannot authorize ResearchPack creation.
-4. Cross-Opportunity decision/ResearchPack combinations are rejected.
-5. The new ResearchPack persists the exact qualifying IdeaGateDecision ID.
-6. The full `ResearchPack → IdeaGateDecision → IdeaGateReviewSnapshot` lineage is readable.
-7. Steer direction remains retrievable by reference and is not copied into ResearchPack state.
-8. ResearchPack remains owned by Opportunity.
-9. Multiple ResearchPack versions may reference the same qualifying decision.
-10. A later ResearchPack version may reference a later qualifying decision.
-11. Existing `(opportunity_id, version)` uniqueness remains authoritative.
-12. Historical ResearchPacks with null Idea Gate provenance remain valid and readable.
-13. Existing low-level/demo/seed ResearchPack creation remains compatible where required.
-14. Creating Proceed or Steer alone still creates no ResearchPack.
-15. Deliberate creation performs no provider/job/queue/readiness/workflow/automation side effect.
-16. `Opportunity.status` remains unchanged.
-17. No generic authorization/progression/workflow entity is introduced.
-18. Repository/API can read exact provenance and Steer direction by reference.
-19. Minimal UI can deliberately initiate research from a qualifying decision and show the created
-    ResearchPack/provenance.
-20. Existing v0.1–v0.15 behavior remains compatible.
-21. Migration, repository, API, UI and quality tests pass.
-
-Explicit exclusions are automated research; source retrieval; Claim/evidence generation or fact checking;
-research readiness/QA; queues, workers, jobs, providers or research agents; generic progression/authorization
-state; EditorialAngle, ContentPiece or Script automation; Editorial Gate; production, rendering, publishing,
-analytics/Learning; financial controls, spend authorization and cost/revenue implementation; and Phase 4
-Research Engine or Phase 9 orchestration behavior.
-
-v0.16 is accepted. Material ambiguity about ResearchPack ownership, decision qualification, same-Opportunity
-validation, Steer semantics, historical compatibility, schema scope, API meaning or later-phase boundaries must
-return to founder + ChatGPT rather than be inferred. v0.16 itself implies no scope beyond its accepted
-boundary.
-
-### v0.17 — Persistent Research Readiness
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
-latest accepted implementation milestone; v0.24, v0.23, v0.22, v0.21, v0.20, v0.19, v0.18 and v0.17 are historical
-accepted predecessors. Migration 20 is canonical and migrations extend through 1–20; migration 21 is absent. v0.17
-did not complete Phase 2 or activate a later phase.
-
-Purpose:
-
-> Persist immutable Research Readiness assessments over exact frozen ResearchPack evidence states, with
-> additive reassessment history and explicit assessment provenance, without implementing research-evaluation
-> automation or editorial progression.
-
-#### Approved persistence and evidence-state boundary
-
-A `ResearchReadinessAssessment` is an immutable, additive assessment of one exact frozen ResearchPack evidence
-state. It is not mutable ResearchPack status, workflow state, founder approval, a research job, a Phase 4
-evaluator or EditorialAngle progression authority. v0.17 introduces only one new immutable
-`research_readiness_assessments` persistence concept/table. It must not introduce normalized evidence-snapshot
-tables, a separate ResearchEvidenceSnapshot aggregate, normalized findings rows, generic
-Readiness/Workflow/Approval tables, progression entities or current/latest pointers.
-
-Each assessment belongs to exactly one ResearchPack. ResearchPack Opportunity ownership, v0.16 Idea Gate
-provenance, versioning and the existing Claims/Sources/ClaimEvidence model remain unchanged. The assessment
-contains its own schema-versioned frozen evidence-state JSON payload. At assessment creation, the
-server/repository deterministically constructs that payload from canonical live ResearchPack, Claim, Source and
-ClaimEvidence records; a caller must not submit an arbitrary complete evidence snapshot as canonical input.
-
-The required first-slice frozen payload contains the ResearchPack ID, version, relevant summary and `as_of_date`;
-for every relevant Claim, its ID, text, type, risk level, freshness type, verification/review state, notes and
-review time where present; for every relied-upon Source, its ID, type, title, publisher, URL, publication/access
-time and jurisdiction where present; and every ClaimEvidence Claim/Source relationship, stance, reference and
-notes where present. It must not invent absent evidence-strength or source-quality fields. Claims are ordered by
-stable Claim ID, Sources by stable Source ID, and evidence links by Claim ID then Source ID; structured JSON is
-canonically serialized with stable sorted keys. This is required for historical diffability and reproducibility.
-An evidence-state digest is optional and non-required in v0.17; if deliberately added later, it must hash the
-frozen schema-versioned canonical payload, not live rows, and does not impose uniqueness.
-
-Each immutable record contains an assessment ID, ResearchPack ID, assessment schema version, frozen evidence
-JSON, one outcome, required structured findings JSON, readiness policy/check version, producer kind, producer
-identifier, producer implementation version and assessment timestamp. Constrained provenance/metadata JSON is
-optional only where existing conventions justify it. Current/latest/superseded/selected/best assessment state,
-EditorialAngle ID and workflow state are prohibited.
-
-The only outcomes are **Ready**, **NeedsMoreResearch** and **Blocked**, enforced both by narrow repository
-validation and a database-level constrained vocabulary where repository conventions allow. Findings must explain
-the outcome, surface material deficiencies and may reference Claim IDs and/or frozen Claim representations; an
-optional summary inside the structured findings payload is allowed. A universal reason-code taxonomy, normalized
-findings and mandatory scoring are not approved. Producer provenance must support honest controlled/manual/test
-creation without provider-specific schema, model-specific columns, LLM execution records or research-engine
-state.
-
-#### History, API and no-UI boundary
-
-Assessments are create/get/list-history only: no update, delete, mutable correction or supersede operation.
-Corrections and reassessments are new immutable records. Multiple assessments for one ResearchPack, including
-repeated assessment of the same evidence state/policy by different producers or for audit, are valid; no
-uniqueness beyond assessment ID is required. Earlier Ready, NeedsMoreResearch and Blocked assessments remain
-historically readable after later evidence changes or later assessments. No `research_pack.readiness_status`,
-`current_readiness_id`, `latest_readiness_id`, `assessment_superseded` or persisted selected/best state is
-authorized; a later read may derive a view without persisting one.
-
-The v0.17 vertical slice provides a controlled application/API creation path: the caller supplies assessment ID,
-outcome, structured findings, policy/check version and producer kind/identifier/implementation version, while
-the server freezes canonical evidence itself. It is not founder approval, automated evaluation, fake
-intelligence or orchestration. The narrow HTTP surface is:
-
-- `POST /api/research-packs/{id}/readiness-assessments`
-- `GET /api/research-packs/{id}/readiness-assessments`
-- `GET /api/research-readiness-assessments/{id}`
-
-The create response and reads expose sufficient frozen evidence/provenance to inspect exactly what was assessed.
-No generic `/readiness` workflow route is allowed. v0.17 requires no founder or operator UI: readiness is a
-machine boundary, no real Phase 4 producer exists, and API plus persistence proves the durable contract without
-misrepresenting a manual form as a fourth human gate.
-
-#### Migration 14 and compatibility boundary
-
-Migration 14 is canonical and is limited to the one immutable readiness-assessment table, its ResearchPack FK,
-versions, frozen evidence JSON, outcome, findings JSON, policy/check version, producer provenance, timestamp
-and an index supporting ResearchPack history. An optional digest may be included only without widening scope.
-It must not alter migrations 1–13, ResearchPack ownership/versioning, Claims, Sources, ClaimEvidence,
-Opportunity, Idea Gate, EditorialAngle, ContentPiece, Script, title/hook or financial tables.
-
-Existing ResearchPacks may have zero assessments: no backfill or readiness inference is allowed, and zero
-records mean only that no persistent readiness assessment exists. Existing Claims/Sources/ClaimEvidence remain
-untouched and v0.1–v0.16 behavior remains compatible. v0.17 is a persistence contract, not an intelligence
-milestone: it must not implement scoring, rules, automated source-quality/freshness checks, fact checking, LLM
-evaluation or automatic outcome selection. Phase 4 may later produce the same durable assessment contract.
-
-`Ready` remains readiness evidence only. v0.17 must not modify EditorialAngle schema, add an EditorialAngle
-readiness reference, block existing Angle creation, authorize or automatically create an Angle, or add a
-progression record. The separate question of EditorialAngle progression authority remains for founder + ChatGPT
-design. Idea Gate remains upstream and Editorial Gate downstream; v0.17 creates no founder approval, rejection,
-manual override or fourth recurring gate.
-
-#### Acceptance requirements
-
-v0.17 is accepted only when all of the following are demonstrated:
-
-1. An immutable assessment can be created for an existing ResearchPack.
-2. The server/repository freezes canonical current evidence at creation.
-3. The payload preserves ResearchPack ID and version.
-4. The payload preserves relevant Claims and their currently available readiness fields.
-5. The payload preserves relied-upon Sources and currently available provenance fields.
-6. The payload preserves ClaimEvidence relationships and current evidence-link fields.
-7. Payload ordering and serialization are deterministic.
-8. Later live Claim/Source/ClaimEvidence mutation or addition leaves an earlier assessment unchanged.
-9. Ready persists successfully.
-10. NeedsMoreResearch persists successfully.
-11. Blocked persists successfully.
-12. Every other outcome is rejected.
-13. Structured findings persist.
-14. Assessment schema version persists.
-15. Policy/check version persists.
-16. Producer kind, identifier and implementation version persist.
-17. Assessment timestamp persists.
-18. Multiple assessments for one ResearchPack are allowed.
-19. Earlier assessments remain readable after later assessment.
-20. No current/latest/superseded readiness state is persisted.
-21. Historical ResearchPacks with zero assessments remain valid.
-22. No readiness backfill or inference occurs.
-23. A caller cannot replace the server-built evidence snapshot with arbitrary submitted content.
-24. API supports create, list-by-pack and get-by-ID.
-25. No founder approval semantics are introduced.
-26. No UI is required.
-27. No fake, deterministic or LLM evaluator is implemented.
-28. No provider/job/queue/research-automation side effect occurs.
-29. No Opportunity or ResearchPack mutable status changes.
-30. No EditorialAngle creation, validation, schema change or progression behavior occurs.
-31. No generic workflow/readiness/approval abstraction is introduced.
-32. Existing v0.1–v0.16 behavior remains compatible.
-33. Migration, repository, API and quality tests pass.
-
-Explicit exclusions are Phase 4 automated research, source retrieval, Claim extraction, evidence gathering,
-source-quality scoring, automated fact checking, LLM evaluation, automated outcome selection, jobs, queues,
-workers, provider orchestration, founder approval/override, generic workflow, current/latest readiness,
-EditorialAngle progression, Title/Hook, Editorial Gate, production/rendering, publishing, analytics/Learning,
-financial controls/spend authorization and Phase 9 orchestration.
-
-The bounded v0.17 implementation is accepted. Material ambiguity about frozen evidence content, producer
-provenance, outcome semantics, immutability, API meaning, substantive readiness rules or later-phase boundaries
-must return to founder + ChatGPT rather than be inferred.
-
-### v0.18 — Readiness-Authorized Editorial Angle Initiation
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.18 is the historical accepted predecessor to v0.19
-within **Phase 2 — Content Operating Model**. v0.17 is its historical accepted predecessor; migration 15 is
-canonical, and migrations extend through 1–15. This acceptance does not complete Phase 2 or activate a later phase.
-v0.25 — Operational Visual Production Inputs is the latest accepted implementation milestone; v0.24 is its accepted
-historical predecessor. Migration 20 is latest, migration 21 is absent, and no successor after v0.25 is selected.
-
-Purpose:
-
-> Allow deliberate creation of an Opportunity-owned EditorialAngle under one explicitly supplied immutable Ready
-> ResearchReadinessAssessment, preserving exact initiation provenance without introducing readiness consumption,
-> claim-level revalidation, UI, or Phase 5 automation.
-
-The approved relationship is a direct, immutable EditorialAngle → ResearchReadinessAssessment creation-
-provenance reference, conceptually `research_readiness_assessment_id`. v0.18 adds this as a direct,
-nullable foreign key: null for historical/legacy/demo Angles and required only through the new explicit Phase 2
-lifecycle-creation path. It is not metadata-only primary provenance, a separate progression/authorization record,
-a generic workflow entity, readiness consumption, current/latest state or founder approval.
-
-Its exact meaning is: **this EditorialAngle was initiated under this exact Ready
-ResearchReadinessAssessment.** It does not mean a mutable EditorialAngle remains perpetually validated by that
-assessment. Current editorial fields and Claim roles remain mutable; enduring editorial validity, immutable
-Angle versions and revalidation require separate founder + ChatGPT design.
-
-Existing/historical/demo Angles remain valid with null readiness provenance and receive no backfill. Existing
-low-level `create_editorial_angle(...)` behavior remains available for legacy, seed, test and backward-compatible
-uses; positional callers must remain compatible. Only the dedicated lifecycle path receives the readiness
-requirement. If persistence mechanics later add an optional provenance argument to the low-level method, its
-existing positional behavior must remain unchanged.
-
-The lifecycle path must receive the exact assessment ID explicitly; it must not derive latest Ready, choose any
-Ready automatically, search live history for a hidden selection, or persist a qualifying/current readiness
-pointer. It validates the Opportunity, ResearchPack, Pack → Opportunity lineage, assessment, exact `Ready`
-outcome, and assessment → Pack lineage. `NeedsMoreResearch`, `Blocked`, missing/invalid assessment,
-cross-ResearchPack and cross-Opportunity input fail. The required lineage is:
-
-> Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
-> → ResearchReadinessAssessment (Ready) → EditorialAngle
-
-One Ready assessment may initiate multiple Angles; a later Ready may initiate a later Angle. Assessments are
-never consumed, selected, invalidated or mutated. Later `Blocked` or `NeedsMoreResearch` assessments do not
-rewrite, invalidate, delete, stale-mark or otherwise mutate earlier Angle provenance. No invalidation or
-replacement workflow is approved.
-
-For this boundary, the only Claim-level condition is exact ResearchPack equality between Angle and assessment.
-It does not require future Angle-linked Claims to be in the frozen readiness payload, text to match frozen Claim
-content, Claim roles to be frozen, or Script-to-Claim validation.
-
-The required lifecycle repository operation is conceptually
-`create_editorial_angle_under_research_readiness(...)`: explicit Opportunity ID, ResearchPack ID, Ready
-assessment ID and existing Angle fields; exact provenance validation; creation of one normal Angle; persistence
-of the direct reference. It must not generate/select angles, call a provider, create ContentPiece/Script, mutate
-readiness or `Opportunity.status`, enqueue work, create workflow state or start Phase 5 automation.
-
-The v0.18 API vertical slice is Opportunity-scoped:
-`POST /api/opportunities/{opportunity_id}/editorial-angles`, with explicit `research_pack_id`,
-`research_readiness_assessment_id` and existing required/optional Angle fields. Its success response exposes the
-Angle, Opportunity, ResearchPack and exact readiness-assessment IDs, with normal Angle fields as appropriate; it
-does not duplicate the frozen readiness payload. Missing Opportunity, ResearchPack or assessment is 404-style;
-Pack/Opportunity mismatch, assessment/Pack mismatch, `NeedsMoreResearch`, `Blocked`, malformed input and other
-invalid/duplicate domain requests are 400-style, consistent with existing conventions. Generic progression,
-authorization, workflow or readiness-transition routes are not approved. No UI is required: this is not a founder
-gate, no Phase 5 generator exists, and persistence/API proves provenance without a premature manual workflow.
-
-Migration 15 is limited to nullable `research_readiness_assessment_id` on `editorial_angles`, a
-repository-consistent `ON DELETE RESTRICT` foreign key, and an assessment → Angle lineage index. It must not alter
-Angle versioning, ResearchPack, ResearchReadinessAssessment, Claim links, ContentPiece, Script, Title/Hook or
-Editorial Gate.
-
-#### Acceptance requirements
-
-v0.18 is accepted only when all of the following are demonstrated:
-
-1. An exact supplied Ready assessment authorizes deliberate lifecycle Angle creation.
-2. NeedsMoreResearch cannot authorize creation.
-3. Blocked cannot authorize creation.
-4. A missing assessment fails.
-5. Assessment/ResearchPack mismatch fails.
-6. ResearchPack/Opportunity mismatch fails.
-7. The exact readiness-assessment ID persists on a lifecycle-created Angle.
-8. Readiness provenance is unchanged after normal Angle edits.
-9. Historical/demo/legacy Angles remain valid with null provenance.
-10. No backfill occurs.
-11. Existing low-level Angle creation remains compatible.
-12. One Ready assessment may support multiple Angles.
-13. A later Ready assessment may support a later Angle.
-14. Later reassessment does not rewrite prior Angle provenance.
-15. A readiness assessment is never consumed or mutated.
-16. No latest/current assessment lookup exists.
-17. Existing same-ResearchPack Claim-link behavior remains unchanged.
-18. No frozen Claim matching is introduced.
-19. Recording Ready alone does not create an Angle.
-20. Lifecycle creation performs no angle generation, ranking or provider call.
-21. No ContentPiece or Script is created.
-22. `Opportunity.status` remains unchanged.
-23. No generic progression, workflow or authorization entity is introduced.
-24. The API creates one lifecycle Angle with explicit exact provenance.
-25. No UI is required or added.
-26. Existing v0.1–v0.17 behavior remains compatible.
-27. Migration, repository, API and quality tests pass.
-
-Explicit exclusions are EditorialAngle versioning overhaul, frozen Angle snapshots, Claim-level readiness
-revalidation, candidate generation/ranking, LLM/provider calls, Phase 5 content intelligence, ContentPiece
-progression, Script/Title/Hook work, editorial QA/Gate, jobs/queues/workers, Phase 9 orchestration,
-production/rendering, publishing, analytics/Learning and financial controls.
-
-v0.18 deliberately references exact Ready research evidence for editorial initiation without consuming it. Phase 5 may later
-automate Angle generation and Phase 9 may later orchestrate progression; neither is part of v0.18. Material
-ambiguity about provenance meaning, lifecycle-only enforcement, legacy compatibility, exact Ready qualification,
-same-Pack/Opportunity validation, update immutability, Claim-link boundary, API semantics or later-phase boundaries
-must return to founder + ChatGPT rather than be inferred.
-
-### v0.19 — Editorial-Angle-Authorized ContentPiece Initiation
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
-latest accepted Phase 2 milestone. v0.24 is its accepted historical predecessor; migration 20 is latest,
-migration 21 is absent, and Phase 2 remains ACTIVE / INCOMPLETE. Founder acceptance covers implementation commit
-`32812e6793d9b06632ebffd82504cd8810c2ab3d`; Black 26.3.1, Ruff, 88 pytest tests and `git diff --check` passed.
-
-Purpose:
-
-> Allow deliberate creation of one ContentPiece from one exact eligible EditorialAngle whose own initiation is
-> directly and immutably linked to one exact Ready ResearchReadinessAssessment, without creating a workflow engine,
-> a duplicate assessment reference, or downstream editorial/production behavior.
-
-The required operation receives explicit `opportunity_id`, explicit `editorial_angle_id`, and the existing ordinary
-ContentPiece fields. It requires: the Opportunity exists; the EditorialAngle exists and belongs to that exact
-Opportunity; the Angle has a non-null `research_readiness_assessment_id`; that exact assessment exists and is
-`Ready`; and assessment → ResearchPack → EditorialAngle → Opportunity lineage is internally consistent. It must not
-choose latest/current/any Ready assessment or substitute another Ready assessment. The exact immutable assessment
-already referenced by the Angle is the only relevant upstream provenance.
-
-Existing legacy/demo/seed Angles with null readiness provenance remain valid historical/compatibility records and
-receive no backfill or mutation, but are ineligible for this lifecycle path. Existing low-level ContentPiece creation
-may remain available for compatibility, demo and test use; v0.19 does not globally reinterpret every ContentPiece as
-requiring lifecycle eligibility.
-
-The persisted lifecycle fact means only: **this ContentPiece was deliberately initiated from this exact
-EditorialAngle, whose own initiation was authorized under this exact immutable Ready
-ResearchReadinessAssessment provenance.** It does not freeze mutable Angle text, revalidate Claims, establish
-perpetual editorial validity, select a current assessment, consume the Angle/assessment, make the ContentPiece
-production-ready, or pass Editorial Gate. This is explicit lineage, not generic workflow/progression state.
-
-The durable chain is ContentPiece → EditorialAngle → ResearchReadinessAssessment. The existing immutable
-ContentPiece → EditorialAngle provenance is sufficient. No duplicate
-`research_readiness_assessment_id` belongs on ContentPiece, and no migration 16 was added.
-
-One eligible EditorialAngle may initiate multiple ContentPieces. No consumption flag, current/latest ContentPiece,
-one-use progression or generic progressed state is authorized. Normal ContentPiece edits must preserve provenance
-and must not mutate/revalidate the Opportunity, ResearchPack, assessment, Angle or sibling ContentPieces. Later
-assessments must not rewrite existing ContentPiece lineage.
-
-The API boundary is `POST /api/opportunities/{opportunity_id}/content-pieces`, with
-`editorial_angle_id` and ordinary ContentPiece fields. Missing Opportunity or Angle follows existing 404 convention;
-wrong Opportunity/Angle lineage, null readiness provenance, invalid/mismatched upstream lineage and non-Ready
-provenance are 400-style failures. Success persists a ContentPiece under existing response conventions. No UI is
-authorized.
-
-v0.19 does not include a full editorial package, Title, Hook, Script creation, Script-to-Claim relationships,
-EditorialAngle versioning/snapshots/revalidation/generation/ranking, provider/model calls, research automation,
-readiness evaluator, machine editorial QA, Editorial Gate, spend authorization, generic workflow/progression,
-jobs, queues, UI, image/visual generation, automated visual-reference selection or consistency QA, production,
-publishing, analytics, Learning Gate implementation or orchestration. v0.20 is a separate accepted successor;
-v0.19's accepted boundary remains unchanged.
-
-#### Sparse human gates, rich machine readiness
-
-Conveyor uses **sparse human gates and rich machine readiness checks**. Human approval is concentrated at
-meaningful judgement boundaries; intermediate pipeline stages should progress automatically when their explicit
-quality, evidence and provenance requirements are satisfied. Human judgement and machine readiness are
-distinct: the machine must not silently manufacture founder approval, and human approval must not substitute
-for technical, evidence or QA readiness.
-
-The recurring target founder gates are:
-
-- **Idea Gate** — “Is this opportunity worth Conveyor spending time and money developing?” The conceptual
-  outcomes are Proceed, Reject or Steer. Conveyor should present the opportunity, SimilarStoic/audience relevance,
-  timeliness where relevant, likely explanatory value, useful discovery context, obvious risk/uncertainty and
-  its recommendation. This is not a ResearchPack approval gate.
-- **Editorial Gate** — “Is this the editorial proposition SimilarStoic should produce?” It reviews an editorial
-  package, not an isolated Script: Title, Hook, Angle and Script, with relevant rationale, research/evidence
-  summary, material uncertainty, heightened-risk notes and intentional alternatives. The conceptual outcomes
-  are Approve, Revise, Reject or Select alternative. Approval permits that specific proposition/version to
-  progress subject to downstream readiness; it is not final technical-video approval. Where paid external
-  production is contemplated, the same Editorial Gate also carries the separate linked judgement of the
-  maximum spend Conveyor may use to produce that approved proposition; it is not a fourth recurring founder gate.
-- **Learning Gate** — “What should Conveyor learn from what happened?” It eventually presents observed
-  performance/comparisons, what worked or underperformed, evidence versus hypothesis, available
-  cost/revenue/economics context, proposed adaptation, scope and confidence. The founder may Accept learning,
-  Reject learning, Limit scope, Request more evidence or Override direction. Approved learning must be
-  evidence-backed, scoped, reversible and historically attributable; it must not silently rewrite brand,
-  roadmap, audience, risk policy or operating-model governance.
-
-#### Editorial Gate bounded production-spend authorization
-
-No paid external production spend may occur without prior human authorization of a bounded spend envelope tied
-to the approved editorial proposition. The authorization is a **maximum allowed spend**, not a target: Conveyor
-should spend less when it can still clear the required quality, brand, evidence and risk thresholds. If the
-required quality would need more than the authorized ceiling, Conveyor must stop and escalate; it must neither
-exceed that ceiling nor silently lower the approved quality requirement.
-
-The eventual founder-facing Editorial Gate production/spend proposal should identify the exact editorial
-proposition/lineage being funded and, where meaningful, show estimated total cost, stage/provider breakdown,
-expected quality, cheaper alternatives and their quality/risk trade-offs, rationale for the recommended option,
-any premium spend and its justification, evidence-based or qualified expected commercial/strategic upside, and
-the maximum requested authorization. Economy, recommended and premium are illustrative comparison labels, not
-approved enums or a fixed number of options. Estimated return must distinguish measured historical evidence,
-modelled expectation and speculation; it is never a guaranteed justification for spend.
-
-Conveyor should seek the lowest-cost production path that still clears the required quality, brand, evidence and
-risk floor. It must optimize provider, model, attempt count and workflow before lowering that floor; premium
-is not automatically better and cheapest is not automatically preferred. Once relevant later production and
-financial systems exist, Conveyor may operate beneath an approved envelope only while sufficient remaining budget
-exists. It must not silently exceed the ceiling or continue open-ended retries because providers are available.
-Exceptional additional spend or material risk requires a new human authorization/exception path.
-
-#### Idea Gate review snapshots and decision history
-
-Opportunities remain mutable discovery records. Founder Idea Gate decisions must not point only to an evolving
-current Opportunity: Conveyor should preserve an immutable review snapshot of exactly what was presented for
-founder judgement. The conceptual snapshot freezes enough reviewable context to establish what was seen,
-including Opportunity identity, title, summary, why-now context, relevant Subject context, score/ranking if
-presented, Conveyor recommendation/explanation, material risk/uncertainty and review timestamp/provenance. This
-does not convert Opportunity into a fully versioned aggregate or define snapshot fields/schema/table names.
-
-Idea Gate decisions are durable, immutable/additive, historically preserved, specific to one immutable review
-snapshot, distinct from machine readiness and distinct from `Opportunity.status`. Their conceptual meanings
-are: **Proceed** authorizes the reviewed proposition into research/editorial development; **Reject** does not
-authorize that reviewed proposition to progress; and **Steer** authorizes progression while preserving founder
-direction that must influence later work. Founder comments/direction, where provided, remain decision history.
-
-A future Proceed decision has no automatic orchestration side effect in the first implementation slice: it does
-not create a ResearchPack, mutate `Opportunity.status`, start research, enqueue work, trigger automation or
-change a current workflow stage. Later orchestration may consume the durable authority. There is no
-`Opportunity.approved`, `Opportunity.current_decision`, generic Approval, universal generic Decision, generic
-mutable current-step state, history overwrite, or founder-direction mutation of the Opportunity itself.
-
-Human decisions apply to the exact immutable review representation judged, not an evolving domain object
-forever. A material later Opportunity change and re-presentation may create a new immutable snapshot and a
-new Idea Gate decision; both histories remain independently understandable and additive.
-
-#### Idea Gate → Research initiation provenance
-
-v0.16 — Authorized Research Initiation is the historical accepted predecessor for explicit qualifying Idea Gate
-provenance and deliberate ResearchPack initiation. A ResearchPack
-remains owned by its Opportunity; lifecycle-created packs additionally preserve lineage equivalent to:
-
-> Opportunity → IdeaGateReviewSnapshot → IdeaGateDecision → ResearchPack → Claims / Sources / ClaimEvidence
-
-**Proceed** and **Steer** may authorize subsequent research. **Reject** must never authorize subsequent
-research. A qualifying decision's review snapshot must belong to the same Opportunity as the ResearchPack.
-Founder Steer direction remains canonical only on the immutable IdeaGateDecision and downstream research must
-consume it by reference, not copy it into mutable ResearchPack state.
-
-Creating a Proceed or Steer decision remains authorization/provenance, not an orchestration command: it does
-not automatically create a ResearchPack, start research, enqueue work, invoke a provider, mutate
-`Opportunity.status`, create workflow/readiness state or trigger automation. A separate deliberate
-research-initiation action validates the qualifying decision, same-Opportunity lineage and retrievable Steer
-direction as specified by v0.16.
-
-A single qualifying Proceed or Steer may support multiple ResearchPack versions. No consumed/one-use/current
-authorization state is approved. When an Opportunity changes materially, Conveyor must obtain a new Idea Gate
-snapshot and decision before treating later research as authorized for the changed proposition. Historical
-ResearchPacks remain valid without fabricated Idea Gate provenance; future linkage is additive and needs no
-destructive backfill. v0.16 does not authorize generic progression/authorization entities, `Opportunity.stage`,
-Phase 4 automated research or Phase 9 orchestration.
-
-#### Lifecycle and readiness direction
-
-The approved first-half direction is:
-
-> Opportunity → IDEA GATE → Research → machine research-readiness → Editorial Angle → ContentPiece → Title/Hook/Script development → machine editorial QA → EDITORIAL GATE
-
-Research readiness is a machine boundary, not a founder gate. It applies to the proposed content and material
-claims rather than an abstract assertion that a topic is fully researched. Idea Gate authorization has already
-occurred upstream; recording readiness requires no founder approval and creates no fourth recurring human gate.
-Its exact immutable assessment outcomes are **Ready**, **NeedsMoreResearch** and **Blocked**: Ready satisfies
-the applicable requirements for editorial development; NeedsMoreResearch identifies remediable evidence
-deficiencies; Blocked prevents progression under the applicable assessment because of a material unresolved
-issue that must not be silently bypassed. These are not `ResearchPack.status` values or mutable workflow state.
-
-The approved Phase 2 design direction is additive, immutable, versioned research-readiness assessments of an
-exact frozen ResearchPack evidence state. v0.17 now defines the bounded one-table
-`ResearchReadinessAssessment`/`research_readiness_assessments` implementation direction. A ResearchPack
-ID/version alone is not historically sufficient:
-Claims may be added or updated after pack creation, Sources may be added later, and ClaimEvidence relationships
-may change. Each assessment must therefore retain a schema-versioned frozen evidence-state payload that can
-reconstruct the ResearchPack ID/version, relevant Claims and readiness-relevant attributes, relied-upon Sources
-and ClaimEvidence relationships, relevant freshness/as-of context, and stable live-record IDs. This is an
-immutable assessment input snapshot, not a replacement research database or a second mutable source of truth.
-
-Each assessment must preserve its policy/check version, assessment schema version, immutable outcome,
-findings/reasons, timestamp and assessment producer/implementation provenance. Findings may be structured,
-may identify material deficiencies and may refer to Claim IDs plus frozen Claim representations; a permanent
-universal reason-code taxonomy and one-assessment-per-Claim model are not approved. Source quality,
-proportional corroboration, freshness, material-claim support, fact/interpretation/opinion/forecast/
-illustration distinctions, uncertainty and known limitations remain applicable; no universal automated score or
-final fact-checking-engine behaviour is defined.
-
-Multiple immutable assessments may exist for one ResearchPack. Later research/evidence changes require a new
-assessment; earlier Ready, NeedsMoreResearch and Blocked history remains truthful and preserved. No mutable
-current/latest/superseded pointer, `ResearchPack.readiness_status`, `ResearchPack.ready`, generic workflow
-stage or assessment-selection state is approved; a later read may derive a latest view without persisting it.
-Research readiness records evidence only: they must not automatically create an EditorialAngle, ContentPiece or
-Script, mutate editorial records, enqueue work or trigger Phase 5 automation. The separately approved design
-direction is explicit Ready-assessment → EditorialAngle initiation provenance under the narrow conditions above;
-it does not authorize implementation, consumption, automatic progression or a separate progression record.
-Structured Research Packs precede scripting; the final Script-to-Claim architecture remains deferred.
-
-Before Editorial Gate, future editorial QA should establish sufficient intended-content research, support for
-material factual claims, appropriate uncertainty/freshness treatment, research-supported angle, non-
-overpromising title/hook, audio-first script comprehension, meaning preservation, SimilarStoic territory/tone,
-surfaced material risk/compliance concerns and sufficient production provenance. This is an operating
-requirement, not universal automated fact-checking implementation.
-
-The approved second-half target is:
-
-> EDITORIAL PACKAGE → EDITORIAL GATE approval + bounded spend authorization → automated production within the authorized envelope → machine production/brand/risk QA → publication readiness → automatic publishing unless an exception occurs → analytics/economics collection → machine learning interpretation → LEARNING GATE → approved adaptations inform future content decisions
-
-In the long-term target, routine production and publishing proceed automatically only after Editorial approval
-and bounded spend authorization, and only within that envelope, unless machine QA, risk, financial or
-system-health checks raise an exception. An attempted overspend is a financial exception requiring human
-escalation, not a routine fourth founder final-video or budget gate. The existing initial human pre-publication
-approval rule remains in force until relevant reliability is demonstrated.
-
-Production/publication readiness eventually checks editorial fidelity, production quality, brand/continuity and
-risk/exception conditions. It includes correspondence to the approved Script/package, no new unsupported
-claims or lost material qualifications, accurate captions and non-contradictory visuals, audio-first
-comprehension, complete/correct assets and ordering, technical/render/platform metadata integrity, correct
-visual/character-reference provenance, deliberate break-frame use, and no blocking factual, regulated,
-copyright/IP, cost, provider/system, provenance or platform-policy concern. Publication readiness means the
-approved proposition was faithfully produced, required QA passed, no blocking exception exists, and Conveyor can
-explain what it is publishing and why.
-
-Exceptions interrupt automation; normal work does not. Failed readiness must not be silently bypassed. Future
-handling may auto-remediate safe deterministic faults, use later technical retry/reproduction machinery, or
-escalate judgement-required cases. There is no silent grounded-to-ungrounded fallback, material output
-substitution or hidden evidence/brand/risk bypass.
-
-#### Persistence and deferral boundary
-
-Progression is authorized by durable domain-specific decisions and readiness evidence, not a universal mutable
-`WorkflowItem(status, approved, current_step)` equivalent. Human decisions and readiness evidence apply to
-specific reviewed/generated versions or lineages; substantive changes require relevant re-evaluation, and
-revision history remains additive. Future decision history must preserve what was reviewed, gate/outcome,
-founder direction, time and actor/provenance. v0.17 ResearchReadinessAssessments already implement the approved
-frozen evidence-state, outcome, finding, policy/schema, timestamp and producer-provenance semantics through their
-bounded persistence and API. The absence applies only to the remaining future downstream editorial
-decision/readiness mechanisms: no separate downstream schema, API, UI or producer is yet implemented.
-
-Phase 2 eventually needs only the persistence semantics relevant to the existing editorial chain: Idea Gate and
-Editorial Gate decision history, domain-specific research/editorial readiness evidence, and revision/progression
-provenance. It deliberately defers production/publication readiness records to Phases 6/7, Learning Gate
-records to Phase 8, financial-guardrail records to future financial implementation, and
-automation/orchestration to Phase 9. A later coordinator may orchestrate such objects without becoming the
-source of truth for their domain meaning.
-
-The bounded spend rule governs **paid external spend** only. Whether negligible, internal or pre-authorized
-operating costs later require per-item authorization remains a financial-control design decision. Future
-spend authorization must be attributable to the exact editorial/production lineage it governs, but no
-authorization, proposal, reservation, ledger or enforcement entity is approved here.
-
-v0.15 — Persistent Idea Gate, v0.16 — Authorized Research Initiation, **v0.17 — Persistent Research Readiness**
-and **v0.18 — Readiness-Authorized Editorial Angle Initiation** are historical accepted implementation
-predecessors. **v0.19 — Editorial-Angle-Authorized ContentPiece Initiation** is a historical accepted implementation
-predecessor; **v0.20 — Readiness-Lineage-Preserving Script Initiation** is a historical accepted implementation
-predecessor; **v0.21 — Editorial Draft Package Foundation** is a historical accepted implementation predecessor;
-**v0.25 — Operational Visual Production Inputs** is the latest accepted implementation milestone. **v0.24 — Editorial
-Gate + Approved VisualPlan Initiation** is its accepted historical predecessor. Migration 20 is canonical and
-migrations extend through 1–20; migration 21 is absent. Phase 2 remains ACTIVE / INCOMPLETE, and no successor after
-v0.25 is selected.
-
-The Editorial Gate spend-authorization direction belongs to later Editorial Gate, production and
-financial-control milestones; it is explicitly outside that first Idea Gate snapshot/decision slice.
-
-### v0.20 — Readiness-Lineage-Preserving Script Initiation
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
-latest accepted Phase 2 milestone. v0.24 is its accepted historical predecessor; migration 20 is latest,
-migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.25 is selected.
-
-Purpose:
-
-> Deliberately append one complete immutable Script version from one ContentPiece only when that ContentPiece's
-> durable provenance resolves through its exact EditorialAngle, exact Ready ResearchReadinessAssessment,
-> ResearchPack and Opportunity.
-
-The dedicated operation accepts the ContentPiece ID, Script ID, narration text and optional existing Script metadata.
-It derives the next version from immutable Script history—version 1 when none exists, otherwise maximum existing
-version plus one—and never accepts a caller-supplied version or readiness identifier. It validates that the
-ContentPiece exists; its Angle exists and shares its Opportunity; the Angle has non-null readiness provenance; the
-exact assessment exists and is `Ready`; assessment and Angle share a ResearchPack; and that Pack shares the
-ContentPiece Opportunity. Missing caller ContentPiece is 404-style; broken internal lineage is 400-style.
-
-The API is `POST /api/content-pieces/{content_piece_id}/scripts`, accepting only `id`, `narration_text` and optional
-`metadata`. Existing low-level Script creation remains compatible. The existing Script schema is sufficient: no
-migration, readiness FK, lifecycle marker, current/latest pointer or other schema change is added.
-
-v0.20 excludes Title/Hook and editorial-package models; Script-to-Claim mapping; editorial QA/Gate and
-approval/revision workflows; spend/financial records; provider or AI generation; research/readiness changes;
-EditorialAngle versioning/revalidation; generic workflow; UI; VisualPlan/Scene/Asset lifecycle work; production,
-publishing, analytics, Learning Gate, orchestration, visual-canon changes and later-phase activation.
-Local validation passed: Black 26.3.1 `--check`, Ruff, 90 pytest tests and `git diff --check`.
-Implementation commit: `8dd8ecb7c22eb73b60b7d65853fbf11635d2188c`. Initial documentation commit:
-`4ddab9749c2159ad7a9801f0af1d5365046ac793`.
-
-### v0.21 — Editorial Draft Package Foundation
-
-**Status: HISTORICAL ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 — Operational Visual Production Inputs is the
-latest accepted Phase 2 milestone. v0.24 is its accepted historical predecessor. Migration 20 is latest,
-migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.25 is selected.
-
-v0.21 adds durable append-only TitleOption and HookOption alternatives owned by one eligible ContentPiece, and an
-immutable EditorialPackageSnapshot that explicitly records one TitleOption, HookOption and exact Script version from
-that same ContentPiece. All dedicated creation validates the existing exact Ready ContentPiece lineage; no readiness
-provenance is duplicated and `ContentPiece.working_title` remains independent compatibility data.
-
-Migration 16 adds only `title_options`, `hook_options` and `editorial_package_snapshots`, their restrictive foreign
-keys and history indexes. ContentPiece-scoped APIs create/list alternatives and snapshots; narrow GET routes retrieve
-them. No current/latest/selected or approval state, Script-to-Claim, QA/Gate, workflow, UI, VisualPlan, production,
-publishing, analytics, Learning or orchestration is included.
-Founder acceptance covers implementation commit `4e36cf6cfabe7e6dbe99e54804653edeec277d9a` and initial
-documentation commit `46a1a59e4ec857f953240d4d9b7a9c33c1cb3f8d`; Black 26.3.1, Ruff, 93 pytest tests and
-`git diff --check` passed.
-
-### v0.22 — Closed Script Claim Provenance Foundation
-
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.22 is a historical accepted Phase 2 predecessor. v0.25 —
-Operational Visual Production Inputs is the latest accepted Phase 2 milestone; v0.24 is its accepted historical
-predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE, and no successor
-after v0.25 is selected.
-
-v0.22 establishes one durable provenance boundary: exact immutable Script → one closed immutable ScriptClaimSet →
-zero or more immutable ScriptClaimLinks → Claim identities resolved through the Script's exact upstream Ready
-assessment frozen evidence. A set is created once and closed by its immutable existence; an empty set is valid and
-means deliberate zero-Claim provenance, distinct from no set. Membership is explicit, atomic and cannot later be
-appended, removed or replaced. Correction requires a new immutable Script version with its own set.
-
-Each supplied Claim must exist, belong to the originating Angle's exact ResearchPack, appear in the exact Ready
-assessment's `frozen_evidence_state`, and be linked to that Angle at declaration time. Historical reads resolve Claim
-and ClaimEvidence representations only from frozen evidence; they do not present later mutable Claim content as
-historical support. Later live Claim, Source, ClaimEvidence or Angle-link changes do not rewrite closed sets.
-
-Migration 17 adds only `script_claim_sets` and `script_claim_links`, restrictive foreign keys, one-set-per-Script and
-unique set membership constraints, plus a Claim lookup index. It includes no backfill and no copied readiness,
-ResearchPack, Angle, ClaimEvidence or package provenance. `POST`/`GET /api/scripts/{script_id}/claim-set` create and
-retrieve the Script-scoped closed set, including its frozen historical representation. Script initiation and
-EditorialPackageSnapshot behavior remain unchanged.
-
-v0.22 excludes Script ranges/segments, Script-to-ClaimEvidence links, Claim snapshots, package Claim links, QA/Gate,
-approval/revision or workflow state, UI, production, publishing, analytics, Learning and orchestration. Founder
-acceptance covers implementation commit `346ddd76d19c8520541f77db4dda7853e8e8a5ed` and pending-state documentation
-commit `3947ae34fb345a5cf6cb16423194a2b21d1d67c5`; Black 26.3.1 `--check`, Ruff, 96 pytest tests and
-`git diff --check` passed.
-
-### v0.23 — Deterministic Editorial Readiness Assessment
-
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.23 is a historical accepted Phase 2 milestone; v0.22 is its
-historical accepted predecessor. v0.25 — Operational Visual Production Inputs is the latest accepted Phase 2
-milestone; v0.24 is its accepted historical predecessor. Migration 20 is latest, migration 21 is absent, Phase 2
-remains ACTIVE / INCOMPLETE, and no successor after v0.25 is selected.
-
-v0.23 adds one durable deterministic boundary: exact immutable EditorialPackageSnapshot → one immutable
-EditorialReadinessAssessment. Assessment input is derived through immutable package references to TitleOption,
-HookOption, Script and its exact ScriptClaimSet, and from populated Claim identities only through the Script's exact
-upstream Ready assessment frozen evidence. Title, hook, narration, Claims, evidence, sources and upstream readiness
-IDs are not copied. Multiple immutable assessments per package are permitted, with no current/latest/superseded state.
-
-The server derives outcome and structured findings under evaluator `deterministic-editorial-readiness` version `v1`
-and assessment schema version 1. The sole blocking policy is `SCRIPT_CLAIM_SET_MISSING`: absence of a ScriptClaimSet
-persists `NotReady` with a blocking error finding. A closed empty set is a valid complete zero-Claim declaration and
-may be `Ready`; a closed populated set must resolve exact frozen Claim/evidence/source representation. Broken package
-or provenance state is an integrity error and does not persist `NotReady`. No risk-level, freshness-type,
-verification-status, source-quality or subjective editorial rule is introduced.
-
-Migration 18 adds only `editorial_readiness_assessments`, a restrictive EditorialPackageSnapshot FK and package
-history index, with no backfill, Gate/finding child table, score, provider/model or financial schema. The API is
-`POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/readiness-assessments` and
-`GET /api/editorial-readiness-assessments/{assessment_id}`. No subjective/model QA, Editorial Gate, approval,
-workflow, UI, production, publishing, analytics, Learning or orchestration is included. Founder acceptance covers
-implementation commit `01eeafd78c0e5a81f9dc5442d9404ca8a25b55b9` and pending-state documentation commit
-`64e5da9183d9a0fe1492e6968f266f26abd4538c`. Validation passed: Black 26.3.1 `--check`, Ruff, 99 pytest tests and
-`git diff --check`.
-
-### v0.24 — Editorial Gate + Approved VisualPlan Initiation
-
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.24 is the accepted historical predecessor to v0.25; v0.23 is its
-historical accepted predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE
-and no successor after v0.25 is selected.
-
-v0.24 adds one exact human-decision boundary: immutable, additive `EditorialGateDecision` history over one supplied
-immutable `EditorialPackageSnapshot` and one supplied exact `Ready` `EditorialReadinessAssessment`. Its only outcomes
-are `Approve`, `Revise` and `Reject`; multiple decisions may be retained for a package or assessment. The records
-define no current/latest/selected/superseded state or generic workflow.
-
-Only the dedicated initiation path for an exact `Approve` decision may create a VisualPlan. It derives the exact
-ContentPiece and Script from the approved package and atomically writes the VisualPlan plus additive
-`visual_plan_gate_provenance`; callers cannot override either lineage. It does not consume the Gate decision or
-automatically create Scenes, AssetSpecs, GenerationExecutions or Assets. Historical/demo and low-level VisualPlans
-remain compatible without Gate provenance and are not backfilled. Migration 19 adds only
-`editorial_gate_decisions`, `visual_plan_gate_provenance`, restrictive foreign keys and direct history/reverse lookup
-indexes. The API is `POST`/`GET /api/editorial-package-snapshots/{snapshot_id}/gate-decisions`, `GET
-`/api/editorial-gate-decisions/{decision_id}`, and `POST /api/editorial-gate-decisions/{decision_id}/visual-plans`.
-
-v0.24 does not authorize new Title/Hook or Script-to-Claim lifecycle work, machine editorial QA, paid production,
-spend/cost schema, provider/model or generation work, Scene/AssetSpec lifecycle work, UI, production, publishing,
-analytics, Learning, orchestration or successor scope. Implementation commit:
-`34acdcfc3b3d523a3eb4a00af6ae7d768669444b`. Pending-state documentation commit:
-`ae993dae6732a2cb456f57e3d070cd315c77a30b`. Black 26.3.1 formatting equivalence passed across 10 repository Python
-files through the in-process API check; the documented CLI hangs in this Windows host as a process-runtime exception.
-Ruff passed, **102 pytest tests** passed, and `git diff --check` passed.
-
-### v0.25 — Operational Visual Production Inputs
-
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.25 is the latest accepted Phase 2 milestone; v0.24 is its
-accepted historical predecessor. Migration 20 is latest, migration 21 is absent, Phase 2 remains ACTIVE / INCOMPLETE
-and no successor after v0.25 is selected.
-
-This bounded milestone operationalizes the existing visual foundation only through the exact accepted chain:
-`Approve EditorialGateDecision → Gate-authorized VisualPlan → ordered editable Scene → editable AssetSpec → managed
-immutable Asset → immutable AssetSelection`. Dedicated Scene and AssetSpec authoring revalidates Gate provenance and
-preserves immutable ownership. Existing low-level/demo operations remain compatible without backfill; no Scene or
-AssetSpec snapshot, timing or video-editing model is introduced.
-
-Manual/no-cost Asset import is first-class. Bounded PNG, JPEG and WebP bytes are validated, copied below Conveyor's
-managed storage root, assigned server-derived immutable AssetSpec-local version, SHA-256 digest, relative managed path
-and `imported` source kind. Content is retrievable only from a registered safe managed Asset record; arbitrary external
-paths and caller-controlled path/version/digest/source fields are rejected. Provider generation remains optional and
-unchanged.
-
-Migration 20 adds only immutable additive `asset_selections` with exact AssetSpec and Asset FKs, nullable exact
-CharacterReferenceSet FK, created time and direct history/reverse lookup indexes. Multiple records are permitted; no
-current/latest/best/active/ranking/superseded state exists. Selection validates managed content and digest. Imported
-character Assets require an explicit exact CharacterReferenceSet matching the AssetSpec CharacterProfile; imported
-non-character Assets require none. Generated Assets retain their existing GenerationExecution provenance and reject a
-manual reference-set override. Reference-set membership is unchanged.
-
-The narrow API adds Gate-qualified Scene and AssetSpec create/list/update, raw managed import under an AssetSpec,
-Asset history/content retrieval and AssetSelection create/list/get. v0.25 adds no narration, captions, timing,
-timeline, renderer, MP4, final artifact or manifest, QA, paid provider/spend/cost work, UI, workflow, publishing,
-analytics, Learning or successor scope. Founder acceptance covers implementation commit
-`065e10bc6e36bf009f54fbce9a0135ef0cae9273` and pending-state documentation commit
-`67500b338ecb959177b131ece2f59b9b11fb327c`. Ruff passed, **107 pytest tests** passed and `git diff --check` passed;
-Black 26.3.1 formatting equivalence passed for 10 repository Python files through the accepted in-process API check
-after the documented Windows CLI worker-process hang.
-
-### v0.26 — Narrated Final Media Production
-
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** At its acceptance, v0.26 was the latest accepted Phase 2 milestone;
-v0.25 is its accepted historical predecessor. Founder acceptance covers implementation commit
-`deb88cda96b1b3989f37a525db5b6555849611db` and pending-state documentation commit
-`18c9fe5154154e90aedeff81199a94cc85f6a6dd`. At the v0.26 acceptance checkpoint, Migration 21 was latest and
-Migration 22 was absent. Phase 2 remains ACTIVE / INCOMPLETE, and no successor after v0.26 was selected at that
-checkpoint.
-
-v0.26 extends the accepted visual-production chain only through: `Approve EditorialGateDecision → Gate-authorized
-VisualPlan → exact Script → managed NarrationAsset → immutable FinalMediaInputSnapshot → terminal RenderExecution →
-immutable FinalMediaArtifact → delegated manual production QA/manual publication handoff`. It introduces no new human
-Gate, generic workflow or current/latest/best artifact state.
-
-Narration is manual bounded WAV, MP3 or M4A import. Each immutable take belongs to one exact Script, has
-server-derived managed storage, SHA-256 and probe duration, and remains append-only with no TTS. A snapshot freezes the
-exact Gate-authorized VisualPlan, Script and NarrationAsset; every ordered current Scene exactly once; one exact
-AssetSelection per Scene; frozen mutable Scene/AssetSpec values; managed Asset digest/reference provenance; timing;
-deterministic captions; and fixed render settings. Callers cannot supply paths, digest, duration, captions, codec,
-dimensions, renderer arguments or output locations.
-
-The synchronous local FFmpeg/FFprobe renderer produces 1080×1920, 30fps H.264/AAC MP4 with static,
-slow-zoom-in/slow-zoom-out motion, cuts and fixed 250ms crossfades, plus burned deterministic captions. Crossfade
-source extension is internal and the final output remains capped to the frozen narration/Scene duration. Every attempt
-is immutable terminal `succeeded` or `failed`; multiple explicit attempts are allowed, failed attempts create no
-artifact, and a successful artifact has one managed MP4, SHA-256 and frozen FFprobe technical validation retrievable
-only through its registered ID.
-
-The operational runtime dependency is a usable local FFmpeg/FFprobe pair resolved from `PATH` or explicit
-`ATLAS_FFMPEG_PATH` and `ATLAS_FFPROBE_PATH`; it is neither a bundled repository binary nor provider, paid-production
-or cost/spend integration.
-
-The narrow API adds narration import/list/get/content, final-media snapshot create/get, synchronous render create/get
-and artifact get/content routes. Validation passed: Ruff, **114 pytest tests**, `git diff --check`, real two-Scene
-crossfade/caption FFmpeg/FFprobe proof, and Black 26.3.1 in-process equivalence across 12 Python files with
-`would_change=0`; the documented Windows Black CLI worker/process completion behavior remains a host-runtime
-exception. v0.26 adds no paid provider activation, cost/spend, publishing/publication records, queues/workers,
-production UI, analytics/Learning, orchestration or successor scope.
-
-### v0.27 — First-Run Operability Bridge
-
-**Status: ACCEPTED IMPLEMENTATION CHECKPOINT.** v0.27 is the latest accepted Phase 2 milestone; v0.26 is its accepted
-historical predecessor. Founder acceptance covers implementation commit `8dd10ef793ac44c25107f02ba4b6bb5c333cf500`
-and pending-state documentation commit `cb5fb1593827e6f7f0943973e86d992ea10dccf5`. v0.27 is a no-migration, thin
-operability bridge: `POST /api/opportunities`,
-`POST /api/research-packs/{id}/claims`, `POST /api/sources`, `POST /api/claims/{id}/evidence`, and
-`POST /api/editorial-angles/{id}/claims` expose existing repository semantics only. They preserve path-owned
-lineage, existing Source URL reuse and ClaimEvidence upsert behavior, and the server-built readiness-evidence freeze;
-they add no generic CRUD, workflow state, discovery/research automation or writing generation.
-
-The explicit `POST /api/character-profiles/{id}/reference-sets/imported` lifecycle deliberately freezes an immutable
-ordered `CharacterReferenceSet` from qualifying managed imported character Assets. Eligibility requires exact
-CharacterProfile matching, a Gate-authorized character AssetSpec, source kind `imported`, safe managed storage and a
-matching SHA-256. It does not require an AssetSelection before bootstrap, creates no GenerationExecution or provider
-call, does not weaken the existing generated-reference path, and introduces no current/latest/best reference state.
-
-At the v0.27 acceptance checkpoint, Migration 21 was latest and Migration 22 was absent. Later canonical Migrations
-22–23 add narration provenance/support only; they do not accept a v0.28 milestone or select a successor. Phase 2
-remains ACTIVE / INCOMPLETE. Validation passed: Ruff, **117 pytest tests**, `git diff --check`, and Black 26.3.1
-in-process equivalence across 12 Python files with `would_change=0`; the documented Windows Black CLI worker/process
-completion behavior remains a host-runtime exception. At that historical v0.27 checkpoint, no production trial, paid
-provider, cost/spend, renderer, UI, publishing, analytics/Learning, queue/worker or successor scope was added, and
-Migration 24 was absent. Migration 24 was subsequently accepted for multi-authority visual-reference persistence.
-
-## Phase 3 — Technical Architecture
-
-Status: SPECIFIED, NOT YET IMPLEMENTED
-
-Define in detail:
-- Application architecture
-- Database
-- AI model architecture
-- APIs
-- External services
-- Storage
-- Authentication
-- Scheduling
-- Queues/workers
-- Logging
-- Monitoring
-- Security
-- Cost controls
-- Deployment
-
-The initial architecture specification includes:
-- Hybrid dashboard and conversational-control interface
-- Modular, configuration-first workflow design
-- Knowledge/content-intelligence provenance model
-- Cost tracking and budget controls
-- GPT + Codex as the current development stack, with provider abstraction where practical
-
-## Phase 4 — Research Engine
-
-Build:
-- Topic discovery
-- Official source monitoring
-- Community signal monitoring
-- Research
-- Source verification
-- Claim extraction
-- Fact checking
-- Topic scoring
-- Trend detection
-
-## Phase 5 — Content Intelligence Engine
-
-Build:
-- Topic analysis
-- Angles
-- Hooks
-- Scripts
-- Analogies
-- Fact checking
-- Source integration
-- CTAs
-- Platform adaptation
-
-## Phase 6 — Video Production Engine
-
-Build:
-- Narration
-- Mascot animation
-- Visual generation
-- Charts
-- Graphics
-- Captions
-- Editing
-- Rendering
-- Platform formats
-
-## Phase 7 — Distribution Engine
-
-Build integrations for:
-- YouTube
-- TikTok
-- Instagram
-
-Capabilities:
-- Upload
-- Metadata
-- Scheduling
-- Publishing
-- Status tracking
-- Error handling
-
-## Phase 8 — Analytics & Learning
-
-Track:
-- Views
-- Retention
-- Watch time
-- Completion
-- Engagement
-- Shares
-- Followers
-- Topic performance
-- Hook performance
-- Format performance
-- Platform performance
-
-Use performance to inform future content selection.
-
-## Phase 9 — Automation
-
-Combine:
-Research → Create → Review → Approve → Publish → Measure → Learn
-
-Begin with human approval.
-
-Progressively automate only where quality is demonstrably maintained.
-
-## Phase 10 — Scale
-
-Potentially expand:
-- Output
-- Channels
-- Topics
-- Brands
-- Products
-- Revenue
-- Automation
-
-## Canonical end-to-end target operating model
-
-Conveyor is intended to become an approximately **95% automated content operating system**. This target
-automates routine execution; it does not remove human judgement. Automation must increase only after relevant
-quality, provenance and operating behaviour are demonstrated: **automate proven workflows; do not automate
-uncertainty merely because automation is technically possible.** High-risk claims, material factual
-uncertainty, sensitive/regulated subject matter, exceptional spend, system-health/quality exceptions and
-other later-defined areas may require human review.
-
-The intended recurring founder interaction is concentrated, where practical, at three target operating-model
-gates. These are not approved database or workflow-state entities:
-
-- **Idea Gate** — Conveyor generates, ranks and explains candidate opportunities; the founder approves, rejects,
-  steers or reprioritises them.
-- **Editorial Gate** — Conveyor prepares title, hook, angle, script, supporting research/evidence context and
-  relevant risk/uncertainty notes; the founder approves, rejects, requests revision or selects alternatives.
-- **Learning Gate** — Conveyor presents performance, learning, evidence-backed hypotheses and proposed changes
-  to future ideas, titles, hooks, scripts, visuals, formats, timing or distribution, with economics context
-  where available; the founder steers and accepts or rejects strategic adaptations.
-
-Between and around these gates, future proven automation may cover discovery, opportunity generation,
-research/evidence/verification support, editorial and script work, visual and scene planning, AssetSpec and
-generation orchestration, narration/audio, assembly/rendering, quality checks, publishing, analytics,
-learning, scheduling, cost/revenue tracking, economics/control reporting and financial guardrails. This
-direction does not authorize deferred phases early.
-
-Conveyor already has durable foundations for:
-
-> Opportunity → Research Pack / Claims / Sources / Evidence → Editorial Angle → ContentPiece → Script → VisualPlan → Scene → AssetSpec → GenerationExecution → Asset
-
-Those foundations are not proof that the complete operating system exists. Later phases extend the direction
-toward:
-
-> Publication → platform performance → analytics → revenue/economics → learning → future opportunity/content decisions
-
-### Phase contributions to the target
-
-- **Phase 1 — Product & Business Definition (COMPLETE):** established the product, brand, audience,
-  territory, monetisation direction, SimilarStoic identity, visual baseline and governing principles; it is
-  not reopened by this target direction.
-- **Phase 2 — Content Operating Model (ACTIVE / INCOMPLETE; v0.27 ACCEPTED):** is the current phase defining the
-  human-led executable
-  lifecycle over existing records, including idea review, research readiness, editorial progression,
-  title/script approval, revisions, production readiness, quality control and approval boundaries. Its approved
-  v0.15 — Persistent Idea Gate is its historical accepted predecessor; v0.16 — Authorized Research Initiation
-  is its historical accepted milestone; v0.17 — Persistent Research Readiness is its historical accepted
-  predecessor; v0.18 — Readiness-Authorized Editorial Angle Initiation is its historical accepted predecessor;
-  v0.19 — Editorial-Angle-Authorized ContentPiece Initiation is its historical accepted predecessor;
-  v0.20 — Readiness-Lineage-Preserving Script Initiation is its historical accepted predecessor;
-  v0.21 — Editorial Draft Package Foundation is its historical accepted predecessor;
-  v0.24 — Editorial Gate + Approved VisualPlan Initiation is its accepted historical predecessor;
-  v0.27 — First-Run Operability Bridge is its latest accepted implementation milestone;
-  v0.26 — Narrated Final Media Production is its accepted historical predecessor;
-  v0.25 — Operational Visual Production Inputs is its accepted historical predecessor;
-  v0.23 — Deterministic Editorial Readiness Assessment is a historical accepted predecessor;
-  at v0.27 acceptance, migration 21 was latest and migration 22 was absent; current canonical source/runtime
-  migrations are through 24 in the synchronized implementation, with Migrations 22–24 adding bounded
-  provenance/support only; no successor after v0.27 is selected;
-  activation does not pull forward later phases.
-- **Phase 3 — Technical Architecture (SPECIFIED, NOT YET IMPLEMENTED):** provides the production-grade
-  substrate—APIs, storage, security, scheduling, monitoring, deployment, and justified workers/queues plus
-  cost/control infrastructure—for the operating model.
-- **Phase 4 — Research Engine:** automates approved-policy discovery inputs, source gathering, structured
-  research, evidence support, verification and freshness/uncertainty handling; it is not collapsed into Phase 2.
-- **Phase 5 — Content Intelligence Engine:** automates opportunity evaluation, angles, titles/hooks, scripts,
-  revision proposals, editorial QA and learning-informed content decisions. Final Pillar taxonomy and scoring
-  remain unsettled unless separately approved.
-- **Phase 6 — Video Production Engine:** turns approved editorial material into production-ready video assets
-  through replaceable narration, visual-generation, assembly, captions, animation/motion, rendering and media
-  QA components, reusing existing visual-generation foundations.
-- **Phase 7 — Distribution Engine:** handles future platform publishing, scheduling, publication records and
-  distribution integrations; it may provide platform data relevant to revenue attribution.
-- **Phase 8 — Analytics & Learning:** closes the performance feedback loop with collection, comparison,
-  pattern/hypothesis development, learning-informed decisions, commercial/performance metrics where
-  appropriate and the founder-facing Learning Gate. Analytics remains separate from financial ledgers.
-- **Phase 9 — Automation:** connects proven components into increasingly autonomous recurring operation toward
-  the approximately 95% target while respecting approval gates, quality controls, provenance, financial limits
-  and system-health controls; it does not authorize early automation of immature workflows.
-- **Phase 10 — Scale:** expands a proven operating system through the already listed output, channels, topics,
-  brands, products, revenue and automation directions without adding commitments here.
-
-### Roadmap governance hierarchy
-
-> Canonical GitHub roadmap → approved end-to-end operating vision → phase objectives/design boundaries → implementation milestones → bounded Codex implementation tasks
-
-Roadmap phases define approved product direction. Versioned implementation milestones are bounded delivery
-increments within that direction and must not independently redefine product direction, phase ownership,
-roadmap sequencing, domain semantics or deferred scope. Such a change requires explicit founder + ChatGPT
-approval and canonical synchronization.
-
----
-
-# Development Principles
-
-1. Complete the current milestone before moving to the next.
-2. Do not prematurely optimise future phases.
-3. Business decisions belong to the founder.
-4. Technical implementation decisions can be delegated where they do not materially alter product behaviour, cost, risk or strategy.
-5. Quality is more important than volume.
-6. Accuracy is more important than speed.
-7. Never manufacture certainty.
-8. Never publish unverified factual claims.
-9. Keep human approval for consequential decisions until automation is proven.
-10. Document important decisions so future AI agents can recover context.
-
-## Development method
+Development method:
 
 > DEFINE → DESIGN WITH USER → BOUNDED CODEX TASK → IMPLEMENT LOCALLY → VALIDATE → REVIEW → FIX REGRESSIONS → COMMIT → PUSH → NEXT MILESTONE
 
-This process supports **change without rebuild**. It does not imply that the final Conveyor workflow, Pillar taxonomy, research rules, scoring system or evidence taxonomy is already settled.
+Use [Conveyor Current State](docs/CONVEYOR_CURRENT_STATE.md) to determine what is actually implemented, accepted,
+authorized, and safe to do next.

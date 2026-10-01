@@ -1,5 +1,10 @@
 # Conveyor — Canonical Handoff and Governance
 
+> **Historical handoff artifact — not current operational authority.** This document preserves the handoff and
+> governance record as provenance, including statements that were current at earlier checkpoints. Current truth now
+> resolves through [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md). If this handoff conflicts with that file,
+> `docs/CONVEYOR_CURRENT_STATE.md` governs current operation.
+
 ## Cell 1 post-proof fresh-session handoff — 29 September 2026
 
 Do not repeat the final-quality persistent-world Cell 1 proof or reopen Persistent Scene Model architecture. A real

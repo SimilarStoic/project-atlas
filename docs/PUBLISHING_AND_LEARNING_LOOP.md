@@ -1,6 +1,10 @@
 # Controlled Publishing and Performance Learning Loop
 
-Current state, 23 September 2026: see the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026).
+> **Bounded design and historical pilot record.** This file preserves publishing/learning design; it is not current
+> repository, runtime, schema, or production-status authority. Resolve current operation through
+> [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md).
+
+Historical reconciliation snapshot, 23 September 2026: see the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026).
 Pilot #1 completed the recorded private systems-proof loop and its effective publication approval is revoked.
 There is no public receipt or release operation. Runtime is Migration 26; Daniel is the approved narrator.
 Earlier Marin/runtime-25/prospective-transfer descriptions below are historical, not current execution authority.
@@ -27,10 +31,10 @@ identity-only OAuth preflight now uses the minimum YouTube read-only scope and h
 channel exactly to `UC1cX-OTF9-LZeNo5TaFgrgQ`; its refresh token is protected by Windows Credential Locker and remains
 outside Git/provenance. The offline
 foundation still implements no live upload, publication, metric collection or autonomous optimiser; the verified
-persistent runtime is now at Migration 25. Accepted Production #5 v4 may later become the first live-loop item only
+persistent runtime was then at Migration 25. Accepted Production #5 v4 could later become the first live-loop item only
 after live
 integration and exact publication authority are separately accepted. Readiness PASS authorizes no upload or
-publication. Production #6 must not begin.
+publication. At that checkpoint, Production #6 had not begun and was not authorized.
 The [controlled pilot architecture](CONTROLLED_YOUTUBE_PILOT_ARCHITECTURE.md) governs external-action safety,
 manual routes, operation evidence, analytics coverage and API-data retention; this design does not override it.
 

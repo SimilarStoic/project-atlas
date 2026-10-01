@@ -1,22 +1,25 @@
 # Database
 
-This directory is reserved for database documentation, schema assets, and migration history. Conveyor currently uses
-governed SQLite persistence with source-defined, transactionally applied migrations in
-`src/project_atlas/persistence.py`. Source-defined migrations are contiguous through **Migration 26**. Migration 26
-adds `inworld_tts` to the narration-execution constraint without reinterpreting historical rows, using the established
-transactional table-rebuild pattern. Separately authorized persistent migration 25 -> 26 completed on 22 September
-2026 with a verified SQLite backup and preserved historical business data. The
-[23 September reconciliation](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026) verified
-migrations 1–26, integrity `ok`, zero FK violations and the unchanged post-migration hash. No migration was performed
-by that read-only audit. Do not use auto-migrating/seeding repository construction for inspection. Migration 24
-is the multi-authority visual-reference foundation; Migration 25 is the additive controlled-publishing/learning
-persistence foundation. Migration 25 is now active in the verified persistent runtime after a byte-for-byte Migration
-24 backup, with integrity and foreign keys clean and all earlier historical table contents unchanged. The protected
-legacy database remains untouched. This adds no OAuth credentials, upload, publication or runtime mutation authority.
+Current operational and schema truth resolves through
+[Conveyor Current State](../docs/CONVEYOR_CURRENT_STATE.md).
 
-With no `ATLAS_DB_PATH`, ordinary local repository construction uses portable `data/atlas-local.db`; historical
-repository `data/atlas.db` is an exact protected legacy artifact and construction refuses that target. The persistent
-Conveyor runtime remains selected explicitly by its environment configuration.
+Conveyor uses governed SQLite persistence with source-defined, transactionally applied migrations in
+`src/project_atlas/persistence.py`. Application schema authority is the `schema_migrations` table. Source migrations
+are contiguous from **1 through 27**, and the current maximum application migration is **27**.
 
-`database/migrations/` is retained for documentation or future migration assets; the current migration implementation is
-source-defined. Do not modify migrations that have been deployed to a shared environment.
+`PRAGMA user_version` is not the application migration authority. `PRAGMA schema_version` is SQLite's internal
+schema-cookie counter, not the Conveyor application migration number. Migrations 25 and 26 are immutable historical
+provenance; Migration 27 is the current application schema authority. Do not rewrite a deployed migration or create a
+cleanup migration merely to reconcile documentation.
+
+The active production database is selected explicitly through the fail-closed process environment established by
+dot-sourcing `scripts/set_conveyor_environment.ps1` from the repository. The `ATLAS_DB_PATH` name is temporary
+technical compatibility, not active product branding. Working-directory-relative databases are development
+fallbacks, not production runtime authority.
+
+For a read-only production audit, do not instantiate `AtlasRepository` or other application code: repository
+construction can apply migrations or seed data. Database access, migration, backup, restore, and runtime mutation each
+require a separately bounded procedure.
+
+`database/migrations/` remains available for documentation or future migration assets; the current implementation is
+source-defined.

@@ -1,6 +1,10 @@
 # Controlled YouTube Pilot — Architecture Authority
 
-Current state, 23 September 2026: the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
+> **Bounded architecture and historical pilot record.** This file governs its pilot architecture subject, but it is
+> not current repository, runtime, schema, or production-status authority. Resolve current operation through
+> [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md).
+
+Historical reconciliation snapshot, 23 September 2026: the [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
 supersedes historical pending-package/transfer/runtime-25/narrator summaries below, not the architecture.
 Pilot #1 is reconciled and privately verified; effective approval is revoked; no release operation or public receipt
 exists. Runtime is Migration 26 and Daniel is approved. No new external action is authorized by this reconciliation.
@@ -25,7 +29,7 @@ Production #5 v4, SHA-256 `c35e8e6211ae9bf7bfeb694ec6dbec3c69d822862729d9d9f4440
 the prospective first pilot item, with no identified pilot-quality veto. The pilot is YouTube Shorts only, initially
 three controlled public items at no more than one per week. One item is an observation, not proof of product or
 audience fit. Readiness PASS authorizes neither implementation nor transfer nor publication. Broad public launch,
-Production #6 remains absent. Migration 25 is active in the verified persistent runtime after verified backup and
+At that checkpoint, Production #6 was absent and Migration 25 was active in the verified persistent runtime after verified backup and
 integrity checks.
 
 Every item needs one **exact founder publication approval before platform transfer**. The frozen package and decision

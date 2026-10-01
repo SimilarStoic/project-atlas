@@ -1,5 +1,9 @@
 # SimilarStoic Public-Launch Creative Calibration
 
+> **Bounded methodology with historical status notes.** This file preserves its calibration method and dated gates;
+> it is not current production-status authority. Resolve current operation, including P6 status, through
+> [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md).
+
 ## Entry-gate reconciliation — 23 September 2026
 
 The [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)
@@ -261,7 +265,7 @@ verification does not authorize release. Do not reserve or dispatch a Production
 revocation remains a future separately authorized governance action. If verification fails or stays ambiguous, preserve
 and reconcile the publishing state instead of advancing merely because the date or attempt occurred.
 
-Production #6 is **NOT STARTED / NOT AUTHORIZED**. Creative Calibration is intended before the next ordinary full
+At this methodology checkpoint, Production #6 was **NOT STARTED / NOT AUTHORIZED**. Creative Calibration was intended before the next ordinary full
 production, but successful private verification does not itself authorize calibration execution.
 
 ## Future long-form and learning direction

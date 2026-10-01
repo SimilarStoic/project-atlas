@@ -2,8 +2,9 @@
 
 ## Purpose
 
-Conveyor is the current long-term engine/project and operating system. SimilarStoic is the outward-facing channel,
-editorial brand and mascot world: **SimilarStoic by Conveyor**. Project Atlas is the historical/legacy project name.
+Conveyor is the long-term production operating system/platform. SimilarStoic is its first autonomous pilot channel and
+flagship proving ground; SimilarStoic owns its channel-specific editorial and creative decisions but does not define or
+own Conveyor. Project Atlas is the historical development name.
 This repository starts with durable engineering boundaries so new capabilities can be added without turning the
 codebase into a monolith.
 
@@ -49,4 +50,6 @@ Configuration should be typed and validated when application configuration is in
 
 ## Documentation expectations
 
-Record decisions that affect multiple modules, deployment, persistence, security, or public interfaces in `docs/decisions/`. Keep setup and operational instructions current with each change.
+Current operational truth resolves through `docs/CONVEYOR_CURRENT_STATE.md`. Record decisions that affect multiple
+modules, deployment, persistence, security, or public interfaces in `docs/decisions/`. Keep bounded setup and
+operational instructions consistent with the current authority.
