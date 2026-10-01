@@ -5,12 +5,13 @@ Current operational and schema truth resolves through
 
 Conveyor uses governed SQLite persistence with source-defined, transactionally applied migrations in
 `src/project_atlas/persistence.py`. Application schema authority is the `schema_migrations` table. Source migrations
-are contiguous from **1 through 27**, and the current maximum application migration is **27**.
+are contiguous from **1 through 28**, and the current maximum application migration is **28**.
 
 `PRAGMA user_version` is not the application migration authority. `PRAGMA schema_version` is SQLite's internal
-schema-cookie counter, not the Conveyor application migration number. Migrations 25 and 26 are immutable historical
-provenance; Migration 27 is the current application schema authority. Do not rewrite a deployed migration or create a
-cleanup migration merely to reconcile documentation.
+schema-cookie counter, not the Conveyor application migration number. Migrations 25–27 are immutable historical
+provenance; Migration 28 is the current application schema authority. The protected production runtime remains at its
+verified pre-Migration-28 checkpoint until a separately authorized runtime transition. Do not rewrite a deployed
+migration or create a cleanup migration merely to reconcile documentation.
 
 The active production database is selected explicitly through the fail-closed process environment established by
 dot-sourcing `scripts/set_conveyor_environment.ps1` from the repository. The `ATLAS_DB_PATH` name is temporary

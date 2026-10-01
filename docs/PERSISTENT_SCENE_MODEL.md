@@ -153,6 +153,34 @@ Historical outputs are not retroactively converted into persistent scene models.
 admission or state lineage is assigned to Production #5 or earlier work. Legacy media retains its original provenance.
 This architecture applies prospectively only when a future production path explicitly adopts it.
 
+## Canonical v2 production lifecycle ingress
+
+The normal application boundary is HTTP and is deliberately distinct from legacy v1 final-media ingress:
+
+- `POST /api/v2/productions` creates one immutable production request and performs missing managed acquisitions;
+- `GET /api/v2/productions/{run_id}` returns authoritative status, evidence and review state;
+- `POST /api/v2/productions/{run_id}/resume` retries the failed canonical stage without creating another run;
+- `POST /api/v2/productions/{run_id}/acquisition-review` records exact human pass/fail evidence before any acquired
+  image can become a persistent-scene entity;
+- `POST /api/v2/productions/{run_id}/qa` records whole-video review after render; and
+- `POST /api/v2/productions/{run_id}/founder-review` records an explicit founder acceptance or rejection only after
+  the private-review-ready state.
+
+The start command identifies an approved `visual_plan_id`, canonical authority records, semantic worlds, entities,
+variant keys and their existing `AssetSpec` acquisition intent, scene transitions, timeline weights and the provider
+forecast. Callers do not manufacture world, state, admission, narration, snapshot, execution or artifact IDs. The
+lifecycle derives those identities under the stable production-run ID.
+
+Generated or imported managed images do not become scene inputs merely because files exist. After acquisition review,
+the managed-image adapter verifies the original content digest, decodes one exact RGBA raster through the configured
+FFmpeg runtime, stores that derivative with source-asset provenance, and then delegates world validation, variant
+admission, state resolution and lineage persistence to the existing persistent-scene services.
+
+Migration 28 represents the cross-stage lifecycle with an immutable production request, append-only status events,
+typed links to existing canonical artifacts, QA-review evidence and a separate founder-review decision. A successful
+render stops at `qa_review_pending`; passed whole-video review advances it to
+`private_founder_review_ready`. Nothing automatically advances to `founder_accepted`.
+
 ## Proven mechanically
 
 - exact persistent world identity/content binding;
@@ -163,16 +191,14 @@ This architecture applies prospectively only when a future production path expli
 - deterministic static reuse and machine-readable adjacent-state change evidence;
 - provider-free resolution and separation of generation demand from admission.
 
-## Not yet proven or implemented as production
+## Remaining proof boundaries
 
-- persistent database implementation or Migration 27;
-- production `MediaService` or final-media snapshot integration;
-- provider-backed entity acquisition and admission workflow;
 - final-quality SimilarStoic visual proof or an actual Cell 1 rebuild;
 - long-run throughput or artistic acceptance at scale.
 
-The next gate is a separately authorized production-integration and visual-proof decision. This document authorizes no
-migration, runtime write, provider call, generation, rebuild, production or publication.
+The canonical lifecycle is mechanically implemented and covered with fake-provider disposable-runtime integration.
+That does not prove provider output quality, Production #7 creative quality or founder acceptance and grants no
+provider call, production execution or publication authority.
 
 ## Non-canonical prototype choices
 

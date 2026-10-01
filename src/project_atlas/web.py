@@ -28,6 +28,11 @@ from project_atlas.generation import (
 )
 from project_atlas.media import FfmpegRuntime, LocalMediaStorage, MediaRuntimeError, MediaService
 from project_atlas.persistence import AtlasRepository
+from project_atlas.production import (
+    ProductionLifecycleError,
+    ProductionLifecycleService,
+    ProductionRequestError,
+)
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
 MAX_IMPORTED_ASSET_BYTES = 10 * 1024 * 1024
@@ -43,6 +48,19 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Handle only local static assets and demo API responses."""
 
         parsed = urlparse(self.path)
+        production_prefix = "/api/v2/productions/"
+        if parsed.path.startswith(production_prefix):
+            run_id = unquote(parsed.path[len(production_prefix) :]).strip("/")
+            if not run_id or "/" in run_id:
+                self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                return
+            try:
+                production = self.server.production_service.status(run_id)
+            except KeyError:
+                self._send_json({"error": "ProductionRun not found."}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json({"kind": "persistent_scene_production", "production": production})
+            return
         visual_plan_prefix = "/api/visual-plans/"
         scene_suffix = "/scenes"
         if parsed.path.startswith(visual_plan_prefix) and parsed.path.endswith(scene_suffix):
@@ -715,6 +733,112 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        if path == "/api/v2/productions":
+            try:
+                production = self.server.production_service.start(
+                    self._read_json_object("Canonical v2 production request")
+                )
+            except KeyError:
+                self._send_json(
+                    {"error": "Referenced canonical production input not found."},
+                    HTTPStatus.NOT_FOUND,
+                )
+                return
+            except (
+                json.JSONDecodeError,
+                ProductionRequestError,
+                ValueError,
+                sqlite3.IntegrityError,
+            ) as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            except ProductionLifecycleError as error:
+                self._send_json(
+                    {
+                        "error": str(error),
+                        "stage": error.stage,
+                        "production": self.server.production_service.status(error.run_id),
+                    },
+                    HTTPStatus.UNPROCESSABLE_ENTITY,
+                )
+                return
+            self._send_json(
+                {"kind": "persistent_scene_production", "production": production},
+                HTTPStatus.CREATED,
+            )
+            return
+        production_prefix = "/api/v2/productions/"
+        production_commands = {
+            "/resume": "resume",
+            "/acquisition-review": "acquisition_review",
+            "/qa": "qa",
+            "/founder-review": "founder_review",
+        }
+        for suffix, command in production_commands.items():
+            if path.startswith(production_prefix) and path.endswith(suffix):
+                run_id = unquote(path[len(production_prefix) : -len(suffix)]).strip("/")
+                if not run_id:
+                    self.send_error(HTTPStatus.NOT_FOUND, "Not found")
+                    return
+                try:
+                    if command == "resume":
+                        payload = self._read_json_object("Production resume command")
+                        if payload:
+                            raise ProductionRequestError("Production resume payload must be empty.")
+                        production = self.server.production_service.resume(run_id)
+                    elif command == "acquisition_review":
+                        payload = self._read_json_object("Acquisition review command")
+                        self._reject_unsupported_fields(
+                            payload, {"reviews"}, "Acquisition review command"
+                        )
+                        reviews = payload.get("reviews")
+                        if not isinstance(reviews, list):
+                            raise ProductionRequestError("Acquisition reviews must be a list.")
+                        production = self.server.production_service.review_acquisition(
+                            run_id, reviews
+                        )
+                    elif command == "qa":
+                        payload = self._read_json_object("Whole-video QA command")
+                        self._reject_unsupported_fields(
+                            payload, {"outcome", "evidence"}, "Whole-video QA command"
+                        )
+                        production = self.server.production_service.record_qa(run_id, payload)
+                    else:
+                        payload = self._read_json_object("Founder review command")
+                        self._reject_unsupported_fields(
+                            payload,
+                            {
+                                "outcome",
+                                "founder_actor",
+                                "decision_reference",
+                                "notes",
+                            },
+                            "Founder review command",
+                        )
+                        production = self.server.production_service.founder_review(run_id, payload)
+                except KeyError:
+                    self._send_json({"error": "ProductionRun not found."}, HTTPStatus.NOT_FOUND)
+                    return
+                except (
+                    json.JSONDecodeError,
+                    ProductionRequestError,
+                    ValueError,
+                    sqlite3.IntegrityError,
+                ) as error:
+                    self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                    return
+                except ProductionLifecycleError as error:
+                    self._send_json(
+                        {
+                            "error": str(error),
+                            "stage": error.stage,
+                            "production": self.server.production_service.status(error.run_id),
+                        },
+                        HTTPStatus.UNPROCESSABLE_ENTITY,
+                    )
+                    return
+                self._send_json({"kind": "persistent_scene_production", "production": production})
+                return
         if path == "/api/opportunities":
             try:
                 payload = self._read_json_object("Opportunity payload")
@@ -2415,6 +2539,16 @@ class AtlasHTTPServer(HTTPServer):
             self.repository,
             self.media_runtime or FfmpegRuntime(),
             LocalMediaStorage(self.media_storage_root),
+        )
+
+    @property
+    def production_service(self) -> ProductionLifecycleService:
+        """Compose the canonical v2 lifecycle from existing server-owned services."""
+
+        return ProductionLifecycleService(
+            self.repository,
+            self.generation_service,
+            self.media_service,
         )
 
     def server_close(self) -> None:

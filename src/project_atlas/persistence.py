@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from project_atlas.demo_data import OPPORTUNITIES, content_payload
+from project_atlas.production_persistence import ProductionRepositoryMixin
+from project_atlas.production_schema import MIGRATION_28
 from project_atlas.publishing_schema import MIGRATION_25
 from project_atlas.publishing_state import PublishingRepositoryMixin
 from project_atlas.scene_persistence import PersistentSceneRepositoryMixin
@@ -1539,13 +1541,16 @@ MIGRATIONS: tuple[Migration, ...] = (
         ),
     ),
     MIGRATION_27,
+    MIGRATION_28,
 )
 
 
 MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23, 26})
 
 
-class AtlasRepository(PersistentSceneRepositoryMixin, PublishingRepositoryMixin):
+class AtlasRepository(
+    ProductionRepositoryMixin, PersistentSceneRepositoryMixin, PublishingRepositoryMixin
+):
     """A small application/repository boundary over SQLite."""
 
     def __init__(
@@ -4377,6 +4382,30 @@ class AtlasRepository(PersistentSceneRepositoryMixin, PublishingRepositoryMixin)
             raise ValueError("Asset storage path escaped the managed storage root.")
         if not candidate.is_file():
             raise ValueError("Managed Asset file does not exist.")
+        return candidate
+
+    def managed_scene_asset_path(self, asset_id: str) -> Path:
+        """Resolve a normal managed image or a provenance-linked RGBA scene derivative."""
+
+        asset = self.get_asset(asset_id)
+        if asset.source_kind != "derived":
+            return self.managed_asset_path(asset_id)
+        if asset.media_type != "application/x-rgba":
+            raise ValueError("Derived scene Asset must use the canonical RGBA media type.")
+        source_id = asset.metadata.get("source_asset_id")
+        source_digest = asset.metadata.get("source_content_digest")
+        adapter = asset.metadata.get("adapter")
+        if not isinstance(source_id, str) or adapter != "managed-image-to-rgba-v1":
+            raise ValueError("Derived scene Asset provenance is incomplete.")
+        source = self.get_asset(source_id)
+        if source.content_digest != source_digest:
+            raise ValueError("Derived scene Asset source provenance differs.")
+        self.managed_asset_path(source.id)
+        if not isinstance(asset.storage_path, str) or not asset.storage_path:
+            raise ValueError("Derived scene Asset path is not managed.")
+        candidate = (self.asset_storage_root / asset.storage_path).resolve()
+        if self.asset_storage_root not in candidate.parents or not candidate.is_file():
+            raise ValueError("Derived scene Asset escaped managed storage or is missing.")
         return candidate
 
     def create_character_reference_set(

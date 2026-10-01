@@ -119,7 +119,7 @@ class PersistentSceneRepositoryMixin:
         scene = self.get_scene(spec.scene_id)
         if scene.visual_plan_id != plan_id:
             raise ValueError("Persistent-scene Assets must belong to the same VisualPlan.")
-        content = self.managed_asset_path(asset.id).read_bytes()
+        content = self.managed_scene_asset_path(asset.id).read_bytes()
         if sha256(content).hexdigest() != expected_digest:
             raise ValueError("Persistent-scene Asset bytes do not match their digest.")
         return content

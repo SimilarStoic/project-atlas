@@ -246,12 +246,12 @@ def _public(
 
 
 def test_migration_25_fresh_schema_integrity_and_legacy_path_guard(tmp_path):
-    assert [version for version, _ in MIGRATIONS] == list(range(1, 28))
+    assert [version for version, _ in MIGRATIONS] == list(range(1, 29))
     repo = AtlasRepository(tmp_path / "schema.sqlite")
     assert [
         row[0]
         for row in repo.connection.execute("SELECT version FROM schema_migrations ORDER BY version")
-    ] == list(range(1, 28))
+    ] == list(range(1, 29))
     assert repo.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     assert repo.connection.execute("PRAGMA foreign_key_check").fetchall() == []
     repo.close()
@@ -265,7 +265,7 @@ def test_portable_default_repository_uses_a_separate_dev_path(tmp_path, monkeypa
     monkeypatch.chdir(tmp_path)
     repo = AtlasRepository()
     assert repo.database_path.resolve() == (tmp_path / "data" / "atlas-local.db").resolve()
-    assert repo.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 27
+    assert repo.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 28
     repo.close()
 
 
@@ -281,7 +281,7 @@ def test_migration_24_to_25_preserves_historical_data(tmp_path, monkeypatch):
     upgraded = AtlasRepository(path)
     assert (
         upgraded.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0]
-        == 27
+        == 28
     )
     assert upgraded.connection.execute("SELECT COUNT(*) FROM opportunities").fetchone()[0] == before
     assert upgraded.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"

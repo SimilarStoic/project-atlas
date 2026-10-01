@@ -670,7 +670,11 @@ def _compile_order(world: PersistentWorld, variants: Iterable[EntityVariant]) ->
     return tuple(result)
 
 
-def base_state(world: PersistentWorld, editorial_scene_id: str = "scene-base") -> ResolvedState:
+def base_state(
+    world: PersistentWorld,
+    editorial_scene_id: str = "scene-base",
+    state_id: str = "state-base",
+) -> ResolvedState:
     validate_world(world)
     admissions = tuple(
         sorted(
@@ -703,7 +707,7 @@ def base_state(world: PersistentWorld, editorial_scene_id: str = "scene-base") -
     entities = _with_effective(local)
     entity_bindings = _entity_content_digests(world, entities)
     provisional = ResolvedState(
-        state_id="state-base",
+        state_id=state_id,
         world_key=world.world_key,
         world_revision=world.revision,
         world_definition_digest=world.definition_digest,

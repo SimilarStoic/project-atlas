@@ -203,9 +203,14 @@ persistence does not guarantee a compelling, semantically active, publication-re
 The following limitations remain operationally important:
 
 - The legacy v1 `AssetSelection` snapshot path still has HTTP ingress and is not dead.
-- Persistent-scene v2 is implemented and tested, but lacks equivalent normal HTTP ingress beyond proof/test paths.
+- Persistent-scene v2 has an explicit canonical HTTP lifecycle under `/api/v2/productions`. It starts from an
+  approved `VisualPlan` plus semantic world/entity/variant intent, performs managed acquisition, pauses for raw-world
+  review, adapts approved images into provenance-linked scene rasters, persists world/admission/state lineage, uses
+  approved narration, captions and rendering, and then pauses for whole-video review before it can become
+  `private_founder_review_ready`.
 - `WHOLE_VIDEO_QA_PROFILE` and related QA profile structures are largely metadata and human-review contracts; their
-  existence is not proof of fully automated semantic creative QA.
+  existence is not proof of fully automated semantic creative QA. The v2 lifecycle records automated bounded cell
+  evidence and explicit human acquisition/whole-video outcomes without treating either as founder acceptance.
 - `static_character.py` is tested but currently has no production caller.
 
 Do not delete or modify these areas merely because they are bounded or incomplete. Resolve each through a separately
@@ -213,14 +218,17 @@ authorized implementation phase.
 
 ## Schema authority
 
-Application schema authority is the `schema_migrations` table with contiguous versions **1 through 27**. The current
-maximum application migration is **27**.
+Application schema authority is the `schema_migrations` table with contiguous versions **1 through 28**. The current
+maximum application migration is **28**. Migration 28 adds only append-only production-run events, cross-stage
+evidence, QA-review outcomes and founder-review decisions; existing generation, persistent-scene, narration and media
+tables remain authoritative for their artifacts.
 
 `PRAGMA user_version = 0` does not mean that no application migrations exist. `PRAGMA schema_version = 203` is
 SQLite's internal schema-cookie counter, not the Conveyor application migration version.
 
-Migrations 25 and 26 are immutable historical provenance. Migration 27 is current application schema authority. Do
-not rewrite deployed migrations and do not create a cleanup migration for documentation reconciliation.
+Migrations 25–27 remain immutable historical provenance. Migration 28 is current application schema authority. The
+protected production runtime was intentionally not opened or migrated during implementation verification; applying
+Migration 28 there requires the separately authorized production-runtime transition before the lifecycle is used.
 
 For read-only database auditing, do not instantiate application repository code: repository construction can apply
 migrations or seed data. Use an explicitly read-only method under a separately authorized audit procedure.
@@ -285,8 +293,8 @@ At this checkpoint:
 - Git working-tree cleanup is complete;
 - the `project_atlas` technical rename, `AtlasRepository` rename, and `ATLAS_*` compatibility migration remain future
   bounded work;
-- the legacy v1 `AssetSelection` ingress transition and persistent-scene v2 normal HTTP ingress remain future bounded
-  work;
+- the legacy v1 `AssetSelection` ingress remains available and unchanged while canonical v2 production uses its
+  explicit `/api/v2/productions` lifecycle;
 - QA automation improvements and the `static_character.py` production-integration decision remain future bounded
   work;
 - broader evidence/work-directory cleanup and multi-channel expansion remain future bounded work;

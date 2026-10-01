@@ -67,7 +67,7 @@ def test_migration_26_upgrade_preserves_history_and_constraints(tmp_path, monkey
     before = [tuple(row) for row in before]
     monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS)
     with pytest.raises(sqlite3.DatabaseError):
-        repo.apply_migrations(((26, MIGRATIONS[-1][1] + ("INVALID SQL",)),))
+        repo.apply_migrations(((26, MIGRATIONS[25][1] + ("INVALID SQL",)),))
     assert repo.connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
     assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 25
     assert [
@@ -88,7 +88,7 @@ def test_migration_26_upgrade_preserves_history_and_constraints(tmp_path, monkey
     assert repo.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     assert repo.connection.execute("PRAGMA foreign_key_check").fetchall() == []
     assert repo.get_narration_asset("historical-audio").content_digest == "a" * 64
-    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 27
+    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 28
     repo.close()
 
 
