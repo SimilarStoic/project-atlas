@@ -129,9 +129,7 @@ def test_daniel_offline_configuration_and_no_fallback(monkeypatch):
     assert settings["timestampType"] == "WORD"
     assert settings["applyTextNormalization"] == "ON"
     assert settings["enhanceGeneration"] is False
-    assert settings["pronunciationAliases"] == [
-        {"written": "ISA", "spoken": "eye-suh"}
-    ]
+    assert settings["pronunciationAliases"] == [{"written": "ISA", "spoken": "eye-suh"}]
     assert sha256(settings["instruction"].encode()).hexdigest() == SIMILARSTOIC_INSTRUCTION_SHA256
     settings["audioConfig"]["speakingRate"] = 2
     assert engine.settings["audioConfig"]["speakingRate"] == 1.0
@@ -172,9 +170,7 @@ def test_exact_request_and_truthful_output(monkeypatch):
     result = engine.synthesize(text)
     assert result.engine_kind == "inworld_tts"
     assert result.content == audio.getvalue()
-    assert result.settings["pronunciationAliases"] == [
-        {"written": "ISA", "spoken": "eye-suh"}
-    ]
+    assert result.settings["pronunciationAliases"] == [{"written": "ISA", "spoken": "eye-suh"}]
     assert text == "An ISA keeps the exact approved text.\nDon't paraphrase."
     assert "fixture-secret" not in repr(result)
     assert len(calls) == 1
@@ -188,6 +184,15 @@ def test_pronunciation_alias_is_token_bound_and_does_not_rewrite_editorial_text(
     assert SIMILARSTOIC_PRONUNCIATION_ALIASES == (("ISA", "eye-suh"),)
     assert spoken == "eye-suh guidance differs from ISAs and MISALIGNED labels."
     assert editorial == "ISA guidance differs from ISAs and MISALIGNED labels."
+
+
+def test_multiple_pronunciation_aliases_use_their_own_replacements() -> None:
+    spoken = apply_pronunciation_aliases(
+        "ISA meets APR.",
+        (("ISA", "eye-suh"), ("APR", "A-P-R")),
+    )
+
+    assert spoken == "eye-suh meets A-P-R."
 
 
 def test_failure_is_sanitized_and_not_retried(monkeypatch):

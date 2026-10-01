@@ -41,7 +41,7 @@ def apply_pronunciation_aliases(
             raise ValueError("Pronunciation aliases require one written token and spoken text.")
         spoken = re.sub(
             rf"(?<![\w]){re.escape(written)}(?![\w])",
-            lambda _match: pronunciation,
+            lambda _match, replacement=pronunciation: replacement,
             spoken,
         )
     return spoken

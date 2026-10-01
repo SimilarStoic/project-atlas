@@ -972,8 +972,10 @@ class MediaService:
                 raise MediaRuntimeError("Caption cue timing is invalid or overlapping.")
             if zone not in allowed_zones or zone not in cls.CAPTION_ZONE_OVERRIDES:
                 raise MediaRuntimeError("Caption cue uses an unsupported safe zone.")
-            if previous_zone is not None and zone != previous_zone and not any(
-                abs(start - boundary) <= 150 for boundary in boundaries
+            if (
+                previous_zone is not None
+                and zone != previous_zone
+                and not any(abs(start - boundary) <= 150 for boundary in boundaries)
             ):
                 raise MediaRuntimeError("Caption zone changes must occur at a Scene boundary.")
             validated.append({**cue, "text": text.strip(), "zone": zone})

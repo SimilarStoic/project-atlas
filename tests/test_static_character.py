@@ -71,7 +71,5 @@ def test_boundary_matte_cleanup_removes_only_connected_light_fringe() -> None:
     assert (width, height) == (5, 5)
     assert extraction.transparent_pixels == 24
     assert extraction.foreground_bbox == (2, 2, 2, 2)
-    assert output[(2 * width + 2) * 4 : (2 * width + 2) * 4 + 4] == bytes(
-        (20, 20, 20, 255)
-    )
+    assert output[(2 * width + 2) * 4 : (2 * width + 2) * 4 + 4] == bytes((20, 20, 20, 255))
     assert extraction.provenance()["edge_matte_cleanup"]["passes"] == 1
