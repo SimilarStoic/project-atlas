@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 import pytest
 
 from project_atlas.generation import GeneratedArtifact, GenerationFailure
+from project_atlas.mascot_performance import CoreMascotPerformanceService
 from project_atlas.media import NarrationSynthesis
 from project_atlas.web import create_server
 from tests.test_web import (
@@ -168,6 +169,90 @@ def _post_error(server, path: str, payload: dict) -> tuple[dict, int]:
         raise AssertionError("Expected lifecycle failure")
     thread.join(timeout=2)
     return result, status
+
+
+def _core_mascot_request(
+    server, tmp_path: Path, prefix: str, performance_key="umbrella-resistance"
+) -> dict:
+    repository = server.repository
+    plan = create_authorized_visual_plan(server, prefix)
+    scene = repository.create_scene_under_visual_plan_authorization(
+        f"{prefix}-scene-1",
+        plan.id,
+        1,
+        "Narration",
+        "Use one exact approved mascot performance.",
+    )
+    spec = repository.create_asset_spec_under_scene_authorization(
+        f"{prefix}-spec-1",
+        scene.id,
+        "character",
+        "Show the Core mascot performing the required action.",
+        "Exact approved Core mascot performance.",
+        "Reuse the approved performance without reinterpretation.",
+        character_profile_id="character-profile-similarstoic-hamster-core-v1",
+    )
+    reference_set_id = ensure_character_reference_set(server, tmp_path / "assets")
+    repository.create_visual_reference_authority(
+        "visual-reference-authority-similarstoic-global-illustration-v1",
+        "similarstoic-global-illustration",
+        "global_illustration_style",
+        "Offline lifecycle authority",
+        "Use the managed fixture only as an offline style authority.",
+        [("asset-http-reference-basis-v1", "style")],
+    )
+    variant = {
+        "key": "required-performance",
+        "asset_spec_id": spec.id,
+        "intrinsic_size_wu": [1024, 1536],
+    }
+    if performance_key is not ...:
+        variant["approved_performance_key"] = performance_key
+    return {
+        "id": prefix,
+        "visual_plan_id": plan.id,
+        "authority": {
+            "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+            "character_reference_set_id": reference_set_id,
+            "visual_reference_authority_id": (
+                "visual-reference-authority-similarstoic-global-illustration-v1"
+            ),
+            "visual_style_profile_id": "visual-style-profile-similarstoic-core-v3",
+        },
+        "worlds": [
+            {
+                "key": "main-world",
+                "scene_ids": [scene.id],
+                "visual_treatment": {
+                    "style_profile_id": "visual-style-profile-similarstoic-core-v3",
+                    "palette_id": "similarstoic-core-v3",
+                    "wall_treatment_id": "off-white-negative-space-v1",
+                    "lighting_policy_id": "flat-soft-light-v1",
+                },
+                "entities": [
+                    {
+                        "key": "core-mascot",
+                        "semantic_role": "actor",
+                        "persistence_class": "ACTOR",
+                        "purpose": "Preserve exact Core mascot identity.",
+                        "neutral_scale_id": "approved-performance-v1",
+                        "initial_variant_key": "required-performance",
+                        "initial_transform": {},
+                        "variants": [variant],
+                    }
+                ],
+                "transitions": [],
+            }
+        ],
+        "timeline": [
+            {
+                "scene_id": scene.id,
+                "duration_weight": 1,
+                "transition_to_next": None,
+            }
+        ],
+        "forecast": {"image_calls": 0, "narration_calls": 1, "real_provider_calls": 0},
+    }
 
 
 def test_canonical_v2_http_lifecycle_is_resumable_and_founder_distinct(
@@ -354,5 +439,155 @@ def test_canonical_v2_acquisition_failure_is_persisted_and_fail_closed(tmp_path)
             if item.asset_id is not None
         ]
         assert len(successful) == 2
+    finally:
+        server.server_close()
+
+
+def test_core_mascot_approved_performance_bypasses_generation_and_survives_lineage(
+    tmp_path, monkeypatch
+) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "mascot.db",
+        generator=generator,
+        asset_storage_root=tmp_path / "assets",
+        media_runtime=runtime,
+        media_storage_root=tmp_path / "media",
+    )
+    wav_path = tmp_path / "narration.wav"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000:duration=1",
+            "-c:a",
+            "pcm_s16le",
+            str(wav_path),
+        ]
+    )
+
+    def synthesize(engine, text):
+        return NarrationSynthesis(
+            wav_path.read_bytes(),
+            "audio/wav",
+            engine.engine_kind,
+            engine.engine_identity,
+            engine.voice_identity,
+            engine.locale,
+            engine.settings,
+        )
+
+    monkeypatch.setattr(
+        "project_atlas.narration.InworldNarrationSynthesizer.synthesize", synthesize
+    )
+    try:
+        request = _core_mascot_request(server, tmp_path, "canonical-core-mascot")
+        started, status = post_json(server, "/api/v2/productions", request)
+
+        assert status == 201
+        assert started["production"]["status"] == "acquisition_review_pending"
+        assert generator.inputs == []
+        acquisition = server.repository.list_production_evidence(request["id"], "acquisition")
+        assert len(acquisition) == 1
+        assert acquisition[0].generation_execution_id is None
+        assert acquisition[0].payload["outcome"] == "reused_approved_performance"
+        imported = server.repository.get_asset(acquisition[0].asset_id)
+        assert imported.metadata["performance"]["key"] == "umbrella-resistance"
+        assert imported.metadata["extraction"]["source_sha256"] == (
+            "a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e"
+        )
+
+        reviewed, status = post_json(
+            server,
+            "/api/v2/productions/canonical-core-mascot/acquisition-review",
+            {
+                "reviews": [
+                    {
+                        "world_key": "main-world",
+                        "entity_key": "core-mascot",
+                        "variant_key": "required-performance",
+                        "outcome": "passed",
+                        "evidence": {"exact_approved_performance": "passed"},
+                    }
+                ]
+            },
+        )
+        assert status == 200
+        assert reviewed["production"]["status"] == "qa_review_pending"
+        assert generator.inputs == []
+        state_evidence = server.repository.list_production_evidence(request["id"], "scene_state")
+        assert len(state_evidence) == 1
+        aggregate = server.repository.verify_persistent_scene_aggregate(
+            state_evidence[0].resolved_state_id
+        )
+        assert aggregate["state_digest"]
+        state = server.repository.get_persistent_scene_state(state_evidence[0].resolved_state_id)
+        assert state.entities[0].entity_key == "core-mascot"
+        assert state.entities[0].variant_id.startswith("canonical-core-mascot:variant:")
+    finally:
+        server.server_close()
+
+
+def test_core_mascot_missing_performance_fails_before_provider(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "missing.db",
+        generator=generator,
+        asset_storage_root=tmp_path / "assets",
+        media_runtime=media_runtime_or_skip(),
+        media_storage_root=tmp_path / "media",
+    )
+    try:
+        request = _core_mascot_request(
+            server, tmp_path, "canonical-core-mascot-missing", performance_key=...
+        )
+        failed, status = _post_error(server, "/api/v2/productions", request)
+
+        assert status == 400
+        assert failed["error"] == "CORE MASCOT PERFORMANCE MISSING: required-performance"
+        assert generator.inputs == []
+        with pytest.raises(KeyError):
+            server.repository.get_production_run(request["id"])
+    finally:
+        server.server_close()
+
+
+def test_core_mascot_approved_source_digest_mismatch_fails_closed(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = create_server(
+        port=0,
+        database_path=tmp_path / "digest.db",
+        generator=generator,
+        asset_storage_root=tmp_path / "assets",
+        media_runtime=media_runtime_or_skip(),
+        media_storage_root=tmp_path / "media",
+    )
+    try:
+        request = _core_mascot_request(server, tmp_path, "canonical-core-mascot-digest")
+        relative = Path(
+            "assets/visual-references/core-mascot/poses/"
+            "core-v3-umbrella-resistance-acting-pose-v1.png"
+        )
+        source_root = tmp_path / "altered-authority"
+        source = source_root / relative
+        source.parent.mkdir(parents=True)
+        source.write_bytes(b"not the approved bytes")
+        service = CoreMascotPerformanceService(
+            server.repository, server.generation_service.storage, source_root
+        )
+
+        with pytest.raises(ValueError, match="digest mismatch"):
+            service.admit(
+                request["worlds"][0]["entities"][0]["variants"][0]["asset_spec_id"],
+                "umbrella-resistance",
+                request["authority"]["character_reference_set_id"],
+            )
+        assert generator.inputs == []
     finally:
         server.server_close()

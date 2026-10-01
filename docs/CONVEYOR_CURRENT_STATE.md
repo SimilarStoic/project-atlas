@@ -191,6 +191,8 @@ The repository has mechanically established:
 - the Persistent Scene Model;
 - exact inheritance and admitted lineage;
 - resolved scene state flowing into render;
+- exact SimilarStoic Core mascot performance reuse from the three founder-approved tracked acting poses, with
+  deterministic background extraction and no automatic character-regeneration fallback;
 - caption integration;
 - the Daniel narration path; and
 - deterministic accepted production state.
@@ -211,7 +213,9 @@ The following limitations remain operationally important:
 - `WHOLE_VIDEO_QA_PROFILE` and related QA profile structures are largely metadata and human-review contracts; their
   existence is not proof of fully automated semantic creative QA. The v2 lifecycle records automated bounded cell
   evidence and explicit human acquisition/whole-video outcomes without treating either as founder acceptance.
-- `static_character.py` is tested but currently has no production caller.
+- The initial Core mascot performance pack covers umbrella resistance, sorting/decisions, and selective effort on
+  reachable objects. A different required semantic performance must stop with `CORE MASCOT PERFORMANCE MISSING` and
+  enter a separately bounded acquisition/approval step; current coverage is intentionally not a complete pose pack.
 
 Do not delete or modify these areas merely because they are bounded or incomplete. Resolve each through a separately
 authorized implementation phase.
@@ -295,8 +299,7 @@ At this checkpoint:
   bounded work;
 - the legacy v1 `AssetSelection` ingress remains available and unchanged while canonical v2 production uses its
   explicit `/api/v2/productions` lifecycle;
-- QA automation improvements and the `static_character.py` production-integration decision remain future bounded
-  work;
+- QA automation improvements and expansion of the approved Core mascot performance pack remain future bounded work;
 - broader evidence/work-directory cleanup and multi-channel expansion remain future bounded work;
 - no compatibility junction is authorized;
 - no schema cleanup migration is authorized;
