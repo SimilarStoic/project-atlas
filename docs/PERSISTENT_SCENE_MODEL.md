@@ -176,14 +176,6 @@ the managed-image adapter verifies the original content digest, decodes one exac
 FFmpeg runtime, stores that derivative with source-asset provenance, and then delegates world validation, variant
 admission, state resolution and lineage persistence to the existing persistent-scene services.
 
-SimilarStoic Core mascot variants are stricter. A character variant using
-`character-profile-similarstoic-hamster-core-v1` must name an `approved_performance_key`. The initial pack contains
-`umbrella-resistance`, `sorting-decisions`, and `things-in-hand`, each bound to an exact founder-approved tracked PNG
-and digest. `static_character.py` deterministically removes only the boundary-connected background while retaining
-mascot/performance pixels, and the result enters the same managed Asset and scene-admission path with full provenance.
-The image generator is not called. If no approved key matches the semantic need, the request fails with
-`CORE MASCOT PERFORMANCE MISSING`; new artwork requires a separate bounded acquisition and founder-approval step.
-
 Migration 28 represents the cross-stage lifecycle with an immutable production request, append-only status events,
 typed links to existing canonical artifacts, QA-review evidence and a separate founder-review decision. A successful
 render stops at `qa_review_pending`; passed whole-video review advances it to

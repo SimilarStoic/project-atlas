@@ -27,13 +27,6 @@ Identity references define concrete character appearance. They are the primary i
 
 Acting / pose references demonstrate approved physical performance and pose deformation while retaining the core identity. They are secondary grounding inputs and never replace or override the identity references.
 
-Canonical v2 production exposes these three exact performances under the keys `umbrella-resistance`,
-`sorting-decisions`, and `things-in-hand`. For a Core-mascot character `AssetSpec`, the named performance is
-digest-verified, deterministically extracted from its background, copied into managed storage with source/extraction
-provenance, and admitted through ordinary persistent-scene lineage. This is a bounded initial performance pack, not a
-claim of complete pose coverage. An unrepresented performance must fail closed for explicit acquisition and approval;
-it must not trigger automatic mascot regeneration.
-
 | Character scope | Filename | Repository path | Dimensions | SHA-256 | Role class | Approved use | Prohibited use |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Core mascot | `core-v3-umbrella-resistance-acting-pose-v1.png` | `assets/visual-references/core-mascot/poses/core-v3-umbrella-resistance-acting-pose-v1.png` | 1024x1536 | `a6ebaec876b40a7a89b22bca26e18ffa56d0709078498d3126946990c55e581e` | APPROVED SECONDARY ACTING-POSE REFERENCE | Core v3 umbrella-resistance acting pose v1; secondary pose/performance grounding alongside a canonical identity reference. | Primary identity authority, proof of a complete pose pack, automatic approval of future generations, or evidence that full-scene generation passed. |

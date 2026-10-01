@@ -50,7 +50,7 @@ class StaticCharacterExtraction:
                 "maximum_rgb_channel_spread": self.edge_matte_max_channel_spread,
                 "passes": self.edge_matte_passes,
             },
-            "alpha": "binary; retained source RGB and any existing alpha are preserved exactly",
+            "alpha": "binary; retained pixels preserve source RGBA exactly",
         }
 
 
@@ -294,12 +294,12 @@ def _foreground_bbox(pixels: bytes, width: int, height: int) -> tuple[int, int, 
 
 
 def _decode_rgba_png(content: bytes) -> tuple[int, int, bytes]:
-    """Decode an 8-bit non-interlaced RGB/RGBA PNG into exact RGBA pixels."""
+    """Decode the explicit 8-bit non-interlaced RGBA PNG form used by the anchor."""
 
     if not content.startswith(PNG_SIGNATURE):
         raise ValueError("Static character source must be a PNG.")
     cursor = len(PNG_SIGNATURE)
-    width = height = color_type = None
+    width = height = None
     compressed = bytearray()
     while cursor < len(content):
         if cursor + 12 > len(content):
@@ -330,13 +330,16 @@ def _decode_rgba_png(content: bytes) -> tuple[int, int, bytes]:
                 not width
                 or not height
                 or encoding
-                not in {
-                    (8, 2, 0, 0, 0),
-                    (8, 6, 0, 0, 0),
-                }
+                != (
+                    8,
+                    6,
+                    0,
+                    0,
+                    0,
+                )
             ):
                 raise ValueError(
-                    "Static character source must be an 8-bit non-interlaced RGB/RGBA PNG."
+                    "Static character source must be an 8-bit non-interlaced RGBA PNG."
                 )
         elif kind == b"IDAT":
             compressed.extend(data)
@@ -346,8 +349,7 @@ def _decode_rgba_png(content: bytes) -> tuple[int, int, bytes]:
     if width is None or height is None or not compressed:
         raise ValueError("PNG requires IHDR and IDAT data.")
     raw = zlib.decompress(compressed)
-    bytes_per_pixel = 4 if color_type == 6 else 3
-    stride = width * bytes_per_pixel
+    stride = width * 4
     if len(raw) != height * (stride + 1):
         raise ValueError("PNG image data length is invalid.")
     decoded = bytearray(height * stride)
@@ -359,9 +361,9 @@ def _decode_rgba_png(content: bytes) -> tuple[int, int, bytes]:
         offset += stride + 1
         current = bytearray(stride)
         for column, value in enumerate(encoded):
-            left = current[column - bytes_per_pixel] if column >= bytes_per_pixel else 0
+            left = current[column - 4] if column >= 4 else 0
             above = previous[column]
-            upper_left = previous[column - bytes_per_pixel] if column >= bytes_per_pixel else 0
+            upper_left = previous[column - 4] if column >= 4 else 0
             if filter_type == 0:
                 current[column] = value
             elif filter_type == 1:
@@ -377,15 +379,7 @@ def _decode_rgba_png(content: bytes) -> tuple[int, int, bytes]:
         start = row * stride
         decoded[start : start + stride] = current
         previous = current
-    if color_type == 6:
-        return width, height, bytes(decoded)
-    rgba = bytearray(width * height * 4)
-    for index in range(width * height):
-        source = index * 3
-        target = index * 4
-        rgba[target : target + 3] = decoded[source : source + 3]
-        rgba[target + 3] = 255
-    return width, height, bytes(rgba)
+    return width, height, bytes(decoded)
 
 
 def _encode_rgba_png(width: int, height: int, pixels: bytes) -> bytes:

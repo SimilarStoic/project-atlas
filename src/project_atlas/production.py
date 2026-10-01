@@ -12,11 +12,6 @@ from pathlib import Path
 from typing import Any
 
 from project_atlas.generation import GenerationService
-from project_atlas.mascot_performance import (
-    CORE_MASCOT_PROFILE_ID,
-    CoreMascotPerformanceMissing,
-    CoreMascotPerformanceService,
-)
 from project_atlas.media import FfmpegRuntime, MediaService
 from project_atlas.persistence import AtlasRepository
 from project_atlas.scene_model import (
@@ -183,9 +178,6 @@ class ProductionLifecycleService:
         self.generation_service = generation_service
         self.media_service = media_service
         self.adapter = ManagedAssetSceneAdapter(repository, media_service.runtime)
-        self.mascot_performances = CoreMascotPerformanceService(
-            repository, generation_service.storage
-        )
 
     def start(self, request: dict[str, Any]) -> dict[str, Any]:
         normalized = self._validate_request(request)
@@ -370,53 +362,32 @@ class ProductionLifecycleService:
         existing = self._acquisition_map(run.id)
         attempt = len(self.repository.list_production_evidence(run.id, "acquisition"))
         try:
-            for (
-                world_key,
-                entity_key,
-                variant_key,
-                asset_spec_id,
-                performance_key,
-            ) in self._variant_specs(run.request):
+            for world_key, entity_key, variant_key, asset_spec_id in self._variant_specs(
+                run.request
+            ):
                 key = (world_key, entity_key, variant_key)
                 if key in existing:
                     continue
+                result = self.generation_service.generate_asset_spec(asset_spec_id)
                 attempt += 1
-                spec = self.repository.get_asset_spec(asset_spec_id)
-                if spec.character_profile_id == CORE_MASCOT_PROFILE_ID:
-                    if performance_key is None:
-                        raise CoreMascotPerformanceMissing(variant_key)
-                    asset = self.mascot_performances.admit(
-                        asset_spec_id,
-                        performance_key,
-                        run.request["authority"]["character_reference_set_id"],
-                    )
-                    execution = None
-                    outcome = "reused_approved_performance"
-                else:
-                    result = self.generation_service.generate_asset_spec(asset_spec_id)
-                    asset = result.asset
-                    execution = result.execution
-                    outcome = execution.outcome
                 payload = {
                     "world_key": world_key,
                     "entity_key": entity_key,
                     "variant_key": variant_key,
                     "asset_spec_id": asset_spec_id,
-                    "outcome": outcome,
+                    "outcome": result.execution.outcome,
                 }
-                if performance_key is not None:
-                    payload["approved_performance_key"] = performance_key
                 self.repository.create_production_evidence(
                     f"{run.id}:acquisition:attempt:{attempt}",
                     run.id,
                     "acquisition",
-                    payload | ({"asset_id": asset.id} if asset else {}),
-                    generation_execution_id=execution.id if execution else None,
-                    asset_id=asset.id if asset else None,
+                    payload | ({"asset_id": result.asset.id} if result.asset else {}),
+                    generation_execution_id=result.execution.id,
+                    asset_id=result.asset.id if result.asset else None,
                 )
-                if asset is None:
+                if result.asset is None:
                     raise RuntimeError("Required managed-asset acquisition failed.")
-                existing[key] = payload | {"asset_id": asset.id}
+                existing[key] = payload | {"asset_id": result.asset.id}
             self.repository.append_production_run_event(
                 run.id,
                 "acquisition_review_pending",
@@ -846,17 +817,11 @@ class ProductionLifecycleService:
                 raise ProductionRequestError("Entity requires at least one variant.")
             keys = []
             for variant in variants:
-                variant_fields = {
+                if not isinstance(variant, dict) or set(variant) != {
                     "key",
                     "asset_spec_id",
                     "intrinsic_size_wu",
-                    "approved_performance_key",
-                }
-                if (
-                    not isinstance(variant, dict)
-                    or not {"key", "asset_spec_id", "intrinsic_size_wu"}.issubset(variant)
-                    or set(variant) - variant_fields
-                ):
+                }:
                     raise ProductionRequestError("Entity variant contract is incomplete.")
                 key = (world["key"], entity["key"], variant["key"])
                 if not _SAFE_KEY.fullmatch(str(variant["key"])) or key in variant_keys:
@@ -873,15 +838,6 @@ class ProductionLifecycleService:
                 spec = self.repository.get_asset_spec(variant["asset_spec_id"])
                 if self.repository.get_scene(spec.scene_id).visual_plan_id != plan_id:
                     raise ProductionRequestError("Variant AssetSpec belongs to another VisualPlan.")
-                performance_key = variant.get("approved_performance_key")
-                if spec.character_profile_id == CORE_MASCOT_PROFILE_ID:
-                    if not isinstance(performance_key, str) or not performance_key.strip():
-                        raise CoreMascotPerformanceMissing(str(variant["key"]))
-                    self.mascot_performances.definition(performance_key)
-                elif performance_key is not None:
-                    raise ProductionRequestError(
-                        "Approved Core mascot performances cannot be used by another AssetSpec."
-                    )
             if entity["initial_variant_key"] not in keys:
                 raise ProductionRequestError("Entity initial variant is not declared.")
             entity_variants[entity["key"]] = set(keys)
@@ -963,18 +919,12 @@ class ProductionLifecycleService:
         for world in request["worlds"]:
             for entity in world["entities"]:
                 for variant in entity["variants"]:
-                    yield (
-                        world["key"],
-                        entity["key"],
-                        variant["key"],
-                        variant["asset_spec_id"],
-                        variant.get("approved_performance_key"),
-                    )
+                    yield world["key"], entity["key"], variant["key"], variant["asset_spec_id"]
 
     def _variant_keys(self, request: dict[str, Any]):
         return (
             (world, entity, variant)
-            for world, entity, variant, _spec, _performance in self._variant_specs(request)
+            for world, entity, variant, _spec in self._variant_specs(request)
         )
 
     def _acquisition_map(self, run_id: str) -> dict[tuple[str, str, str], dict[str, Any]]:
