@@ -9,6 +9,9 @@ Use the other documents by scope:
 - [`../ROADMAP.md`](../ROADMAP.md) — strategy and future sequencing only.
 - [`../CURRENT_STATUS.md`](../CURRENT_STATUS.md) — historical status/provenance snapshot.
 - [`CANONICAL_HANDOFF.md`](CANONICAL_HANDOFF.md) — historical handoff and governance provenance.
+- [`evidence/experiments/REJECTED_V028_PROTOTYPES.md`](evidence/experiments/REJECTED_V028_PROTOTYPES.md) — rejected,
+  non-canonical SimilarStoic v028 prototype evidence preserved as historical experiment context, not active production
+  tooling.
 - [`FOUNDER_PRODUCT_OPERATING_DOCTRINE.md`](FOUNDER_PRODUCT_OPERATING_DOCTRINE.md) — durable product and business
   judgement principles.
 - [`BUSINESS_AND_VENDOR_STRATEGY.md`](BUSINESS_AND_VENDOR_STRATEGY.md) — bounded build-vs-buy, portability, provider,

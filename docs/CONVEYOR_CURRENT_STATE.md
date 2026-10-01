@@ -91,23 +91,24 @@ to reject an authorized future database change.
 
 ## Current Git and verification checkpoint
 
-At this consolidation boundary:
+The active repository is expected to be clean on `main`. Before consequential Git operations, fresh agents must inspect
+the working tree and index and verify current `HEAD`, `origin/main`, and live remote `main` directly. Exact current
+commit SHAs and GitHub Actions run IDs are volatile verification results, not permanent operational truth.
 
-- local and remote `main`: `0044bd2d33777c2b9c39ed34fba6dd692a7911dc`
-- subject: `chore: establish Conveyor runtime environment contract`
-- pre-cleanup tag `pre-conveyor-cleanup-2026-09-30`:
-  `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`
-- full relocated offline suite: **316 passed**
-- protected runtime database checkpoint SHA-256:
-  `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2`
+- The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
+  `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
+- The relocated full offline suite originally passed **316 tests**.
+- After the narration CI repair and its regression test, the verified full suite contains **317 passing tests**.
+- Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
+  result matters.
+- The protected runtime database checkpoint SHA-256 is
+  `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2`.
 
-Two local untracked experiments are expected:
-
-- `scripts/render_v028_identity_prototype.py`
-- `scripts/render_v028_layered_reconstruction.ps1`
-
-They bypass the main persistence/provenance pipeline and are not canonical production entry points. Do not stage,
-modify, delete, or treat them as current operating authority without a separate bounded decision.
+The founder-rejected, non-canonical v028 prototype scripts were intentionally removed from active `scripts/` after
+preservation. Their exact source bytes and representative visual evidence are stored outside the repository at
+`D:\ConveyorOS\archives\experiments\similarstoic\rejected-v028\2026-09-01\`. The tracked
+[rejected-v028 evidence index](evidence/experiments/REJECTED_V028_PROTOTYPES.md) records their disposition. Do not
+restore them or treat them as production tooling merely because historical evidence exists.
 
 ## Current production status
 
@@ -206,8 +207,6 @@ The following limitations remain operationally important:
 - `WHOLE_VIDEO_QA_PROFILE` and related QA profile structures are largely metadata and human-review contracts; their
   existence is not proof of fully automated semantic creative QA.
 - `static_character.py` is tested but currently has no production caller.
-- The two untracked v028 rendering scripts bypass the canonical persistence/provenance pipeline and are not production
-  entry points.
 
 Do not delete or modify these areas merely because they are bounded or incomplete. Resolve each through a separately
 authorized implementation phase.
@@ -252,11 +251,16 @@ This classification is not authorization to move or delete evidence. Historical 
 claims as provenance. Their current-looking language must be read in the context of their dated snapshot and the
 historical notice at the top of the file.
 
+The [rejected SimilarStoic v028 prototype evidence](evidence/experiments/REJECTED_V028_PROTOTYPES.md) is a bounded
+historical record of non-canonical experiments, not active production tooling.
+
 ## Safe starting procedure for a fresh agent
 
 1. Read this document before treating any other status or handoff file as current.
-2. Confirm the repository is `D:\ConveyorOS\source\Conveyor` and inspect `git status` without altering it.
-3. Preserve the two expected untracked render scripts unless a later bounded task explicitly addresses them.
+2. Confirm the repository is `D:\ConveyorOS\source\Conveyor`, expect a clean working tree unless the authorized task
+   deliberately creates changes, and inspect `git status` without altering it.
+3. Do not restore the rejected v028 prototypes into active `scripts/`; consult their
+   [evidence index](evidence/experiments/REJECTED_V028_PROTOTYPES.md) only when historical context is relevant.
 4. For authorized production operation in a new PowerShell process, dot-source
    `scripts/set_conveyor_environment.ps1` and inspect the five resolved values.
 5. Fail closed if the structure or required runtime paths differ; do not recreate legacy roots or accept relative
@@ -273,12 +277,21 @@ Reading or dot-sourcing the environment script does not itself authorize startin
 
 At this checkpoint:
 
-- relocation and the durable runtime environment contract are complete;
-- documentation authority consolidation is the active cleanup concern;
-- the Project Atlas-to-Conveyor technical package/API rename remains a later bounded migration;
+- source/runtime relocation is complete;
+- the durable runtime environment contract and storage-path normalization are complete;
+- documentation authority consolidation and final reconciliation are complete;
+- CI restoration is complete;
+- rejected-v028 prototype preservation and disposition are complete;
+- Git working-tree cleanup is complete;
+- the `project_atlas` technical rename, `AtlasRepository` rename, and `ATLAS_*` compatibility migration remain future
+  bounded work;
+- the legacy v1 `AssetSelection` ingress transition and persistent-scene v2 normal HTTP ingress remain future bounded
+  work;
+- QA automation improvements and the `static_character.py` production-integration decision remain future bounded
+  work;
+- broader evidence/work-directory cleanup and multi-channel expansion remain future bounded work;
 - no compatibility junction is authorized;
 - no schema cleanup migration is authorized;
-- no physical evidence reorganization is authorized;
 - no Production #7 work has begun; and
 - provider calls, spend, application startup, publication, and runtime mutation require separate authorization.
 
