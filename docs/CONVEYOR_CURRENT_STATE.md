@@ -85,10 +85,9 @@ The `ATLAS_*` prefix is temporary technical compatibility, not active product id
 working-directory-relative `data/atlas-local.db`, `data/assets`, or `data/media` for production. Do not use a system
 `PATH` FFmpeg as an implicit production substitute.
 
-Historical production-database hashes are verification evidence, not a permanent runtime contract. Migration 28 has
-now been applied to the protected production runtime and later authorized production work has legitimately changed the
-database again, so this document does not assert a current runtime-database digest. Never embed an old checkpoint hash
-in startup code or use it to reject an authorized future database change.
+The protected production database SHA-256 recorded below is a verification checkpoint, not a permanent runtime
+contract. Legitimate future production operations may change it; never embed it in startup code or use it as a reason
+to reject an authorized future database change.
 
 ## Current Git and verification checkpoint
 
@@ -102,8 +101,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - After the narration CI repair and its regression test, the verified full suite contains **317 passing tests**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
-- Migration 28 was applied to the protected production runtime on 2026-10-01 after an independent pre-migration backup.
-  Subsequent authorized Production #7-era writes mean the earlier database hashes are historical checkpoints only.
+- The protected runtime database checkpoint SHA-256 is
+  `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2`.
 
 The founder-rejected, non-canonical v028 prototype scripts were intentionally removed from active `scripts/` after
 preservation. Their exact source bytes and representative visual evidence are stored outside the repository at
@@ -152,8 +151,8 @@ founder-approved baseline above is the current creative authority.
 
 P6 evidence included halos/edge defects, long static stretches, weak background semantic support, repeated poses and
 hamster blocking, a ghost circle, character drift, a pronunciation issue, and a repeated ending. Narration was the
-strongest component. These findings explain learned rules; Production #5 v4 remains historical accepted evidence, but
-the founder-approved baseline above is the current production-quality creative authority.
+strongest component. These findings explain learned rules; they do not replace Production #5 v4 as the accepted
+artifact baseline.
 
 ## Creative operating rules
 
@@ -245,10 +244,9 @@ tables remain authoritative for their artifacts.
 `PRAGMA user_version = 0` does not mean that no application migrations exist. `PRAGMA schema_version = 203` is
 SQLite's internal schema-cookie counter, not the Conveyor application migration version.
 
-Migrations 25–27 remain immutable historical provenance. Migration 28 is current application schema authority and was
-applied to the protected production runtime on 2026-10-01 after a separately preserved pre-migration backup. Later
-authorized production writes have legitimately changed that runtime database; no further schema transition is implied
-or authorized by this checkpoint.
+Migrations 25–27 remain immutable historical provenance. Migration 28 is current application schema authority. The
+protected production runtime was intentionally not opened or migrated during implementation verification; applying
+Migration 28 there requires the separately authorized production-runtime transition before the lifecycle is used.
 
 For read-only database auditing, do not instantiate application repository code: repository construction can apply
 migrations or seed data. Use an explicitly read-only method under a separately authorized audit procedure.
@@ -320,8 +318,7 @@ At this checkpoint:
 - broader evidence/work-directory cleanup and multi-channel expansion remain future bounded work;
 - no compatibility junction is authorized;
 - no schema cleanup migration is authorized;
-- Production #7-era private work has occurred and informed the founder-approved production baseline recorded above;
-  do not reopen it as a requirement to progress; and
+- no Production #7 work has begun; and
 - provider calls, spend, application startup, publication, and runtime mutation require separate authorization.
 
 Update this file deliberately whenever accepted current operational truth changes. Do not turn it into a chronological
