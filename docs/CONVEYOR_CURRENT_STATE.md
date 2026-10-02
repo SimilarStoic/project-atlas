@@ -101,8 +101,9 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - After the narration CI repair and its regression test, the verified full suite contains **317 passing tests**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
-- The protected runtime database checkpoint SHA-256 is
-  `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2`.
+- The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
+  pre-Migration-28 verification checkpoint. Migration 28 and legitimate Production #7-era writes changed the
+  protected runtime afterward; do not treat that hash as its current value.
 
 The founder-rejected, non-canonical v028 prototype scripts were intentionally removed from active `scripts/` after
 preservation. Their exact source bytes and representative visual evidence are stored outside the repository at
@@ -151,8 +152,8 @@ founder-approved baseline above is the current creative authority.
 
 P6 evidence included halos/edge defects, long static stretches, weak background semantic support, repeated poses and
 hamster blocking, a ghost circle, character drift, a pronunciation issue, and a repeated ending. Narration was the
-strongest component. These findings explain learned rules; they do not replace Production #5 v4 as the accepted
-artifact baseline.
+strongest component. These findings explain learned rules. Production #5 v4 remains historical accepted evidence;
+the founder-approved `next-private-production.mp4` identified above is the current creative baseline.
 
 ## Creative operating rules
 
@@ -244,9 +245,9 @@ tables remain authoritative for their artifacts.
 `PRAGMA user_version = 0` does not mean that no application migrations exist. `PRAGMA schema_version = 203` is
 SQLite's internal schema-cookie counter, not the Conveyor application migration version.
 
-Migrations 25–27 remain immutable historical provenance. Migration 28 is current application schema authority. The
-protected production runtime was intentionally not opened or migrated during implementation verification; applying
-Migration 28 there requires the separately authorized production-runtime transition before the lifecycle is used.
+Migrations 25–27 remain immutable historical provenance. Migration 28 is current application schema authority and was
+applied to the protected production runtime on 1 October 2026 after a dedicated pre-migration backup. Subsequent
+authorized Production #7-era activity produced legitimate runtime writes; the old pre-migration hash is historical.
 
 For read-only database auditing, do not instantiate application repository code: repository construction can apply
 migrations or seed data. Use an explicitly read-only method under a separately authorized audit procedure.
@@ -318,8 +319,12 @@ At this checkpoint:
 - broader evidence/work-directory cleanup and multi-channel expansion remain future bounded work;
 - no compatibility junction is authorized;
 - no schema cleanup migration is authorized;
-- no Production #7 work has begun; and
+- Production #7-era private work occurred and informed the founder-approved production baseline; and
 - provider calls, spend, application startup, publication, and runtime mutation require separate authorization.
+
+The next phase is an independent Claude read-only takeover assessment. No paid implementation is authorized yet; the
+known recipe-binding, request-authority alignment, source-credit integration, character-continuity, and scene-density
+gaps remain intentionally unresolved pending founder review of that assessment.
 
 Update this file deliberately whenever accepted current operational truth changes. Do not turn it into a chronological
 diary; move superseded detail to historical/provenance records and keep this document usable as a fresh-agent entry
