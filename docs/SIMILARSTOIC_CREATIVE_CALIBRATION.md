@@ -4,6 +4,81 @@
 > it is not current production-status authority. Resolve current operation, including P6 status, through
 > [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md).
 
+## Founder-approved production method
+
+The founder-approved production-quality reference is
+`output/production-tests/next-private-production/next-private-production.mp4` (38.720 seconds; SHA-256
+`FE99094664FF2F3514BC4D66485FD24BDD2A63591811F98EE6C89DF0DC566B3A`). It is suitable for the public SimilarStoic
+main channel, although this decision does not publish it. Recreate its ingredients and flow on new content; do not
+reuse its exact topic, script, or scenes. Later static-mascot and persistence-heavy comparison tangents are not part
+of this approved method.
+
+### A. Reusable SimilarStoic production invariants
+
+- Generate dynamic, integrated full-scene action illustrations in which the narrator explains and the hamster/world
+  illustrate. Preserve expressive facial and pose variation, movement through the composition, meaningful
+  scene-to-scene progression, and sparse warm off-white negative space.
+- Resolve the existing `VisualStyleProfile` `visual-style-profile-similarstoic-core-v3`, `CharacterProfile`
+  `character-profile-similarstoic-hamster-core-v1`, latest exact-profile `CharacterReferenceSet`
+  `character-reference-set-similarstoic-hamster-core-v1`, and global `VisualReferenceAuthority`
+  `visual-reference-authority-similarstoic-global-illustration-v1`. Their approved reference assets are respectively
+  `asset-similarstoic-control-v1-reference-anchor` (SHA-256
+  `11332518CDACE450F8E432FE8CB3558EA2374CF0273F94973912E914CEE66956`) and
+  `asset-visual-authority-default-scene-language-v1` (SHA-256
+  `989E0DA7B273A42F0BF8C229C1510B904902B1EEF3336E626705966E6048CCB2`). Existing generation resolution already
+  selects these authorities; do not create a parallel canon or style-memory system.
+- Use the persisted common acquisition grammar: one 9:16 SimilarStoic Core v3 full-scene action illustration,
+  conditioned on both canonical references; preserve the hamster's head/body ratio, rounded torso, face/ear
+  proportions, whiskers, and exact multicolour crossbody-bag identity while allowing beat-appropriate expression and
+  pose. Require crude intentional dark ink, wobbly contours, restrained flat colour, crisp source edges, believable
+  hamster-world scale, and one coherent physical environment. Forbid infographics/posters/diagrams/UI/card layouts,
+  detached symbols, polished vector or glossy/painterly treatment, gradients, excessive texture, embedded text,
+  logos/watermarks, humans/body parts, and extra characters. Append only the new beat's semantic action and setting.
+- At acquisition, judge every raw image for authority/style match, semantic action, believable scale/world logic,
+  crisp intentional edges, forbidden text/humans, and obvious mascot drift in head/body ratio, torso/silhouette,
+  face/ears, or bag. Reject a weak source before rendering; do not reject useful expressive variation.
+- Use approved Inworld `inworld-tts-2` SYSTEM voice `Daniel`, `en-US`, balanced delivery, 48 kHz WAV, speaking rate
+  1.0, normalization on, enhancement off, and word timestamps. The persisted direction is relaxed, intelligent,
+  conversational, grounded, lightly amused, confident without selling, with understated humour and natural
+  clause-level pauses; never announcer, corporate presenter, finance guru, advert, podcast intro, or hyperactive
+  creator. Do not add, omit, or paraphrase script words.
+- Use narration-weighted semantic timing, purposeful transitions, mobile-readable captions, and the established
+  render path. Review acquisition quality before assembly and the complete result before founder review.
+
+### B. Useful production-shape defaults
+
+- The approved evidence uses eight meaningful narration-led visual beats over 38.720 seconds. Treat this as a useful
+  density reference, not a rigid duration or beat-count requirement.
+- Its eight beat durations were weighted by semantic-clause word counts, with 250 ms crossfades at scene boundaries.
+- Captions used `similarstoic-social-mobile-v3`: deterministic five-word chunks, narration-weighted timing, Arial
+  Bold 92 at 1080x1920, at most two lines, warm light backing, and safe lower/middle/upper placement changed only at
+  scene boundaries.
+- The persisted image executions used `openai` / `gpt-image-2`, PNG output, and two reference images per request.
+  Eight initial acquisitions passed; there were no retries. Provider/model choice remains provenance, not permission
+  to spend or a mandate to generate unnecessary alternatives.
+- The final render used repository-bundled FFmpeg 9.0.1: 1080x1920 at 30 fps, H.264 `libx264` CRF 18 / medium /
+  `yuv420p`, AAC mono 48 kHz at 192 kbps, and fast-start packaging.
+
+### C. Topic-specific evidence that is not reusable canon
+
+The emergency-buffer topic, approved script, clause wording, boiler/bad-Tuesday example, savings destination and
+first-step imagery, regular-saving chute, debt-leak ending, and all eight exact scenes belong only to this video.
+Future productions must create new researched claims, scripts, semantic beats, and scene content while retaining the
+method above.
+
+Character continuity, sufficient narration-driven scene density, and factual source attribution remain continuing
+improvements, not launch blockers. Research provenance already belongs in Conveyor's `ResearchPack`, `Claim`,
+`Source`, `ClaimEvidence`, and `ScriptClaimSet`; the precise remaining integration is to carry the supporting sources
+from an approved script claim set into publishing-package source/credit metadata. That is a bounded extension point
+for Claude, not authority to introduce a new provenance subsystem or reopen the visual architecture.
+
+The existing generation service already defaults to the approved visual-style and global-authority IDs and resolves
+the latest exact-profile character reference set. The production-shape recipe above is not yet a first-class lifecycle
+selector: a canonical v2 caller must still supply the narration-led `VisualPlan`, per-beat `AssetSpec` instructions,
+and semantic timing explicitly. Claude's bounded operational integration point is to expose this recipe through the
+existing production/lifecycle configuration while retaining these existing authority records and provenance models;
+it is not a new canon, style-memory, or mascot subsystem.
+
 ## Entry-gate reconciliation — 23 September 2026
 
 The [verified pilot/runtime record](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)

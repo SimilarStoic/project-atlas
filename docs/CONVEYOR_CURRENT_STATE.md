@@ -112,7 +112,24 @@ restore them or treat them as production tooling merely because historical evide
 
 ## Current production status
 
-**Production #5 v4 remains the accepted artifact baseline.**
+**SimilarStoic is production-worthy now.** The founder-approved public-production-quality baseline is
+`output/production-tests/next-private-production/next-private-production.mp4` (SHA-256
+`FE99094664FF2F3514BC4D66485FD24BDD2A63591811F98EE6C89DF0DC566B3A`, 38.720 seconds). This local artifact is the
+creative-treatment reference, not a publication authorization or a scene library. Future videos must use new topics,
+scripts, and scenes through the same production method recorded in
+[`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md#founder-approved-production-method),
+not reuse this video's content.
+
+Fundamental visual tweaking is complete. Continue to improve character continuity without sacrificing expressive
+variation, generate enough meaningful narration-driven scene changes to sustain engagement, and preserve factual
+sources with appropriate publication-flow attribution. These are continuing quality improvements, not blockers and
+not reasons to redesign the approved visual treatment or restart architecture experimentation. The successful eight
+beats over approximately 39 seconds are evidence for useful density, not a universal beat-count rule.
+
+Conveyor already models research provenance through `ResearchPack`, `Claim`, `Source`, `ClaimEvidence`, and
+`ScriptClaimSet`. The bounded remaining integration is to project the sources supporting a production's approved
+script claims into publishing-package source/credit metadata; extend those existing structures rather than inventing
+a second sourcing subsystem.
 
 **Production #6 was completed as a private diagnostic production cycle. It mechanically exercised the current
 Conveyor production path and produced useful evidence, but failed founder creative acceptance and was not approved
@@ -129,7 +146,8 @@ The status distinctions are:
 | Lessons retained and generalized | Yes |
 | Closed as diagnostic evidence | Yes |
 
-Do not reopen P6 merely to make it pass. No Production #7 work has begun at this checkpoint.
+Do not reopen P6 merely to make it pass. Production #7 and its experiments supplied later private evidence; the
+founder-approved baseline above is the current creative authority.
 
 P6 evidence included halos/edge defects, long static stretches, weak background semantic support, repeated poses and
 hamster blocking, a ghost circle, character drift, a pronunciation issue, and a repeated ending. Narration was the
