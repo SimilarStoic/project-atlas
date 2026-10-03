@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the Phase 1 canonical v2 fidelity work, the verified full suite contains **341 passing tests**.
+- After Phase 1B, the verified local full suite is **349 passed, 0 skipped, 0 failed**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -276,6 +276,22 @@ v2 production requests now:
 - require full-frame integrated beats to carry the request's character authority, while non-full-frame
   characterless entities remain allowed.
 
+Acquisition review and retry:
+
+- Rejected raw images can be reacquired within the same production run.
+- Acquisition reviews are round-scoped and bound to the exact asset reviewed, and previously passed variants are
+  never regenerated.
+- Rejected and retried generation attempts continue to count toward the frozen image-call ceiling.
+- Narration does not begin until every currently active variant has a passing acquisition review.
+
+Full-frame aspect admission:
+
+- Full-frame generated results are checked against the approved 9:16 shape immediately after generation.
+- A source more than 0.5% relative error from 9:16 is technically rejected before founder review. The rejected
+  attempt still counts toward the image-call ceiling, is never presented as an active founder-review asset, and only
+  the affected variant is regenerated.
+- The assembly-time full-frame aspect check remains as defense in depth.
+
 Automated cell QA claims only persistent-aggregate verification and compositor coverage
 (`conveyor-automated-cell-v2`); perceptual final-frame quality remains human review.
 
@@ -366,10 +382,21 @@ At this checkpoint:
 - Production #7-era private work occurred and informed the founder-approved production baseline; and
 - provider calls, spend, application startup, publication, and runtime mutation require separate authorization.
 
-Phase 1 (canonical v2 fidelity) is complete. Remaining gaps are recipe binding (including moving the full-frame
-character requirement into the channel recipe), source-credit projection, character continuity, scene density,
-speech-aligned beat timing, and ceiling counting of calls that raise before evidence is recorded. Each requires
-separate authorization.
+Phase 1 (canonical v2 fidelity) and Phase 1B (acquisition retry rounds and aspect admission) are complete. Remaining
+gaps are:
+
+- recipe binding, including moving the full-frame character requirement into the channel recipe;
+- source-credit projection;
+- character continuity;
+- scene density;
+- speech-aligned beat timing;
+- ceiling counting of generation calls that raise before acquisition evidence is persisted. This covers both a paid
+  provider call that raises before evidence is recorded, and a provider call that returns an asset but whose
+  post-provider technical inspection or probe raises before evidence is recorded;
+- image size on reference-conditioned calls: a configured image size may be recorded in provenance but is not sent
+  on reference-conditioned image-edit calls, so those calls use the provider's default size.
+
+Each requires separate authorization.
 
 Update this file deliberately whenever accepted current operational truth changes. Do not turn it into a chronological
 diary; move superseded detail to historical/provenance records and keep this document usable as a fresh-agent entry
