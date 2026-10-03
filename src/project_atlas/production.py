@@ -39,6 +39,8 @@ SCENE_ADAPTER_VERSION = "managed-image-to-rgba-v2"
 # Derived raster identities carry the adapter generation so a resume can never reuse a
 # raster produced by an earlier adapter.
 DERIVED_RASTER_NAMESPACE = "raster-v2"
+# Full-frame sources may differ from 9:16 only by rounding (the approved 941x1672 is ~0.05% off).
+FULL_FRAME_ASPECT_TOLERANCE = 0.005
 FULL_FRAME_SCALE_FILTER = (
     "scale={width}:{height}:flags=lanczos+accurate_rnd+full_chroma_int+bitexact"
 )
@@ -57,12 +59,50 @@ class ProductionRequestError(ValueError):
     """The external command does not describe one complete canonical production."""
 
 
+def full_frame_aspect_error(width: int, height: int, target_size: tuple[int, int]) -> str | None:
+    """Describe a full-frame source whose aspect differs from the frame beyond tolerance."""
+
+    if abs((width / height) / (target_size[0] / target_size[1]) - 1) > FULL_FRAME_ASPECT_TOLERANCE:
+        return (
+            f"Full-frame source {width}x{height} is not within "
+            f"{FULL_FRAME_ASPECT_TOLERANCE:.1%} of the {target_size[0]}x{target_size[1]} "
+            "frame aspect."
+        )
+    return None
+
+
 class ManagedAssetSceneAdapter:
     """Convert verified managed images into exact managed RGBA scene assets."""
 
     def __init__(self, repository: AtlasRepository, runtime: FfmpegRuntime) -> None:
         self.repository = repository
         self.runtime = runtime
+
+    def source_dimensions(self, source_asset_id: str) -> tuple[int, int]:
+        """Probe one managed image's decodable pixel dimensions."""
+
+        source_path = self.repository.managed_asset_path(source_asset_id)
+        probe = self.runtime._run(
+            [
+                self.runtime.ffprobe_path,
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=width,height",
+                "-of",
+                "json",
+                str(source_path),
+            ]
+        )
+        streams = json.loads(probe.stdout).get("streams", [])
+        if len(streams) != 1:
+            raise ValueError("Managed acquisition must contain one decodable image stream.")
+        width, height = streams[0].get("width"), streams[0].get("height")
+        if not isinstance(width, int) or not isinstance(height, int) or width <= 0 or height <= 0:
+            raise ValueError("Managed acquisition has invalid image dimensions.")
+        return width, height
 
     def adapt(
         self,
@@ -97,31 +137,12 @@ class ManagedAssetSceneAdapter:
             raise ValueError("Managed acquisition bytes do not match their persisted digest.")
         temporary_root = Path(tempfile.mkdtemp(prefix="conveyor-scene-adapter-"))
         try:
-            probe = self.runtime._run(
-                [
-                    self.runtime.ffprobe_path,
-                    "-v",
-                    "error",
-                    "-select_streams",
-                    "v:0",
-                    "-show_entries",
-                    "stream=width,height",
-                    "-of",
-                    "json",
-                    str(source_path),
-                ]
-            )
-            streams = json.loads(probe.stdout).get("streams", [])
-            if len(streams) != 1:
-                raise ValueError("Managed acquisition must contain one decodable image stream.")
-            source_width, source_height = streams[0].get("width"), streams[0].get("height")
-            if (
-                not isinstance(source_width, int)
-                or not isinstance(source_height, int)
-                or source_width <= 0
-                or source_height <= 0
-            ):
-                raise ValueError("Managed acquisition has invalid image dimensions.")
+            source_width, source_height = self.source_dimensions(source.id)
+            if target_size is not None:
+                # Defense in depth: acquisition already refuses off-aspect full-frame sources.
+                aspect_error = full_frame_aspect_error(source_width, source_height, target_size)
+                if aspect_error is not None:
+                    raise ValueError(aspect_error)
             width, height = target_size or (source_width, source_height)
             scale_filter = (
                 FULL_FRAME_SCALE_FILTER.format(width=width, height=height)
@@ -238,7 +259,8 @@ class ProductionLifecycleService:
         latest = self.repository.latest_production_run_event(run_id)
         if latest is None:
             raise ProductionRequestError("Production has no lifecycle event.")
-        if latest.status == "failed" and latest.stage == "acquisition":
+        if latest.status == "failed" and latest.stage in {"acquisition", "acquisition_review"}:
+            # Reacquire only missing variants and variants whose active asset was rejected.
             self._acquire(run)
         elif latest.status in {
             "acquisition_review_pending",
@@ -249,7 +271,7 @@ class ProductionLifecycleService:
         }:
             return self.status(run_id)
         elif latest.status == "failed":
-            if not self._passed_review(run_id, "acquisition"):
+            if not self._all_variants_passed(run):
                 raise ProductionRequestError("Acquisition approval is required before resuming.")
             self._assemble_and_render(run)
         return self.status(run_id)
@@ -257,12 +279,17 @@ class ProductionLifecycleService:
     def review_acquisition(self, run_id: str, reviews: list[dict[str, Any]]) -> dict[str, Any]:
         run = self.repository.get_production_run(run_id)
         latest = self.repository.latest_production_run_event(run_id)
-        if latest is None or latest.status not in {"acquisition_review_pending", "failed"}:
-            if self._passed_review(run_id, "acquisition"):
+        if latest is None or latest.status != "acquisition_review_pending":
+            if self._all_variants_passed(run):
                 return self.status(run_id)
             raise ProductionRequestError("Production is not awaiting acquisition review.")
         acquired = self._acquisition_map(run_id)
-        expected = set(self._variant_keys(run.request))
+        if set(acquired) != set(self._variant_keys(run.request)):
+            raise ProductionRequestError("Every variant must be acquired before review.")
+        # Only active assets without a review need review; earlier passes stay valid.
+        states = self._variant_review_states(run)
+        expected = {key for key, state in states.items() if state == "pending"}
+        review_round = self._next_acquisition_review_round(run_id)
         supplied: dict[tuple[str, str, str], dict[str, Any]] = {}
         for review in reviews:
             if not isinstance(review, dict):
@@ -273,19 +300,22 @@ class ProductionLifecycleService:
                     "Acquisition review identity is invalid or duplicated."
                 )
             supplied[key] = review
-        if set(supplied) != expected or set(acquired) != expected:
+        if set(supplied) != expected:
             raise ProductionRequestError(
-                "Acquisition review must cover every exact acquired variant."
+                "Acquisition review must cover exactly the variants awaiting review."
             )
+        for review in supplied.values():
+            if review.get("outcome") not in {"passed", "failed"} or not isinstance(
+                review.get("evidence"), dict
+            ):
+                raise ProductionRequestError("Acquisition review requires outcome and evidence.")
         any_failed = False
         for index, key in enumerate(sorted(expected), 1):
             review = supplied[key]
-            outcome = review.get("outcome")
-            evidence = review.get("evidence")
-            if outcome not in {"passed", "failed"} or not isinstance(evidence, dict):
-                raise ProductionRequestError("Acquisition review requires outcome and evidence.")
+            outcome = review["outcome"]
+            evidence = review["evidence"]
             self.repository.create_production_qa_review(
-                f"{run_id}:qa:acquisition:{index}",
+                f"{run_id}:qa:acquisition:round-{review_round}:{index}",
                 run_id,
                 "acquisition",
                 outcome,
@@ -299,7 +329,7 @@ class ProductionLifecycleService:
                 run_id,
                 "failed",
                 "acquisition_review",
-                {"review_count": len(reviews)},
+                {"review_count": len(reviews), "review_round": review_round},
                 error_code="acquisition_rejected",
                 error_message="One or more acquired assets failed required review.",
             )
@@ -392,54 +422,71 @@ class ProductionLifecycleService:
 
     def _acquire(self, run: Any) -> None:
         self.repository.append_production_run_event(run.id, "acquiring", "acquisition", {})
-        existing = self._acquisition_map(run.id)
+        states = self._variant_review_states(run)
+        existing = {
+            key: value
+            for key, value in self._acquisition_map(run.id).items()
+            if states.get(key) != "rejected"
+        }
         attempt = len(self.repository.list_production_evidence(run.id, "acquisition"))
         ceiling = run.request["forecast"]["image_calls"]
+        full_frame = self._full_frame_variant_keys(run.request)
         try:
             self._assert_generation_authority(run.request)
             for world_key, entity_key, variant_key, asset_spec_id in self._variant_specs(
                 run.request
             ):
                 key = (world_key, entity_key, variant_key)
-                if key in existing:
-                    continue
-                prior_calls = sum(
-                    item.generation_execution_id is not None
-                    for item in self.repository.list_production_evidence(run.id, "acquisition")
-                )
-                if prior_calls + 1 > ceiling:
-                    raise ProductionRequestError(
-                        f"Image-call ceiling of {ceiling} would be exceeded by another "
-                        f"provider call; {prior_calls} calls already recorded for this run."
+                # Technically inadmissible results are retried for this variant only, within
+                # the frozen ceiling; only admissible assets ever reach founder review.
+                while key not in existing:
+                    prior_calls = sum(
+                        item.generation_execution_id is not None
+                        for item in self.repository.list_production_evidence(run.id, "acquisition")
                     )
-                result = self.generation_service.generate_asset_spec(asset_spec_id)
-                attempt += 1
-                mismatch = self._execution_authority_mismatch(run.request, result.execution.id)
-                # An execution whose provenance contradicts the run authority still counts as a
-                # provider call, but its asset is never admitted as this run's acquisition.
-                admitted = result.asset if mismatch is None else None
-                payload = {
-                    "world_key": world_key,
-                    "entity_key": entity_key,
-                    "variant_key": variant_key,
-                    "asset_spec_id": asset_spec_id,
-                    "outcome": result.execution.outcome,
-                }
-                if mismatch is not None:
-                    payload["authority_mismatch"] = mismatch
-                self.repository.create_production_evidence(
-                    f"{run.id}:acquisition:attempt:{attempt}",
-                    run.id,
-                    "acquisition",
-                    payload | ({"asset_id": admitted.id} if admitted else {}),
-                    generation_execution_id=result.execution.id,
-                    asset_id=admitted.id if admitted else None,
-                )
-                if mismatch is not None:
-                    raise ProductionRequestError(mismatch)
-                if result.asset is None:
-                    raise RuntimeError("Required managed-asset acquisition failed.")
-                existing[key] = payload | {"asset_id": result.asset.id}
+                    if prior_calls + 1 > ceiling:
+                        raise ProductionRequestError(
+                            f"Image-call ceiling of {ceiling} would be exceeded by another "
+                            f"provider call; {prior_calls} calls already recorded for this run."
+                        )
+                    result = self.generation_service.generate_asset_spec(asset_spec_id)
+                    attempt += 1
+                    mismatch = self._execution_authority_mismatch(run.request, result.execution.id)
+                    technical = (
+                        full_frame_aspect_error(
+                            *self.adapter.source_dimensions(result.asset.id), FRAME_SIZE
+                        )
+                        if mismatch is None and result.asset is not None and key in full_frame
+                        else None
+                    )
+                    # Authority-mismatched or technically inadmissible executions still count
+                    # as provider calls, but their assets are never admitted for review.
+                    admitted = result.asset if mismatch is None and technical is None else None
+                    payload = {
+                        "world_key": world_key,
+                        "entity_key": entity_key,
+                        "variant_key": variant_key,
+                        "asset_spec_id": asset_spec_id,
+                        "outcome": result.execution.outcome,
+                    }
+                    if mismatch is not None:
+                        payload["authority_mismatch"] = mismatch
+                    if technical is not None:
+                        payload["technical_rejection"] = technical
+                    self.repository.create_production_evidence(
+                        f"{run.id}:acquisition:attempt:{attempt}",
+                        run.id,
+                        "acquisition",
+                        payload | ({"asset_id": admitted.id} if admitted else {}),
+                        generation_execution_id=result.execution.id,
+                        asset_id=admitted.id if admitted else None,
+                    )
+                    if mismatch is not None:
+                        raise ProductionRequestError(mismatch)
+                    if result.asset is None:
+                        raise RuntimeError("Required managed-asset acquisition failed.")
+                    if admitted is not None:
+                        existing[key] = payload | {"asset_id": admitted.id}
             self.repository.append_production_run_event(
                 run.id,
                 "acquisition_review_pending",
@@ -450,6 +497,10 @@ class ProductionLifecycleService:
             self._fail(run.id, "acquisition", error)
 
     def _assemble_and_render(self, run: Any) -> None:
+        if not self._all_variants_passed(run):
+            raise ProductionRequestError(
+                "Every active acquired variant needs a passing human review before assembly."
+            )
         try:
             states = self._ensure_scene_states(run)
             narration = self._ensure_narration(run)
@@ -1033,6 +1084,16 @@ class ProductionLifecycleService:
                 for variant in entity["variants"]:
                     yield world["key"], entity["key"], variant["key"], variant["asset_spec_id"]
 
+    @staticmethod
+    def _full_frame_variant_keys(request: dict[str, Any]) -> set[tuple[str, str, str]]:
+        return {
+            (world["key"], entity["key"], variant["key"])
+            for world in request["worlds"]
+            for entity in world["entities"]
+            for variant in entity["variants"]
+            if tuple(variant["intrinsic_size_wu"]) == FRAME_SIZE
+        }
+
     def _variant_keys(self, request: dict[str, Any]):
         return (
             (world, entity, variant)
@@ -1040,8 +1101,14 @@ class ProductionLifecycleService:
         )
 
     def _acquisition_map(self, run_id: str) -> dict[tuple[str, str, str], dict[str, Any]]:
+        """Return each variant's active asset: its latest admitted acquisition attempt."""
+
         result = {}
-        for item in self.repository.list_production_evidence(run_id, "acquisition"):
+        evidence = sorted(
+            self.repository.list_production_evidence(run_id, "acquisition"),
+            key=lambda item: int(item.id.rsplit(":", 1)[1]),
+        )
+        for item in evidence:
             if item.asset_id:
                 key = tuple(
                     item.payload[name] for name in ("world_key", "entity_key", "variant_key")
@@ -1118,13 +1185,38 @@ class ProductionLifecycleService:
             return "Generation execution recorded a different global visual authority."
         return None
 
-    def _passed_review(self, run_id: str, scope: str) -> bool:
-        reviews = [
-            item
-            for item in self.repository.list_production_qa_reviews(run_id)
-            if item.scope == scope
+    def _variant_review_states(self, run: Any) -> dict[tuple[str, str, str], str]:
+        """Classify each acquired variant's active asset as passed, rejected or pending.
+
+        Reviews bind to the exact reviewed asset, so a rejection of a superseded asset never
+        affects its replacement and a pass stays valid across later review rounds.
+        """
+
+        outcomes: dict[str, set[str]] = {}
+        for review in self.repository.list_production_qa_reviews(run.id):
+            if review.scope == "acquisition" and isinstance(review.evidence.get("asset_id"), str):
+                outcomes.setdefault(review.evidence["asset_id"], set()).add(review.outcome)
+        states = {}
+        for key, active in self._acquisition_map(run.id).items():
+            recorded = outcomes.get(active["asset_id"], set())
+            states[key] = (
+                "rejected" if "failed" in recorded else "passed" if recorded else "pending"
+            )
+        return states
+
+    def _all_variants_passed(self, run: Any) -> bool:
+        states = self._variant_review_states(run)
+        return set(states) == set(self._variant_keys(run.request)) and all(
+            state == "passed" for state in states.values()
+        )
+
+    def _next_acquisition_review_round(self, run_id: str) -> int:
+        rounds = [
+            1 if ":round-" not in review.id else int(review.id.split(":round-")[1].split(":")[0])
+            for review in self.repository.list_production_qa_reviews(run_id)
+            if review.scope == "acquisition"
         ]
-        return bool(reviews) and all(item.outcome == "passed" for item in reviews)
+        return max(rounds, default=0) + 1
 
     def _single_evidence(self, run_id: str, kind: str):
         evidence = self.repository.list_production_evidence(run_id, kind)

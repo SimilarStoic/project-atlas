@@ -18,11 +18,14 @@ from project_atlas.production import (
     ManagedAssetSceneAdapter,
     ProductionLifecycleService,
 )
-from project_atlas.scene_media import load_persistent_scene_frame, unwritten_alpha_pixels
+from project_atlas.scene_media import (
+    encode_rgba_png,
+    load_persistent_scene_frame,
+    unwritten_alpha_pixels,
+)
 from project_atlas.scene_model import Affine
 from project_atlas.web import create_server
 from tests.test_web import (
-    MEDIA_PNG,
     create_authorized_visual_plan,
     ensure_character_reference_set,
     media_runtime_or_skip,
@@ -32,6 +35,8 @@ from tests.test_web import (
 # The dimensions gpt-image-2 returned for the approved SimilarStoic beats.
 REALISTIC_SOURCE_SIZE = (941, 1672)
 HAMSTER_PROFILE = "character-profile-similarstoic-hamster-core-v1"
+# A minimal technically admissible full-frame source (exact 9:16) for non-media tests.
+NINE_BY_SIXTEEN_PNG = encode_rgba_png(9, 16, bytes([250, 248, 240, 255]) * 9 * 16)
 
 
 def realistic_source_png(runtime, tmp_path: Path) -> bytes:
@@ -63,12 +68,14 @@ class ValidFakeImageGenerator:
     def __init__(
         self,
         failure: GenerationFailure | None = None,
-        content: bytes = MEDIA_PNG,
+        content: bytes = NINE_BY_SIXTEEN_PNG,
         fail_on_calls: frozenset[int] = frozenset(),
+        sequence: list[bytes] | None = None,
     ) -> None:
         self.failure = failure
         self.content = content
         self.fail_on_calls = fail_on_calls
+        self.sequence = sequence
         self.inputs = []
 
     def supports(self, asset_type: str) -> bool:
@@ -80,7 +87,8 @@ class ValidFakeImageGenerator:
             raise self.failure
         if len(self.inputs) in self.fail_on_calls:
             raise GenerationFailure("offline scheduled failure")
-        return GeneratedArtifact(self.content, "image/png", provider_key="offline-fake")
+        content = self.sequence[len(self.inputs) - 1] if self.sequence else self.content
+        return GeneratedArtifact(content, "image/png", provider_key="offline-fake")
 
 
 def _server(tmp_path: Path, generator: ValidFakeImageGenerator, runtime=None):
@@ -766,5 +774,298 @@ def test_characterless_spec_rejects_unexpected_character_provenance(tmp_path, mo
         assert len(evidence) == 1
         assert evidence[0].generation_execution_id is not None
         assert evidence[0].asset_id is None
+    finally:
+        server.server_close()
+
+
+def sized_png(runtime, tmp_path: Path, width: int, height: int) -> bytes:
+    """Render one deterministic PNG of an exact size with the local FFmpeg only."""
+
+    path = tmp_path / f"source-{width}x{height}.png"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            f"color=c=white:s={width}x{height}:r=1,format=rgb24",
+            "-frames:v",
+            "1",
+            str(path),
+        ]
+    )
+    return path.read_bytes()
+
+
+def _spec_of(generation_input) -> str:
+    return generation_input.visual_authority_recipe["asset_spec_id"]
+
+
+def _review(keys, outcome: str) -> list[dict]:
+    return [
+        {
+            "world_key": world,
+            "entity_key": entity,
+            "variant_key": variant,
+            "outcome": outcome,
+            "evidence": {"source_quality": outcome},
+        }
+        for world, entity, variant in keys
+    ]
+
+
+def test_rejected_variant_is_reacquired_alone_and_later_rounds_supersede_it(
+    tmp_path, monkeypatch
+) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    try:
+        request, keys = _request(server, tmp_path, "retry-round", image_calls=3)
+        start_key, finish_key = keys
+        post_json(server, "/api/v2/productions", request)
+        assert [_spec_of(item) for item in generator.inputs] == [
+            "retry-round-spec-1",
+            "retry-round-spec-2",
+        ]
+        first_finish = server.production_service._acquisition_map("retry-round")[finish_key][
+            "asset_id"
+        ]
+
+        rejected, status = post_json(
+            server,
+            "/api/v2/productions/retry-round/acquisition-review",
+            {"reviews": _review([start_key], "passed") + _review([finish_key], "failed")},
+        )
+        assert status == 200
+        assert rejected["production"]["status"] == "failed"
+        assert rejected["production"]["stage"] == "acquisition_review"
+        assert calls == []  # No narration while any active variant lacks a pass.
+
+        resumed, status = post_json(server, "/api/v2/productions/retry-round/resume", {})
+        assert status == 200
+        assert resumed["production"]["status"] == "acquisition_review_pending"
+        # Only the rejected variant was regenerated; the passed one was not.
+        assert [_spec_of(item) for item in generator.inputs] == [
+            "retry-round-spec-1",
+            "retry-round-spec-2",
+            "retry-round-spec-2",
+        ]
+        active = server.production_service._acquisition_map("retry-round")
+        assert active[finish_key]["asset_id"] != first_finish
+
+        # The second round must cover only the retried variant.
+        both, status = _post_error(
+            server,
+            "/api/v2/productions/retry-round/acquisition-review",
+            {"reviews": _review(keys, "passed")},
+        )
+        assert status == 400
+        assert "awaiting review" in both["error"]
+        assert calls == []
+
+        passed, status = post_json(
+            server,
+            "/api/v2/productions/retry-round/acquisition-review",
+            {"reviews": _review([finish_key], "passed")},
+        )
+        assert status == 200
+        assert passed["production"]["status"] == "qa_review_pending"
+        assert len(calls) == 1
+
+        reviews = [
+            review
+            for review in server.repository.list_production_qa_reviews("retry-round")
+            if review.scope == "acquisition"
+        ]
+        # History is preserved: the failed first-round review still exists, round-scoped.
+        assert sorted((review.id, review.outcome) for review in reviews) == [
+            ("retry-round:qa:acquisition:round-1:1", "failed"),
+            ("retry-round:qa:acquisition:round-1:2", "passed"),
+            ("retry-round:qa:acquisition:round-2:1", "passed"),
+        ]
+        derived_sources = {
+            server.repository.get_asset(source["asset_id"]).metadata["source_asset_id"]
+            for item in server.repository.get_final_media_input_snapshot(
+                next(
+                    entry["references"]["final_media_input_snapshot_id"]
+                    for entry in passed["production"]["evidence"]
+                    if entry["type"] == "snapshot"
+                )
+            ).scene_inputs
+            for source in item["source_assets"]
+        }
+        assert active[finish_key]["asset_id"] in derived_sources
+        assert first_finish not in derived_sources
+    finally:
+        server.server_close()
+
+
+def test_rejected_image_counts_toward_ceiling_and_blocks_retry_before_provider(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, keys = _request(server, tmp_path, "retry-ceiling", image_calls=2)
+        post_json(server, "/api/v2/productions", request)
+        post_json(
+            server,
+            "/api/v2/productions/retry-ceiling/acquisition-review",
+            {"reviews": _review(keys[:1], "passed") + _review(keys[1:], "failed")},
+        )
+        blocked, status = _post_error(server, "/api/v2/productions/retry-ceiling/resume", {})
+        assert status == 422
+        assert "ceiling of 2 would be exceeded" in blocked["error"]
+        assert len(generator.inputs) == 2
+    finally:
+        server.server_close()
+
+
+def test_full_frame_aspect_guard_accepts_the_approved_source_shape(tmp_path) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    try:
+        request, _keys = _request(server, tmp_path, "aspect-ok")
+        post_json(server, "/api/v2/productions", request)
+        source_id = server.production_service._acquisition_map("aspect-ok")[
+            ("main-world", "explanation", "start")
+        ]["asset_id"]
+        raster = ManagedAssetSceneAdapter(server.repository, runtime).adapt(
+            "aspect-ok", source_id, "aspect-ok:raster-v2:test", (1080, 1920)
+        )
+        assert (raster.width, raster.height) == (1080, 1920)
+    finally:
+        server.server_close()
+
+
+def test_off_aspect_full_frame_result_is_retried_before_founder_review(
+    tmp_path, monkeypatch
+) -> None:
+    runtime = media_runtime_or_skip()
+    realistic = realistic_source_png(runtime, tmp_path)
+    square = sized_png(runtime, tmp_path, 1080, 1080)
+    generator = ValidFakeImageGenerator(sequence=[realistic, square, realistic])
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    try:
+        request, keys = _request(server, tmp_path, "aspect-admit", image_calls=3)
+        started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201
+        assert started["production"]["status"] == "acquisition_review_pending"
+        # The valid first variant was not regenerated; only the off-aspect one was retried.
+        assert [_spec_of(item) for item in generator.inputs] == [
+            "aspect-admit-spec-1",
+            "aspect-admit-spec-2",
+            "aspect-admit-spec-2",
+        ]
+        evidence = sorted(
+            server.repository.list_production_evidence("aspect-admit", "acquisition"),
+            key=lambda item: int(item.id.rsplit(":", 1)[1]),
+        )
+        assert [item.generation_execution_id is not None for item in evidence] == [True] * 3
+        rejected = evidence[1]
+        assert rejected.asset_id is None
+        assert "frame aspect" in rejected.payload["technical_rejection"]
+        # Only the admissible 941x1672 assets are presented for founder review.
+        adapter = ManagedAssetSceneAdapter(server.repository, runtime)
+        active = server.production_service._acquisition_map("aspect-admit")
+        assert {adapter.source_dimensions(item["asset_id"]) for item in active.values()} == {
+            REALISTIC_SOURCE_SIZE
+        }
+        assert set(
+            server.production_service._variant_review_states(
+                server.repository.get_production_run("aspect-admit")
+            ).values()
+        ) == {"pending"}
+        assert calls == []
+        passed, status = post_json(
+            server,
+            "/api/v2/productions/aspect-admit/acquisition-review",
+            {"reviews": _review(keys, "passed")},
+        )
+        assert status == 200
+        assert passed["production"]["status"] == "qa_review_pending"
+        assert len(calls) == 1
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize("size", [(1080, 1080), (1024, 1536)])
+def test_repeated_off_aspect_results_stop_at_the_image_call_ceiling(
+    tmp_path, monkeypatch, size
+) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=sized_png(runtime, tmp_path, *size))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    try:
+        request, _keys = _request(server, tmp_path, "aspect-ceiling", image_calls=2)
+        failed, status = _post_error(server, "/api/v2/productions", request)
+        assert status == 422
+        assert failed["stage"] == "acquisition"
+        assert "ceiling of 2 would be exceeded" in failed["error"]
+        assert len(generator.inputs) == 2
+        assert server.production_service._acquisition_map("aspect-ceiling") == {}
+        assert calls == []
+    finally:
+        server.server_close()
+
+
+def test_assembly_aspect_guard_remains_as_defense_in_depth(tmp_path) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=sized_png(runtime, tmp_path, 400, 400))
+    server = _server(tmp_path, generator, runtime)
+    try:
+        request, _keys = _request(
+            server,
+            tmp_path,
+            "aspect-depth",
+            character_profile_id=None,
+            intrinsic_size_wu=(400, 400),
+        )
+        post_json(server, "/api/v2/productions", request)
+        source_id = server.production_service._acquisition_map("aspect-depth")[
+            ("main-world", "explanation", "start")
+        ]["asset_id"]
+        with pytest.raises(ValueError, match="frame aspect"):
+            ManagedAssetSceneAdapter(server.repository, runtime).adapt(
+                "aspect-depth", source_id, "aspect-depth:raster-v2:test", (1080, 1920)
+            )
+    finally:
+        server.server_close()
+
+
+def test_non_full_frame_sources_are_not_aspect_guarded(tmp_path) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=sized_png(runtime, tmp_path, 400, 400))
+    server = _server(tmp_path, generator, runtime)
+    try:
+        request, _keys = _request(
+            server,
+            tmp_path,
+            "aspect-partial",
+            character_profile_id=None,
+            intrinsic_size_wu=(400, 400),
+        )
+        started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201
+        assert started["production"]["status"] == "acquisition_review_pending"
+        assert len(generator.inputs) == 2
+        assert all(
+            "technical_rejection" not in item.payload
+            for item in server.repository.list_production_evidence("aspect-partial", "acquisition")
+        )
+        source_id = server.production_service._acquisition_map("aspect-partial")[
+            ("main-world", "explanation", "start")
+        ]["asset_id"]
+        raster = ManagedAssetSceneAdapter(server.repository, runtime).adapt(
+            "aspect-partial", source_id, "aspect-partial:raster-v2:test", None
+        )
+        assert (raster.width, raster.height) == (400, 400)
     finally:
         server.server_close()
