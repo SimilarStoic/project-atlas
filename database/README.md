@@ -9,8 +9,8 @@ are contiguous from **1 through 28**, and the current maximum application migrat
 
 `PRAGMA user_version` is not the application migration authority. `PRAGMA schema_version` is SQLite's internal
 schema-cookie counter, not the Conveyor application migration number. Migrations 25–27 are immutable historical
-provenance; Migration 28 is the current application schema authority. The protected production runtime remains at its
-verified pre-Migration-28 checkpoint until a separately authorized runtime transition. Do not rewrite a deployed
+provenance; Migration 28 is the current application schema authority. Migration 28 was applied to the protected
+runtime on 1 October 2026. Do not rewrite a deployed
 migration or create a cleanup migration merely to reconcile documentation.
 
 The active production database is selected explicitly through the fail-closed process environment established by

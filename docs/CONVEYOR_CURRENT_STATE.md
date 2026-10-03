@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the narration CI repair and its regression test, the verified full suite contains **317 passing tests**.
+- After the Phase 1 canonical v2 fidelity work, the verified full suite contains **341 passing tests**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -126,6 +126,20 @@ variation, generate enough meaningful narration-driven scene changes to sustain 
 sources with appropriate publication-flow attribution. These are continuing quality improvements, not blockers and
 not reasons to redesign the approved visual treatment or restart architecture experimentation. The successful eight
 beats over approximately 39 seconds are evidence for useful density, not a universal beat-count rule.
+
+The approved MP4 was assembled outside Conveyor's canonical production path: its eight images came from Conveyor's
+generation service against a scratch database copy, it reuses the Production #7 attempt-2 Daniel narration, and its
+final assembly procedure was not preserved. Canonical v2 has since reproduced the approved method offline from the
+preserved beats and narration (Phase 1 replay, reaching `private_founder_review_ready`). That replay is technical
+evidence, not founder acceptance of a new production.
+
+Preserved evidence:
+
+- approved baseline: `D:\ConveyorOS\evidence\similarstoic\approved-production-baseline\2026-10-03-v1\`
+  (backup `D:\ConveyorBackups\approved-production-baseline\2026-10-03-v1\`);
+- Phase 1 replay: `D:\ConveyorOS\evidence\similarstoic\phase1-replay\`;
+- production DB backup (post-Migration-28, pre-Claude-implementation):
+  `D:\ConveyorBackups\post-migration-28-pre-claude-implementation-2026-10-03\`.
 
 Conveyor already models research provenance through `ResearchPack`, `Claim`, `Source`, `ClaimEvidence`, and
 `ScriptClaimSet`. The bounded remaining integration is to project the sources supporting a production's approved
@@ -235,6 +249,36 @@ The following limitations remain operationally important:
 Do not delete or modify these areas merely because they are bounded or incomplete. Resolve each through a separately
 authorized implementation phase.
 
+## Canonical v2 fidelity and safeguards
+
+Canonical v2 previously could not render full-frame beats acceptably: its compositor forward-maps source pixels, so
+upscaling a 941x1672 generated image to the 1080x1920 frame left about 24% of pixels unwritten (a visible grid).
+This is fixed by:
+
+- a versioned scene adapter, `managed-image-to-rgba-v2`, that resamples full-frame variants to exactly 1080x1920
+  with bit-exact FFmpeg Lanczos scaling and records the scale method in derived-asset metadata (derived raster IDs
+  are versioned so pre-fix rasters are never reused);
+- a production guard that rejects any layer mapping requiring upscale and requires full-frame layers at exact 1:1;
+- a pre-encode compositor coverage gate: every composited frame must have zero unwritten alpha pixels.
+
+New persistent snapshots freeze render profile `similarstoic-vertical-v3`: libx264 CRF 18, preset medium, yuv420p,
+1080x1920 at 30 fps, AAC 192k mono 48 kHz, faststart. Existing `similarstoic-vertical-v2` behaviour is unchanged:
+v1 AssetSelection snapshots and older persistent snapshots keep their historical encoding.
+
+v2 production requests now:
+
+- require an explicit boolean `narration_authorized`, frozen into the request digest; narration fails closed before
+  any synthesizer call when it is not `true`;
+- treat `forecast.image_calls` as a frozen per-run ceiling counted per recorded provider generation call, including
+  failed calls (`forecast.narration_calls` must be 1);
+- check generation authority before any provider call and the persisted execution provenance after each call; a
+  mismatched execution counts as a call but is never admitted as an acquisition;
+- require full-frame integrated beats to carry the request's character authority, while non-full-frame
+  characterless entities remain allowed.
+
+Automated cell QA claims only persistent-aggregate verification and compositor coverage
+(`conveyor-automated-cell-v2`); perceptual final-frame quality remains human review.
+
 ## Schema authority
 
 Application schema authority is the `schema_migrations` table with contiguous versions **1 through 28**. The current
@@ -322,9 +366,10 @@ At this checkpoint:
 - Production #7-era private work occurred and informed the founder-approved production baseline; and
 - provider calls, spend, application startup, publication, and runtime mutation require separate authorization.
 
-The next phase is an independent Claude read-only takeover assessment. No paid implementation is authorized yet; the
-known recipe-binding, request-authority alignment, source-credit integration, character-continuity, and scene-density
-gaps remain intentionally unresolved pending founder review of that assessment.
+Phase 1 (canonical v2 fidelity) is complete. Remaining gaps are recipe binding (including moving the full-frame
+character requirement into the channel recipe), source-credit projection, character continuity, scene density,
+speech-aligned beat timing, and ceiling counting of calls that raise before evidence is recorded. Each requires
+separate authorization.
 
 Update this file deliberately whenever accepted current operational truth changes. Do not turn it into a chronological
 diary; move superseded detail to historical/provenance records and keep this document usable as a fresh-agent entry
