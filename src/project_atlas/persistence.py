@@ -26,6 +26,10 @@ def now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat()
 
 
+# Historical v1 derived rasters stay resolvable; v2 adds exact full-frame resampling.
+DERIVED_SCENE_ADAPTERS = frozenset({"managed-image-to-rgba-v1", "managed-image-to-rgba-v2"})
+
+
 def default_database_path() -> Path:
     """Return a portable development path, never the protected historical DB."""
 
@@ -4395,7 +4399,7 @@ class AtlasRepository(
         source_id = asset.metadata.get("source_asset_id")
         source_digest = asset.metadata.get("source_content_digest")
         adapter = asset.metadata.get("adapter")
-        if not isinstance(source_id, str) or adapter != "managed-image-to-rgba-v1":
+        if not isinstance(source_id, str) or adapter not in DERIVED_SCENE_ADAPTERS:
             raise ValueError("Derived scene Asset provenance is incomplete.")
         source = self.get_asset(source_id)
         if source.content_digest != source_digest:

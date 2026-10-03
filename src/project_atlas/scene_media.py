@@ -106,6 +106,14 @@ def load_persistent_scene_frame(repository: AtlasRepository, state_id: str) -> P
     )
 
 
+def unwritten_alpha_pixels(rgba: bytes) -> int:
+    """Count composited pixels whose alpha was never written (exactly zero)."""
+
+    if len(rgba) % 4:
+        raise ValueError("RGBA frame byte length must be a multiple of four.")
+    return rgba[3::4].count(0)
+
+
 def compositor_contract() -> dict[str, Any]:
     return {
         "identity": COMPOSITOR_IDENTITY,

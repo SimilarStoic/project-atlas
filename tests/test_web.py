@@ -749,6 +749,9 @@ def test_narrated_final_media_http_lifecycle_is_server_derived_and_retrievable(t
         snapshot = snapshot_response["final_media_input_snapshot"]
         assert snapshot["script_id"] == script_id
         assert len(snapshot["caption_cues"]) == 1
+        # v1 AssetSelection snapshots keep freezing the historical v2 render profile.
+        assert snapshot["render_settings"]["profile"] == "similarstoic-vertical-v2"
+        assert "encode" not in snapshot["render_settings"]
         fetched_snapshot, status = request_json(
             server, f"{base_url}/api/final-media-input-snapshots/{snapshot['id']}"
         )

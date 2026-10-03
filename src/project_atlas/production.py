@@ -14,6 +14,7 @@ from typing import Any
 from project_atlas.generation import GenerationService
 from project_atlas.media import FfmpegRuntime, MediaService
 from project_atlas.persistence import AtlasRepository
+from project_atlas.scene_media import load_persistent_scene_frame, unwritten_alpha_pixels
 from project_atlas.scene_model import (
     Affine,
     Camera,
@@ -33,6 +34,14 @@ from project_atlas.scene_model import (
 )
 
 _SAFE_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+FRAME_SIZE = (1080, 1920)
+SCENE_ADAPTER_VERSION = "managed-image-to-rgba-v2"
+# Derived raster identities carry the adapter generation so a resume can never reuse a
+# raster produced by an earlier adapter.
+DERIVED_RASTER_NAMESPACE = "raster-v2"
+FULL_FRAME_SCALE_FILTER = (
+    "scale={width}:{height}:flags=lanczos+accurate_rnd+full_chroma_int+bitexact"
+)
 
 
 class ProductionLifecycleError(RuntimeError):
@@ -55,7 +64,15 @@ class ManagedAssetSceneAdapter:
         self.repository = repository
         self.runtime = runtime
 
-    def adapt(self, run_id: str, source_asset_id: str, derived_asset_id: str) -> RasterAsset:
+    def adapt(
+        self,
+        run_id: str,
+        source_asset_id: str,
+        derived_asset_id: str,
+        target_size: tuple[int, int] | None = None,
+    ) -> RasterAsset:
+        """Decode one managed image, resampling full-frame rasters to exact frame pixels."""
+
         source = self.repository.get_asset(source_asset_id)
         try:
             existing = self.repository.get_asset(derived_asset_id)
@@ -64,6 +81,8 @@ class ManagedAssetSceneAdapter:
         if existing is not None:
             if existing.metadata.get("source_asset_id") != source.id:
                 raise ValueError("Derived scene identity is already bound to another source.")
+            if existing.metadata.get("adapter") != SCENE_ADAPTER_VERSION:
+                raise ValueError("Derived scene identity was produced by another adapter version.")
             content = self.repository.managed_scene_asset_path(existing.id).read_bytes()
             width, height = existing.metadata.get("width"), existing.metadata.get("height")
             if not isinstance(width, int) or not isinstance(height, int):
@@ -95,23 +114,32 @@ class ManagedAssetSceneAdapter:
             streams = json.loads(probe.stdout).get("streams", [])
             if len(streams) != 1:
                 raise ValueError("Managed acquisition must contain one decodable image stream.")
-            width, height = streams[0].get("width"), streams[0].get("height")
+            source_width, source_height = streams[0].get("width"), streams[0].get("height")
             if (
-                not isinstance(width, int)
-                or not isinstance(height, int)
-                or width <= 0
-                or height <= 0
+                not isinstance(source_width, int)
+                or not isinstance(source_height, int)
+                or source_width <= 0
+                or source_height <= 0
             ):
                 raise ValueError("Managed acquisition has invalid image dimensions.")
+            width, height = target_size or (source_width, source_height)
+            scale_filter = (
+                FULL_FRAME_SCALE_FILTER.format(width=width, height=height)
+                if target_size is not None
+                else None
+            )
             raw_path = temporary_root / "frame.rgba"
             self.runtime._run(
                 [
                     self.runtime.ffmpeg_path,
                     "-y",
+                    "-threads",
+                    "1",
                     "-i",
                     str(source_path),
                     "-frames:v",
                     "1",
+                    *(["-vf", f"{scale_filter},format=rgba"] if scale_filter else []),
                     "-pix_fmt",
                     "rgba",
                     "-f",
@@ -151,11 +179,16 @@ class ManagedAssetSceneAdapter:
                 "application/x-rgba",
                 "derived",
                 {
-                    "adapter": "managed-image-to-rgba-v1",
+                    "adapter": SCENE_ADAPTER_VERSION,
                     "source_asset_id": source.id,
                     "source_content_digest": source.content_digest,
+                    "source_width": source_width,
+                    "source_height": source_height,
                     "width": width,
                     "height": height,
+                    "scale_method": "ffmpeg-lanczos-bitexact" if scale_filter else "none",
+                    "scale_filter": scale_filter,
+                    "renderer_version": self.runtime.version(self.runtime.ffmpeg_path),
                 },
                 digest,
             )
@@ -361,15 +394,30 @@ class ProductionLifecycleService:
         self.repository.append_production_run_event(run.id, "acquiring", "acquisition", {})
         existing = self._acquisition_map(run.id)
         attempt = len(self.repository.list_production_evidence(run.id, "acquisition"))
+        ceiling = run.request["forecast"]["image_calls"]
         try:
+            self._assert_generation_authority(run.request)
             for world_key, entity_key, variant_key, asset_spec_id in self._variant_specs(
                 run.request
             ):
                 key = (world_key, entity_key, variant_key)
                 if key in existing:
                     continue
+                prior_calls = sum(
+                    item.generation_execution_id is not None
+                    for item in self.repository.list_production_evidence(run.id, "acquisition")
+                )
+                if prior_calls + 1 > ceiling:
+                    raise ProductionRequestError(
+                        f"Image-call ceiling of {ceiling} would be exceeded by another "
+                        f"provider call; {prior_calls} calls already recorded for this run."
+                    )
                 result = self.generation_service.generate_asset_spec(asset_spec_id)
                 attempt += 1
+                mismatch = self._execution_authority_mismatch(run.request, result.execution.id)
+                # An execution whose provenance contradicts the run authority still counts as a
+                # provider call, but its asset is never admitted as this run's acquisition.
+                admitted = result.asset if mismatch is None else None
                 payload = {
                     "world_key": world_key,
                     "entity_key": entity_key,
@@ -377,14 +425,18 @@ class ProductionLifecycleService:
                     "asset_spec_id": asset_spec_id,
                     "outcome": result.execution.outcome,
                 }
+                if mismatch is not None:
+                    payload["authority_mismatch"] = mismatch
                 self.repository.create_production_evidence(
                     f"{run.id}:acquisition:attempt:{attempt}",
                     run.id,
                     "acquisition",
-                    payload | ({"asset_id": result.asset.id} if result.asset else {}),
+                    payload | ({"asset_id": admitted.id} if admitted else {}),
                     generation_execution_id=result.execution.id,
-                    asset_id=result.asset.id if result.asset else None,
+                    asset_id=admitted.id if admitted else None,
                 )
+                if mismatch is not None:
+                    raise ProductionRequestError(mismatch)
                 if result.asset is None:
                     raise RuntimeError("Required managed-asset acquisition failed.")
                 existing[key] = payload | {"asset_id": result.asset.id}
@@ -498,13 +550,17 @@ class ProductionLifecycleService:
         if existing:
             return self.repository.get_narration_asset(existing[-1].narration_asset_id)
         self.repository.append_production_run_event(run.id, "narrating", "narration", {})
+        if run.request.get("narration_authorized") is not True:
+            raise ProductionRequestError(
+                "Narration is not authorized by this production request; no provider call made."
+            )
         plan = self.repository.get_visual_plan(run.visual_plan_id)
         result = self.media_service.generate_brand_narration(
             f"{run.id}:narration-execution:1",
             f"{run.id}-narration-1",
             plan.script_id,
             brand_key="similarstoic",
-            execution_authorized=True,
+            execution_authorized=run.request["narration_authorized"],
         )
         self.repository.create_production_evidence(
             f"{run.id}:narration:evidence:1",
@@ -587,16 +643,30 @@ class ProductionLifecycleService:
             scene_id: self.repository.verify_persistent_scene_aggregate(state_id)
             for scene_id, state_id in states.items()
         }
+        coverage = {
+            scene_id: unwritten_alpha_pixels(
+                load_persistent_scene_frame(self.repository, state_id).rgba
+            )
+            for scene_id, state_id in states.items()
+        }
+        outcome = "passed" if not any(coverage.values()) else "failed"
         self.repository.create_production_qa_review(
             f"{run.id}:qa:cell:1",
             run.id,
             "cell",
-            "passed",
+            outcome,
             "automated",
-            dict(MediaService.FINAL_FRAME_VISUAL_QA_PROFILE),
-            {"persistent_aggregate_verification": evidence},
+            dict(MediaService.AUTOMATED_CELL_QA_PROFILE),
+            {
+                "persistent_aggregate_verification": evidence,
+                MediaService.COMPOSITOR_COVERAGE_POLICY: {
+                    "unwritten_alpha_pixels_by_scene": coverage
+                },
+            },
             artifact.id,
         )
+        if outcome != "passed":
+            raise ProductionRequestError("Composited scene frames contain unwritten pixels.")
 
     def _build_world(
         self,
@@ -614,14 +684,23 @@ class ProductionLifecycleService:
             for variant_index, variant in enumerate(entity["variants"], 1):
                 key = (world_input["key"], entity["key"], variant["key"])
                 source_id = acquisition[key]["asset_id"]
-                derived_id = f"{run.id}:raster:{world_index}:{entity_index}:{variant_index}"
-                raster = self.adapter.adapt(run.id, source_id, derived_id)
+                derived_id = (
+                    f"{run.id}:{DERIVED_RASTER_NAMESPACE}:"
+                    f"{world_index}:{entity_index}:{variant_index}"
+                )
+                size = tuple(variant["intrinsic_size_wu"])
+                full_frame = size == FRAME_SIZE
+                raster = self.adapter.adapt(
+                    run.id, source_id, derived_id, FRAME_SIZE if full_frame else None
+                )
                 assets.append(raster)
                 spec_ids.append(variant["asset_spec_id"])
                 variant_id = self._variant_id(run.id, world_index, entity["key"], variant["key"])
                 variant_ids.append(variant_id)
-                size = tuple(variant["intrinsic_size_wu"])
                 mapping = Affine(a=size[0] / raster.width, d=size[1] / raster.height)
+                self._guard_layer_mapping(
+                    self._affine(entity["initial_transform"]).compose(mapping), full_frame
+                )
                 variants.append(
                     EntityVariant(
                         variant_id,
@@ -688,6 +767,16 @@ class ProductionLifecycleService:
         )
         return bind_world_definition(world)
 
+    @staticmethod
+    def _guard_layer_mapping(mapping: Affine, full_frame: bool) -> None:
+        """Reject compositor mappings the forward-mapped pixel compositor cannot fill."""
+
+        scale_x, scale_y = mapping.scale
+        if scale_x > 1 or scale_y > 1:
+            raise ValueError("Scene layer mapping would upscale its raster and leave holes.")
+        if full_frame and (mapping.a, mapping.b, mapping.c, mapping.d) != (1, 0, 0, 1):
+            raise ValueError("Full-frame scene layers must reach the compositor at exact 1:1.")
+
     def _operation(self, run_id: str, world_index: int, value: dict[str, Any]) -> Operation:
         action, entity_key = value["action"], value["entity_key"]
         operation_value = value.get("value")
@@ -705,15 +794,33 @@ class ProductionLifecycleService:
     def _validate_request(self, request: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(request, dict):
             raise ProductionRequestError("Production request must be an object.")
-        allowed = {"id", "visual_plan_id", "authority", "worlds", "timeline", "forecast"}
+        allowed = {
+            "id",
+            "visual_plan_id",
+            "authority",
+            "worlds",
+            "timeline",
+            "forecast",
+            "narration_authorized",
+        }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
         for field in ("id", "visual_plan_id"):
             if not isinstance(request.get(field), str) or not _SAFE_KEY.fullmatch(request[field]):
                 raise ProductionRequestError(f"Production {field} must be a safe stable key.")
         self.repository._require_gate_authorized_visual_plan(request["visual_plan_id"])
-        if not isinstance(request.get("forecast", {}), dict):
+        if not isinstance(request.get("narration_authorized"), bool):
+            raise ProductionRequestError("Production narration_authorized must be a boolean.")
+        forecast = request.get("forecast")
+        if not isinstance(forecast, dict):
             raise ProductionRequestError("Production forecast must be an object.")
+        image_calls = forecast.get("image_calls")
+        if not isinstance(image_calls, int) or isinstance(image_calls, bool):
+            raise ProductionRequestError("Production forecast image_calls must be an integer.")
+        if forecast.get("narration_calls") != 1 or isinstance(
+            forecast.get("narration_calls"), bool
+        ):
+            raise ProductionRequestError("Production forecast narration_calls must equal 1.")
         authority = request.get("authority")
         authority_fields = {
             "character_profile_id",
@@ -742,6 +849,11 @@ class ProductionLifecycleService:
             world_scenes.extend(world["scene_ids"])
         if world_scenes != plan_scenes:
             raise ProductionRequestError("World scene order must cover the exact VisualPlan.")
+        if image_calls < len(variant_keys):
+            raise ProductionRequestError(
+                f"Production forecast image_calls ({image_calls}) is below the "
+                f"{len(variant_keys)} variants this request must acquire."
+            )
         if [item.get("scene_id") for item in timeline] != plan_scenes:
             raise ProductionRequestError("Timeline must cover the exact VisualPlan in sequence.")
         for index, item in enumerate(timeline):
@@ -936,6 +1048,75 @@ class ProductionLifecycleService:
                 )
                 result[key] = item.payload | {"asset_id": item.asset_id}
         return result
+
+    def _assert_generation_authority(self, request: dict[str, Any]) -> None:
+        """Fail before any provider call unless generation resolves the requested authority."""
+
+        authority = request["authority"]
+        service = self.generation_service
+        if service.visual_style_profile_id != authority["visual_style_profile_id"]:
+            raise ProductionRequestError(
+                "Generation visual style differs from the production authority."
+            )
+        if service.global_visual_authority_id != authority["visual_reference_authority_id"]:
+            raise ProductionRequestError(
+                "Generation global visual authority differs from the production authority."
+            )
+        latest = self.repository.get_latest_character_reference_set(
+            authority["character_profile_id"]
+        )
+        if latest is None or latest.id != authority["character_reference_set_id"]:
+            raise ProductionRequestError(
+                "Generation would resolve a different character reference set."
+            )
+        for world in request["worlds"]:
+            for entity in world["entities"]:
+                for variant in entity["variants"]:
+                    spec = self.repository.get_asset_spec(variant["asset_spec_id"])
+                    # Full-frame integrated beats are character-led under the current
+                    # SimilarStoic production method; move this requirement into the channel
+                    # recipe when that recipe is codified.
+                    if tuple(variant["intrinsic_size_wu"]) == FRAME_SIZE:
+                        if spec.character_profile_id != authority["character_profile_id"]:
+                            raise ProductionRequestError(
+                                "Full-frame AssetSpec character profile differs from the "
+                                "production authority."
+                            )
+                    elif spec.character_profile_id not in {None, authority["character_profile_id"]}:
+                        raise ProductionRequestError(
+                            "Variant AssetSpec character profile differs from the production "
+                            "authority."
+                        )
+
+    def _execution_authority_mismatch(
+        self, request: dict[str, Any], execution_id: str
+    ) -> str | None:
+        """Describe any persisted execution provenance that contradicts the run authority."""
+
+        authority = request["authority"]
+        execution = self.repository.get_generation_execution(execution_id)
+        if execution.visual_style_profile_id != authority["visual_style_profile_id"]:
+            return "Generation execution recorded a different visual style profile."
+        spec = self.repository.get_asset_spec(execution.asset_spec_id)
+        if spec.character_profile_id is not None:
+            if (
+                execution.character_profile_id != authority["character_profile_id"]
+                or execution.character_reference_set_id != authority["character_reference_set_id"]
+            ):
+                return "Generation execution recorded a different character authority."
+        elif (
+            execution.character_profile_id is not None
+            or execution.character_reference_set_id is not None
+        ):
+            return "Generation execution recorded character provenance for a characterless spec."
+        global_authorities = [
+            item.visual_reference_authority_id
+            for item in self.repository.list_generation_execution_visual_authorities(execution_id)
+            if item.usage_role == "global_illustration_style"
+        ]
+        if global_authorities != [authority["visual_reference_authority_id"]]:
+            return "Generation execution recorded a different global visual authority."
+        return None
 
     def _passed_review(self, run_id: str, scope: str) -> bool:
         reviews = [

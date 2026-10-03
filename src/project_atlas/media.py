@@ -27,6 +27,7 @@ from project_atlas.scene_media import (
     SNAPSHOT_SCHEMA_VERSION,
     compositor_contract,
     load_persistent_scene_frame,
+    unwritten_alpha_pixels,
 )
 from project_atlas.scene_model import canonical_json, digest
 
@@ -524,6 +525,39 @@ class MediaService:
         "crossfade_ms": 250,
         "duration_tolerance_ms": 100,
     }
+    # Frozen snapshots select their encode behaviour. Snapshots without an explicit encode
+    # block keep the historical FFmpeg-default libx264/AAC arguments.
+    PERSISTENT_ENCODE_PROFILE = {
+        "video_encoder": "libx264",
+        "crf": 18,
+        "preset": "medium",
+        "pixel_format": "yuv420p",
+        "width": 1080,
+        "height": 1920,
+        "frame_rate": 30,
+        "audio_encoder": "aac",
+        "audio_bitrate": "192k",
+        "audio_channels": 1,
+        "audio_sample_rate": 48000,
+        "faststart": True,
+    }
+    COMPOSITOR_COVERAGE_POLICY = "zero_unwritten_alpha_pixels_v1"
+    PERSISTENT_RENDER_SETTINGS = {
+        **RENDER_SETTINGS,
+        "profile": "similarstoic-vertical-v3",
+        "encode": PERSISTENT_ENCODE_PROFILE,
+        "compositor_coverage": COMPOSITOR_COVERAGE_POLICY,
+    }
+    QA_PROFILED_RENDER_PROFILES = frozenset(
+        {"similarstoic-vertical-v2", "similarstoic-vertical-v3"}
+    )
+    # Automated cell review records only deterministic properties it actually measures;
+    # perceptual final-frame properties remain human-review contracts.
+    AUTOMATED_CELL_QA_PROFILE = {
+        "profile": "conveyor-automated-cell-v2",
+        "checks": ["persistent_aggregate_verification", COMPOSITOR_COVERAGE_POLICY],
+        "perceptual_review": "not_automated",
+    }
     MOTIONS = frozenset({"static", "slow_zoom_in", "slow_zoom_out"})
     TRANSITIONS = frozenset({"cut", "crossfade"})
     # FFmpeg/libass converts SRT input to an internal 384x288 ASS script.  Pixel
@@ -852,7 +886,7 @@ class MediaService:
         if sum(item["duration_ms"] for item in frozen) != narration.duration_ms:
             raise ValueError("Scene durations must equal the exact NarrationAsset duration.")
         script = self.repository.get_script(plan.script_id)
-        settings = dict(self.RENDER_SETTINGS)
+        settings = dict(self.PERSISTENT_RENDER_SETTINGS)
         settings["persistent_scene_compositor"] = contract
         return self.repository.create_persistent_final_media_input_snapshot(
             snapshot_id,
@@ -864,7 +898,10 @@ class MediaService:
         )
 
     def _persistent_scene_frame(
-        self, item: dict[str, Any], visual_plan_id: str | None = None
+        self,
+        item: dict[str, Any],
+        visual_plan_id: str | None = None,
+        require_full_coverage: bool = False,
     ) -> bytes:
         """Revalidate every frozen v2 binding and return exact deterministic PNG bytes."""
 
@@ -920,6 +957,8 @@ class MediaService:
             raise MediaRuntimeError("Persistent snapshot source Asset set differs.")
         if item["compositor"] != compositor_contract():
             raise MediaRuntimeError("Persistent snapshot compositor contract differs.")
+        if require_full_coverage and unwritten_alpha_pixels(frame.rgba):
+            raise MediaRuntimeError("Persistent scene frame has unwritten compositor pixels.")
         return frame.png
 
     CAPTION_ZONE_OVERRIDES = {
@@ -1048,12 +1087,12 @@ class MediaService:
         if not isinstance(crossfade_ms, int) or crossfade_ms <= 0 or frame_rate != 30:
             raise MediaRuntimeError("Snapshot has unsupported frozen render settings.")
         if (
-            settings.get("profile") == "similarstoic-vertical-v2"
+            settings.get("profile") in cls.QA_PROFILED_RENDER_PROFILES
             and settings.get("final_frame_visual_qa") != cls.FINAL_FRAME_VISUAL_QA_PROFILE
         ):
             raise MediaRuntimeError("Snapshot has an unsupported final-frame visual QA profile.")
         if (
-            settings.get("profile") == "similarstoic-vertical-v2"
+            settings.get("profile") in cls.QA_PROFILED_RENDER_PROFILES
             and settings.get("whole_video_qa") != cls.WHOLE_VIDEO_QA_PROFILE
         ):
             raise MediaRuntimeError("Snapshot has an unsupported whole-video QA profile.")
@@ -1143,6 +1182,62 @@ class MediaService:
         filters.append(f"[composed]subtitles=captions.srt:force_style='{force_style}'[captioned]")
         return filters
 
+    @classmethod
+    def _encode_arguments(cls, render_settings: dict[str, Any]) -> tuple[list[str], bool]:
+        """Return the frozen profile's encode arguments and whether full coverage is required."""
+
+        profile = render_settings.get("profile")
+        if "encode" not in render_settings and profile != cls.PERSISTENT_RENDER_SETTINGS["profile"]:
+            return (
+                [
+                    "-c:v",
+                    "libx264",
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-r",
+                    "30",
+                    "-c:a",
+                    "aac",
+                    "-movflags",
+                    "+faststart",
+                ],
+                False,
+            )
+        if (
+            profile != cls.PERSISTENT_RENDER_SETTINGS["profile"]
+            or render_settings.get("encode") != cls.PERSISTENT_ENCODE_PROFILE
+            or render_settings.get("compositor_coverage") != cls.COMPOSITOR_COVERAGE_POLICY
+            or (render_settings.get("width"), render_settings.get("height"))
+            != (cls.PERSISTENT_ENCODE_PROFILE["width"], cls.PERSISTENT_ENCODE_PROFILE["height"])
+        ):
+            raise MediaRuntimeError("Snapshot has an unsupported frozen encode profile.")
+        encode = cls.PERSISTENT_ENCODE_PROFILE
+        return (
+            [
+                "-c:v",
+                encode["video_encoder"],
+                "-preset",
+                encode["preset"],
+                "-crf",
+                str(encode["crf"]),
+                "-pix_fmt",
+                encode["pixel_format"],
+                "-r",
+                str(encode["frame_rate"]),
+                "-c:a",
+                encode["audio_encoder"],
+                "-b:a",
+                encode["audio_bitrate"],
+                "-ac",
+                str(encode["audio_channels"]),
+                "-ar",
+                str(encode["audio_sample_rate"]),
+                "-movflags",
+                "+faststart",
+            ],
+            True,
+        )
+
     def artifact_content(self, artifact_id: str) -> bytes:
         """Safely retrieve only the exact managed bytes registered for one MP4 artifact."""
 
@@ -1181,6 +1276,7 @@ class MediaService:
                 render_settings.get("persistent_scene_compositor") != compositor_contract()
             ):
                 raise MediaRuntimeError("Snapshot has an unsupported persistent compositor.")
+            encode_arguments, require_full_coverage = self._encode_arguments(render_settings)
             arguments = [self.runtime.ffmpeg_path, "-y"]
             for index, item in enumerate(snapshot.scene_inputs):
                 if snapshot.snapshot_schema_version == "v1":
@@ -1192,7 +1288,11 @@ class MediaService:
                         )
                 else:
                     path = temporary_root / f"persistent-scene-{index:04d}.png"
-                    path.write_bytes(self._persistent_scene_frame(item, snapshot.visual_plan_id))
+                    path.write_bytes(
+                        self._persistent_scene_frame(
+                            item, snapshot.visual_plan_id, require_full_coverage
+                        )
+                    )
                 source_duration_ms = item["duration_ms"] + (
                     render_settings["crossfade_ms"]
                     if item["transition_to_next"] == "crossfade"
@@ -1223,16 +1323,7 @@ class MediaService:
                     f"{len(snapshot.scene_inputs)}:a",
                     "-t",
                     f"{narration.duration_ms / 1000:.3f}",
-                    "-c:v",
-                    "libx264",
-                    "-pix_fmt",
-                    "yuv420p",
-                    "-r",
-                    "30",
-                    "-c:a",
-                    "aac",
-                    "-movflags",
-                    "+faststart",
+                    *encode_arguments,
                     str(output),
                 ]
             )

@@ -635,3 +635,98 @@ def test_composition_filters_cover_cut_crossfade_and_all_frozen_motions() -> Non
     assert "xfade=transition=fade:duration=0.250:offset=1.000" in ";".join(filters)
     assert "zoompan" in ";".join(filters)
     assert "trim=duration=1.500" in ";".join(filters)
+
+
+HISTORICAL_ENCODE_ARGUMENTS = [
+    "-c:v",
+    "libx264",
+    "-pix_fmt",
+    "yuv420p",
+    "-r",
+    "30",
+    "-c:a",
+    "aac",
+    "-movflags",
+    "+faststart",
+]
+
+
+def test_existing_render_profile_is_unchanged_and_keeps_historical_encoding() -> None:
+    settings = MediaService.RENDER_SETTINGS
+    assert settings["profile"] == "similarstoic-vertical-v2"
+    assert "encode" not in settings
+    assert "compositor_coverage" not in settings
+    assert MediaService._encode_arguments(settings) == (HISTORICAL_ENCODE_ARGUMENTS, False)
+
+
+def test_old_persistent_snapshots_keep_historical_render_behaviour() -> None:
+    """A frozen pre-v3 persistent snapshot renders exactly as before: defaults, no coverage gate."""
+
+    historical = {**MediaService.RENDER_SETTINGS, "persistent_scene_compositor": {"frozen": 1}}
+    assert MediaService._encode_arguments(historical) == (HISTORICAL_ENCODE_ARGUMENTS, False)
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    assert MediaService._composition_filters(scenes, 1000, historical)
+
+
+def test_v3_profile_freezes_and_selects_explicit_encode_arguments() -> None:
+    settings = MediaService.PERSISTENT_RENDER_SETTINGS
+    assert settings["profile"] == "similarstoic-vertical-v3"
+    assert settings["encode"] == {
+        "video_encoder": "libx264",
+        "crf": 18,
+        "preset": "medium",
+        "pixel_format": "yuv420p",
+        "width": 1080,
+        "height": 1920,
+        "frame_rate": 30,
+        "audio_encoder": "aac",
+        "audio_bitrate": "192k",
+        "audio_channels": 1,
+        "audio_sample_rate": 48000,
+        "faststart": True,
+    }
+    arguments, require_full_coverage = MediaService._encode_arguments(settings)
+    assert require_full_coverage is True
+    assert arguments == [
+        "-c:v",
+        "libx264",
+        "-preset",
+        "medium",
+        "-crf",
+        "18",
+        "-pix_fmt",
+        "yuv420p",
+        "-r",
+        "30",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-ac",
+        "1",
+        "-ar",
+        "48000",
+        "-movflags",
+        "+faststart",
+    ]
+    scenes = [{"duration_ms": 1000, "motion": "static", "transition_to_next": None}]
+    assert MediaService._composition_filters(scenes, 1000, settings)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"encode": {**MediaService.PERSISTENT_ENCODE_PROFILE, "crf": 23}},
+        {"compositor_coverage": None},
+        {"profile": "similarstoic-vertical-v2"},
+        {"width": 720},
+    ],
+)
+def test_tampered_or_mismatched_v3_encode_profiles_fail_closed(mutation) -> None:
+    settings = {**MediaService.PERSISTENT_RENDER_SETTINGS, **mutation}
+    with pytest.raises(MediaRuntimeError, match="encode profile"):
+        MediaService._encode_arguments(settings)
+    without_encode = dict(MediaService.PERSISTENT_RENDER_SETTINGS)
+    without_encode.pop("encode")
+    with pytest.raises(MediaRuntimeError, match="encode profile"):
+        MediaService._encode_arguments(without_encode)
