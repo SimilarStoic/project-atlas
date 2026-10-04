@@ -558,6 +558,22 @@ class MediaService:
         "checks": ["persistent_aggregate_verification", COMPOSITOR_COVERAGE_POLICY],
         "perceptual_review": "not_automated",
     }
+    # Small, unobtrusive upper-right source label shown only while its cited Scene is on screen.
+    CITATION_LABEL_MAX_CHARS = 24
+    CITATION_STYLE = {
+        "style": "conveyor-citation-upper-right-v1",
+        "font_name": "Arial",
+        "font_size": 38,
+        "bold": True,
+        "alignment": 9,
+        "margin_horizontal": 110,
+        "margin_top": 260,
+        "primary_colour": "&H00383838",
+        "background_colour": "&H40FFFDF8",
+        "border_style": 3,
+        "outline": 8,
+        "shadow": 0,
+    }
     MOTIONS = frozenset({"static", "slow_zoom_in", "slow_zoom_out"})
     TRANSITIONS = frozenset({"cut", "crossfade"})
     # FFmpeg/libass converts SRT input to an internal 384x288 ASS script.  Pixel
@@ -814,6 +830,7 @@ class MediaService:
         visual_plan_id: str,
         narration_id: str,
         scene_inputs: list[dict[str, Any]],
+        citations: list[dict[str, Any]] | None = None,
     ) -> FinalMediaInputSnapshot:
         """Freeze exact persisted scene states as first-class v2 render inputs."""
 
@@ -888,6 +905,11 @@ class MediaService:
         script = self.repository.get_script(plan.script_id)
         settings = dict(self.PERSISTENT_RENDER_SETTINGS)
         settings["persistent_scene_compositor"] = contract
+        if citations:
+            settings["citation_overlay"] = {
+                "style": dict(self.CITATION_STYLE),
+                "citations": self.citation_overlays(frozen, citations),
+            }
         return self.repository.create_persistent_final_media_input_snapshot(
             snapshot_id,
             plan.id,
@@ -896,6 +918,116 @@ class MediaService:
             self.caption_cues(script.narration_text, narration.duration_ms),
             settings,
         )
+
+    @classmethod
+    def citation_overlays(
+        cls, scene_inputs: list[dict[str, Any]], citations: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Time each explicitly supplied citation to exactly its cited Scene's interval."""
+
+        intervals: dict[str, tuple[int, int]] = {}
+        elapsed = 0
+        for item in scene_inputs:
+            intervals[item["scene_id"]] = (elapsed, elapsed + item["duration_ms"])
+            elapsed += item["duration_ms"]
+        if not isinstance(citations, list):
+            raise ValueError("Citations must be a list.")
+        timed, seen = [], set()
+        for citation in citations:
+            if not isinstance(citation, dict) or set(citation) != {
+                "scene_id",
+                "label",
+                "source_ids",
+            }:
+                raise ValueError("A citation requires exactly scene_id, label and source_ids.")
+            scene_id, label, source_ids = (
+                citation["scene_id"],
+                citation["label"],
+                citation["source_ids"],
+            )
+            if scene_id not in intervals or scene_id in seen:
+                raise ValueError("A citation must name one distinct Scene of this timeline.")
+            if (
+                not isinstance(label, str)
+                or not label.strip()
+                or len(label.strip()) > cls.CITATION_LABEL_MAX_CHARS
+                or any(character in label for character in "{}\\\r\n")
+            ):
+                raise ValueError("A citation label must be 1-24 plain characters.")
+            if (
+                not isinstance(source_ids, list)
+                or not source_ids
+                or not all(isinstance(item, str) and item.strip() for item in source_ids)
+                or len(set(source_ids)) != len(source_ids)
+            ):
+                raise ValueError("A citation requires distinct source IDs.")
+            seen.add(scene_id)
+            start, end = intervals[scene_id]
+            timed.append(
+                {
+                    "scene_id": scene_id,
+                    "label": label.strip(),
+                    "source_ids": list(source_ids),
+                    "start_ms": start,
+                    "end_ms": end,
+                }
+            )
+        return sorted(timed, key=lambda item: item["start_ms"])
+
+    @classmethod
+    def _citation_filter(
+        cls,
+        render_settings: dict[str, Any],
+        scene_inputs: list[dict[str, Any]],
+        temporary_root: Path,
+    ) -> str | None:
+        """Return the frozen citation overlay filter, or None for citation-free snapshots."""
+
+        overlay = render_settings.get("citation_overlay")
+        if overlay is None:
+            return None
+        if not isinstance(overlay, dict) or overlay.get("style") != cls.CITATION_STYLE:
+            raise MediaRuntimeError("Snapshot has an unsupported citation overlay style.")
+        frozen = overlay.get("citations")
+        supplied = [
+            {key: item[key] for key in ("scene_id", "label", "source_ids")}
+            for item in frozen or []
+            if isinstance(item, dict)
+        ]
+        try:
+            expected = cls.citation_overlays(scene_inputs, supplied)
+        except (KeyError, ValueError) as error:
+            raise MediaRuntimeError("Snapshot citation overlay is invalid.") from error
+        if not frozen or frozen != expected:
+            raise MediaRuntimeError("Snapshot citation timing differs from its cited Scenes.")
+        # Position with a numpad override tag, as caption safe zones do; SRT force_style
+        # Alignment would be interpreted with legacy SSA numbering.
+        position = rf"{{\an{cls.CITATION_STYLE['alignment']}}}"
+        (temporary_root / "citations.srt").write_text(
+            cls._srt([{**item, "text": position + item["label"]} for item in expected]),
+            encoding="utf-8",
+        )
+        style = cls.CITATION_STYLE
+        width, height = cls.SRT_ASS_PLAY_RESOLUTION
+
+        def ass(value: int, play: int, frame: int) -> str:
+            return f"{value * play / frame:.6f}".rstrip("0").rstrip(".")
+
+        force_style = (
+            f"FontName={style['font_name']},"
+            f"FontSize={ass(style['font_size'], height, render_settings['height'])},"
+            f"Bold={-1 if style['bold'] else 0},"
+            f"MarginL={ass(style['margin_horizontal'], width, render_settings['width'])},"
+            f"MarginR={ass(style['margin_horizontal'], width, render_settings['width'])},"
+            f"MarginV={ass(style['margin_top'], height, render_settings['height'])},"
+            f"PrimaryColour={style['primary_colour']},"
+            f"OutlineColour={style['background_colour']},"
+            f"BackColour={style['background_colour']},"
+            f"BorderStyle={style['border_style']},"
+            f"Outline={ass(style['outline'], height, render_settings['height'])},"
+            f"Shadow={style['shadow']}"
+        )
+        return f"[captioned]subtitles=citations.srt:force_style='{force_style}'[cited]"
 
     def _persistent_scene_frame(
         self,
@@ -1312,13 +1444,18 @@ class MediaService:
             filters = self._composition_filters(
                 snapshot.scene_inputs, narration.duration_ms, render_settings
             )
+            citation_filter = self._citation_filter(
+                render_settings, snapshot.scene_inputs, temporary_root
+            )
+            if citation_filter is not None:
+                filters.append(citation_filter)
             output = temporary_root / "output.mp4"
             arguments.extend(
                 [
                     "-filter_complex",
                     ";".join(filters),
                     "-map",
-                    "[captioned]",
+                    "[cited]" if citation_filter is not None else "[captioned]",
                     "-map",
                     f"{len(snapshot.scene_inputs)}:a",
                     "-t",

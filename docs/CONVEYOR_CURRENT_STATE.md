@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After canonical post-narration retiming, the verified local full suite is **354 passed, 0 skipped, 0 failed**.
+- After claim-timed citation overlays, the verified local full suite is **358 passed, 0 skipped, 0 failed**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -304,6 +304,15 @@ Canonical post-narration retiming (`retime`, also `POST /api/v2/productions/{run
 - The newest successful render is the current render; later human whole-video QA binds to it.
 - Retime is refused after a founder decision, or once any render of the run has been packaged.
 - A failed retime has no recovery path yet.
+
+Explicit claim-timed citation overlays are supported.
+
+- They come only from an optional `citations` request field. Each citation has a scene, a label of 24 characters or
+  fewer, and source IDs drawn from the script's frozen ScriptClaimSet. They are frozen in the request digest and are
+  never inferred.
+- Each citation is bound to one Scene, rendered small in the upper-right safe area only while that Scene is on screen,
+  and carried through retime with its timing recomputed.
+- Productions without citations render exactly as before.
 
 ## Schema authority
 

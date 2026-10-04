@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from hashlib import sha256
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -11,7 +12,7 @@ from urllib.request import Request, urlopen
 import pytest
 
 from project_atlas.generation import GeneratedArtifact, GenerationFailure
-from project_atlas.media import MediaService, NarrationSynthesis
+from project_atlas.media import MediaRuntimeError, MediaService, NarrationSynthesis
 from project_atlas.production import (
     DERIVED_RASTER_NAMESPACE,
     SCENE_ADAPTER_VERSION,
@@ -1565,3 +1566,182 @@ def test_retime_production_8_shape_regression(tmp_path, monkeypatch) -> None:
         assert repository.get_final_media_artifact("p8-shape-artifact-1")
     finally:
         server.server_close()
+
+
+# --- Claim-timed citation overlay -----------------------------------------------------------
+
+
+def _citation_dark_pixels(runtime, video: Path, seconds: float, tmp_path: Path) -> int:
+    """Count dark pixels in the upper-right safe corner of one decoded frame."""
+
+    raw = tmp_path / f"corner-{seconds:.3f}.gray"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-ss",
+            f"{seconds:.3f}",
+            "-i",
+            str(video),
+            "-frames:v",
+            "1",
+            "-vf",
+            "crop=540:240:540:80,format=gray",
+            "-f",
+            "rawvideo",
+            str(raw),
+        ]
+    )
+    return sum(1 for value in raw.read_bytes() if value < 128)
+
+
+def _cited_render_run(tmp_path, monkeypatch, prefix: str, citations):
+    runtime = media_runtime_or_skip()
+    white = sized_png(runtime, tmp_path, 941, 1672)
+    generator = ValidFakeImageGenerator(content=white)
+    server = _server(tmp_path, generator, runtime)
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path))
+    request, keys = _request(server, tmp_path, prefix)
+    if citations is not None:
+        request["citations"] = citations(request)
+    post_json(server, "/api/v2/productions", request)
+    reviewed, status = post_json(
+        server, f"/api/v2/productions/{prefix}/acquisition-review", _passing_reviews(keys)
+    )
+    assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
+    return runtime, server, generator, request
+
+
+def test_citation_requests_are_validated_and_frozen(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _request(server, tmp_path, "cite-validate")
+        scene = request["timeline"][1]["scene_id"]
+        source = "cite-validate-source"
+        good = {"scene_id": scene, "label": "Source: GOV.UK", "source_ids": [source]}
+        for citations, match in (
+            ([{**good, "scene_id": "not-a-scene"}], "distinct Scene"),
+            ([good, good], "distinct Scene"),
+            ([{**good, "label": " "}], "1-24"),
+            ([{**good, "label": "x" * 25}], "1-24"),
+            ([{**good, "label": "brace {x}"}], "1-24"),
+            ([{**good, "source_ids": ["unknown-source"]}], "frozen ScriptClaimSet"),
+            ([{**good, "source_ids": []}], "distinct source IDs"),
+            ([{**good, "extra": 1}], "exactly scene_id"),
+            ([], "non-empty"),
+        ):
+            failed, status = _post_error(
+                server, "/api/v2/productions", {**request, "citations": citations}
+            )
+            assert status == 400 and match in failed["error"], (citations, failed)
+            assert generator.inputs == []
+        started, status = post_json(server, "/api/v2/productions", {**request, "citations": [good]})
+        assert status == 201
+        run = server.repository.get_production_run(request["id"])
+        assert run.request["citations"] == [good]
+        uncited = json.dumps(request, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        assert run.request_digest != sha256(uncited.encode()).hexdigest()
+    finally:
+        server.server_close()
+
+
+def test_citation_is_timed_to_its_scene_visible_only_there_and_follows_retime(
+    tmp_path, monkeypatch
+) -> None:
+    def cite_second_scene(request):
+        return [
+            {
+                "scene_id": request["timeline"][1]["scene_id"],
+                "label": "Source: GOV.UK",
+                "source_ids": ["cite-render-source"],
+            }
+        ]
+
+    runtime, server, generator, request = _cited_render_run(
+        tmp_path, monkeypatch, "cite-render", cite_second_scene
+    )
+    repository, service = server.repository, server.production_service
+    try:
+        snapshot = repository.get_final_media_input_snapshot("cite-render:snapshot:1")
+        first, second = (item["duration_ms"] for item in snapshot.scene_inputs)
+        overlay = snapshot.render_settings["citation_overlay"]
+        assert overlay["style"] == MediaService.CITATION_STYLE
+        assert overlay["citations"] == [
+            {
+                "scene_id": snapshot.scene_inputs[1]["scene_id"],
+                "label": "Source: GOV.UK",
+                "source_ids": ["cite-render-source"],
+                "start_ms": first,
+                "end_ms": first + second,
+            }
+        ]
+        artifact = repository.get_final_media_artifact("cite-render-artifact-1")
+        video = tmp_path / "media" / artifact.storage_path
+        assert _citation_dark_pixels(runtime, video, first / 2000, tmp_path) == 0
+        assert _citation_dark_pixels(runtime, video, (first + 0.75 * second) / 1000, tmp_path) > 50
+
+        # Retime keeps the citation on the same Scene and recomputes its interval.
+        _forbid_providers(monkeypatch, generator)
+        total = first + second
+        moved = [total // 4, total - total // 4]
+        service.retime("cite-render", moved, "founder", "Earlier second scene.")
+        retimed = repository.get_final_media_input_snapshot("cite-render:snapshot:2")
+        assert [
+            (c["scene_id"], c["start_ms"], c["end_ms"])
+            for c in retimed.render_settings["citation_overlay"]["citations"]
+        ] == [(snapshot.scene_inputs[1]["scene_id"], moved[0], total)]
+        video2 = (
+            tmp_path
+            / "media"
+            / repository.get_final_media_artifact("cite-render-artifact-2").storage_path
+        )
+        probe_at = (moved[0] + first) / 2000 + 0.05  # inside the new interval, before the old one
+        assert moved[0] / 1000 < probe_at < first / 1000
+        assert _citation_dark_pixels(runtime, video2, probe_at, tmp_path) > 50
+        assert _citation_dark_pixels(runtime, video, probe_at, tmp_path) == 0
+        assert _citation_dark_pixels(runtime, video2, moved[0] / 2000, tmp_path) == 0
+    finally:
+        server.server_close()
+
+
+def test_citation_free_snapshots_keep_the_existing_render_graph(tmp_path, monkeypatch) -> None:
+    runtime, server, _generator, request = _cited_render_run(
+        tmp_path, monkeypatch, "cite-none", None
+    )
+    try:
+        snapshot = server.repository.get_final_media_input_snapshot("cite-none:snapshot:1")
+        assert "citation_overlay" not in snapshot.render_settings
+        assert "citations" not in server.repository.get_production_run(request["id"]).request
+        assert (
+            MediaService._citation_filter(snapshot.render_settings, snapshot.scene_inputs, tmp_path)
+            is None
+        )
+        assert not (tmp_path / "citations.srt").exists()
+        artifact = server.repository.get_final_media_artifact("cite-none-artifact-1")
+        video = tmp_path / "media" / artifact.storage_path
+        for seconds in (0.2, 0.8):
+            assert _citation_dark_pixels(runtime, video, seconds, tmp_path) == 0
+    finally:
+        server.server_close()
+
+
+def test_tampered_citation_timing_fails_closed() -> None:
+    scenes = [
+        {"scene_id": "a", "duration_ms": 400},
+        {"scene_id": "b", "duration_ms": 600},
+    ]
+    timed = MediaService.citation_overlays(
+        scenes, [{"scene_id": "b", "label": "Source: TPR", "source_ids": ["s"]}]
+    )
+    assert timed[0]["start_ms"] == 400 and timed[0]["end_ms"] == 1000
+    settings = {**MediaService.PERSISTENT_RENDER_SETTINGS}
+    for overlay in (
+        {"style": MediaService.CITATION_STYLE, "citations": [{**timed[0], "start_ms": 0}]},
+        {"style": {**MediaService.CITATION_STYLE, "font_size": 90}, "citations": timed},
+        {"style": MediaService.CITATION_STYLE, "citations": []},
+    ):
+        with pytest.raises(MediaRuntimeError):
+            MediaService._citation_filter(
+                {**settings, "citation_overlay": overlay}, scenes, Path(".")
+            )

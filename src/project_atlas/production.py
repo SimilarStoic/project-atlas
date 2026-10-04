@@ -491,7 +491,11 @@ class ProductionLifecycleService:
         )
         try:
             snapshot = self.media_service.create_persistent_scene_snapshot(
-                f"{run.id}:snapshot:{version}", run.visual_plan_id, narration.id, inputs
+                f"{run.id}:snapshot:{version}",
+                run.visual_plan_id,
+                narration.id,
+                inputs,
+                run.request.get("citations"),
             )
             self.repository.create_production_evidence(
                 f"{run.id}:snapshot:evidence:{version}",
@@ -820,7 +824,11 @@ class ProductionLifecycleService:
                 }
             )
         snapshot = self.media_service.create_persistent_scene_snapshot(
-            f"{run.id}:snapshot:1", run.visual_plan_id, narration.id, inputs
+            f"{run.id}:snapshot:1",
+            run.visual_plan_id,
+            narration.id,
+            inputs,
+            run.request.get("citations"),
         )
         self.repository.create_production_evidence(
             f"{run.id}:snapshot:evidence:1",
@@ -1026,6 +1034,7 @@ class ProductionLifecycleService:
             "timeline",
             "forecast",
             "narration_authorized",
+            "citations",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -1073,6 +1082,8 @@ class ProductionLifecycleService:
             world_scenes.extend(world["scene_ids"])
         if world_scenes != plan_scenes:
             raise ProductionRequestError("World scene order must cover the exact VisualPlan.")
+        if "citations" in request:
+            self._validate_citations(request["visual_plan_id"], plan_scenes, request["citations"])
         if image_calls < len(variant_keys):
             raise ProductionRequestError(
                 f"Production forecast image_calls ({image_calls}) is below the "
@@ -1235,6 +1246,29 @@ class ProductionLifecycleService:
             closure = transition.get("allowed_derived_entities", [])
             if not isinstance(closure, list) or any(item not in entity_keys for item in closure):
                 raise ProductionRequestError("Derived-entity closure is invalid.")
+
+    def _validate_citations(self, plan_id: str, plan_scenes: list[str], citations: Any) -> None:
+        """Accept only explicit citations whose sources back the Script's frozen claim set."""
+
+        if not isinstance(citations, list) or not citations:
+            raise ProductionRequestError("Citations must be a non-empty list when supplied.")
+        try:
+            MediaService.citation_overlays(
+                [{"scene_id": scene_id, "duration_ms": 1} for scene_id in plan_scenes], citations
+            )
+        except ValueError as error:
+            raise ProductionRequestError(str(error)) from error
+        claim_set = self.repository.script_claim_set_payload(
+            self.repository.get_visual_plan(plan_id).script_id
+        )
+        frozen = {
+            source["id"] for source in (claim_set or {}).get("frozen_sources", []) if "id" in source
+        }
+        for citation in citations:
+            if not set(citation["source_ids"]) <= frozen:
+                raise ProductionRequestError(
+                    "Citation sources must belong to the Script's frozen ScriptClaimSet."
+                )
 
     @staticmethod
     def _affine(value: Any) -> Affine:
