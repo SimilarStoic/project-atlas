@@ -254,6 +254,33 @@ class ProductionLifecycleService:
         self._acquire(run)
         return self.status(run_id)
 
+    def authorize_narration(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
+        """Record a durable founder narration authorization without touching the frozen request.
+
+        Idempotent: a run that is already authorized (by its request or an earlier record)
+        returns its status without a new record.
+        """
+
+        run = self.repository.get_production_run(run_id)
+        if not isinstance(evidence, dict):
+            raise ProductionRequestError("Narration authorization requires an evidence object.")
+        actor = evidence.get("authorized_by")
+        if not isinstance(actor, str) or not actor.strip():
+            raise ProductionRequestError("Narration authorization requires authorized_by.")
+        if not self._narration_authorized(run):
+            self.repository.create_production_evidence(
+                f"{run_id}:narration-authorization:1",
+                run_id,
+                "narration_authorization",
+                evidence | {"authorized_by": actor.strip()},
+            )
+        return self.status(run_id)
+
+    def _narration_authorized(self, run: Any) -> bool:
+        return run.request.get("narration_authorized") is True or bool(
+            self.repository.list_production_evidence(run.id, "narration_authorization")
+        )
+
     def resume(self, run_id: str) -> dict[str, Any]:
         run = self.repository.get_production_run(run_id)
         latest = self.repository.latest_production_run_event(run_id)
@@ -579,6 +606,7 @@ class ProductionLifecycleService:
             "evidence": [self._evidence_payload(item) for item in evidence],
             "qa_reviews": [asdict(item) for item in reviews],
             "founder_review": self._founder_review_payload(run_id),
+            "narration_authorized": self._narration_authorized(run),
             "current_render": (
                 {
                     "version": self._evidence_version(current),
@@ -771,7 +799,8 @@ class ProductionLifecycleService:
         if existing:
             return self.repository.get_narration_asset(existing[-1].narration_asset_id)
         self.repository.append_production_run_event(run.id, "narrating", "narration", {})
-        if run.request.get("narration_authorized") is not True:
+        # The frozen request or a recorded founder authorization may authorize narration.
+        if not self._narration_authorized(run):
             raise ProductionRequestError(
                 "Narration is not authorized by this production request; no provider call made."
             )
@@ -781,7 +810,7 @@ class ProductionLifecycleService:
             f"{run.id}-narration-1",
             plan.script_id,
             brand_key="similarstoic",
-            execution_authorized=run.request["narration_authorized"],
+            execution_authorized=True,
         )
         self.repository.create_production_evidence(
             f"{run.id}:narration:evidence:1",

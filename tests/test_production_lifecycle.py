@@ -691,6 +691,136 @@ def test_narration_requires_explicit_frozen_authorization(tmp_path, monkeypatch)
         server.server_close()
 
 
+def _narration_authorization(server, run_id: str) -> list:
+    return server.repository.list_production_evidence(run_id, "narration_authorization")
+
+
+def test_recorded_founder_authorization_permits_exactly_one_narration(
+    tmp_path, monkeypatch
+) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    try:
+        request, review_keys = _request(
+            server, tmp_path, "narration-later", narration_authorized=False
+        )
+        started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201
+        assert started["production"]["narration_authorized"] is False
+        run_before = server.repository.get_production_run("narration-later")
+        image_calls = len(generator.inputs)
+
+        path = "/api/v2/productions/narration-later/narration-authorization"
+        _failed, status = _post_error(server, path, {"evidence": {}})
+        assert status == 400
+        assert _narration_authorization(server, "narration-later") == []
+
+        evidence = {"authorized_by": "founder", "decision_reference": "offline-test"}
+        authorized, status = post_json(server, path, {"evidence": evidence})
+        assert status == 200
+        assert authorized["production"]["narration_authorized"] is True
+        # Authorization records evidence only; the lifecycle state is unchanged.
+        assert authorized["production"]["status"] == "acquisition_review_pending"
+        again, status = post_json(server, path, {"evidence": evidence})
+        assert status == 200
+        records = _narration_authorization(server, "narration-later")
+        assert len(records) == 1 and records[0].payload == evidence
+        assert calls == []
+
+        reviewed, status = post_json(
+            server,
+            "/api/v2/productions/narration-later/acquisition-review",
+            _passing_reviews(review_keys),
+        )
+        assert status == 200
+        assert reviewed["production"]["status"] == "qa_review_pending"
+        assert len(calls) == 1
+        resumed, status = post_json(server, "/api/v2/productions/narration-later/resume", {})
+        assert status == 200
+        assert len(calls) == 1
+        assert len(server.repository.list_production_evidence("narration-later", "narration")) == 1
+        assert len(generator.inputs) == image_calls
+
+        run_after = server.repository.get_production_run("narration-later")
+        assert run_after.request == run_before.request
+        assert run_after.request["narration_authorized"] is False
+        assert run_after.request_digest == run_before.request_digest
+    finally:
+        server.server_close()
+
+
+def test_authorization_after_a_blocked_narration_resumes_without_reacquisition(
+    tmp_path, monkeypatch
+) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    try:
+        request, review_keys = _request(
+            server, tmp_path, "narration-after-block", narration_authorized=False
+        )
+        _started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201
+        image_calls = len(generator.inputs)
+        blocked, status = _post_error(
+            server,
+            "/api/v2/productions/narration-after-block/acquisition-review",
+            _passing_reviews(review_keys),
+        )
+        assert status == 422 and blocked["stage"] == "narration"
+        reviews = server.repository.list_production_qa_reviews("narration-after-block")
+        assert {item.scope for item in reviews} == {"acquisition"}
+        assert calls == []
+
+        post_json(
+            server,
+            "/api/v2/productions/narration-after-block/narration-authorization",
+            {"evidence": {"authorized_by": "founder"}},
+        )
+        resumed, status = post_json(server, "/api/v2/productions/narration-after-block/resume", {})
+        assert status == 200
+        assert resumed["production"]["status"] == "qa_review_pending"
+        assert len(calls) == 1
+        assert len(generator.inputs) == image_calls
+        after = server.repository.list_production_qa_reviews("narration-after-block")
+        assert [item for item in after if item.scope == "acquisition"] == reviews
+    finally:
+        server.server_close()
+
+
+def test_frozen_request_authorization_needs_no_record(tmp_path, monkeypatch) -> None:
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    try:
+        request, review_keys = _request(server, tmp_path, "narration-frozen")
+        started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201 and started["production"]["narration_authorized"] is True
+        authorized, status = post_json(
+            server,
+            "/api/v2/productions/narration-frozen/narration-authorization",
+            {"evidence": {"authorized_by": "founder"}},
+        )
+        assert status == 200
+        assert _narration_authorization(server, "narration-frozen") == []
+        reviewed, status = post_json(
+            server,
+            "/api/v2/productions/narration-frozen/acquisition-review",
+            _passing_reviews(review_keys),
+        )
+        assert reviewed["production"]["status"] == "qa_review_pending"
+        assert len(calls) == 1
+    finally:
+        server.server_close()
+
+
 @pytest.mark.parametrize("profile", [None, "character-profile-offline-other-v1"])
 def test_full_frame_beats_require_the_authority_character_before_any_call(
     tmp_path, profile

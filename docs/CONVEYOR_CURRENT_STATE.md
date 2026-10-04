@@ -98,7 +98,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After claim-timed citation overlays, the verified local full suite is **358 passed, 0 skipped, 0 failed**.
+- After post-acquisition founder narration authorization (a recorded action; the frozen request is unchanged; at most one
+  narration call per run), the verified local full suite is **361 passed, 0 skipped, 0 failed**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical

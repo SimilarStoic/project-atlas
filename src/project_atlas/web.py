@@ -774,6 +774,7 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             "/qa": "qa",
             "/founder-review": "founder_review",
             "/retime": "retime",
+            "/narration-authorization": "narration_authorization",
         }
         for suffix, command in production_commands.items():
             if path.startswith(production_prefix) and path.endswith(suffix):
@@ -804,6 +805,14 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                             payload, {"outcome", "evidence"}, "Whole-video QA command"
                         )
                         production = self.server.production_service.record_qa(run_id, payload)
+                    elif command == "narration_authorization":
+                        payload = self._read_json_object("Narration authorization command")
+                        self._reject_unsupported_fields(
+                            payload, {"evidence"}, "Narration authorization command"
+                        )
+                        production = self.server.production_service.authorize_narration(
+                            run_id, payload.get("evidence")
+                        )
                     elif command == "retime":
                         payload = self._read_json_object("Production retime command")
                         self._reject_unsupported_fields(
