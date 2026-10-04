@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After Phase 1B, the verified local full suite is **349 passed, 0 skipped, 0 failed**.
+- After canonical post-narration retiming, the verified local full suite is **354 passed, 0 skipped, 0 failed**.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -295,6 +295,16 @@ Full-frame aspect admission:
 Automated cell QA claims only persistent-aggregate verification and compositor coverage
 (`conveyor-automated-cell-v2`); perceptual final-frame quality remains human review.
 
+Canonical post-narration retiming (`retime`, also `POST /api/v2/productions/{run}/retime`):
+
+- It is available only from `qa_review_pending`, or after a failed whole-video QA (`failed` at stage `qa`).
+- Caller-supplied per-beat durations must sum exactly to the persisted narration duration.
+- The approved images, scene states and narration are reused, with zero provider calls.
+- Outputs are versioned, and all prior snapshots, renders and reviews are preserved.
+- The newest successful render is the current render; later human whole-video QA binds to it.
+- Retime is refused after a founder decision, or once any render of the run has been packaged.
+- A failed retime has no recovery path yet.
+
 ## Schema authority
 
 Application schema authority is the `schema_migrations` table with contiguous versions **1 through 28**. The current
@@ -394,7 +404,10 @@ gaps are:
   provider call that raises before evidence is recorded, and a provider call that returns an asset but whose
   post-provider technical inspection or probe raises before evidence is recorded;
 - image size on reference-conditioned calls: a configured image size may be recorded in provenance but is not sent
-  on reference-conditioned image-edit calls, so those calls use the provider's default size.
+  on reference-conditioned image-edit calls, so those calls use the provider's default size;
+- initial beat timing is estimated before narration exists and may require a post-narration retime;
+- narration word timestamps are not persisted, so captions are not fully speech-aligned;
+- packaging does not yet require the current, founder-accepted render.
 
 Each requires separate authorization.
 
