@@ -350,9 +350,15 @@ class ProductionLifecycleService:
         outcome, evidence = payload.get("outcome"), payload.get("evidence")
         if outcome not in {"passed", "failed"} or not isinstance(evidence, dict):
             raise ProductionRequestError("Whole-video review requires outcome and evidence.")
-        artifact = self._single_evidence(run_id, "render").final_media_artifact_id
+        # Human whole-video review always binds to the current (latest) render.
+        artifact = self._current_evidence(run_id, "render").final_media_artifact_id
+        previous = [
+            review
+            for review in self.repository.list_production_qa_reviews(run_id)
+            if review.scope == "whole_video"
+        ]
         self.repository.create_production_qa_review(
-            f"{run_id}:qa:whole-video:1",
+            f"{run_id}:qa:whole-video:{len(previous) + 1}",
             run_id,
             "whole_video",
             outcome,
@@ -398,11 +404,163 @@ class ProductionLifecycleService:
         )
         return self.status(run_id)
 
+    def retime(
+        self, run_id: str, durations_ms: list[int], actor: str, reason: str
+    ) -> dict[str, Any]:
+        """Re-render approved images and persisted narration with new absolute beat timing.
+
+        A bounded post-narration operation: no image or narration provider is reachable, every
+        earlier snapshot, render and review is preserved, and the new render becomes current
+        for the next human whole-video review.
+        """
+
+        run = self.repository.get_production_run(run_id)
+        latest = self.repository.latest_production_run_event(run_id)
+        retimeable = latest is not None and (
+            (latest.status == "qa_review_pending" and latest.stage == "qa")
+            or (
+                latest.status == "failed"
+                and latest.stage == "qa"
+                and latest.error_code == "whole_video_qa_failed"
+            )
+        )
+        if not retimeable or self._founder_review_payload(run_id) is not None:
+            raise ProductionRequestError(
+                "Retiming requires a production awaiting or failing whole-video review."
+            )
+        for field, value in (("actor", actor), ("reason", reason)):
+            if not isinstance(value, str) or not value.strip():
+                raise ProductionRequestError(f"Retime {field} is required text.")
+        scene_ids = self._plan_scene_ids(run.visual_plan_id)
+        if not isinstance(durations_ms, list) or len(durations_ms) != len(scene_ids):
+            raise ProductionRequestError("Retime requires exactly one duration per Scene.")
+        if any(
+            not isinstance(value, int) or isinstance(value, bool) or value <= 0
+            for value in durations_ms
+        ):
+            raise ProductionRequestError("Retime durations must be positive integer milliseconds.")
+        narration = self.repository.get_narration_asset(
+            self._current_evidence(run_id, "narration").narration_asset_id
+        )
+        if sum(durations_ms) != narration.duration_ms:
+            raise ProductionRequestError(
+                f"Retime durations must sum exactly to the narration's {narration.duration_ms} ms."
+            )
+        source_render = self._current_evidence(run_id, "render")
+        if self._render_artifacts_published(run_id):
+            raise ProductionRequestError("Retiming is refused once a render has been packaged.")
+        # The source snapshot is the one that produced the current render (same version), never
+        # an independently newer snapshot left behind by an incomplete render attempt.
+        source_version = self._evidence_version(source_render)
+        matching = [
+            item
+            for item in self.repository.list_production_evidence(run_id, "snapshot")
+            if self._evidence_version(item) == source_version
+        ]
+        if len(matching) != 1:
+            raise ProductionRequestError(
+                "Current render has no matching snapshot evidence of the same version."
+            )
+        source_snapshot = self.repository.get_final_media_input_snapshot(
+            matching[0].final_media_input_snapshot_id
+        )
+        states = {
+            item.payload["scene_id"]: item.resolved_state_id
+            for item in self.repository.list_production_evidence(run_id, "scene_state")
+        }
+        if [item["scene_id"] for item in source_snapshot.scene_inputs] != scene_ids or any(
+            states.get(item["scene_id"]) != item["resolved_state_id"]
+            for item in source_snapshot.scene_inputs
+        ):
+            raise ProductionRequestError(
+                "Current snapshot does not match the run's approved states."
+            )
+        version = self._next_render_version(run_id)
+        inputs = [
+            {
+                "scene_id": item["scene_id"],
+                "resolved_state_id": item["resolved_state_id"],
+                "duration_ms": duration,
+                "motion": item["motion"],
+                "transition_to_next": item["transition_to_next"],
+            }
+            for item, duration in zip(source_snapshot.scene_inputs, durations_ms, strict=True)
+        ]
+        self.repository.append_production_run_event(
+            run_id, "rendering", "retime", {"render_version": version}
+        )
+        try:
+            snapshot = self.media_service.create_persistent_scene_snapshot(
+                f"{run.id}:snapshot:{version}", run.visual_plan_id, narration.id, inputs
+            )
+            self.repository.create_production_evidence(
+                f"{run.id}:snapshot:evidence:{version}",
+                run.id,
+                "snapshot",
+                {"schema_version": snapshot.snapshot_schema_version, "render_version": version},
+                final_media_input_snapshot_id=snapshot.id,
+            )
+            artifact = self.media_service.render(
+                f"{run.id}:render-execution:{version}", f"{run.id}-artifact-{version}", snapshot.id
+            )
+            self.repository.create_production_evidence(
+                f"{run.id}:render:evidence:{version}",
+                run.id,
+                "render",
+                {"technical_validation": artifact.technical_validation, "render_version": version},
+                render_execution_id=artifact.render_execution_id,
+                final_media_artifact_id=artifact.id,
+            )
+            self._record_automated_cell_qa(
+                run,
+                {item["scene_id"]: item["resolved_state_id"] for item in inputs},
+                artifact,
+                f"{run.id}:qa:cell:{version}",
+            )
+            self.repository.create_production_evidence(
+                f"{run.id}:retime:evidence:{version}",
+                run.id,
+                "retime",
+                {
+                    "actor": actor.strip(),
+                    "reason": reason.strip(),
+                    "durations_ms": list(durations_ms),
+                    "scene_ids": scene_ids,
+                    "narration_asset_id": narration.id,
+                    "narration_content_digest": narration.content_digest,
+                    "narration_duration_ms": narration.duration_ms,
+                    "source_render_version": self._evidence_version(source_render),
+                    "source_final_media_artifact_id": source_render.final_media_artifact_id,
+                    "source_final_media_input_snapshot_id": source_snapshot.id,
+                    "render_version": version,
+                    "final_media_artifact_id": artifact.id,
+                },
+                narration_asset_id=narration.id,
+                final_media_input_snapshot_id=snapshot.id,
+                render_execution_id=artifact.render_execution_id,
+                final_media_artifact_id=artifact.id,
+            )
+            self.repository.append_production_run_event(
+                run.id,
+                "qa_review_pending",
+                "qa",
+                {
+                    "artifact_id": artifact.id,
+                    "render_version": version,
+                    "whole_video_review": "pending",
+                },
+            )
+        except Exception as error:
+            self._fail(run.id, "retime", error)
+        return self.status(run_id)
+
     def status(self, run_id: str) -> dict[str, Any]:
         run = self.repository.get_production_run(run_id)
         latest = self.repository.latest_production_run_event(run_id)
         evidence = self.repository.list_production_evidence(run_id)
         reviews = self.repository.list_production_qa_reviews(run_id)
+        renders = [item for item in evidence if item.evidence_type == "render"]
+        current = max(renders, key=self._evidence_version) if renders else None
         return {
             "id": run.id,
             "visual_plan_id": run.visual_plan_id,
@@ -417,6 +575,14 @@ class ProductionLifecycleService:
             "evidence": [self._evidence_payload(item) for item in evidence],
             "qa_reviews": [asdict(item) for item in reviews],
             "founder_review": self._founder_review_payload(run_id),
+            "current_render": (
+                {
+                    "version": self._evidence_version(current),
+                    "final_media_artifact_id": current.final_media_artifact_id,
+                }
+                if current
+                else None
+            ),
             "created_at": run.created_at,
         }
 
@@ -626,10 +792,9 @@ class ProductionLifecycleService:
         return result.narration_asset
 
     def _ensure_snapshot(self, run: Any, states: dict[str, str], narration: Any) -> Any:
-        existing = self.repository.list_production_evidence(run.id, "snapshot")
-        if existing:
+        if self.repository.list_production_evidence(run.id, "snapshot"):
             return self.repository.get_final_media_input_snapshot(
-                existing[-1].final_media_input_snapshot_id
+                self._current_evidence(run.id, "snapshot").final_media_input_snapshot_id
             )
         timeline = {item["scene_id"]: item for item in run.request["timeline"]}
         scene_ids = self._plan_scene_ids(run.visual_plan_id)
@@ -667,9 +832,10 @@ class ProductionLifecycleService:
         return snapshot
 
     def _ensure_render(self, run: Any, snapshot: Any) -> Any:
-        existing = self.repository.list_production_evidence(run.id, "render")
-        if existing:
-            return self.repository.get_final_media_artifact(existing[-1].final_media_artifact_id)
+        if self.repository.list_production_evidence(run.id, "render"):
+            return self.repository.get_final_media_artifact(
+                self._current_evidence(run.id, "render").final_media_artifact_id
+            )
         self.repository.append_production_run_event(run.id, "rendering", "render", {})
         artifact = self.media_service.render(
             f"{run.id}:render-execution:1", f"{run.id}-artifact-1", snapshot.id
@@ -690,6 +856,13 @@ class ProductionLifecycleService:
             review.scope == "cell" for review in self.repository.list_production_qa_reviews(run.id)
         ):
             return
+        self._record_automated_cell_qa(run, states, artifact, f"{run.id}:qa:cell:1")
+
+    def _record_automated_cell_qa(
+        self, run: Any, states: dict[str, str], artifact: Any, review_id: str
+    ) -> None:
+        """Record one automated cell review bound to exactly one rendered artifact."""
+
         evidence = {
             scene_id: self.repository.verify_persistent_scene_aggregate(state_id)
             for scene_id, state_id in states.items()
@@ -702,7 +875,7 @@ class ProductionLifecycleService:
         }
         outcome = "passed" if not any(coverage.values()) else "failed"
         self.repository.create_production_qa_review(
-            f"{run.id}:qa:cell:1",
+            review_id,
             run.id,
             "cell",
             outcome,
@@ -1218,11 +1391,58 @@ class ProductionLifecycleService:
         ]
         return max(rounds, default=0) + 1
 
-    def _single_evidence(self, run_id: str, kind: str):
+    @staticmethod
+    def _evidence_version(item: Any) -> int:
+        """Versioned evidence IDs end in their integer render/output version."""
+
+        return int(item.id.rsplit(":", 1)[1])
+
+    def _current_evidence(self, run_id: str, kind: str):
+        """Return the highest-version evidence of one kind; earlier versions stay queryable."""
+
         evidence = self.repository.list_production_evidence(run_id, kind)
-        if len(evidence) != 1:
-            raise ProductionRequestError(f"Production requires exactly one {kind} evidence record.")
-        return evidence[0]
+        if not evidence:
+            raise ProductionRequestError(f"Production has no {kind} evidence record.")
+        return max(evidence, key=self._evidence_version)
+
+    def _next_render_version(self, run_id: str) -> int:
+        """Pick the next output version, skipping any identity already persisted."""
+
+        snapshots = self.repository.list_production_evidence(run_id, "snapshot")
+        renders = self.repository.list_production_evidence(run_id, "render")
+        version = 1 + max([self._evidence_version(item) for item in snapshots + renders], default=0)
+        evidence_ids = {item.id for item in self.repository.list_production_evidence(run_id)}
+        review_ids = {item.id for item in self.repository.list_production_qa_reviews(run_id)}
+
+        def exists(getter, identity: str) -> bool:
+            try:
+                getter(identity)
+            except KeyError:
+                return False
+            return True
+
+        while (
+            exists(self.repository.get_final_media_input_snapshot, f"{run_id}:snapshot:{version}")
+            or exists(self.repository.get_render_execution, f"{run_id}:render-execution:{version}")
+            or exists(self.repository.get_final_media_artifact, f"{run_id}-artifact-{version}")
+            or {
+                f"{run_id}:snapshot:evidence:{version}",
+                f"{run_id}:render:evidence:{version}",
+                f"{run_id}:retime:evidence:{version}",
+            }
+            & evidence_ids
+            or f"{run_id}:qa:cell:{version}" in review_ids
+        ):
+            version += 1
+        return version
+
+    def _render_artifacts_published(self, run_id: str) -> bool:
+        """True once any render of this run has entered the publishing workflow."""
+
+        return any(
+            self.repository.final_media_artifact_is_packaged(item.final_media_artifact_id)
+            for item in self.repository.list_production_evidence(run_id, "render")
+        )
 
     def _fail(self, run_id: str, stage: str, error: Exception) -> None:
         self.repository.append_production_run_event(

@@ -406,6 +406,17 @@ class PublishingRepositoryMixin:
         )
         return [self.get_publishing_package(row["id"]) for row in rows]
 
+    def final_media_artifact_is_packaged(self, artifact_id: str) -> bool:
+        """True once any publishing package references this final-media artifact."""
+
+        return (
+            self.connection.execute(
+                "SELECT 1 FROM publishing_packages WHERE final_media_artifact_id = ? LIMIT 1",
+                (artifact_id,),
+            ).fetchone()
+            is not None
+        )
+
     def create_publishing_package(
         self,
         package_id: str,

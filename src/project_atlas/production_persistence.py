@@ -25,7 +25,8 @@ _TRANSITIONS = {
     "assembling": {"narrating", "failed"},
     "narrating": {"rendering", "failed"},
     "rendering": {"qa_review_pending", "failed"},
-    "qa_review_pending": {"private_founder_review_ready", "failed"},
+    # A bounded post-narration retime re-renders approved inputs before human QA.
+    "qa_review_pending": {"private_founder_review_ready", "failed", "rendering"},
     "private_founder_review_ready": {"founder_accepted", "founder_rejected"},
     "founder_accepted": set(),
     "founder_rejected": set(),

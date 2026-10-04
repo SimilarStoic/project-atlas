@@ -16,7 +16,9 @@ from project_atlas.production import (
     DERIVED_RASTER_NAMESPACE,
     SCENE_ADAPTER_VERSION,
     ManagedAssetSceneAdapter,
+    ProductionLifecycleError,
     ProductionLifecycleService,
+    ProductionRequestError,
 )
 from project_atlas.scene_media import (
     encode_rgba_png,
@@ -1067,5 +1069,499 @@ def test_non_full_frame_sources_are_not_aspect_guarded(tmp_path) -> None:
             "aspect-partial", source_id, "aspect-partial:raster-v2:test", None
         )
         assert (raster.width, raster.height) == (400, 400)
+    finally:
+        server.server_close()
+
+
+# --- Bounded post-narration retiming -------------------------------------------------------
+
+
+def _forbid_providers(monkeypatch, generator) -> None:
+    """After the first render, any image or narration provider call is a test failure."""
+
+    def no_narration(*_args, **_kwargs):
+        raise AssertionError("narration provider must not be called by a retime")
+
+    monkeypatch.setattr(
+        "project_atlas.narration.InworldNarrationSynthesizer.synthesize", no_narration
+    )
+    generator.failure = GenerationFailure("image provider must not be called by a retime")
+
+
+def _render_ready_run(tmp_path, monkeypatch, prefix: str):
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    request, keys = _request(server, tmp_path, prefix)
+    post_json(server, "/api/v2/productions", request)
+    reviewed, status = post_json(
+        server, f"/api/v2/productions/{prefix}/acquisition-review", _passing_reviews(keys)
+    )
+    assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
+    assert len(calls) == 1
+    return server, generator, request
+
+
+def _durations_for(server, run_id: str, count: int) -> list[int]:
+    narration_id = server.repository.list_production_evidence(run_id, "narration")[
+        0
+    ].narration_asset_id
+    total = server.repository.get_narration_asset(narration_id).duration_ms
+    first = total // 3
+    return [first, total - first] if count == 2 else [total]
+
+
+def test_retime_rerenders_approved_inputs_and_rebinds_human_review(tmp_path, monkeypatch) -> None:
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "retime-flow")
+    repository, service = server.repository, server.production_service
+    try:
+        run_id = request["id"]
+        run_before = repository.get_production_run(run_id)
+        # Normal first render: exactly one versioned render, snapshot and cell review.
+        assert [e.id for e in repository.list_production_evidence(run_id, "render")] == [
+            f"{run_id}:render:evidence:1"
+        ]
+        assert [
+            r.id for r in repository.list_production_qa_reviews(run_id) if r.scope == "cell"
+        ] == [f"{run_id}:qa:cell:1"]
+        assert service.resume(run_id)["current_render"]["version"] == 1  # idempotent
+        assert len(repository.list_production_evidence(run_id, "render")) == 1
+
+        image_calls = len(generator.inputs)
+        _forbid_providers(monkeypatch, generator)
+        original_evidence = repository.list_production_evidence(run_id)
+        original_reviews = repository.list_production_qa_reviews(run_id)
+        original_snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:1")
+        original_artifact = repository.get_final_media_artifact(f"{run_id}-artifact-1")
+        narration_id = repository.list_production_evidence(run_id, "narration")[
+            0
+        ].narration_asset_id
+        durations = _durations_for(server, run_id, 2)
+
+        retimed, status = post_json(
+            server,
+            f"/api/v2/productions/{run_id}/retime",
+            {"durations_ms": durations, "actor": "founder", "reason": "Align cuts to pauses."},
+        )
+        assert status == 200
+        production = retimed["production"]
+        assert production["status"] == "qa_review_pending" and production["stage"] == "qa"
+        assert production["current_render"] == {
+            "version": 2,
+            "final_media_artifact_id": f"{run_id}-artifact-2",
+        }
+        assert len(generator.inputs) == image_calls
+        assert production["founder_review"] is None
+        assert not [
+            r for r in repository.list_production_qa_reviews(run_id) if r.scope == "whole_video"
+        ]
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM publishing_packages").fetchone()[0]
+            == 0
+        )
+
+        snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:2")
+        assert [item["duration_ms"] for item in snapshot.scene_inputs] == durations
+        assert snapshot.narration_asset_id == narration_id
+        for new, old in zip(snapshot.scene_inputs, original_snapshot.scene_inputs, strict=True):
+            assert new["resolved_state_id"] == old["resolved_state_id"]
+            assert new["source_assets"] == old["source_assets"]
+            assert new["transition_to_next"] == old["transition_to_next"]
+        assert snapshot.caption_cues == original_snapshot.caption_cues
+        assert snapshot.render_settings == original_snapshot.render_settings
+
+        # Nothing historical was replaced; new records are versioned alongside it.
+        assert all(
+            item in repository.list_production_evidence(run_id) for item in original_evidence
+        )
+        assert all(
+            item in repository.list_production_qa_reviews(run_id) for item in original_reviews
+        )
+        assert (
+            repository.get_final_media_input_snapshot(f"{run_id}:snapshot:1") == original_snapshot
+        )
+        assert repository.get_final_media_artifact(f"{run_id}-artifact-1") == original_artifact
+        cells = {
+            r.id: r for r in repository.list_production_qa_reviews(run_id) if r.scope == "cell"
+        }
+        assert cells[f"{run_id}:qa:cell:1"].final_media_artifact_id == f"{run_id}-artifact-1"
+        assert cells[f"{run_id}:qa:cell:2"].final_media_artifact_id == f"{run_id}-artifact-2"
+        assert cells[f"{run_id}:qa:cell:2"].outcome == "passed"
+
+        retime_evidence = repository.list_production_evidence(run_id, "retime")
+        assert len(retime_evidence) == 1
+        payload = retime_evidence[0].payload
+        assert payload["actor"] == "founder" and payload["reason"] == "Align cuts to pauses."
+        assert payload["durations_ms"] == durations
+        assert payload["narration_asset_id"] == narration_id
+        assert payload["source_render_version"] == 1
+        assert payload["source_final_media_artifact_id"] == f"{run_id}-artifact-1"
+        assert payload["render_version"] == 2
+        assert payload["final_media_artifact_id"] == f"{run_id}-artifact-2"
+        assert retime_evidence[0].narration_asset_id == narration_id
+
+        # Human QA after a retime binds to the new render; a failed review can be retimed.
+        failed = service.record_qa(run_id, {"outcome": "failed", "evidence": {"pacing": "late"}})
+        assert (failed["status"], failed["stage"]) == ("failed", "qa")
+        whole = [
+            r for r in repository.list_production_qa_reviews(run_id) if r.scope == "whole_video"
+        ]
+        assert [(r.id, r.final_media_artifact_id) for r in whole] == [
+            (f"{run_id}:qa:whole-video:1", f"{run_id}-artifact-2")
+        ]
+        third = service.retime(run_id, list(reversed(durations)), "founder", "Second pacing pass.")
+        assert third["status"] == "qa_review_pending"
+        assert third["current_render"]["final_media_artifact_id"] == f"{run_id}-artifact-3"
+        assert repository.get_final_media_input_snapshot(f"{run_id}:snapshot:3")
+        assert repository.get_render_execution(f"{run_id}:render-execution:3").id
+        assert [
+            e.id
+            for e in sorted(
+                repository.list_production_evidence(run_id, "render"), key=lambda e: e.id
+            )
+        ] == [
+            f"{run_id}:render:evidence:1",
+            f"{run_id}:render:evidence:2",
+            f"{run_id}:render:evidence:3",
+        ]
+        passed = service.record_qa(run_id, {"outcome": "passed", "evidence": {"pacing": "ok"}})
+        assert passed["status"] == "private_founder_review_ready"
+        whole = {
+            r.id: r
+            for r in repository.list_production_qa_reviews(run_id)
+            if r.scope == "whole_video"
+        }
+        assert whole[f"{run_id}:qa:whole-video:2"].final_media_artifact_id == f"{run_id}-artifact-3"
+
+        with pytest.raises(ProductionRequestError, match="awaiting or failing"):
+            service.retime(run_id, durations, "founder", "Too late.")
+        service.founder_review(
+            run_id,
+            {
+                "outcome": "accepted",
+                "founder_actor": "founder",
+                "decision_reference": "r",
+                "notes": "",
+            },
+        )
+        with pytest.raises(ProductionRequestError, match="awaiting or failing"):
+            service.retime(run_id, durations, "founder", "After acceptance.")
+
+        run_after = repository.get_production_run(run_id)
+        assert run_after.request == run_before.request
+        assert run_after.request_digest == run_before.request_digest
+    finally:
+        server.server_close()
+
+
+def test_retime_timing_and_identity_validation_fails_closed(tmp_path, monkeypatch) -> None:
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "retime-validate")
+    repository, service = server.repository, server.production_service
+    try:
+        run_id = request["id"]
+        _forbid_providers(monkeypatch, generator)
+        good = _durations_for(server, run_id, 2)
+        events = repository.latest_production_run_event(run_id).sequence
+        for durations, match in (
+            ([sum(good)], "one duration per Scene"),
+            (good + [1], "one duration per Scene"),
+            ([0, sum(good)], "positive integer"),
+            ([-1, sum(good) + 1], "positive integer"),
+            ([True, sum(good) - 1], "positive integer"),
+            ([good[0] + 0.0, good[1]], "positive integer"),
+            ([good[0], good[1] + 1], "sum exactly"),
+            ([good[0], good[1] - 1], "sum exactly"),
+            ("1,2", "one duration per Scene"),
+        ):
+            with pytest.raises(ProductionRequestError, match=match):
+                service.retime(run_id, durations, "founder", "bad timing")
+        for actor, reason in (("", "x"), ("founder", " "), (None, "x")):
+            with pytest.raises(ProductionRequestError, match="required text"):
+                service.retime(run_id, good, actor, reason)
+        assert repository.latest_production_run_event(run_id).sequence == events
+        assert len(repository.list_production_evidence(run_id, "render")) == 1
+        assert repository.list_production_evidence(run_id, "retime") == []
+        rejected, status = _post_error(
+            server,
+            f"/api/v2/productions/{run_id}/retime",
+            {"durations_ms": good, "actor": "founder", "reason": "x", "images": []},
+        )
+        assert status == 400 and "unsupported" in rejected["error"]
+
+        # A retime whose render fails stays failed; retime is not a recovery mechanism.
+        original_render = MediaService.render
+
+        def failing_render(*_args, **_kwargs):
+            raise RuntimeError("offline render failure")
+
+        monkeypatch.setattr(MediaService, "render", failing_render)
+        with pytest.raises(ProductionLifecycleError):
+            service.retime(run_id, good, "founder", "first attempt")
+        latest = repository.latest_production_run_event(run_id)
+        assert (latest.status, latest.stage) == ("failed", "retime")
+        assert repository.get_final_media_input_snapshot(f"{run_id}:snapshot:2")
+        monkeypatch.setattr(MediaService, "render", original_render)
+        with pytest.raises(ProductionRequestError, match="awaiting or failing"):
+            service.retime(run_id, good, "founder", "second attempt")
+        assert repository.latest_production_run_event(run_id).sequence == latest.sequence
+        assert [e.id for e in repository.list_production_evidence(run_id, "render")] == [
+            f"{run_id}:render:evidence:1"
+        ]
+    finally:
+        server.server_close()
+
+
+def test_retime_source_snapshot_matches_the_current_render_version(tmp_path, monkeypatch) -> None:
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "retime-orphan")
+    repository, service = server.repository, server.production_service
+    try:
+        run_id = request["id"]
+        _forbid_providers(monkeypatch, generator)
+        good = _durations_for(server, run_id, 2)
+        original = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:1")
+        # An orphan, higher-version snapshot with no corresponding render evidence.
+        orphan = server.media_service.create_persistent_scene_snapshot(
+            f"{run_id}:snapshot:2",
+            original.visual_plan_id,
+            original.narration_asset_id,
+            [
+                {
+                    "scene_id": item["scene_id"],
+                    "resolved_state_id": item["resolved_state_id"],
+                    "duration_ms": duration,
+                    "motion": item["motion"],
+                    "transition_to_next": item["transition_to_next"],
+                }
+                for item, duration in zip(original.scene_inputs, reversed(good), strict=True)
+            ],
+        )
+        repository.create_production_evidence(
+            f"{run_id}:snapshot:evidence:2",
+            run_id,
+            "snapshot",
+            {"schema_version": orphan.snapshot_schema_version},
+            final_media_input_snapshot_id=orphan.id,
+        )
+
+        result = service.retime(run_id, good, "founder", "Retime from the rendered snapshot.")
+        payload = repository.list_production_evidence(run_id, "retime")[0].payload
+        assert payload["source_render_version"] == 1
+        assert payload["source_final_media_input_snapshot_id"] == f"{run_id}:snapshot:1"
+        # The orphan's version is skipped rather than collided with.
+        assert result["current_render"] == {
+            "version": 3,
+            "final_media_artifact_id": f"{run_id}-artifact-3",
+        }
+        assert [
+            i["duration_ms"]
+            for i in repository.get_final_media_input_snapshot(f"{run_id}:snapshot:3").scene_inputs
+        ] == good
+        assert repository.get_final_media_input_snapshot(f"{run_id}:snapshot:2") == orphan
+
+        # A current render with no snapshot evidence of the same version fails closed.
+        artifact = repository.get_final_media_artifact(f"{run_id}-artifact-3")
+        repository.create_production_evidence(
+            f"{run_id}:render:evidence:9",
+            run_id,
+            "render",
+            {"technical_validation": {}},
+            render_execution_id=artifact.render_execution_id,
+            final_media_artifact_id=artifact.id,
+        )
+        with pytest.raises(ProductionRequestError, match="matching snapshot"):
+            service.retime(run_id, good, "founder", "No matching snapshot.")
+    finally:
+        server.server_close()
+
+
+def test_retime_is_refused_once_a_render_is_packaged(tmp_path, monkeypatch) -> None:
+    from project_atlas.publishing_state import TARGET_CHANNEL
+    from tests.test_publishing import _manifest
+
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "retime-packaged")
+    repository, service = server.repository, server.production_service
+    try:
+        run_id = request["id"]
+        artifact = repository.get_final_media_artifact(f"{run_id}-artifact-1")
+        repository.create_publishing_package(
+            "retime-package",
+            "retime-pilot",
+            1,
+            1,
+            artifact.id,
+            artifact.content_digest,
+            TARGET_CHANNEL,
+            _manifest(),
+        )
+        with pytest.raises(ProductionRequestError, match="packaged"):
+            service.retime(run_id, _durations_for(server, run_id, 2), "founder", "Too late.")
+        assert len(repository.list_production_evidence(run_id, "render")) == 1
+    finally:
+        server.server_close()
+
+
+def _single_beat_worlds_request(server, tmp_path: Path, prefix: str, count: int) -> dict:
+    repository = server.repository
+    plan = create_authorized_visual_plan(server, prefix)
+    scenes, specs = [], []
+    for index in range(1, count + 1):
+        scene = repository.create_scene_under_visual_plan_authorization(
+            f"{prefix}-scene-{index}", plan.id, index, f"Beat {index}", f"Visual {index}"
+        )
+        spec = repository.create_asset_spec_under_scene_authorization(
+            f"{prefix}-spec-{index}",
+            scene.id,
+            "character",
+            "Full-scene beat.",
+            f"Beat {index}",
+            f"Draw beat {index} without text.",
+            character_profile_id=HAMSTER_PROFILE,
+        )
+        scenes.append(scene.id)
+        specs.append(spec.id)
+    reference_set_id = ensure_character_reference_set(server, tmp_path / "assets")
+    repository.create_visual_reference_authority(
+        "visual-reference-authority-similarstoic-global-illustration-v1",
+        "similarstoic-global-illustration",
+        "global_illustration_style",
+        "Offline lifecycle authority",
+        "Offline style authority.",
+        [("asset-http-reference-basis-v1", "style")],
+    )
+    treatment = {
+        "style_profile_id": "visual-style-profile-similarstoic-core-v3",
+        "palette_id": "similarstoic-core-v3",
+        "wall_treatment_id": "off-white-negative-space-v1",
+        "lighting_policy_id": "flat-soft-light-v1",
+    }
+    return {
+        "id": prefix,
+        "visual_plan_id": plan.id,
+        "authority": {
+            "character_profile_id": HAMSTER_PROFILE,
+            "character_reference_set_id": reference_set_id,
+            "visual_reference_authority_id": (
+                "visual-reference-authority-similarstoic-global-illustration-v1"
+            ),
+            "visual_style_profile_id": "visual-style-profile-similarstoic-core-v3",
+        },
+        "worlds": [
+            {
+                "key": f"beat-{index}",
+                "scene_ids": [scene_id],
+                "visual_treatment": treatment,
+                "entities": [
+                    {
+                        "key": "scene",
+                        "semantic_role": "full-scene-illustration",
+                        "persistence_class": "LOCKED_STATIC",
+                        "purpose": "Full-scene beat.",
+                        "neutral_scale_id": "full-frame-v1",
+                        "initial_variant_key": "beat",
+                        "initial_transform": {},
+                        "variants": [
+                            {
+                                "key": "beat",
+                                "asset_spec_id": spec_id,
+                                "intrinsic_size_wu": [1080, 1920],
+                            }
+                        ],
+                    }
+                ],
+                "transitions": [],
+            }
+            for index, (scene_id, spec_id) in enumerate(zip(scenes, specs, strict=True), 1)
+        ],
+        "timeline": [
+            {
+                "scene_id": scene_id,
+                "duration_weight": 1,
+                "transition_to_next": "crossfade" if index < count - 1 else None,
+            }
+            for index, scene_id in enumerate(scenes)
+        ],
+        "forecast": {"image_calls": count, "narration_calls": 1},
+        "narration_authorized": True,
+    }
+
+
+def test_retime_production_8_shape_regression(tmp_path, monkeypatch) -> None:
+    """Eight full-frame v3 beats over a 30,220 ms narration, retimed to founder durations."""
+
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    wav = tmp_path / "narration-30220.wav"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=330:sample_rate=48000:duration=30.22",
+            "-c:a",
+            "pcm_s16le",
+            str(wav),
+        ]
+    )
+    calls: list[str] = []
+
+    def synthesize(engine, text):
+        calls.append(text)
+        return NarrationSynthesis(
+            wav.read_bytes(),
+            "audio/wav",
+            engine.engine_kind,
+            engine.engine_identity,
+            engine.voice_identity,
+            engine.locale,
+            engine.settings,
+        )
+
+    monkeypatch.setattr(
+        "project_atlas.narration.InworldNarrationSynthesizer.synthesize", synthesize
+    )
+    repository, service = server.repository, server.production_service
+    try:
+        request = _single_beat_worlds_request(server, tmp_path, "p8-shape", 8)
+        post_json(server, "/api/v2/productions", request)
+        keys = [(f"beat-{i}", "scene", "beat") for i in range(1, 9)]
+        reviewed, _status = post_json(
+            server, "/api/v2/productions/p8-shape/acquisition-review", _passing_reviews(keys)
+        )
+        assert reviewed["production"]["status"] == "qa_review_pending"
+        narration_id = repository.list_production_evidence("p8-shape", "narration")[
+            0
+        ].narration_asset_id
+        assert repository.get_narration_asset(narration_id).duration_ms == 30220
+        active = {k: v["asset_id"] for k, v in service._acquisition_map("p8-shape").items()}
+        image_calls, narration_calls = len(generator.inputs), len(calls)
+        original = repository.get_final_media_input_snapshot("p8-shape:snapshot:1")
+
+        durations = [3053, 2857, 3471, 2346, 3262, 4728, 5006, 5497]
+        assert sum(durations) == 30220
+        result = service.retime("p8-shape", durations, "founder", "Pause-aligned pacing.")
+
+        assert result["status"] == "qa_review_pending"
+        snapshot = repository.get_final_media_input_snapshot("p8-shape:snapshot:2")
+        assert [item["duration_ms"] for item in snapshot.scene_inputs] == durations
+        assert snapshot.narration_asset_id == narration_id
+        assert snapshot.render_settings["profile"] == "similarstoic-vertical-v3"
+        assert [i["source_assets"] for i in snapshot.scene_inputs] == [
+            i["source_assets"] for i in original.scene_inputs
+        ]
+        assert {k: v["asset_id"] for k, v in service._acquisition_map("p8-shape").items()} == active
+        assert (len(generator.inputs), len(calls)) == (image_calls, narration_calls)
+        artifact = repository.get_final_media_artifact("p8-shape-artifact-2")
+        assert abs(artifact.duration_ms - 30220) <= 100
+        cells = [r for r in repository.list_production_qa_reviews("p8-shape") if r.scope == "cell"]
+        assert {(r.id, r.final_media_artifact_id, r.outcome) for r in cells} == {
+            ("p8-shape:qa:cell:1", "p8-shape-artifact-1", "passed"),
+            ("p8-shape:qa:cell:2", "p8-shape-artifact-2", "passed"),
+        }
+        assert repository.get_final_media_artifact("p8-shape-artifact-1")
     finally:
         server.server_close()
