@@ -25,7 +25,8 @@ from project_atlas.persistence import (
     VisualStyleProfile,
 )
 
-DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v3"
+# New generations use v4; recorded executions and frozen production runs keep their profile.
+DEFAULT_VISUAL_STYLE_PROFILE_ID = "visual-style-profile-similarstoic-core-v4"
 DEFAULT_GLOBAL_VISUAL_AUTHORITY_ID = (
     "visual-reference-authority-similarstoic-global-illustration-v1"
 )

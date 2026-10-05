@@ -6806,6 +6806,87 @@ class AtlasRepository(
             "highly polished AI-clean finish",
             "detailed fur rendering on the canonical recurring hamster",
         ]
+        # v4 carries founder-validated Production 8/9 character findings into the executable
+        # default (docs/SIMILARSTOIC_CREATIVE_CALIBRATION.md section A).
+        v4_rules = json.loads(json.dumps(v3_rules))
+        # v3's text entry allows text an AssetSpec explicitly requires; the approved full-scene
+        # method forbids text in generated source art outright, so v4's copy is unconditional
+        # (v3 itself is unchanged).
+        conditional_text = (
+            "invented explanatory text, posters, labels, dashboards, written information or "
+            "signage unless explicitly required by the AssetSpec"
+        )
+        if conditional_text not in v3_rules["global"]["avoid"]:
+            raise RuntimeError("v4 derivation expects v3's conditional text rule.")
+        source_text = (
+            "embedded words, letters, labels, typography, numbers, captions or signage in "
+            "generated source art"
+        )
+        v4_rules["global"]["avoid"] = [
+            *(
+                source_text if entry == conditional_text else entry
+                for entry in v3_rules["global"]["avoid"]
+            ),
+            "infographics, posters, diagrams, UI, card layouts or detached collections of symbols",
+            "logos or watermarks",
+            "blurred or soft-focus source edges",
+        ]
+        v4_rules["global"]["detail"] = (
+            f"{v3_rules['global']['detail']}; phones, calendars, keypads and similar props are "
+            "allowed as physical objects, with blank or non-legible surfaces, and nothing relies "
+            "on readable markings"
+        )
+        # Canonical full-scene beats are character AssetSpecs, so v4 replaces v3's isolated-subject
+        # role and "plain or minimal background; very few competing props" preference with the
+        # approved full-scene method (formerly a doc-only acquisition grammar).
+        v4_rules["asset_types"]["character"] = {
+            "role": (
+                "one 9:16 full-scene action illustration in which the hamster acts inside one "
+                "coherent physical environment"
+            ),
+            "prefer": [
+                "the hamster as the dominant acting subject",
+                "clear silhouette and body language",
+                "only the setting and props the beat's action needs",
+            ],
+            "cast": (
+                "the canonical hamster is the only character; no humans or human body parts and no "
+                "extra characters"
+            ),
+            "identity": (
+                "match the supplied canonical hamster reference images and preserve the Core "
+                "hamster's head-to-body ratio, rounded torso silhouette, face and ear proportions, "
+                "long whiskers and exact multicolour crossbody bag"
+            ),
+            "staging": (
+                "an expressive pose that fits the beat; the hamster moves naturally within the "
+                "composition rather than always standing in one place"
+            ),
+        }
+        v4_rules["asset_types"]["character"].update(
+            {
+                "expression": (
+                    "one coherent, readable facial expression; when the AssetSpec gives an "
+                    "explicit Expression line with brows and mouth, follow it exactly and add no "
+                    "conflicting or residual brow or mouth geometry; furrowed or angled-down brows "
+                    "only when the specified expression calls for them"
+                ),
+                "mouth": (
+                    "exactly one simple toothless mouth, with no teeth and no doubled or residual "
+                    "mouth lines"
+                ),
+                "paws_and_feet": (
+                    "clean paws with clearly separate digits and feet with clean toes, never extra "
+                    "or doubled digits or toes"
+                ),
+                "strap": "the crossbody strap is one continuous band from shoulder to bag",
+                "duplication": "no duplicated limbs, facial features or objects",
+                "proportions": (
+                    "short, compact hamster proportions in every pose; furniture and props are "
+                    "sized to the hamster, and the torso and legs are never stretched to reach them"
+                ),
+            }
+        )
         stamp = now()
         with self.connection:
             self.connection.execute(
@@ -6840,6 +6921,28 @@ class AtlasRepository(
                         "restrained scene colour."
                     ),
                     json.dumps(v3_rules, sort_keys=True),
+                    stamp,
+                ),
+            )
+            self.connection.execute(
+                "INSERT OR IGNORE INTO visual_style_profiles VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?)",
+                (
+                    "visual-style-profile-similarstoic-core-v4",
+                    "similarstoic-core",
+                    4,
+                    "SimilarStoic Core",
+                    (
+                        "The Core v3 baseline plus founder-validated Production 8/9 character "
+                        "integrity rules for SimilarStoic."
+                    ),
+                    (
+                        "Use a crude, visibly human hand-drawn editorial sketch with organic, "
+                        "imperfect dark linework and simple readable forms. For the canonical "
+                        "recurring hamster, preserve the founder-approved warm tan/orange accents "
+                        "and signature flat multi-colour crossbody sling/man-bag within otherwise "
+                        "restrained scene colour."
+                    ),
+                    json.dumps(v4_rules, sort_keys=True),
                     stamp,
                 ),
             )

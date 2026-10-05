@@ -18,22 +18,29 @@ of this approved method.
 - Generate dynamic, integrated full-scene action illustrations in which the narrator explains and the hamster/world
   illustrate. Preserve expressive facial and pose variation, movement through the composition, meaningful
   scene-to-scene progression, and sparse warm off-white negative space.
-- Resolve the existing `VisualStyleProfile` `visual-style-profile-similarstoic-core-v3`, `CharacterProfile`
+- Resolve the default `VisualStyleProfile` `visual-style-profile-similarstoic-core-v4`, `CharacterProfile`
   `character-profile-similarstoic-hamster-core-v1`, latest exact-profile `CharacterReferenceSet`
-  `character-reference-set-similarstoic-hamster-core-v1`, and global `VisualReferenceAuthority`
-  `visual-reference-authority-similarstoic-global-illustration-v1`. Their approved reference assets are respectively
+  `character-reference-set-similarstoic-hamster-core-v2`, and global `VisualReferenceAuthority`
+  `visual-reference-authority-similarstoic-global-illustration-v1`. Reference set v2 is the identity reference
   `asset-similarstoic-control-v1-reference-anchor` (SHA-256
-  `11332518CDACE450F8E432FE8CB3558EA2374CF0273F94973912E914CEE66956`) and
+  `11332518CDACE450F8E432FE8CB3558EA2374CF0273F94973912E914CEE66956`) followed by the approved multi-pose identity
+  reference `asset-similarstoic-core-identity-multipose-a5564bd0` (SHA-256
+  `D3ACB16AF30B9A5ACA29E92E2E8F19D7B5A21DF4B8E572DE054756CA23321CC4`); the global style reference is
   `asset-visual-authority-default-scene-language-v1` (SHA-256
   `989E0DA7B273A42F0BF8C229C1510B904902B1EEF3336E626705966E6048CCB2`). Existing generation resolution already
-  selects these authorities; do not create a parallel canon or style-memory system.
-- Use the persisted common acquisition grammar: one 9:16 SimilarStoic Core v3 full-scene action illustration,
-  conditioned on both canonical references; preserve the hamster's head/body ratio, rounded torso, face/ear
-  proportions, whiskers, and exact multicolour crossbody-bag identity while allowing beat-appropriate expression and
-  pose. Require crude intentional dark ink, wobbly contours, restrained flat colour, crisp source edges, believable
-  hamster-world scale, and one coherent physical environment. Forbid infographics/posters/diagrams/UI/card layouts,
-  detached symbols, polished vector or glossy/painterly treatment, gradients, excessive texture, embedded text,
-  logos/watermarks, humans/body parts, and extra characters. Append only the new beat's semantic action and setting.
+  selects these authorities; do not create a parallel canon or style-memory system. Runs frozen on core-v3 stay
+  bound to it; they are not migrated or rebound.
+- The executable visual and character grammar is `VisualStyleProfile` `visual-style-profile-similarstoic-core-v4`
+  (seeded in `src/project_atlas/persistence.py`, composed into every generation prompt by `PromptComposer`). Do
+  not restate its rules here or in production packages. Each beat's AssetSpec adds only the beat-specific action,
+  setting and expression line.
+- Authoring: give every character beat exactly one explicit expression line naming brows and mouth, for example
+  `Expression: careful. Brows level, mouth: small closed neutral line.` The v4 expression rule makes that line
+  authoritative. Expressive variation, including furrowed or angled-down brows, is valid when the line asks for it.
+  Specify props that could carry markings (phones, calendars, signs) as plain or blank. Vary the hamster's position,
+  pose and staging from beat to beat rather than repeating one framing.
+- In v4, the `character` asset type means the canonical SimilarStoic full-scene character asset path. A future
+  non-full-scene character asset (for example a layered sprite) needs a distinct asset type.
 - At acquisition, judge every raw image for authority/style match, semantic action, believable scale/world logic,
   crisp intentional edges, forbidden text/humans, and obvious mascot drift in head/body ratio, torso/silhouette,
   face/ears, or bag. Reject a weak source before rendering; do not reject useful expressive variation.
@@ -44,6 +51,32 @@ of this approved method.
   creator. Do not add, omit, or paraphrase script words.
 - Use narration-weighted semantic timing, purposeful transitions, mobile-readable captions, and the established
   render path. Review acquisition quality before assembly and the complete result before founder review.
+
+#### A.1 Founder-validated findings (Productions 8 and 9)
+
+Each finding is recorded once, with the single executable place that now enforces it. Topic-specific P9 content
+(the BNPL shop and kitchen, exact beat wording) stays in section C.
+
+| Finding (founder review) | Generalized rule | Enforcement point | Evidence |
+| --- | --- | --- | --- |
+| Beat images drifted between locations | A recurring location is generated from one approved environment anchor | `environment_family` `VisualReferenceAuthority` per location, resolved by `GenerationService` | P8 Attempt 2; P9 shop/home anchors |
+| Off-aspect source images reached review | Full-frame sources are 9:16 before founder review; technical failures are reacquired automatically | Acquisition admission (`full_frame_aspect_error`) in `production.py` | P8 Phase 1B |
+| Doubled or toothed mouths, contradictory expressions | One readable expression and one simple toothless mouth; the beat's expression line is authoritative | core-v4 character rules `expression`, `mouth` plus the per-beat expression line | P9 Attempt 1 beats 3, 4, 7, 8; Attempt 2 accepted |
+| Doubled toes, malformed fingers | Clean paws with separate digits, clean toes | core-v4 `paws_and_feet` | P9 Attempt 1 beats 5, 8 |
+| Strap stopping at the neck or missing | One continuous strap from shoulder to bag | core-v4 `strap` | P9 Attempt 1 beat 7; Attempt 2 round 1 beat 7 |
+| Torso or legs stretched to reach furniture | Compact proportions; furniture and props sized to the hamster | core-v4 `proportions` | P9 Attempt 2 round 1 beats 2, 8 |
+| Duplicated objects or features | No duplicated limbs, facial features or objects | core-v4 `duplication` | P9 Attempt 1 |
+| One identity image under-constrained poses | Identity plus approved multi-pose reference | Latest `CharacterReferenceSet` (v2) | P9 Attempt 2 |
+| Props invited readable digits, dates or lettering | No embedded text of any kind in generated source art; props stay allowed with blank or non-legible surfaces | core-v4 global avoid (unconditional text ban) and global `detail`; authoring asks for blank props | P9 handset, post box, calendar |
+| Narration needed approval after images, but runs were frozen without it | A recorded founder action may authorize narration post-acquisition; one narration call per run | `authorize_narration` in `production.py` | P9 Attempt 2 |
+| Captions ran ahead of speech and across scene changes | Pause-aligned phrase captions from the exact narration | `speech_timing.py` via `create_persistent_scene_snapshot` | P9 render v3 |
+| Estimated beat timing did not follow the narration | Scene boundaries at sentence-final pause midpoints, applied only after founder approval | `recommend_retime` + `retime` | P8 v2, P9 v2 |
+| A provider network failure interrupted acquisition | A technical provider failure stops the run; resume needs explicit founder authorization | Lifecycle `failed` state and `resume` | P9 Attempt 2 beat 8 |
+
+Open finding (not yet a rule): with Daniel, a fixed term such as "Buy now, pay later" was voiced as separate
+utterances (a pitch reset and an unpunctuated pause). Evaluate on Production 10's narration before choosing any
+mechanism; no speech-form change is implemented, and captions and parity checks continue to derive from the approved
+script.
 
 ### B. Useful production-shape defaults
 

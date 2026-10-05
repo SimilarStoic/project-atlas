@@ -12,7 +12,11 @@ from urllib.request import Request, urlopen
 
 import pytest
 
-from project_atlas.generation import GeneratedArtifact, GenerationFailure
+from project_atlas.generation import (
+    DEFAULT_VISUAL_STYLE_PROFILE_ID,
+    GeneratedArtifact,
+    GenerationFailure,
+)
 from project_atlas.media import MediaRuntimeError, MediaService, NarrationSynthesis
 from project_atlas.production import (
     DERIVED_RASTER_NAMESPACE,
@@ -115,6 +119,7 @@ def _request(
     narration_authorized: bool = True,
     character_profile_id: str | None = HAMSTER_PROFILE,
     intrinsic_size_wu: tuple[int, int] = (1080, 1920),
+    visual_style_profile_id: str = DEFAULT_VISUAL_STYLE_PROFILE_ID,
 ) -> tuple[dict, list[tuple[str, str, str]]]:
     repository = server.repository
     plan = create_authorized_visual_plan(server, prefix)
@@ -166,7 +171,7 @@ def _request(
                 "visual_reference_authority_id": (
                     "visual-reference-authority-similarstoic-global-illustration-v1"
                 ),
-                "visual_style_profile_id": "visual-style-profile-similarstoic-core-v3",
+                "visual_style_profile_id": visual_style_profile_id,
             },
             "worlds": [
                 {
@@ -688,6 +693,100 @@ def test_narration_requires_explicit_frozen_authorization(tmp_path, monkeypatch)
             server.repository.get_narration_generation_execution(
                 "narration-blocked:narration-execution:1"
             )
+    finally:
+        server.server_close()
+
+
+V3_STYLE = "visual-style-profile-similarstoic-core-v3"
+V4_STYLE = "visual-style-profile-similarstoic-core-v4"
+
+
+def test_new_productions_generate_with_v4_and_its_character_rules(tmp_path) -> None:
+    assert DEFAULT_VISUAL_STYLE_PROFILE_ID == V4_STYLE
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _request(server, tmp_path, "v4-default")
+        assert request["authority"]["visual_style_profile_id"] == V4_STYLE
+        started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201
+        assert started["production"]["status"] == "acquisition_review_pending"
+        prompt = generator.inputs[0].prompt
+        for rule in (
+            "expression: one coherent, readable facial expression",
+            "follow it exactly and add no conflicting or residual brow or mouth geometry",
+            "mouth: exactly one simple toothless mouth",
+            "paws and feet: clean paws with clearly separate digits",
+            "strap: the crossbody strap is one continuous band from shoulder to bag",
+            "duplication: no duplicated limbs, facial features or objects",
+            "proportions: short, compact hamster proportions in every pose",
+            "embedded words, letters, labels, typography, numbers, captions or signage in "
+            "generated source art",
+            "props are allowed as physical objects, with blank or non-legible surfaces",
+            "role: one 9:16 full-scene action illustration in which the hamster acts inside one "
+            "coherent physical environment",
+            "cast: the canonical hamster is the only character; no humans or human body parts",
+            "identity: match the supplied canonical hamster reference images and preserve the "
+            "Core hamster's head-to-body ratio",
+            "staging: an expressive pose that fits the beat; the hamster moves naturally within "
+            "the composition rather than always standing in one place",
+            "infographics, posters, diagrams, UI, card layouts or detached collections of symbols",
+            "logos or watermarks",
+            "blurred or soft-focus source edges",
+        ):
+            assert rule in prompt
+        # The full-scene method never sits beside v3's isolated-subject background preference.
+        assert "plain or minimal background" not in prompt
+        assert "very few competing props" not in prompt
+        assert "unless explicitly required by the AssetSpec" not in prompt
+        execution = server.repository.get_generation_execution(
+            server.repository.list_production_evidence("v4-default", "acquisition")[
+                0
+            ].generation_execution_id
+        )
+        assert execution.visual_style_profile_id == V4_STYLE
+    finally:
+        server.server_close()
+
+
+def test_a_frozen_v3_production_stays_v3_and_new_acquisition_fails_closed(
+    tmp_path, monkeypatch
+) -> None:
+    generator = ValidFakeImageGenerator()
+    # The run is created while generation still resolved v3 (as P8/P9 were).
+    monkeypatch.setenv("ATLAS_VISUAL_STYLE_PROFILE_ID", V3_STYLE)
+    server = _server(tmp_path, generator)
+    try:
+        request, keys = _request(server, tmp_path, "frozen-v3", visual_style_profile_id=V3_STYLE)
+        started, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201 and started["production"]["status"] == "acquisition_review_pending"
+    finally:
+        server.server_close()
+    assert len(generator.inputs) == 2
+    v3_prompt = generator.inputs[0].prompt
+    assert "toothless mouth" not in v3_prompt
+
+    # After the default moves to v4, the frozen run is neither migrated nor rebound.
+    monkeypatch.delenv("ATLAS_VISUAL_STYLE_PROFILE_ID")
+    server = _server(tmp_path, generator)
+    try:
+        run = server.repository.get_production_run("frozen-v3")
+        digest = run.request_digest
+        assert run.request["authority"]["visual_style_profile_id"] == V3_STYLE
+        rejected = _review(keys, "passed")
+        rejected[0]["outcome"] = "failed"
+        reviewed, status = post_json(
+            server, "/api/v2/productions/frozen-v3/acquisition-review", {"reviews": rejected}
+        )
+        assert status == 200 and reviewed["production"]["status"] == "failed"
+        failed, status = _post_error(server, "/api/v2/productions/frozen-v3/resume", {})
+        assert status == 422
+        assert failed["stage"] == "acquisition"
+        assert "Generation visual style differs" in failed["error"]
+        # Fail-closed before any provider call; the frozen request is unchanged.
+        assert len(generator.inputs) == 2
+        after = server.repository.get_production_run("frozen-v3")
+        assert after.request == run.request and after.request_digest == digest
     finally:
         server.server_close()
 
@@ -1649,7 +1748,7 @@ def _single_beat_worlds_request(server, tmp_path: Path, prefix: str, count: int)
             "visual_reference_authority_id": (
                 "visual-reference-authority-similarstoic-global-illustration-v1"
             ),
-            "visual_style_profile_id": "visual-style-profile-similarstoic-core-v3",
+            "visual_style_profile_id": DEFAULT_VISUAL_STYLE_PROFILE_ID,
         },
         "worlds": [
             {

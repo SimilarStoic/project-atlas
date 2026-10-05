@@ -226,6 +226,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
             ("visual-style-profile-similarstoic-core-v1", 1),
             ("visual-style-profile-similarstoic-core-v2", 2),
             ("visual-style-profile-similarstoic-core-v3", 3),
+            ("visual-style-profile-similarstoic-core-v4", 4),
         ]
         assert [
             (profile.id, profile.version) for profile in repository.list_character_profiles()
@@ -5455,6 +5456,59 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
             "textured colouring or fills",
         } <= set(v2.rules["global"]["avoid"])
         assert v2.rules["asset_types"]["environment"]["role"] == "background setting layer only"
+        # v4 is v3 plus founder-validated character rules; v3 itself is unchanged.
+        v4 = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v4")
+        assert (v4.style_key, v4.version) == ("similarstoic-core", 4)
+        assert "expression" not in v3.rules["asset_types"]["character"]
+        assert "plain or minimal background" in v3.rules["asset_types"]["character"]["prefer"]
+        v4_character = v4.rules["asset_types"]["character"]
+        assert set(v4_character) == {
+            "role",
+            "prefer",
+            "cast",
+            "identity",
+            "staging",
+            "expression",
+            "mouth",
+            "paws_and_feet",
+            "strap",
+            "duplication",
+            "proportions",
+        }
+        assert "9:16 full-scene action illustration" in v4_character["role"]
+        assert "plain or minimal background" not in v4_character["prefer"]
+        assert "very few competing props" not in v4_character["prefer"]
+        v3_avoid = v3.rules["global"]["avoid"]
+        conditional = (
+            "invented explanatory text, posters, labels, dashboards, written information or "
+            "signage unless explicitly required by the AssetSpec"
+        )
+        source_text = (
+            "embedded words, letters, labels, typography, numbers, captions or signage in "
+            "generated source art"
+        )
+        assert conditional in v3_avoid
+        assert v4.rules["global"]["avoid"] == [
+            *(source_text if entry == conditional else entry for entry in v3_avoid),
+            "infographics, posters, diagrams, UI, card layouts or detached collections of symbols",
+            "logos or watermarks",
+            "blurred or soft-focus source edges",
+        ]
+        # Exactly one text ban, with no AssetSpec escape, in v4.
+        assert not any(
+            "unless explicitly required" in entry for entry in v4.rules["global"]["avoid"]
+        )
+        assert v4.rules["global"]["detail"].startswith(v3.rules["global"]["detail"])
+        assert "blank or non-legible surfaces" in v4.rules["global"]["detail"]
+        assert {
+            key: value
+            for key, value in v4.rules["global"].items()
+            if key not in {"avoid", "detail"}
+        } == {
+            key: value
+            for key, value in v3.rules["global"].items()
+            if key not in {"avoid", "detail"}
+        }
         assert not hasattr(repository, "update_visual_style_profile")
         assert not hasattr(repository, "delete_visual_style_profile")
         for invalid_version in (0, -1, True, "1"):
@@ -5528,7 +5582,7 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
         assert reopened.get_visual_style_profile(v1.id).name == "Founder-preserved v1 profile"
         assert reopened.get_visual_style_profile(v2.id).name == "Founder-preserved v2 profile"
         assert reopened.get_visual_style_profile(v3.id).name == "Founder-preserved v3 profile"
-        assert len(reopened.list_visual_style_profiles()) == 3
+        assert len(reopened.list_visual_style_profiles()) == 4
     finally:
         reopened.close()
 
@@ -5544,7 +5598,7 @@ def test_visual_style_profile_is_seeded_immutable_and_validated(tmp_path) -> Non
         assert restored.get_visual_style_profile(v1.id).name == "Founder-preserved v1 profile"
         assert restored.get_visual_style_profile(v2.id).version == 2
         assert restored.get_visual_style_profile(v3.id).name == "Founder-preserved v3 profile"
-        assert len(restored.list_visual_style_profiles()) == 3
+        assert len(restored.list_visual_style_profiles()) == 4
     finally:
         restored.close()
 
@@ -5623,10 +5677,10 @@ def test_generation_service_uses_profile_provenance_and_missing_profile_stops_ea
         service = GenerationService(repository, generator, LocalAssetStorage(tmp_path / "assets"))
         assert (
             service.visual_style_summary()["profile_id"]
-            == "visual-style-profile-similarstoic-core-v3"
+            == "visual-style-profile-similarstoic-core-v4"
         )
         result = service.generate_asset_spec(asset_spec.id)
-        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v3")
+        profile = repository.get_visual_style_profile("visual-style-profile-similarstoic-core-v4")
         assert result.execution.visual_style_profile_id == profile.id
         assert result.execution.generation_input["schema_version"] == 3
         assert result.execution.generation_input["style"]["profile_id"] == profile.id
