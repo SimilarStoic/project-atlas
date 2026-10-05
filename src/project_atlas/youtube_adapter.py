@@ -109,6 +109,9 @@ class GoogleReadOnlyYouTubeClient:
 class YouTubeReadOnlyObservationAdapter:
     """Observe one exact private/manual-route object; all mutations fail closed."""
 
+    # The exact granted scope set this adapter accepts; anything broader fails closed.
+    REQUIRED_SCOPES: tuple[str, ...] = (YOUTUBE_READONLY_SCOPE,)
+
     def __init__(
         self,
         credential_provider: CredentialProvider,
@@ -139,13 +142,15 @@ class YouTubeReadOnlyObservationAdapter:
     def _authorized(self) -> CredentialView:
         try:
             credentials = self.credential_provider.acquire()
-            result = verify_exact_channel(credentials, self.client)
+            result = verify_exact_channel(
+                credentials, self.client, required_scopes=frozenset(self.REQUIRED_SCOPES)
+            )
         except (PreflightBlocked, YouTubeObservationBlocked) as exc:
             category = getattr(exc, "category", str(exc))
             raise YouTubeObservationBlocked(category) from exc
         if result.status != "PASS":
             raise YouTubeObservationBlocked(result.error_category or "channel_verification_failed")
-        if tuple(result.granted_scopes) != (YOUTUBE_READONLY_SCOPE,):
+        if tuple(result.granted_scopes) != tuple(sorted(self.REQUIRED_SCOPES)):
             raise YouTubeObservationBlocked("unexpected_scope_granted")
         return credentials
 

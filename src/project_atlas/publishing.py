@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
@@ -32,6 +32,8 @@ class TransferResult:
     acknowledged_bytes: int | None = None
     session_ref: str | None = None
     reason: str | None = None
+    # Sanitized provider facts (privacy/status/timestamps); never credentials or session URLs.
+    evidence: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -135,6 +137,21 @@ class PublishingService:
         ):
             raise ValueError("Operation lacks exact original founder authority.")
 
+    def _expected(self, package: PublishingPackage, upload_operation_id: str) -> PublishingPackage:
+        """Values the remote object must match: founder-confirmed upload values when present."""
+
+        intent = self.repository.get_publication_operation(upload_operation_id).intent
+        if "title" not in intent:
+            return package
+        return replace(
+            package,
+            manifest={
+                **package.manifest,
+                "title": intent["title"],
+                "description": intent["description"],
+            },
+        )
+
     def prepare_package(
         self,
         package_id: str,
@@ -199,7 +216,18 @@ class PublishingService:
             comment,
         )
 
-    def reserve_upload(self, package_id: str, attempt: int = 1) -> PublicationOperation:
+    UPLOAD_PRIVACY = frozenset({"private", "unlisted", "public"})
+
+    def reserve_upload(
+        self, package_id: str, attempt: int = 1, upload: dict[str, Any] | None = None
+    ) -> PublicationOperation:
+        """Reserve one upload; ``upload`` freezes the founder-confirmed upload values.
+
+        Confirmed values (title, description, privacy) are bound into the operation intent and
+        sent exactly as confirmed; without them an upload stays the historical private-first
+        package transfer.
+        """
+
         package = self.repository.get_publishing_package(package_id)
         self._target(package.channel_id)
         self._authority(package, package.manifest["transfer_route"], "upload")
@@ -214,6 +242,32 @@ class PublishingService:
             "attempt": attempt,
             "privacy": "private",
         }
+        if upload is not None:
+            actor = upload.get("founder_actor") if isinstance(upload, dict) else None
+            if (
+                not isinstance(upload, dict)
+                or upload.get("founder_confirmed") is not True
+                or not isinstance(actor, str)
+                or not actor.strip()
+                or not isinstance(upload.get("title"), str)
+                or not isinstance(upload.get("description"), str)
+                or upload.get("privacy") not in self.UPLOAD_PRIVACY
+            ):
+                raise ValueError(
+                    "Upload requires explicit founder-confirmed title, description and privacy."
+                )
+            intent.update(
+                {
+                    "schema": "confirmed-upload-v1",
+                    "privacy": upload["privacy"],
+                    "title": upload["title"],
+                    "description": upload["description"],
+                    "founder_confirmation": {
+                        "actor": actor.strip(),
+                        "confirmed_at": self.clock().replace(microsecond=0).isoformat(),
+                    },
+                }
+            )
         return self.repository.reserve_publication_operation(
             package_id,
             "upload",
@@ -287,7 +341,11 @@ class PublishingService:
             "remote_identity_observed",
             "Conveyor",
             {"method": "provider-result"},
-            {"remote_id": result.remote_id, "channel_id": result.channel_id},
+            {
+                **(result.evidence or {}),
+                "remote_id": result.remote_id,
+                "channel_id": result.channel_id,
+            },
         )
         self.repository.append_publication_operation_event(
             operation.id,
@@ -371,12 +429,12 @@ class PublishingService:
         self._historical_authority(package, operation)
         if operation.action_kind != "upload" or operation.outcome != "unknown":
             raise ValueError("Only an uncertain upload may use identity reconciliation.")
-        observation = self.adapter.observe_remote(remote_id, package)
+        observation = self.adapter.observe_remote(remote_id, self._expected(package, operation.id))
         if (
             observation.remote_id != remote_id
             or observation.channel_id != package.channel_id
             or observation.metadata_matches is not True
-            or observation.privacy != "private"
+            or observation.privacy != operation.intent.get("privacy", "private")
         ):
             raise ValueError(
                 "Identity recovery needs an exact independently observed remote object."
@@ -470,7 +528,9 @@ class PublishingService:
             )
         self._target(publication.channel_id)
         package = self.repository.get_publishing_package(publication.package_id)
-        result = self.adapter.observe_remote(publication.remote_id, package)
+        result = self.adapter.observe_remote(
+            publication.remote_id, self._expected(package, publication.upload_operation_id)
+        )
         if result.remote_id != publication.remote_id or result.channel_id != publication.channel_id:
             raise ValueError("Observed remote identity differs from bound lineage.")
         verification = (
@@ -541,7 +601,9 @@ class PublishingService:
         ):
             raise ValueError("API release requires one exact untouched reserved operation.")
         # Re-check immediately before dispatch; a prior private-ready snapshot can stale.
-        observed = self.adapter.observe_remote(publication.remote_id, package)
+        observed = self.adapter.observe_remote(
+            publication.remote_id, self._expected(package, publication.upload_operation_id)
+        )
         if (
             observed.remote_id != publication.remote_id
             or observed.channel_id != publication.channel_id
@@ -628,7 +690,9 @@ class PublishingService:
                     {"action": "founder-Studio-private-to-public"},
                 )
         try:
-            observation = self.adapter.observe_remote(publication.remote_id, package)
+            observation = self.adapter.observe_remote(
+                publication.remote_id, self._expected(package, publication.upload_operation_id)
+            )
         except Exception:
             if (
                 release.execution_mode == "manual"

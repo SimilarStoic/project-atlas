@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After pause-aligned phrase captions and the retime recommendation, the verified local full suite is **374 passed,
+- After the controlled founder-confirmed YouTube upload path, the verified local full suite is **404 passed,
   0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action; the frozen request is
   unchanged and a run makes at most one narration call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
@@ -327,6 +327,19 @@ Canonical persistent-scene snapshots use pause-aligned phrase captions (`caption
   path. The historical five-word cues remain only for legacy AssetSelection snapshots.
 - `GET /api/v2/productions/{id}/retime-recommendation` recommends scene durations whose boundaries sit at the pause
   ending each scene's narration excerpt. It is read-only; applying it remains a founder-approved retime.
+
+A controlled founder-confirmed YouTube upload path exists (`src/project_atlas/youtube_upload.py`). **Live use is not
+permitted** until a separate commit implements the YouTube Developer Policies revocation, deletion, 30-day
+refresh/delete and privacy-policy obligations, plus governance for public/unlisted uploads.
+
+- One `videos.insert` of the exact artifact bound to an API-route founder-approved PublishingPackage, with the title,
+  description and privacy the founder confirms on the upload screen; no update, privacy transition or delete.
+- Authorization is exactly `youtube.readonly` + `youtube.upload`, held as a separate Windows Credential Locker entry;
+  the read-only observation token is never upload-capable. `python -m project_atlas.youtube_upload authorize` always
+  runs fresh consent and stores the token only after exact scope and SimilarStoic channel verification.
+- `/youtube/upload` is served only when configured, only on a loopback bind to a loopback peer, with Host/Origin
+  checks, a single-use nonce, anti-framing headers and the YouTube API Terms section 9.1 upload notice.
+- After dispatch, an uncertain outcome is shown as unknown and reconciliation-required, never as nothing sent.
 
 ## Schema authority
 

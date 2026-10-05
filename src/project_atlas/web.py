@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import mimetypes
+import os
 import sqlite3
 import uuid
+from collections.abc import Callable
 from dataclasses import replace
+from html import escape
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 from project_atlas.demo_data import ACTIVITY, chat_reply, content_payload
@@ -35,6 +40,20 @@ from project_atlas.production import (
 )
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
+YOUTUBE_UPLOAD_PATH = "/youtube/upload"
+
+
+def is_loopback(address: str) -> bool:
+    """True only for a literal loopback address (IPv4, IPv6 or IPv4-mapped IPv6)."""
+
+    try:
+        value = ipaddress.ip_address(address.split("%", 1)[0])
+    except ValueError:
+        return False
+    mapped = getattr(value, "ipv4_mapped", None)
+    return (mapped or value).is_loopback
+
+
 MAX_IMPORTED_ASSET_BYTES = 10 * 1024 * 1024
 MAX_IMPORTED_NARRATION_BYTES = 100 * 1024 * 1024
 
@@ -48,6 +67,10 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Handle only local static assets and demo API responses."""
 
         parsed = urlparse(self.path)
+        if parsed.path == YOUTUBE_UPLOAD_PATH:
+            package_id = parse_qs(parsed.query).get("package", [""])[0]
+            self._youtube_upload(lambda controller: controller.page(package_id))
+            return
         production_prefix = "/api/v2/productions/"
         recommendation_suffix = "/retime-recommendation"
         if parsed.path.startswith(production_prefix) and parsed.path.endswith(
@@ -750,6 +773,9 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
+        if path == YOUTUBE_UPLOAD_PATH:
+            self._youtube_upload(lambda controller: controller.submit(self._read_upload_form()))
+            return
         if path == "/api/v2/productions":
             try:
                 production = self.server.production_service.start(
@@ -2533,6 +2559,69 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             "created_at": artifact.created_at,
         }
 
+    def _youtube_upload(self, action) -> None:
+        """Serve the founder upload screen only to same-origin loopback requests."""
+
+        controller = self.server.youtube_upload
+        if controller is None:
+            self._discard_small_body()
+            self._send_html(
+                "<!doctype html><title>YouTube upload</title><p>YouTube upload is not "
+                "configured for this server.</p>",
+                HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+            return
+        # The real socket peer and the bound address must be loopback; Host and Origin are
+        # client-controlled and only add DNS-rebinding/cross-site protection on top.
+        if (
+            not is_loopback(self.client_address[0])
+            or not is_loopback(self.server.server_address[0])
+            or not controller.allowed_request(
+                self.headers.get("Host"), self.headers.get("Origin"), self.server.server_address[1]
+            )
+        ):
+            self._discard_small_body()
+            self._send_html("<!doctype html><p>Forbidden.</p>", HTTPStatus.FORBIDDEN)
+            return
+        try:
+            status, page = action(controller)
+        except ValueError as error:
+            status, page = HTTPStatus.BAD_REQUEST, f"<!doctype html><p>{escape(str(error))}</p>"
+        self._send_html(page, HTTPStatus(status))
+
+    def _discard_small_body(self) -> None:
+        """Consume a small refused request body so the client sees the response, not a reset."""
+
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return
+        if 0 < length <= 64 * 1024:
+            self.rfile.read(length)
+
+    def _read_upload_form(self) -> dict[str, str]:
+        media_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip()
+        length = int(self.headers.get("Content-Length") or 0)
+        if media_type != "application/x-www-form-urlencoded" or not 0 < length <= 64 * 1024:
+            raise ValueError("The upload confirmation form is invalid.")
+        fields = parse_qs(self.rfile.read(length).decode("utf-8"), keep_blank_values=True)
+        return {name: values[0] for name, values in fields.items() if len(values) == 1}
+
+    def _send_html(self, page: str, status: HTTPStatus = HTTPStatus.OK) -> None:
+        body = page.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        # The confirmation screen must not be framed (clickjacking) or post elsewhere.
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; "
+            "frame-ancestors 'none'",
+        )
+        self.end_headers()
+        self.wfile.write(body)
+
     def _send_binary(self, content: bytes, media_type: str) -> None:
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", media_type)
@@ -2564,12 +2653,18 @@ class AtlasHTTPServer(HTTPServer):
         generation_service: GenerationService,
         media_runtime: FfmpegRuntime | None = None,
         media_storage_root: Path | None = None,
+        youtube_upload: Any | None = None,
     ) -> None:
+        if youtube_upload is not None and not is_loopback(address[0]):
+            # Fail closed: the founder upload surface never listens beyond this machine.
+            raise ValueError("YouTube upload requires the server to bind a loopback address.")
         super().__init__(address, AtlasRequestHandler)
         self.repository = repository
         self.generation_service = generation_service
         self.media_runtime = media_runtime
         self.media_storage_root = media_storage_root
+        # Optional founder YouTube upload screen; absent unless explicitly configured.
+        self.youtube_upload = youtube_upload
 
     @property
     def media_service(self) -> MediaService:
@@ -2604,9 +2699,15 @@ def create_server(
     asset_storage_root: Path | None = None,
     media_runtime: FfmpegRuntime | None = None,
     media_storage_root: Path | None = None,
+    youtube_upload: Callable[[AtlasRepository], Any] | None = None,
 ) -> AtlasHTTPServer:
-    """Create the MVP server without starting it, for testability."""
+    """Create the MVP server without starting it, for testability.
 
+    ``youtube_upload`` builds the optional founder upload controller from the repository.
+    """
+
+    if youtube_upload is not None and not is_loopback(host):
+        raise ValueError("YouTube upload requires the server to bind a loopback address.")
     repository = AtlasRepository(database_path, asset_storage_root=asset_storage_root)
     return AtlasHTTPServer(
         (host, port),
@@ -2618,6 +2719,7 @@ def create_server(
         ),
         media_runtime,
         media_storage_root,
+        youtube_upload(repository) if youtube_upload else None,
     )
 
 
@@ -2628,7 +2730,20 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1).")
     parser.add_argument("--port", default=8000, type=int, help="Port to bind (default: 8000).")
     args = parser.parse_args()
-    server = create_server(args.host, args.port)
+    youtube_upload = None
+    client_config = os.environ.get("ATLAS_YOUTUBE_CLIENT_CONFIG", "").strip()
+    if client_config:
+        from project_atlas.youtube_upload import YouTubeUploadController
+
+        def youtube_upload(repository: AtlasRepository) -> YouTubeUploadController:
+            return YouTubeUploadController.from_client_config(
+                repository,
+                None,
+                Path(client_config),
+                Path(__file__).resolve().parents[2],
+            )
+
+    server = create_server(args.host, args.port, youtube_upload=youtube_upload)
     print(f"Conveyor MVP is running at http://{args.host}:{args.port}")
     try:
         server.serve_forever()

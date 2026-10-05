@@ -73,8 +73,12 @@ def verify_exact_channel(
     *,
     expected_channel_id: str = EXPECTED_CHANNEL_ID,
     now: datetime | None = None,
+    required_scopes: frozenset[str] = frozenset({YOUTUBE_READONLY_SCOPE}),
 ) -> ChannelPreflightResult:
-    """Return only normalized evidence; no Google object crosses this boundary."""
+    """Return only normalized evidence; no Google object crosses this boundary.
+
+    ``required_scopes`` is the exact granted scope set; anything missing or broader fails.
+    """
 
     verified_at = (now or datetime.now(UTC)).replace(microsecond=0).isoformat()
     scopes = _scope_set(credentials)
@@ -99,9 +103,9 @@ def verify_exact_channel(
 
     if not credentials.valid or credentials.expired:
         return blocked("authorization_unusable")
-    if YOUTUBE_READONLY_SCOPE not in scopes:
+    if not required_scopes <= scopes:
         return blocked("required_scope_missing")
-    if scopes != {YOUTUBE_READONLY_SCOPE}:
+    if scopes != required_scopes:
         return blocked("unexpected_scope_granted")
     try:
         channel_ids = client.authenticated_channel_ids(credentials)
@@ -166,10 +170,15 @@ def _write_sanitized_json(path: Path, value: dict[str, Any]) -> None:
 
 
 class WindowsCredentialRefreshTokenStore:
-    """Store one refresh token in the native Windows Credential Locker."""
+    """Store one refresh token in the native Windows Credential Locker.
 
-    def __init__(self, keyring_module: Any | None = None) -> None:
+    Each exact scope set uses its own account entry, so a token consented for one scope set
+    is never reused as authority for another.
+    """
+
+    def __init__(self, keyring_module: Any | None = None, account: str = KEYRING_ACCOUNT) -> None:
         self._keyring_module = keyring_module
+        self.account = account
 
     def _native_keyring(self) -> Any:
         try:
@@ -193,7 +202,7 @@ class WindowsCredentialRefreshTokenStore:
     def get(self) -> str | None:
         module = self._native_keyring()
         try:
-            refresh_token = module.get_password(KEYRING_SERVICE, KEYRING_ACCOUNT)
+            refresh_token = module.get_password(KEYRING_SERVICE, self.account)
         except Exception as exc:
             raise PreflightBlocked("credential_store_unavailable") from exc
         if refresh_token is None:
@@ -207,7 +216,7 @@ class WindowsCredentialRefreshTokenStore:
             raise PreflightBlocked("credential_store_invalid")
         module = self._native_keyring()
         try:
-            module.set_password(KEYRING_SERVICE, KEYRING_ACCOUNT, refresh_token)
+            module.set_password(KEYRING_SERVICE, self.account, refresh_token)
         except Exception as exc:
             raise PreflightBlocked("credential_store_unavailable") from exc
 
@@ -220,10 +229,19 @@ class GoogleInstalledCredentialProvider:
         client_config: Path,
         refresh_store: RefreshTokenStore,
         repository_root: Path,
+        *,
+        scopes: tuple[str, ...] = (YOUTUBE_READONLY_SCOPE,),
+        interactive: bool = True,
+        success_message: str = (
+            "Conveyor read-only channel authorization completed. You may close this tab."
+        ),
     ) -> None:
         _outside_repository(client_config, repository_root)
         self.client_config = client_config
         self.refresh_store = refresh_store
+        self.scopes = tuple(scopes)
+        self.interactive = interactive
+        self.success_message = success_message
 
     def acquire(self) -> CredentialView:
         config = _client_config(self.client_config)
@@ -232,7 +250,6 @@ class GoogleInstalledCredentialProvider:
             from google.auth.exceptions import RefreshError
             from google.auth.transport.requests import Request
             from google.oauth2.credentials import Credentials
-            from google_auth_oauthlib.flow import InstalledAppFlow
         except ImportError as exc:
             raise PreflightBlocked("oauth_dependency_unavailable") from exc
 
@@ -245,37 +262,48 @@ class GoogleInstalledCredentialProvider:
                 token_uri=installed["token_uri"],
                 client_id=installed["client_id"],
                 client_secret=installed["client_secret"],
-                scopes=[YOUTUBE_READONLY_SCOPE],
+                scopes=list(self.scopes),
             )
             try:
                 credentials.refresh(Request())
             except RefreshError as exc:
                 raise PreflightBlocked("authorization_unusable") from exc
+        elif not self.interactive:
+            # Never open a consent window from a non-interactive caller (e.g. a web request).
+            raise PreflightBlocked("authorization_missing")
         else:
-            try:
-                flow = InstalledAppFlow.from_client_config(
-                    config,
-                    scopes=[YOUTUBE_READONLY_SCOPE],
-                    autogenerate_code_verifier=True,
-                )
-                credentials = flow.run_local_server(
-                    host="127.0.0.1",
-                    port=0,
-                    open_browser=True,
-                    authorization_prompt_message="",
-                    success_message=(
-                        "Conveyor read-only channel authorization completed. "
-                        "You may close this tab."
-                    ),
-                    access_type="offline",
-                    prompt="consent",
-                    include_granted_scopes="false",
-                )
-            except Exception as exc:
-                raise PreflightBlocked("interactive_authorization_failed") from exc
-            if not credentials.refresh_token:
-                raise PreflightBlocked("refresh_token_missing")
+            credentials = self.fresh_consent()
             self.refresh_store.set(credentials.refresh_token)
+        return credentials
+
+    def fresh_consent(self) -> CredentialView:
+        """Run new interactive consent for exactly ``scopes`` and persist nothing."""
+
+        config = _client_config(self.client_config)
+        try:
+            from google_auth_oauthlib.flow import InstalledAppFlow
+        except ImportError as exc:
+            raise PreflightBlocked("oauth_dependency_unavailable") from exc
+        try:
+            flow = InstalledAppFlow.from_client_config(
+                config,
+                scopes=list(self.scopes),
+                autogenerate_code_verifier=True,
+            )
+            credentials = flow.run_local_server(
+                host="127.0.0.1",
+                port=0,
+                open_browser=True,
+                authorization_prompt_message="",
+                success_message=self.success_message,
+                access_type="offline",
+                prompt="consent",
+                include_granted_scopes="false",
+            )
+        except Exception as exc:
+            raise PreflightBlocked("interactive_authorization_failed") from exc
+        if not credentials.refresh_token:
+            raise PreflightBlocked("refresh_token_missing")
         return credentials
 
 
