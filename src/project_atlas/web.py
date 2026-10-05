@@ -49,6 +49,23 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
 
         parsed = urlparse(self.path)
         production_prefix = "/api/v2/productions/"
+        recommendation_suffix = "/retime-recommendation"
+        if parsed.path.startswith(production_prefix) and parsed.path.endswith(
+            recommendation_suffix
+        ):
+            run_id = unquote(
+                parsed.path[len(production_prefix) : -len(recommendation_suffix)]
+            ).strip("/")
+            try:
+                recommendation = self.server.production_service.recommend_retime(run_id)
+            except KeyError:
+                self._send_json({"error": "ProductionRun not found."}, HTTPStatus.NOT_FOUND)
+                return
+            except ProductionRequestError as error:
+                self._send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+                return
+            self._send_json({"kind": "retime_recommendation", "recommendation": recommendation})
+            return
         if parsed.path.startswith(production_prefix):
             run_id = unquote(parsed.path[len(production_prefix) :]).strip("/")
             if not run_id or "/" in run_id:

@@ -11,6 +11,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
+from project_atlas import speech_timing
 from project_atlas.generation import GenerationService
 from project_atlas.media import FfmpegRuntime, MediaService
 from project_atlas.persistence import AtlasRepository
@@ -430,6 +431,57 @@ class ProductionLifecycleService:
             payload["notes"],
         )
         return self.status(run_id)
+
+    def recommend_retime(self, run_id: str) -> dict[str, Any]:
+        """Recommend narration-aligned scene durations; read-only and applies nothing.
+
+        Each scene boundary sits at the pause ending that scene's narration excerpt, measured on
+        the run's persisted narration. Applying it remains a separate founder-approved retime.
+        """
+
+        run = self.repository.get_production_run(run_id)
+        if not self.repository.list_production_evidence(run_id, "narration"):
+            raise ProductionRequestError("Production has no narration to align scene timing to.")
+        narration = self.repository.get_narration_asset(
+            self._current_evidence(run_id, "narration").narration_asset_id
+        )
+        plan = self.repository.get_visual_plan(run.visual_plan_id)
+        script = self.repository.get_script(plan.script_id)
+        scenes = self.repository.list_scenes_for_visual_plan(run.visual_plan_id)
+        timing = self.media_service.narration_speech_timing(narration, script.narration_text)
+        try:
+            recommendation = speech_timing.recommend_scene_durations(
+                timing, [scene.narration_excerpt for scene in scenes]
+            )
+        except ValueError as error:
+            raise ProductionRequestError(str(error)) from error
+        snapshots = self.repository.list_production_evidence(run_id, "snapshot")
+        current = (
+            self.repository.get_final_media_input_snapshot(
+                self._current_evidence(run_id, "snapshot").final_media_input_snapshot_id
+            )
+            if snapshots
+            else None
+        )
+        return {
+            "run_id": run_id,
+            "narration_asset_id": narration.id,
+            "narration_duration_ms": narration.duration_ms,
+            "scene_ids": [scene.id for scene in scenes],
+            "current_durations_ms": (
+                [item["duration_ms"] for item in current.scene_inputs] if current else None
+            ),
+            "recommended_durations_ms": recommendation["durations_ms"],
+            "boundaries": recommendation["boundaries"],
+            "pauses": [
+                {"start_ms": round(pause.start_ms), "end_ms": round(pause.end_ms)}
+                for pause in timing.pauses
+            ],
+            "timing_evidence": {
+                **speech_timing.timing_evidence(timing),
+                "silence_detection": dict(self.media_service.runtime.SILENCE_DETECTION),
+            },
+        }
 
     def retime(
         self, run_id: str, durations_ms: list[int], actor: str, reason: str

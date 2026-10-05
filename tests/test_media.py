@@ -107,8 +107,42 @@ def test_openai_narration_uses_only_exact_script_and_truthful_settings(monkeypat
     assert synthesis.settings == engine.settings
 
 
+def test_detect_silences_reports_narration_pauses_locally(tmp_path) -> None:
+    runtime = _runtime_or_skip()
+    wav = tmp_path / "paused.wav"
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000:duration=0.6",
+            "-f",
+            "lavfi",
+            "-i",
+            "anullsrc=r=48000:cl=mono:d=0.4",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000:duration=0.6",
+            "-filter_complex",
+            "[0:a][1:a][2:a]concat=n=3:v=0:a=1[a]",
+            "-map",
+            "[a]",
+            "-c:a",
+            "pcm_s16le",
+            str(wav),
+        ]
+    )
+    silences = runtime.detect_silences(wav)
+    assert len(silences) == 1
+    start, end = silences[0]
+    assert abs(start - 600) < 30 and abs(end - 1000) < 30
+
+
 def test_caption_cues_are_short_phrase_level_segments() -> None:
-    """Refinement captions turn over quickly without rewriting the supplied script."""
+    """Historical five-word cues remain only for legacy AssetSelection snapshots."""
 
     text = "one two three four five six seven eight nine ten eleven twelve"
     cues = MediaService.caption_cues(text, 1200)

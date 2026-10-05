@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 from urllib.error import HTTPError
@@ -1233,6 +1234,78 @@ def _render_ready_run(tmp_path, monkeypatch, prefix: str):
     assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
     assert len(calls) == 1
     return server, generator, request
+
+
+def get_json(server, path: str) -> tuple[dict, int]:
+    import threading
+
+    thread = threading.Thread(target=server.handle_request)
+    thread.start()
+    try:
+        with urlopen(
+            f"http://{server.server_address[0]}:{server.server_address[1]}{path}"
+        ) as response:
+            return json.load(response), response.status
+    except HTTPError as error:
+        return json.loads(error.read()), error.code
+    finally:
+        thread.join(timeout=30)
+
+
+def test_retime_recommendation_is_read_only_and_sums_to_the_narration(
+    tmp_path, monkeypatch
+) -> None:
+    server, generator, _request_body = _render_ready_run(tmp_path, monkeypatch, "recommend")
+    try:
+        repository = server.repository
+        run = repository.get_production_run("recommend")
+        snapshot = repository.get_final_media_input_snapshot(
+            server.production_service._current_evidence(
+                "recommend", "snapshot"
+            ).final_media_input_snapshot_id
+        )
+        # New canonical snapshots freeze pause-aligned phrase captions, never the 5-word path.
+        assert snapshot.render_settings["caption_policy"] == "pause-aligned-phrase-captions-v1"
+        assert snapshot.render_settings["caption_timing"]["source"] == "pause_anchored_estimate"
+        assert [cue["text"] for cue in snapshot.caption_cues] == ["Narration."]
+
+        url = "/api/v2/productions/recommend/retime-recommendation"
+        mismatch, status = get_json(server, url)
+        # The fixture script ("Narration.") does not concatenate from its scene excerpts.
+        assert status == 400 and "concatenate exactly" in mismatch["error"]
+
+        plan = repository.get_visual_plan(run.visual_plan_id)
+        script = repository.get_script(plan.script_id)
+        aligned = replace(script, narration_text="Narration 1 Narration 2")
+        monkeypatch.setattr(repository, "get_script", lambda _script_id: aligned)
+        before = (
+            len(repository.list_production_evidence("recommend")),
+            repository.latest_production_run_event("recommend"),
+        )
+        recommended, status = get_json(server, url)
+        assert status == 200
+        recommendation = recommended["recommendation"]
+        narration_ms = recommendation["narration_duration_ms"]
+        assert sum(recommendation["recommended_durations_ms"]) == narration_ms
+        assert len(recommendation["recommended_durations_ms"]) == 2
+        assert recommendation["current_durations_ms"] == [
+            item["duration_ms"] for item in snapshot.scene_inputs
+        ]
+        assert recommendation["boundaries"][0]["source"] in {
+            "matched_pause_midpoint",
+            "estimated_word_gap",
+        }
+        after = (
+            len(repository.list_production_evidence("recommend")),
+            repository.latest_production_run_event("recommend"),
+        )
+        assert after == before
+        assert len(generator.inputs) == 2
+
+        missing, status = get_json(server, "/api/v2/productions/unknown/retime-recommendation")
+        assert status == 404
+    finally:
+        server.server_close()
 
 
 def _durations_for(server, run_id: str, count: int) -> list[int]:

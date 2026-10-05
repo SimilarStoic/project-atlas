@@ -17,6 +17,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Protocol
 
+from project_atlas import speech_timing
 from project_atlas.persistence import (
     AtlasRepository,
     FinalMediaInputSnapshot,
@@ -168,6 +169,36 @@ class FfmpegRuntime:
             raise NarrationSynthesisError("Narration audio is silent or could not be measured.")
         if float(detected.group(1)) <= -70:
             raise NarrationSynthesisError("Narration audio is too quiet for production use.")
+
+    SILENCE_DETECTION = {"filter": "silencedetect", "noise_db": -35, "min_duration_s": 0.12}
+
+    def detect_silences(self, path: Path) -> list[tuple[float, float]]:
+        """Return (start_ms, end_ms) narration pauses using FFmpeg's local silence detector."""
+
+        settings = self.SILENCE_DETECTION
+        result = self._run(
+            [
+                self.ffmpeg_path,
+                "-hide_banner",
+                "-i",
+                str(path),
+                "-af",
+                f"silencedetect=noise={settings['noise_db']}dB:d={settings['min_duration_s']}",
+                "-f",
+                "null",
+                "-",
+            ]
+        )
+        silences, start = [], None
+        for kind, value in re.findall(r"silence_(start|end):\s*(-?[0-9.]+)", result.stderr):
+            if kind == "start":
+                start = max(0.0, float(value) * 1000)
+            elif start is not None:
+                silences.append((start, float(value) * 1000))
+                start = None
+        if start is not None:
+            silences.append((start, self.probe(path).duration_ms))
+        return silences
 
 
 class LocalMediaStorage:
@@ -474,6 +505,89 @@ class MediaService:
         "alternate_zones": ["middle_center_safe", "upper_center_safe"],
         "position_change_policy": "scene_boundary_only_when_action_requires",
     }
+    # Arial Bold advance widths per 1000 em (metric-compatible with Helvetica-Bold); used
+    # only to decide whether caption text fits the renderer's two-line caption layout.
+    CAPTION_GLYPH_WIDTHS = {
+        " ": 278,
+        "!": 333,
+        '"': 474,
+        "'": 238,
+        "(": 333,
+        ")": 333,
+        ",": 278,
+        "-": 333,
+        ".": 278,
+        "0": 556,
+        "1": 556,
+        "2": 556,
+        "3": 556,
+        "4": 556,
+        "5": 556,
+        "6": 556,
+        "7": 556,
+        "8": 556,
+        "9": 556,
+        ":": 333,
+        ";": 333,
+        "?": 611,
+        "A": 722,
+        "B": 722,
+        "C": 722,
+        "D": 722,
+        "E": 667,
+        "F": 611,
+        "G": 778,
+        "H": 722,
+        "I": 278,
+        "J": 556,
+        "K": 722,
+        "L": 611,
+        "M": 833,
+        "N": 722,
+        "O": 778,
+        "P": 667,
+        "Q": 778,
+        "R": 722,
+        "S": 667,
+        "T": 611,
+        "U": 722,
+        "V": 667,
+        "W": 944,
+        "X": 667,
+        "Y": 667,
+        "Z": 611,
+        "a": 556,
+        "b": 611,
+        "c": 556,
+        "d": 611,
+        "e": 556,
+        "f": 333,
+        "g": 611,
+        "h": 611,
+        "i": 278,
+        "j": 278,
+        "k": 556,
+        "l": 278,
+        "m": 889,
+        "n": 611,
+        "o": 611,
+        "p": 611,
+        "q": 611,
+        "r": 389,
+        "s": 556,
+        "t": 333,
+        "u": 611,
+        "v": 556,
+        "w": 778,
+        "x": 556,
+        "y": 556,
+        "z": 500,
+        "—": 1000,
+        "’": 278,
+    }
+    # libass sizes a font by ascent + descent (Arial: 1854 + 434 of 2048 units per em).
+    CAPTION_EM_PER_FONT_SIZE = 2048 / 2288
+
     FINAL_FRAME_VISUAL_QA_PROFILE = {
         "profile": "similarstoic-final-frame-v4",
         "inspection_scales": ["full_resolution", "normal_video", "phone"],
@@ -739,6 +853,10 @@ class MediaService:
 
     @staticmethod
     def caption_cues(text: str, duration_ms: int) -> list[dict[str, Any]]:
+        """Historical five-word captions, kept only for legacy AssetSelection snapshots.
+
+        Canonical persistent-scene snapshots use ``speech_timing.build_caption_cues``.
+        """
         words = text.split()
         chunks = [" ".join(words[index : index + 5]) for index in range(0, len(words), 5)]
         if not chunks:
@@ -910,13 +1028,68 @@ class MediaService:
                 "style": dict(self.CITATION_STYLE),
                 "citations": self.citation_overlays(frozen, citations),
             }
+        timing = self.narration_speech_timing(narration, script.narration_text)
+        boundaries, elapsed = [], 0
+        for item in frozen[:-1]:
+            elapsed += item["duration_ms"]
+            boundaries.append(elapsed)
+        settings["caption_policy"] = speech_timing.CAPTION_POLICY
+        settings["caption_timing"] = {
+            **speech_timing.timing_evidence(timing),
+            "silence_detection": dict(self.runtime.SILENCE_DETECTION),
+        }
         return self.repository.create_persistent_final_media_input_snapshot(
             snapshot_id,
             plan.id,
             narration.id,
             frozen,
-            self.caption_cues(script.narration_text, narration.duration_ms),
+            speech_timing.build_caption_cues(
+                timing,
+                script.narration_text,
+                boundaries,
+                lambda text: self.caption_fits(text, settings["caption_profile"]),
+            ),
             settings,
+        )
+
+    @classmethod
+    def caption_fits(cls, text: str, profile: dict[str, Any]) -> bool:
+        """Whether text wraps into the social caption layout's maximum lines at 1080 px.
+
+        Uses the frozen profile's font size, side margins and box padding, the same values the
+        renderer passes to libass, with greedy word wrapping (which minimises line count).
+        """
+
+        em = profile["font_size"] * cls.CAPTION_EM_PER_FONT_SIZE
+        line_width = (
+            cls.PERSISTENT_RENDER_SETTINGS["width"]
+            - profile["margin_left"]
+            - profile["margin_right"]
+            - 2 * profile["outline"]
+        )
+
+        def width(value: str) -> float:
+            return em * sum(cls.CAPTION_GLYPH_WIDTHS.get(char, 556) for char in value) / 1000
+
+        lines, current = 1, ""
+        for word in text.split():
+            candidate = f"{current} {word}" if current else word
+            if width(candidate) <= line_width:
+                current = candidate
+                continue
+            if not current or width(word) > line_width:
+                return False
+            lines, current = lines + 1, word
+        return lines <= profile["max_lines"]
+
+    def narration_speech_timing(self, narration: Any, text: str) -> speech_timing.SpeechTiming:
+        """Derive word timings for exact narration audio from its detected pauses."""
+
+        pauses = self.runtime.detect_silences(self.storage.path(narration.storage_path))
+        return speech_timing.estimate_word_timings(
+            text,
+            narration.duration_ms,
+            [speech_timing.Silence(start, end) for start, end in pauses],
         )
 
     @classmethod

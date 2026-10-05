@@ -50,9 +50,11 @@ of this approved method.
 - The approved evidence uses eight meaningful narration-led visual beats over 38.720 seconds. Treat this as a useful
   density reference, not a rigid duration or beat-count requirement.
 - Its eight beat durations were weighted by semantic-clause word counts, with 250 ms crossfades at scene boundaries.
-- Captions used `similarstoic-social-mobile-v3`: deterministic five-word chunks, narration-weighted timing, Arial
-  Bold 92 at 1080x1920, at most two lines, warm light backing, and safe lower/middle/upper placement changed only at
-  scene boundaries.
+- Captions use `similarstoic-social-mobile-v3` styling (Arial Bold 92 at 1080x1920, at most two lines, warm light
+  backing, safe lower/middle/upper placement changed only at scene boundaries). The approved reference used
+  deterministic five-word chunks; canonical renders now use pause-aligned phrase captions
+  (`pause-aligned-phrase-captions-v1`; see `CONVEYOR_CURRENT_STATE.md`). Provider word timestamps, once persisted,
+  feed the same cue builder.
 - The persisted image executions used `openai` / `gpt-image-2`, PNG output, and two reference images per request.
   Eight initial acquisitions passed; there were no retries. Provider/model choice remains provenance, not permission
   to spend or a mandate to generate unnecessary alternatives.

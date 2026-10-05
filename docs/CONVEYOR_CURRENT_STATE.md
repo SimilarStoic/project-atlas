@@ -98,8 +98,9 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After post-acquisition founder narration authorization (a recorded action; the frozen request is unchanged; at most one
-  narration call per run), the verified local full suite is **361 passed, 0 skipped, 0 failed**.
+- After pause-aligned phrase captions and the retime recommendation, the verified local full suite is **374 passed,
+  0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action; the frozen request is
+  unchanged and a run makes at most one narration call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -315,6 +316,18 @@ Explicit claim-timed citation overlays are supported.
   and carried through retime with its timing recomputed.
 - Productions without citations render exactly as before.
 
+Canonical persistent-scene snapshots use pause-aligned phrase captions (`caption_policy`
+`pause-aligned-phrase-captions-v1`, `src/project_atlas/speech_timing.py`).
+
+- Timing evidence is FFmpeg `silencedetect` (-35 dB, 0.12 s) on the exact persisted narration, matched to the approved
+  script's punctuation phrases; unmatched boundaries are estimated by the same builder. No provider call is made.
+- Cues follow natural phrases, never start before the spoken words, keep mobile readability, and end at a scene change
+  that falls in a narration pause. A continuous spoken phrase is not split merely because a scene changes.
+- Future persisted provider word timestamps must feed this same cue builder as a timing source, not a second caption
+  path. The historical five-word cues remain only for legacy AssetSelection snapshots.
+- `GET /api/v2/productions/{id}/retime-recommendation` recommends scene durations whose boundaries sit at the pause
+  ending each scene's narration excerpt. It is read-only; applying it remains a founder-approved retime.
+
 ## Schema authority
 
 Application schema authority is the `schema_migrations` table with contiguous versions **1 through 28**. The current
@@ -409,14 +422,14 @@ gaps are:
 - source-credit projection;
 - character continuity;
 - scene density;
-- speech-aligned beat timing;
+- speech-aligned initial beat timing (a post-narration retime recommendation exists);
 - ceiling counting of generation calls that raise before acquisition evidence is persisted. This covers both a paid
   provider call that raises before evidence is recorded, and a provider call that returns an asset but whose
   post-provider technical inspection or probe raises before evidence is recorded;
 - image size on reference-conditioned calls: a configured image size may be recorded in provenance but is not sent
   on reference-conditioned image-edit calls, so those calls use the provider's default size;
 - initial beat timing is estimated before narration exists and may require a post-narration retime;
-- narration word timestamps are not persisted, so captions are not fully speech-aligned;
+- provider word timestamps are requested but not persisted; captions use pause-aligned estimates between pauses;
 - packaging does not yet require the current, founder-accepted render.
 
 Each requires separate authorization.
