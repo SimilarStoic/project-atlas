@@ -137,6 +137,24 @@ class PublishingService:
         ):
             raise ValueError("Operation lacks exact original founder authority.")
 
+    def _public_upload_governance(
+        self, package: PublishingPackage, exclude_operation_id: str | None = None
+    ) -> None:
+        """A public or unlisted videos.insert is a release: apply the existing release authority."""
+
+        approval = self.repository.effective_publication_approval(package.id)
+        if approval is None or approval.release_route != "api":
+            raise ValueError(
+                "A public or unlisted upload needs founder approval for an API public release."
+            )
+        if not timing_is_open(approval.timing, self.clock()):
+            raise ValueError(
+                "A public or unlisted upload is only allowed inside the approved publication time."
+            )
+        conflict = self.repository.release_week_conflict(package, exclude_operation_id)
+        if conflict:
+            raise ValueError(conflict)
+
     def _expected(self, package: PublishingPackage, upload_operation_id: str) -> PublishingPackage:
         """Values the remote object must match: founder-confirmed upload values when present."""
 
@@ -256,6 +274,8 @@ class PublishingService:
                 raise ValueError(
                     "Upload requires explicit founder-confirmed title, description and privacy."
                 )
+            if upload["privacy"] != "private":
+                self._public_upload_governance(package)
             intent.update(
                 {
                     "schema": "confirmed-upload-v1",
@@ -371,6 +391,9 @@ class PublishingService:
         self._authority(package, "api", "upload")
         if self.repository.get_publication_operation_events(operation_id)[-1].kind != "reserved":
             raise ValueError("Dispatched/uncertain upload must be inspected, not begun again.")
+        if operation.intent.get("privacy", "private") != "private":
+            # Re-check immediately before dispatch: the approved window can close.
+            self._public_upload_governance(package, operation.id)
         self.storage.read_verified(
             self.repository.get_final_media_artifact(package.final_media_artifact_id).storage_path,
             package.artifact_digest,

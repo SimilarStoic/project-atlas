@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the controlled founder-confirmed YouTube upload path, the verified local full suite is **404 passed,
+- After the YouTube policy obligations and release governance, the verified local full suite is **429 passed,
   0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action; the frozen request is
   unchanged and a run makes at most one narration call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
@@ -328,9 +328,10 @@ Canonical persistent-scene snapshots use pause-aligned phrase captions (`caption
 - `GET /api/v2/productions/{id}/retime-recommendation` recommends scene durations whose boundaries sit at the pause
   ending each scene's narration excerpt. It is read-only; applying it remains a founder-approved retime.
 
-A controlled founder-confirmed YouTube upload path exists (`src/project_atlas/youtube_upload.py`). **Live use is not
-permitted** until a separate commit implements the YouTube Developer Policies revocation, deletion, 30-day
-refresh/delete and privacy-policy obligations, plus governance for public/unlisted uploads.
+A controlled founder-confirmed YouTube upload path exists (`src/project_atlas/youtube_upload.py`), with the YouTube
+Developer Policies obligations implemented in `src/project_atlas/youtube_consent.py`. **Live use still requires** an
+API-route PublishingPackage and founder approval for the chosen artifact (P9 v3 has none yet) and fresh upload OAuth
+consent.
 
 - One `videos.insert` of the exact artifact bound to an API-route founder-approved PublishingPackage, with the title,
   description and privacy the founder confirms on the upload screen; no update, privacy transition or delete.
@@ -340,6 +341,27 @@ refresh/delete and privacy-policy obligations, plus governance for public/unlist
 - `/youtube/upload` is served only when configured, only on a loopback bind to a loopback peer, with Host/Origin
   checks, a single-use nonce, anti-framing headers and the YouTube API Terms section 9.1 upload notice.
 - After dispatch, an uncertain outcome is shown as unknown and reconciliation-required, never as nothing sent.
+- Versioned acceptance: Conveyor Privacy Policy version `2026-10-05` (constant `POLICY_VERSION`, matching the published
+  page) must be accepted before any authorization or YouTube API use; a changed version requires re-acceptance.
+  Acceptance, revocation and data deletion live at `/youtube/privacy` and are reachable without acceptance.
+- Revoke (button and `youtube_consent revoke`) revokes each stored token with Google (only HTTP 200 counts as
+  confirmed), deletes both local credentials and purges stored YouTube API data, processing each authorization
+  independently; anything unconfirmed shows the Google security-settings link. Delete-data purges API data and states
+  that nothing on YouTube is affected. Conveyor-authored records are retained.
+- The read-only and upload authorizations each reconfirm independently every 30 days, automatically before API use and
+  only after acceptance. Definitive revocation deletes the credential and purges data; transient failures fail closed.
+  Stored YouTube API payloads older than 30 days that were not refreshed are deleted.
+- The only publishing/YouTube mutation routes are `POST /youtube/upload`, `POST /youtube/privacy/accept`,
+  `POST /youtube/revoke` and `POST /youtube/delete-data` (`YOUTUBE_MUTATION_ROUTES`, test-enforced).
+- A public or unlisted upload must satisfy the existing release authority: API release route, the approved
+  publication time open now, and a clear channel pilot week; otherwise it is refused before anything is sent.
+- Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
+  as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
+- Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker
+  entries) always purges stale data locally and reconfirms due authorizations only with current acceptance:
+  `D:\ConveyorOS\source\Conveyor\.venv\Scripts\python.exe -m project_atlas.youtube_consent --consent-state
+  <consent-state.json> --db D:\ConveyorOS\runtime\ConveyorRuntime\conveyor.db maintain --client-config
+  <client-config.json>` (both JSON paths outside the repository).
 
 ## Schema authority
 

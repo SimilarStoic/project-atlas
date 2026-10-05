@@ -821,21 +821,41 @@ class PublishingRepositoryMixin:
             or operation.intent.get("timing") != package.manifest["publication_timing"]
         ):
             raise ValueError("Release intent must match the approved pilot slot and timing.")
+        conflict = self.release_week_conflict(package, operation_id)
+        if conflict:
+            raise ValueError(conflict)
+
+    def release_week_conflict(
+        self, package: PublishingPackage, exclude_operation_id: str | None = None
+    ) -> str | None:
+        """The single channel-week public-release rule, shared by releases and public uploads.
+
+        A non-failed release, a non-failed public/unlisted upload, or a public receipt in the
+        package's channel pilot week consumes that week.
+        """
+
         rows = self.connection.execute(
             "SELECT o.id FROM publication_operations o JOIN publishing_packages p "
-            "ON p.id = o.package_id WHERE o.action_kind = 'release' AND o.id <> ? "
-            "AND p.channel_id = ? AND p.pilot_week = ?",
-            (operation_id, package.channel_id, package.pilot_week),
+            "ON p.id = o.package_id WHERE o.id <> ? AND p.channel_id = ? AND p.pilot_week = ? "
+            "AND o.action_kind IN ('release', 'upload')",
+            (exclude_operation_id or "", package.channel_id, package.pilot_week),
         )
-        if any(self.get_publication_operation(row["id"]).outcome != "failed" for row in rows):
-            raise ValueError("Another public item reserves or consumed this channel pilot week.")
+        for row in rows:
+            operation = self.get_publication_operation(row["id"])
+            public = operation.action_kind == "release" or operation.intent.get("privacy") in {
+                "public",
+                "unlisted",
+            }
+            if public and operation.outcome != "failed":
+                return "Another public item reserves or consumed this channel pilot week."
         receipt = self.connection.execute(
             "SELECT id FROM publication_receipts WHERE channel_id = ? AND pilot_week = ? "
             "AND release_operation_id <> ?",
-            (package.channel_id, package.pilot_week, operation_id),
+            (package.channel_id, package.pilot_week, exclude_operation_id or ""),
         ).fetchone()
         if receipt is not None:
-            raise ValueError("Another public receipt consumed this channel pilot week.")
+            return "Another public receipt consumed this channel pilot week."
+        return None
 
     def bind_platform_publication(
         self,
@@ -1249,6 +1269,90 @@ class PublishingRepositoryMixin:
             "AND provider_purged_at IS NULL",
             (stamp(), operation_id),
         )
+
+    def purge_all_youtube_api_data(self) -> dict[str, int]:
+        """Delete every stored YouTube API-origin field via the existing purge rules.
+
+        Conveyor-authored records (packages, approvals, intents, founder-attested identities,
+        operation journals) remain; only provider-origin values and hashes are removed.
+        """
+
+        publications = [
+            row["id"]
+            for row in self.connection.execute(
+                "SELECT id FROM platform_publications ORDER BY id"
+            ).fetchall()
+        ]
+        for publication_id in publications:
+            self.purge_publication_api_data(publication_id)
+        operations = [
+            row["operation_id"]
+            for row in self.connection.execute(
+                "SELECT DISTINCT operation_id FROM publication_operation_events "
+                "WHERE provider_evidence_json IS NOT NULL AND provider_purged_at IS NULL"
+            ).fetchall()
+        ]
+        for operation_id in operations:
+            self.purge_provider_operation_evidence(operation_id)
+        return {"publications": len(publications), "operations": len(operations)}
+
+    def purge_stale_youtube_api_data(self, cutoff: datetime) -> dict[str, int]:
+        """Delete YouTube API payloads not refreshed since ``cutoff`` (30-day rule).
+
+        A publication's API identity counts as refreshed by a verified status observation
+        newer than the cutoff; observation is the refresh path, deletion the default.
+        """
+
+        def older(value: str | None) -> bool:
+            try:
+                moment = datetime.fromisoformat(value) if value else None
+            except ValueError:
+                moment = None
+            return moment is None or moment < cutoff
+
+        counts = {
+            "status_snapshots": 0,
+            "performance_snapshots": 0,
+            "operations": 0,
+            "publications": 0,
+        }
+        for row in self.connection.execute(
+            "SELECT id, observed_at FROM publication_status_snapshots "
+            "WHERE provider_purged_at IS NULL"
+        ).fetchall():
+            if older(row["observed_at"]):
+                self.purge_provider_snapshot_payload("publication_status_snapshots", row["id"])
+                counts["status_snapshots"] += 1
+        for row in self.connection.execute(
+            "SELECT id, collected_at FROM performance_snapshots WHERE provider_purged_at IS NULL"
+        ).fetchall():
+            if older(row["collected_at"]):
+                self.purge_provider_snapshot_payload("performance_snapshots", row["id"])
+                counts["performance_snapshots"] += 1
+        stale_operations = {
+            row["operation_id"]
+            for row in self.connection.execute(
+                "SELECT operation_id, created_at FROM publication_operation_events "
+                "WHERE provider_evidence_json IS NOT NULL AND provider_purged_at IS NULL"
+            ).fetchall()
+            if older(row["created_at"])
+        }
+        for operation_id in sorted(stale_operations):
+            self.purge_provider_operation_evidence(operation_id)
+            counts["operations"] += 1
+        for row in self.connection.execute(
+            "SELECT id, identified_at FROM platform_publications WHERE identity_source = 'api' "
+            "AND remote_id IS NOT NULL AND provider_purged_at IS NULL"
+        ).fetchall():
+            fresh = self.connection.execute(
+                "SELECT observed_at FROM publication_status_snapshots WHERE publication_id = ? "
+                "AND verification = 'passed' AND provider_purged_at IS NULL",
+                (row["id"],),
+            ).fetchall()
+            if older(row["identified_at"]) and all(older(item["observed_at"]) for item in fresh):
+                self.purge_publication_api_data(row["id"])
+                counts["publications"] += 1
+        return counts
 
     def purge_provider_operation_evidence(self, operation_id: str) -> None:
         """Allow deletion even for a dispatched API operation with no bound publication."""

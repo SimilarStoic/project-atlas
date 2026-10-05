@@ -41,6 +41,16 @@ from project_atlas.production import (
 
 STATIC_DIRECTORY = Path(__file__).parent / "static"
 YOUTUBE_UPLOAD_PATH = "/youtube/upload"
+YOUTUBE_PRIVACY_PATH = "/youtube/privacy"
+# The complete set of approved local publishing/YouTube mutation routes (METHOD, PATH).
+# Every one is served only to a loopback peer on a loopback bind with Host/Origin checks,
+# a purpose-bound single-use nonce and anti-framing headers.
+YOUTUBE_MUTATION_ROUTES: dict[tuple[str, str], str] = {
+    ("POST", "/youtube/upload"): "submit",
+    ("POST", "/youtube/privacy/accept"): "accept_policy",
+    ("POST", "/youtube/revoke"): "revoke",
+    ("POST", "/youtube/delete-data"): "delete_data",
+}
 
 
 def is_loopback(address: str) -> bool:
@@ -70,6 +80,12 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         if parsed.path == YOUTUBE_UPLOAD_PATH:
             package_id = parse_qs(parsed.query).get("package", [""])[0]
             self._youtube_upload(lambda controller: controller.page(package_id))
+            return
+        if parsed.path == YOUTUBE_PRIVACY_PATH:
+            self._youtube_upload(lambda controller: controller.privacy_page())
+            return
+        if parsed.path.startswith("/youtube/"):
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
         production_prefix = "/api/v2/productions/"
         recommendation_suffix = "/retime-recommendation"
@@ -773,8 +789,15 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
         """Execute one narrow persisted generation or reference-selection action."""
 
         path = urlparse(self.path).path
-        if path == YOUTUBE_UPLOAD_PATH:
-            self._youtube_upload(lambda controller: controller.submit(self._read_upload_form()))
+        youtube_action = YOUTUBE_MUTATION_ROUTES.get(("POST", path))
+        if youtube_action is not None:
+            self._youtube_upload(
+                lambda controller: getattr(controller, youtube_action)(self._read_upload_form())
+            )
+            return
+        if path.startswith("/youtube/"):
+            self._discard_small_body()
+            self.send_error(HTTPStatus.NOT_FOUND, "Not found")
             return
         if path == "/api/v2/productions":
             try:
@@ -2732,6 +2755,11 @@ def main() -> None:
     args = parser.parse_args()
     youtube_upload = None
     client_config = os.environ.get("ATLAS_YOUTUBE_CLIENT_CONFIG", "").strip()
+    consent_state = os.environ.get("ATLAS_YOUTUBE_CONSENT_STATE", "").strip()
+    if client_config and not consent_state:
+        raise SystemExit(
+            "ATLAS_YOUTUBE_CONSENT_STATE is required with ATLAS_YOUTUBE_CLIENT_CONFIG."
+        )
     if client_config:
         from project_atlas.youtube_upload import YouTubeUploadController
 
@@ -2741,9 +2769,15 @@ def main() -> None:
                 None,
                 Path(client_config),
                 Path(__file__).resolve().parents[2],
+                Path(consent_state),
             )
 
     server = create_server(args.host, args.port, youtube_upload=youtube_upload)
+    if server.youtube_upload is not None:
+        # Local-only start-up inspection: due state and stale-data deletion; no API call.
+        print(
+            f"[Conveyor] YouTube consent: {json.dumps(server.youtube_upload.governance.startup())}"
+        )
     print(f"Conveyor MVP is running at http://{args.host}:{args.port}")
     try:
         server.serve_forever()

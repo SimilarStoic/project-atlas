@@ -24,6 +24,7 @@ from project_atlas.youtube_adapter import (
     YouTubeObservationBlocked,
     YouTubeReadOnlyObservationAdapter,
 )
+from project_atlas.youtube_consent import ConsentRegistry, YouTubeGovernance
 from project_atlas.youtube_preflight import (
     KEYRING_ACCOUNT,
     YOUTUBE_READONLY_SCOPE,
@@ -96,13 +97,51 @@ class FakeUploadClient:
         return self.resource
 
 
+# The approved exact API publication minute is CLOCK (13:00 London time on 2026-10-05).
+OPEN_WINDOW = {"timezone": "Europe/London", "mode": "exact", "at": "2026-10-05T13:00:00+01:00"}
+
+
 def manifest() -> dict:
     return {
         **_manifest(),
         "language": "en-GB",
         "category": {"id": "27", "name": "Education"},
         "compliance": {"altered_or_synthetic_media": {"declare_to_youtube": True}},
+        "publication_timing": OPEN_WINDOW,
     }
+
+
+class FakeStore:
+    """In-memory credential entry with the store interface (get/set/delete)."""
+
+    def __init__(self, token: str | None = None) -> None:
+        self.token = token
+        self.saved: list[str] = []
+
+    def get(self):
+        return self.token
+
+    def set(self, token):
+        self.saved.append(token)
+        self.token = token
+
+    def delete(self) -> bool:
+        existed, self.token = self.token is not None, None
+        return existed
+
+
+def governance_for(repo, tmp_path, accepted=True, stores=None, revoke_token=None):
+    registry = ConsentRegistry(tmp_path / "consent-state.json")
+    if accepted:
+        registry.accept("founder", CLOCK)
+    stores = stores if stores is not None else {}
+    return YouTubeGovernance(
+        registry,
+        repo,
+        store_for=lambda account: stores.setdefault(account, FakeStore()),
+        revoke_token=revoke_token or (lambda token: "confirmed"),
+        clock=lambda: CLOCK,
+    )
 
 
 @pytest.fixture
@@ -124,7 +163,8 @@ def env(tmp_path):
         "package-1", "synthetic-pilot", 1, 1, "fake-artifact", manifest()
     )
     service.approve_package("founder-approval-1", package.id, "synthetic-founder")
-    controller = YouTubeUploadController(service, adapter, monotonic=lambda: 0.0)
+    governance = governance_for(repo, tmp_path)
+    controller = YouTubeUploadController(service, adapter, governance, monotonic=lambda: 0.0)
     yield repo, storage, client, provider, adapter, service, package, controller
     repo.close()
 
@@ -426,7 +466,9 @@ def test_web_route_is_loopback_same_origin_and_absent_unless_configured(env, tmp
     configured = create_server(
         port=0,
         database_path=tmp_path / "configured.db",
-        youtube_upload=lambda _repository: YouTubeUploadController(service, adapter),
+        youtube_upload=lambda _repository: YouTubeUploadController(
+            service, adapter, env[-1].governance
+        ),
     )
     try:
         port = configured.server_address[1]
@@ -480,7 +522,9 @@ def test_upload_server_refuses_a_non_loopback_bind(env, tmp_path):
             host="0.0.0.0",
             port=0,
             database_path=tmp_path / "exposed.db",
-            youtube_upload=lambda _repository: YouTubeUploadController(service, adapter),
+            youtube_upload=lambda _repository: YouTubeUploadController(
+                service, adapter, env[-1].governance
+            ),
         )
 
 
@@ -491,7 +535,9 @@ def test_non_loopback_peer_is_refused_even_with_forged_localhost_host(env, tmp_p
     server = create_server(
         port=0,
         database_path=tmp_path / "peer.db",
-        youtube_upload=lambda _repository: YouTubeUploadController(service, adapter),
+        youtube_upload=lambda _repository: YouTubeUploadController(
+            service, adapter, env[-1].governance
+        ),
     )
     original_setup = AtlasRequestHandler.setup
 
@@ -554,13 +600,18 @@ def _fresh(scopes=UPLOAD_SCOPES, token="new-upload-token") -> Credentials:
     return credentials
 
 
-def _authorize(tmp_path, store, channels):
+def _authorize(tmp_path, store, channels, accepted=True):
     from project_atlas.youtube_upload import authorize
 
     client_config = tmp_path / "client.json"
     _write_client_config(client_config)
     result = tmp_path / "evidence" / "authorize.json"
-    code = authorize(client_config, result, store=store, channel_client=ChannelClient(channels))
+    consent = ConsentRegistry(tmp_path / "consent-state.json")
+    if accepted:
+        consent.accept("founder", CLOCK)
+    code = authorize(
+        client_config, result, consent.path, store=store, channel_client=ChannelClient(channels)
+    )
     return code, json.loads(result.read_text(encoding="utf-8"))
 
 

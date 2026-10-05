@@ -18,9 +18,7 @@ from project_atlas.youtube_preflight import (
     EXPECTED_CHANNEL_ID,
     YOUTUBE_READONLY_SCOPE,
     CredentialView,
-    GoogleInstalledCredentialProvider,
     PreflightBlocked,
-    WindowsCredentialRefreshTokenStore,
     verify_exact_channel,
 )
 
@@ -127,17 +125,17 @@ class YouTubeReadOnlyObservationAdapter:
         cls,
         client_config: Path,
         repository_root: Path,
+        governance: Any,
         *,
         clock: Callable[[], datetime] | None = None,
     ) -> YouTubeReadOnlyObservationAdapter:
-        """Use the already-established native Windows refresh-token store."""
+        """Read-only credentials behind policy acceptance and 30-day reconfirmation."""
 
-        provider = GoogleInstalledCredentialProvider(
-            client_config,
-            WindowsCredentialRefreshTokenStore(),
-            repository_root,
+        from project_atlas.youtube_consent import governed_provider
+
+        return cls(
+            governed_provider("readonly", client_config, repository_root, governance), clock=clock
         )
-        return cls(provider, clock=clock)
 
     def _authorized(self) -> CredentialView:
         try:

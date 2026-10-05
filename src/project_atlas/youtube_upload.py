@@ -16,7 +16,7 @@ import secrets
 import sys
 import time
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -30,10 +30,22 @@ from project_atlas.youtube_adapter import (
     YouTubeObservationBlocked,
     YouTubeReadOnlyObservationAdapter,
 )
+from project_atlas.youtube_consent import (  # noqa: F401  (re-exported upload scopes)
+    DELETION_NOTICE,
+    GOOGLE_PRIVACY_URL,
+    GOOGLE_SECURITY_SETTINGS_URL,
+    POLICY_VERSION,
+    PRIVACY_POLICY_URL,
+    UPLOAD_KEYRING_ACCOUNT,
+    UPLOAD_SCOPES,
+    YOUTUBE_TERMS_URL,
+    YOUTUBE_UPLOAD_SCOPE,
+    ConsentRegistry,
+    YouTubeGovernance,
+    governed_provider,
+)
 from project_atlas.youtube_preflight import (
     CHANNELS_ENDPOINT,
-    EXPECTED_CHANNEL_ID,
-    YOUTUBE_READONLY_SCOPE,
     GoogleInstalledCredentialProvider,
     GoogleReadOnlyChannelClient,
     PreflightBlocked,
@@ -43,13 +55,8 @@ from project_atlas.youtube_preflight import (
     verify_exact_channel,
 )
 
-YOUTUBE_UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
-UPLOAD_SCOPES = (YOUTUBE_READONLY_SCOPE, YOUTUBE_UPLOAD_SCOPE)
-# A distinct credential-store entry: the read-only token can never satisfy an upload.
-UPLOAD_KEYRING_ACCOUNT = f"{EXPECTED_CHANNEL_ID}:upload-v1"
 UPLOAD_ENDPOINT = "https://www.googleapis.com/upload/youtube/v3/videos"
 UPLOAD_ADAPTER_VERSION = "youtube-founder-confirmed-upload-v1"
-YOUTUBE_TERMS_URL = "https://www.youtube.com/t/terms"
 # YouTube API Services Terms of Service, section 9.1 (Required Notice), verbatim, with the
 # non-mobile URL that section prescribes for uploads from a personal computer.
 REQUIRED_UPLOAD_NOTICE = (
@@ -197,18 +204,13 @@ class YouTubeUploadAdapter(YouTubeReadOnlyObservationAdapter):
         client_config: Path,
         repository_root: Path,
         media_resolver: Callable[[PublishingPackage], Path],
+        governance: YouTubeGovernance,
         *,
         clock: Callable[[], datetime] | None = None,
     ) -> YouTubeUploadAdapter:
-        """Non-interactive: a missing upload authorization fails closed, never opens consent."""
+        """Governed and non-interactive: never opens consent, never runs before acceptance."""
 
-        provider = GoogleInstalledCredentialProvider(
-            client_config,
-            WindowsCredentialRefreshTokenStore(account=UPLOAD_KEYRING_ACCOUNT),
-            repository_root,
-            scopes=UPLOAD_SCOPES,
-            interactive=False,
-        )
+        provider = governed_provider("upload", client_config, repository_root, governance)
         return cls(provider, media_resolver, clock=clock)
 
     def authenticated_channel_title(self) -> str | None:
@@ -308,14 +310,16 @@ class YouTubeUploadController:
         self,
         service: PublishingService,
         adapter: YouTubeUploadAdapter,
+        governance: YouTubeGovernance,
         *,
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self.service = service
         self.repository = service.repository
         self.adapter = adapter
+        self.governance = governance
         self.monotonic = monotonic
-        self._nonces: dict[str, tuple[str, str, float]] = {}
+        self._nonces: dict[str, tuple[str, tuple[str, ...], float]] = {}
 
     @classmethod
     def from_client_config(
@@ -324,16 +328,131 @@ class YouTubeUploadController:
         media_storage_root: Path | None,
         client_config: Path,
         repository_root: Path,
+        consent_state: Path,
     ) -> YouTubeUploadController:
         storage = LocalMediaStorage(media_storage_root)
+        governance = YouTubeGovernance(ConsentRegistry(consent_state, repository_root), repository)
 
         def media_for(package: PublishingPackage) -> Path:
             artifact = repository.get_final_media_artifact(package.final_media_artifact_id)
             storage.read_verified(artifact.storage_path, package.artifact_digest)
             return storage.path(artifact.storage_path)
 
-        adapter = YouTubeUploadAdapter.from_upload_config(client_config, repository_root, media_for)
-        return cls(PublishingService(repository, storage, adapter), adapter)
+        adapter = YouTubeUploadAdapter.from_upload_config(
+            client_config, repository_root, media_for, governance
+        )
+        return cls(PublishingService(repository, storage, adapter), adapter, governance)
+
+    def _issue(self, purpose: str, *binding: str) -> str:
+        nonce = secrets.token_urlsafe(32)
+        self._nonces[nonce] = (purpose, binding, self.monotonic())
+        return nonce
+
+    def _redeem(self, form: dict[str, str], purpose: str) -> tuple[str, ...] | None:
+        """Single-use, purpose-bound, time-limited screen nonce."""
+
+        record = self._nonces.pop(form.get("nonce", ""), None)
+        if record is None or record[0] != purpose or self.monotonic() - record[2] > NONCE_SECONDS:
+            return None
+        return record[1]
+
+    def privacy_page(self) -> tuple[int, str]:
+        """Acceptance, revocation and deletion; reachable without acceptance or authorization."""
+
+        registry = self.governance.registry
+        accepted = registry.accepted_version()
+        links = (
+            "<ul>"
+            f"<li><a href='{PRIVACY_POLICY_URL}' target='_blank' rel='noopener'>Conveyor Privacy "
+            f"Policy</a> (version {POLICY_VERSION})</li>"
+            f"<li><a href='{YOUTUBE_TERMS_URL}' target='_blank' rel='noopener'>YouTube Terms of "
+            "Service</a></li>"
+            f"<li><a href='{GOOGLE_PRIVACY_URL}' target='_blank' rel='noopener'>Google Privacy "
+            "Policy</a></li>"
+            f"<li><a href='{GOOGLE_SECURITY_SETTINGS_URL}' target='_blank' rel='noopener'>Google "
+            "security settings (revoke Conveyor's access)</a></li>"
+            "</ul>"
+        )
+        if registry.is_current():
+            acceptance = f"<p>You accepted Conveyor Privacy Policy version {POLICY_VERSION}.</p>"
+        else:
+            previous = f" (previously accepted: {html.escape(accepted)})" if accepted else ""
+            acceptance = (
+                "<form method='post' action='/youtube/privacy/accept'>"
+                f"<input type='hidden' name='nonce' value='{self._issue('accept')}'>"
+                f"<input type='hidden' name='accept_version' value='{POLICY_VERSION}'>"
+                "<label><input type='checkbox' name='accepted' value='accepted' required> "
+                f"I have read and accept the Conveyor Privacy Policy version {POLICY_VERSION}"
+                f"{previous}. By using Conveyor's YouTube features I agree to be bound by the "
+                "YouTube Terms of Service.</label>"
+                "<button type='submit'>Accept</button></form>"
+            )
+        body = (
+            "<h1>YouTube privacy and data controls</h1>"
+            "<p>Conveyor uses YouTube API Services. Before Conveyor authorizes or uses YouTube API "
+            "Services, accept the current Conveyor Privacy Policy.</p>"
+            + links
+            + acceptance
+            + "<h2>Revoke Conveyor's YouTube access</h2>"
+            "<p>Revokes every stored YouTube authorization with Google, deletes it from this "
+            "computer and deletes the YouTube API data Conveyor stored.</p>"
+            "<form method='post' action='/youtube/revoke'>"
+            f"<input type='hidden' name='nonce' value='{self._issue('revoke')}'>"
+            "<button type='submit'>Revoke YouTube access</button></form>"
+            "<h2>Delete stored YouTube data</h2>"
+            f"<p>{html.escape(DELETION_NOTICE)}</p>"
+            "<form method='post' action='/youtube/delete-data'>"
+            f"<input type='hidden' name='nonce' value='{self._issue('delete')}'>"
+            "<button type='submit'>Delete stored YouTube data</button></form>"
+        )
+        return 200, _page("YouTube privacy and data controls", body)
+
+    def accept_policy(self, form: dict[str, str]) -> tuple[int, str]:
+        if self._redeem(form, "accept") is None:
+            return 409, _page("Privacy policy", "<p class='blocked'>This page expired; reload.</p>")
+        if form.get("accepted") != "accepted" or form.get("accept_version") != POLICY_VERSION:
+            return 400, _page(
+                "Privacy policy",
+                f"<p class='blocked'>Accept Conveyor Privacy Policy version {POLICY_VERSION} to "
+                "continue.</p>",
+            )
+        self.governance.registry.accept("founder", self.governance.clock())
+        return 200, _page(
+            "Privacy policy",
+            f"<h1>Accepted</h1><p>Conveyor Privacy Policy version {POLICY_VERSION} accepted.</p>",
+        )
+
+    def revoke(self, form: dict[str, str]) -> tuple[int, str]:
+        if self._redeem(form, "revoke") is None:
+            return 409, _page("Revoke", "<p class='blocked'>This page expired; reload.</p>")
+        result = self.governance.revoke()
+        rows = [
+            (
+                f"{kind} authorization",
+                f"Google revocation: {item['remote_revocation']}; local credential "
+                f"{'deleted' if item['local_credential_deleted'] else 'not deleted'}"
+                + (f" ({', '.join(item['errors'])})" if item["errors"] else ""),
+            )
+            for kind, item in result["authorizations"].items()
+        ]
+        rows.append(("Stored YouTube API data", "deleted"))
+        warning = (
+            "<p class='blocked'>Google did not confirm every revocation, or a local credential "
+            "could not be deleted. Stored YouTube data was still deleted; also remove Conveyor at "
+            f"<a href='{GOOGLE_SECURITY_SETTINGS_URL}'>Google security settings</a>.</p>"
+            if result["remote_revocation_unconfirmed"]
+            else ""
+        )
+        return 200, _page("Revoke", "<h1>YouTube access revoked</h1>" + warning + _rows(rows))
+
+    def delete_data(self, form: dict[str, str]) -> tuple[int, str]:
+        if self._redeem(form, "delete") is None:
+            return 409, _page("Delete data", "<p class='blocked'>This page expired; reload.</p>")
+        result = self.governance.delete_data()
+        return 200, _page(
+            "Delete data",
+            "<h1>Stored YouTube data deleted</h1>" f"<p>{html.escape(result['notice'])}</p>",
+        )
 
     @staticmethod
     def allowed_request(host: str | None, origin: str | None, port: int) -> bool:
@@ -359,6 +478,14 @@ class YouTubeUploadController:
             package = self.repository.get_publishing_package(package_id)
         except KeyError:
             return 404, _page("YouTube upload", "<h1>YouTube upload</h1><p>Package not found.</p>")
+        if not self.governance.registry.is_current():
+            # No YouTube API request (not even a channel lookup) before current acceptance.
+            return 409, _page(
+                "YouTube upload",
+                "<h1>YouTube upload</h1><p class='blocked'>Accept the current Conveyor Privacy "
+                f"Policy (version {POLICY_VERSION}) before using YouTube features: "
+                "<a href='/youtube/privacy'>privacy and data controls</a>.</p>",
+            )
         approval = self._approval(package)
         artifact = self.repository.get_final_media_artifact(package.final_media_artifact_id)
         package_rows = _rows(
@@ -393,8 +520,7 @@ class YouTubeUploadController:
                 "for youtube.readonly + youtube.upload with "
                 "<code>python -m project_atlas.youtube_upload authorize</code>, then reload.</p>",
             )
-        nonce = secrets.token_urlsafe(32)
-        self._nonces[nonce] = (package.id, package.package_digest, self.monotonic())
+        nonce = self._issue("upload", package.id, package.package_digest)
         manifest = package.manifest
         private_first = manifest.get("private_first") is True
         choices = "".join(
@@ -453,19 +579,25 @@ class YouTubeUploadController:
             + f" <a href='{YOUTUBE_TERMS_URL}' target='_blank' rel='noopener'>"
             + "YouTube Terms of Service</a></p>"
             + "<button type='submit'>Upload</button></form>"
+            + "<p><a href='/youtube/privacy'>Privacy, revocation and data deletion</a></p>"
         )
         return 200, _page("YouTube upload", body)
 
     def submit(self, form: dict[str, str]) -> tuple[int, str]:
-        nonce = form.get("nonce", "")
-        binding = self._nonces.pop(nonce, None)
-        if binding is None or self.monotonic() - binding[2] > NONCE_SECONDS:
+        binding = self._redeem(form, "upload")
+        if binding is None:
             return 409, _page(
                 "YouTube upload",
                 "<h1>YouTube upload</h1><p class='blocked'>This upload screen has expired or was "
                 "already used. Reload the upload screen; nothing was sent to YouTube.</p>",
             )
-        package_id, package_digest, _issued = binding
+        if not self.governance.registry.is_current():
+            return 409, _page(
+                "YouTube upload",
+                "<h1>YouTube upload</h1><p class='blocked'>Accept the current Conveyor Privacy "
+                "Policy first. Nothing was sent to YouTube.</p>",
+            )
+        package_id, package_digest = binding
         try:
             package = self.repository.get_publishing_package(package_id)
         except KeyError:
@@ -585,6 +717,7 @@ class YouTubeUploadController:
 def authorize(
     client_config: Path,
     result_file: Path,
+    consent_state: Path,
     *,
     store: Any | None = None,
     channel_client: Any | None = None,
@@ -597,6 +730,13 @@ def authorize(
 
     repository_root = Path(__file__).resolve().parents[2]
     _outside_repository(result_file, repository_root)
+    registry = ConsentRegistry(consent_state, repository_root)
+    if not registry.is_current():
+        # No consent flow or YouTube API request before current privacy-policy acceptance.
+        evidence = {"status": "BLOCKER", "error_category": "privacy_policy_acceptance_required"}
+        _write_sanitized_json(result_file, {**evidence, "stored": False})
+        print(json.dumps(evidence, sort_keys=True))
+        return 2
     store = store or WindowsCredentialRefreshTokenStore(account=UPLOAD_KEYRING_ACCOUNT)
     provider = GoogleInstalledCredentialProvider(
         client_config,
@@ -616,6 +756,7 @@ def authorize(
         evidence = {**result.evidence(), "stored": False}
         if result.status == "PASS":
             store.set(credentials.refresh_token)
+            registry.mark_reconfirmed("upload", datetime.now(UTC))
             evidence["stored"] = True
     except PreflightBlocked as exc:
         evidence = {"status": "BLOCKER", "error_category": exc.category, "stored": False}
@@ -630,8 +771,9 @@ def main(argv: list[str] | None = None) -> int:
     consent = sub.add_parser("authorize", help="Fresh consent for youtube.readonly + upload.")
     consent.add_argument("--client-config", type=Path, required=True)
     consent.add_argument("--result-file", type=Path, required=True)
+    consent.add_argument("--consent-state", type=Path, required=True)
     args = parser.parse_args(argv)
-    return authorize(args.client_config, args.result_file)
+    return authorize(args.client_config, args.result_file, args.consent_state)
 
 
 def upload_screen_path(package_id: str) -> str:

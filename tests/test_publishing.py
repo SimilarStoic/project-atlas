@@ -996,12 +996,3 @@ def test_unbound_provider_operation_evidence_is_purgeable(setup):
     ).fetchone()
     assert row[0] is None
     assert repo.get_publication_operation(operation.id).outcome == "pending"
-
-
-def test_unauthenticated_web_has_no_publishing_mutation_surface():
-    source = (Path(__file__).resolve().parents[1] / "src" / "project_atlas" / "web.py").read_text(
-        encoding="utf-8"
-    )
-    assert "publishing_packages" not in source
-    assert "PublicationOperation" not in source
-    assert "/publish" not in source

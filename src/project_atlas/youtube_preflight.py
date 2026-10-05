@@ -220,6 +220,18 @@ class WindowsCredentialRefreshTokenStore:
         except Exception as exc:
             raise PreflightBlocked("credential_store_unavailable") from exc
 
+    def delete(self) -> bool:
+        """Remove this entry; True if one existed. Repeating it is a safe no-op."""
+
+        module = self._native_keyring()
+        try:
+            if module.get_password(KEYRING_SERVICE, self.account) is None:
+                return False
+            module.delete_password(KEYRING_SERVICE, self.account)
+        except Exception as exc:
+            raise PreflightBlocked("credential_store_unavailable") from exc
+        return True
+
 
 class GoogleInstalledCredentialProvider:
     """Google-specific credential handling; tokens never enter domain provenance."""
@@ -247,7 +259,7 @@ class GoogleInstalledCredentialProvider:
         config = _client_config(self.client_config)
         installed = config["installed"]
         try:
-            from google.auth.exceptions import RefreshError
+            from google.auth.exceptions import RefreshError, TransportError
             from google.auth.transport.requests import Request
             from google.oauth2.credentials import Credentials
         except ImportError as exc:
@@ -267,7 +279,14 @@ class GoogleInstalledCredentialProvider:
             try:
                 credentials.refresh(Request())
             except RefreshError as exc:
-                raise PreflightBlocked("authorization_unusable") from exc
+                # Only Google's invalid_grant proves the grant is revoked or expired; any other
+                # refresh failure is treated as transient and must not delete anything.
+                definitive = "invalid_grant" in str(exc)
+                raise PreflightBlocked(
+                    "authorization_revoked" if definitive else "authorization_check_transient"
+                ) from exc
+            except TransportError as exc:
+                raise PreflightBlocked("authorization_check_transient") from exc
         elif not self.interactive:
             # Never open a consent window from a non-interactive caller (e.g. a web request).
             raise PreflightBlocked("authorization_missing")
@@ -369,10 +388,24 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--client-config", type=Path, required=True)
     parser.add_argument("--result-file", type=Path, required=True)
+    parser.add_argument("--consent-state", type=Path, required=True)
     args = parser.parse_args(argv)
     repository_root = Path(__file__).resolve().parents[2]
     _outside_repository(args.result_file, repository_root)
+    from project_atlas.youtube_consent import ConsentRegistry
+
+    registry = ConsentRegistry(args.consent_state, repository_root)
+    if not registry.is_current():
+        # No authorization or YouTube API request before current privacy-policy acceptance.
+        print(
+            json.dumps(
+                {"status": "BLOCKER", "error_category": "privacy_policy_acceptance_required"}
+            )
+        )
+        return 2
     result = execute_live_preflight(args.client_config, repository_root)
+    if result.status == "PASS":
+        registry.mark_reconfirmed("readonly", datetime.now(UTC))
     _write_sanitized_json(args.result_file, result.evidence())
     print(json.dumps(result.evidence(), sort_keys=True))
     return 0 if result.status == "PASS" else 2
