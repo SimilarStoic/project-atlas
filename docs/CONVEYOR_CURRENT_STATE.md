@@ -370,6 +370,14 @@ consent.
   it and purged all stored YouTube API data (including this evidence's remote id and observations), as accepted.
   While the OAuth app is in Testing mode, tokens for both authorizations expire after ~7 days, so such purges are
   expected until OAuth verification.
+- YouTube API Services audit: submitted 2026-10-06 15:40 Europe/London; Google's confirmation received. Purpose:
+  lift the private-only upload restriction on unaudited project 1031021502761; no quota increase requested.
+  Declared endpoints `channels.list`, `videos.list`, `videos.insert`; scopes `youtube.readonly` and
+  `youtube.upload`; use case Video Uploading & Account Management; policy version `2026-10-06`. Evidence is kept
+  outside the repository at `D:\ConveyorOS\evidence\youtube-audit\2026-10-06\submission\` and must not be
+  committed. Status: awaiting Google's response; the OAuth app is still in Testing mode. Attestation made: any new
+  YouTube API use (e.g. YouTube Analytics) first requires a privacy policy update and written notification to
+  YouTube.
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
   as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
 - Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker
