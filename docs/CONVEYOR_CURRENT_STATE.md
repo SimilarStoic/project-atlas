@@ -171,6 +171,23 @@ hamster blocking, a ghost circle, character drift, a pronunciation issue, and a 
 strongest component. These findings explain learned rules. Production #5 v4 remains historical accepted evidence;
 the founder-approved `next-private-production.mp4` identified above is the current creative baseline.
 
+## Public releases
+
+The founder published these videos manually in YouTube Studio, outside Conveyor. Each uploaded file is byte-identical
+to the founder-accepted final artifact.
+
+| Production | Accepted review | Artifact (SHA-256, duration) | Public URL | Public |
+| --- | --- | --- | --- | --- |
+| P8 | `production-8-attempt-2:founder-review:1` | `production-8-attempt-2-artifact-2` (`6f2b248a14002efc1a2e39ba930efb442a5b7a2eb8e293e6924334379a95c000`, 30.220 s) | https://youtube.com/shorts/MbVZPnX_b_s | 2026-10-04 13:57:41 Europe/London |
+| P9 | `production-9-attempt-2:founder-review:1` | `production-9-attempt-2-artifact-3` (`4c0a8bb23cff0ba8487f0ca0aa92950d60c100e75b63f463b1f6ea26f6b2132f`, 34.400 s) | https://youtube.com/shorts/Dd76ERbxg_w | 2026-10-05 (date only) |
+
+- Neither release has a Conveyor PublishingPackage, approval, release operation, platform publication or publication
+  receipt, so runtime release-week accounting cannot see them (P8: 2026-W40; P9: 2026-W41).
+- P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
+- P7 remains private evidence only, with no founder acceptance. P10 has not started.
+- Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
+  here the same day with URL, artifact ID and SHA-256, until Conveyor can record such a publication in runtime.
+
 ## Creative operating rules
 
 The current generalized creative rules are:
@@ -329,9 +346,10 @@ Canonical persistent-scene snapshots use pause-aligned phrase captions (`caption
   ending each scene's narration excerpt. It is read-only; applying it remains a founder-approved retime.
 
 A controlled founder-confirmed YouTube upload path exists (`src/project_atlas/youtube_upload.py`), with the YouTube
-Developer Policies obligations implemented in `src/project_atlas/youtube_consent.py`. **Live use still requires** an
-API-route PublishingPackage and founder approval for the chosen artifact (P9 v3 has none yet) and fresh upload OAuth
-consent.
+Developer Policies obligations implemented in `src/project_atlas/youtube_consent.py`. **Live use requires** an
+API-route PublishingPackage and founder approval for the chosen artifact, plus current upload OAuth consent. P9's
+public release `Dd76ERbxg_w` was a manual Studio upload outside this path (see [Public releases](#public-releases));
+its only API-route package is the never-release private audit-evidence package below (video `JuouBEMCNzg`).
 
 - One `videos.insert` of the exact artifact bound to an API-route founder-approved PublishingPackage, with the title,
   description and privacy the founder confirms on the upload screen; no update, privacy transition or delete.
@@ -362,8 +380,9 @@ consent.
   route is a legacy-schema compatibility sentinel only, never release authority: only a private upload is allowed;
   public/unlisted upload, every API or manual release path and public receipts are refused before dispatch, and such
   packages never count toward release weeks.
-- Audit evidence: on 2026-10-06 the founder privately uploaded P9 v3 through the API as YouTube video `JuouBEMCNzg`
-  (never-release package `publishing-package-similarstoic-youtube-pilot-1-slot-2-v1`); its first observation
+- Audit evidence: on 2026-10-06 the founder privately uploaded a copy of P9 v3 through the API as YouTube video
+  `JuouBEMCNzg` (never-release package `publishing-package-similarstoic-youtube-pilot-1-slot-2-v1`; distinct from
+  P9's public manual release `Dd76ERbxg_w`); its first observation
   failed verification only on tags: YouTube stored them verbatim but returns them sorted. Tags verification is now
   order-independent but exact (same strings, case, whitespace and count). The Task Scheduler task "Conveyor YouTube
   maintenance" is enabled (daily 03:00); its first run found the expired read-only authorization revoked, deleted
