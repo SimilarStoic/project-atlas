@@ -362,6 +362,11 @@ consent.
   route is a legacy-schema compatibility sentinel only, never release authority: only a private upload is allowed;
   public/unlisted upload, every API or manual release path and public receipts are refused before dispatch, and such
   packages never count toward release weeks.
+- Audit evidence: on 2026-10-06 the founder privately uploaded P9 v3 through the API as YouTube video `JuouBEMCNzg`
+  (never-release package `publishing-package-similarstoic-youtube-pilot-1-slot-2-v1`); its first observation
+  failed verification only on tags (cause not yet diagnosed). The Task Scheduler task "Conveyor YouTube maintenance"
+  exists but is disabled until the stale read-only authorization is resolved, because a definitive refresh failure
+  would purge all stored YouTube API data, including this evidence.
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
   as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
 - Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker
