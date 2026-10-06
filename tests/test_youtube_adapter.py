@@ -244,6 +244,27 @@ def test_declarations_leave_every_other_verification_active():
         )
 
 
+def test_tags_match_regardless_of_youtube_order_but_stay_exact():
+    target = _declared(caption={"kind": "burned_in"}, cover={"kind": "platform_default"})
+    expected = target.manifest["tags"]
+    for tags, matches in (
+        (sorted(expected, reverse=True), True),
+        (list(reversed(expected)), True),
+        ([tag.upper() for tag in expected], False),
+        ([f" {expected[0]}", *expected[1:]], False),
+        (expected[:-1], False),
+        ([*expected, expected[0]], False),
+        ([], False),
+    ):
+        client = Client()
+        client.resource["snippet"]["tags"] = tags
+        observed = YouTubeReadOnlyObservationAdapter(Provider(), client).observe_remote(
+            "remote-1", target
+        )
+        assert observed.provider_payload["metadata_checks"]["tags"] is matches, tags
+        assert observed.metadata_matches is matches, tags
+
+
 def test_asset_backed_caption_and_cover_packages_keep_both_checks():
     asset_backed = _declared(
         caption={"format": "srt", "path": "captions.srt", "sha256": "c" * 64},

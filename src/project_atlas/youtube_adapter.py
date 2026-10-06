@@ -188,7 +188,9 @@ class YouTubeReadOnlyObservationAdapter:
         checks = {
             "title": snippet.get("title") == manifest.get("title"),
             "description": snippet.get("description") == manifest.get("description"),
-            "tags": snippet.get("tags", []) == manifest.get("tags", []),
+            # YouTube stores tags verbatim but returns them in its own order; compare exact
+            # strings as a multiset, not as a sequence.
+            "tags": sorted(snippet.get("tags", [])) == sorted(manifest.get("tags", [])),
             "category": snippet.get("categoryId") == str(category.get("id")),
             "language": snippet.get("defaultAudioLanguage") == manifest.get("language"),
             "audience": bool(made_for_kids) is bool(audience.get("made_for_kids")),

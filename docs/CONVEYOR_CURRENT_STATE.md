@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After aligning publishing rules (burned-in captions, evidence-only packages), the verified local full suite is **438 passed,
+- After the order-independent YouTube tags check, the verified local full suite is **439 passed,
   0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action; the frozen request is
   unchanged and a run makes at most one narration call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
@@ -364,9 +364,12 @@ consent.
   packages never count toward release weeks.
 - Audit evidence: on 2026-10-06 the founder privately uploaded P9 v3 through the API as YouTube video `JuouBEMCNzg`
   (never-release package `publishing-package-similarstoic-youtube-pilot-1-slot-2-v1`); its first observation
-  failed verification only on tags (cause not yet diagnosed). The Task Scheduler task "Conveyor YouTube maintenance"
-  exists but is disabled until the stale read-only authorization is resolved, because a definitive refresh failure
-  would purge all stored YouTube API data, including this evidence.
+  failed verification only on tags: YouTube stored them verbatim but returns them sorted. Tags verification is now
+  order-independent but exact (same strings, case, whitespace and count). The Task Scheduler task "Conveyor YouTube
+  maintenance" is enabled (daily 03:00); its first run found the expired read-only authorization revoked, deleted
+  it and purged all stored YouTube API data (including this evidence's remote id and observations), as accepted.
+  While the OAuth app is in Testing mode, tokens for both authorizations expire after ~7 days, so such purges are
+  expected until OAuth verification.
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
   as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
 - Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker
