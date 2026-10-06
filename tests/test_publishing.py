@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta, timezone
@@ -996,3 +997,159 @@ def test_unbound_provider_operation_evidence_is_purgeable(setup):
     ).fetchone()
     assert row[0] is None
     assert repo.get_publication_operation(operation.id).outcome == "pending"
+
+
+# --- Never-release (evidence-only) packages -------------------------------------------------
+
+
+def _never_release(**overrides) -> dict:
+    manifest = {
+        **_manifest("api", "manual"),
+        "release_policy": "never_release",
+        "release_route": "manual",
+        "publication_timing": {"mode": "never_release"},
+        "private_first": True,
+        "pilot_slot": 2,
+    }
+    manifest.update(overrides)
+    return manifest
+
+
+def _evidence_package(
+    service: PublishingService, package_id: str = "evidence-1", slot: int = 2, **overrides
+):
+    package = service.prepare_package(
+        package_id,
+        "synthetic-evidence",
+        slot,
+        1,
+        "fake-artifact",
+        _never_release(pilot_slot=slot, **overrides),
+    )
+    service.approve_package(f"{package_id}-approval", package.id, "synthetic-founder")
+    return package
+
+
+def test_never_release_requires_the_exact_cross_field_combination(setup):
+    repo, _storage, _fake, service = setup
+    package = _evidence_package(service)
+    assert package.pilot_week == "never-release"
+    approval = repo.effective_publication_approval(package.id)
+    assert approval.release_route == "manual" and approval.timing == {"mode": "never_release"}
+    for bad in (
+        {"release_route": "api"},
+        {"publication_timing": {"mode": "never_release", "extra": True}},
+        {
+            "publication_timing": {
+                "timezone": "Europe/London",
+                "mode": "window",
+                "start": (LONDON_MINUTE - timedelta(minutes=1)).isoformat(),
+                "end": (LONDON_MINUTE + timedelta(minutes=2)).isoformat(),
+            }
+        },
+        {"private_first": False},
+        {"release_policy": "sometimes"},
+    ):
+        with pytest.raises(ValueError):
+            service.prepare_package(
+                "evidence-bad", "synthetic-bad", 3, 1, "fake-artifact", _never_release(**bad)
+            )
+    # The sentinel timing is invalid on any normal package.
+    with pytest.raises(ValueError, match="only valid on a never-release package"):
+        service.prepare_package(
+            "normal-bad",
+            "synthetic-bad",
+            3,
+            1,
+            "fake-artifact",
+            {
+                **_manifest("api", "manual"),
+                "pilot_slot": 3,
+                "publication_timing": {"mode": "never_release"},
+            },
+        )
+    # Normal packages keep the existing route/timing rules and derive a real ISO week.
+    normal = _approved(service)
+    assert normal.pilot_week != "never-release" and re.fullmatch(r"\d{4}-W\d{2}", normal.pilot_week)
+    with pytest.raises(ValueError, match="API release needs exact time"):
+        service.prepare_package(
+            "normal-mixed",
+            "synthetic-pilot-2",
+            1,
+            1,
+            "fake-artifact",
+            {**_manifest("api", "manual"), "release_route": "api"},
+        )
+
+
+def test_never_release_allows_private_upload_but_refuses_public_or_unlisted_insert(setup):
+    repo, _storage, _fake, service = setup
+    package = _evidence_package(service)
+    for privacy in ("public", "unlisted"):
+        with pytest.raises(ValueError, match="never-release"):
+            service.reserve_upload(
+                package.id,
+                upload={
+                    "title": "Evidence",
+                    "description": "Evidence",
+                    "privacy": privacy,
+                    "founder_actor": "synthetic-founder",
+                    "founder_confirmed": True,
+                },
+            )
+    assert repo.connection.execute("SELECT COUNT(*) FROM publication_operations").fetchone()[0] == 0
+    operation = service.reserve_upload(package.id)
+    publication = service.begin_api_upload(operation.id)
+    assert publication is not None and operation.intent["privacy"] == "private"
+
+
+def test_never_release_refuses_every_api_and_manual_release_path(setup):
+    repo, _storage, _fake, service = setup
+    package = _evidence_package(service)
+    operation = service.reserve_upload(package.id)
+    publication = service.begin_api_upload(operation.id)
+    service.observe_status("evidence-status", publication.id)
+    operations_before = repo.connection.execute(
+        "SELECT COUNT(*) FROM publication_operations"
+    ).fetchone()[0]
+    with pytest.raises(ValueError, match="never-release"):
+        service.reserve_release(publication.id)
+    for mode in ("manual", "api"):
+        with pytest.raises(ValueError, match="never-release"):
+            service._authority(package, mode, "release")
+        with pytest.raises(ValueError, match="never-release"):
+            repo.reserve_publication_operation(
+                package.id, "release", mode, {"schema": "public-transition-v1"}, REVIEW_NOW
+            )
+    with pytest.raises(ValueError, match="never-release"):
+        service.begin_api_release(operation.id, publication.id)
+    with pytest.raises(ValueError, match="never-release"):
+        service.reconcile_public_receipt(
+            "evidence-receipt", "evidence-public", publication.id, operation.id, "synthetic-founder"
+        )
+    with pytest.raises(ValueError, match="never-release"):
+        repo.create_publication_receipt(
+            "evidence-receipt",
+            publication.id,
+            operation.id,
+            "evidence-status",
+            LATER,
+            "provider-public-state",
+            "second",
+        )
+    assert (
+        repo.connection.execute("SELECT COUNT(*) FROM publication_operations").fetchone()[0]
+        == operations_before
+    )
+    assert repo.connection.execute("SELECT COUNT(*) FROM publication_receipts").fetchone()[0] == 0
+
+
+def test_never_release_packages_never_consume_a_release_week(setup):
+    repo, _storage, _fake, service = setup
+    evidence = _evidence_package(service)
+    service.begin_api_upload(service.reserve_upload(evidence.id).id)
+    other = _evidence_package(service, "evidence-2", slot=3)
+    assert repo.release_week_conflict(evidence) is None
+    assert repo.release_week_conflict(other) is None
+    normal = _approved(service)
+    assert repo.release_week_conflict(normal) is None

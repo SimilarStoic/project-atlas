@@ -98,7 +98,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the YouTube policy obligations and release governance, the verified local full suite is **429 passed,
+- After aligning publishing rules (burned-in captions, evidence-only packages), the verified local full suite is **438 passed,
   0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action; the frozen request is
   unchanged and a run makes at most one narration call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
@@ -355,6 +355,13 @@ consent.
   `POST /youtube/revoke` and `POST /youtube/delete-data` (`YOUTUBE_MUTATION_ROUTES`, test-enforced).
 - A public or unlisted upload must satisfy the existing release authority: API release route, the approved
   publication time open now, and a clear channel pilot week; otherwise it is refused before anything is sent.
+- A package may declare `caption_artifact: {"kind": "burned_in"}` and/or `cover_choice: {"kind": "platform_default"}`;
+  observation then skips only the caption-track or custom-thumbnail check. Asset-backed packages are verified as before.
+- An evidence-only package declares `release_policy: "never_release"` with exactly `release_route: "manual"`,
+  `publication_timing: {"mode": "never_release"}` and `private_first: true` (pilot week `never-release`). The manual
+  route is a legacy-schema compatibility sentinel only, never release authority: only a private upload is allowed;
+  public/unlisted upload, every API or manual release path and public receipts are refused before dispatch, and such
+  packages never count toward release weeks.
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
   as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
 - Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker

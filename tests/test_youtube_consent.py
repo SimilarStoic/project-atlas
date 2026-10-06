@@ -671,3 +671,32 @@ def test_maintenance_transient_failure_keeps_credentials_definitive_deletes(
     assert report["reconfirmation"] == {"readonly": error, "upload": error}
     assert all((store.token is None) is deleted for store in stores.values())
     assert (_api_data(repo)["status_payloads"] == 0) is deleted
+
+
+def test_never_release_package_screen_allows_private_and_refuses_public(env):
+    _repo, _storage, client, _provider, _adapter, service, _package, controller = env
+    evidence = service.prepare_package(
+        "evidence-screen",
+        "synthetic-evidence",
+        1,
+        1,
+        "fake-artifact",
+        {
+            **manifest(),
+            "release_policy": "never_release",
+            "release_route": "manual",
+            "publication_timing": {"mode": "never_release"},
+            "private_first": True,
+        },
+    )
+    service.approve_package("evidence-screen-approval", evidence.id, "synthetic-founder")
+    status, page = controller.page(evidence.id)
+    assert status == 200 and "never-release package" in page
+    for privacy in ("public", "unlisted"):
+        status, page = controller.submit(form_for(controller, evidence, privacy=privacy))
+        assert status == 409 and "refused before anything was sent" in page
+        assert "never-release" in page
+    assert client.inserts == []
+    status, _page = controller.submit(form_for(controller, evidence, privacy="private"))
+    assert status == 200 and len(client.inserts) == 1
+    assert client.inserts[0]["body"]["status"]["privacyStatus"] == "private"

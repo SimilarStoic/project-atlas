@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
@@ -176,3 +176,86 @@ def test_scope_is_exact_and_mutations_are_unavailable():
     ):
         with pytest.raises(UnsupportedYouTubeMutation):
             call()
+
+
+# --- Caption / cover declarations ------------------------------------------------------------
+
+
+def _declared(caption=None, cover=None) -> PublishingPackage:
+    base = package()
+    manifest = dict(base.manifest)
+    if caption is not None:
+        manifest["caption_artifact"] = caption
+    if cover is not None:
+        manifest["cover_choice"] = cover
+    return replace(base, manifest=manifest)
+
+
+def _observe(target, **content):
+    client = Client()
+    client.resource["contentDetails"] = {"caption": "true", "hasCustomThumbnail": True, **content}
+    return YouTubeReadOnlyObservationAdapter(Provider(), client).observe_remote("remote-1", target)
+
+
+def test_burned_in_captions_skip_only_the_caption_track_check():
+    target = _declared(caption={"kind": "burned_in"})
+    observed = _observe(target, caption="false")
+    checks = observed.provider_payload["metadata_checks"]
+    assert "captions_present" not in checks and checks["custom_cover_present"] is True
+    assert observed.metadata_matches is True
+    # The custom-cover requirement is unchanged for this package.
+    assert _observe(target, caption="false", hasCustomThumbnail=False).metadata_matches is False
+
+
+def test_platform_default_cover_skips_only_the_custom_thumbnail_check():
+    target = _declared(cover={"kind": "platform_default"})
+    observed = _observe(target, hasCustomThumbnail=False)
+    checks = observed.provider_payload["metadata_checks"]
+    assert "custom_cover_present" not in checks and checks["captions_present"] is True
+    assert observed.metadata_matches is True
+    assert _observe(target, caption="false", hasCustomThumbnail=False).metadata_matches is False
+
+
+def test_declarations_leave_every_other_verification_active():
+    target = _declared(caption={"kind": "burned_in"}, cover={"kind": "platform_default"})
+    clean = _observe(target, caption="false", hasCustomThumbnail=False)
+    assert clean.metadata_matches is True
+    assert set(clean.provider_payload["metadata_checks"]) == {
+        "title",
+        "description",
+        "tags",
+        "category",
+        "language",
+        "audience",
+        "altered_or_synthetic_media",
+    }
+    for field, value in (("title", "Other"), ("description", "Other"), ("tags", ["x"])):
+        client = Client()
+        client.resource["snippet"][field] = value
+        observed = YouTubeReadOnlyObservationAdapter(Provider(), client).observe_remote(
+            "remote-1", target
+        )
+        assert observed.metadata_matches is False
+    wrong_channel = Client()
+    wrong_channel.resource["snippet"]["channelId"] = "UC-other"
+    with pytest.raises(YouTubeObservationBlocked, match="remote_video_channel_mismatch"):
+        YouTubeReadOnlyObservationAdapter(Provider(), wrong_channel).observe_remote(
+            "remote-1", target
+        )
+
+
+def test_asset_backed_caption_and_cover_packages_keep_both_checks():
+    asset_backed = _declared(
+        caption={"format": "srt", "path": "captions.srt", "sha256": "c" * 64},
+        cover={"kind": "fallback_frame", "path": "cover.png", "sha256": "d" * 64},
+    )
+    for content, expected in (
+        ({}, True),
+        ({"caption": "false"}, False),
+        ({"hasCustomThumbnail": False}, False),
+    ):
+        observed = _observe(asset_backed, **content)
+        assert {"captions_present", "custom_cover_present"} <= set(
+            observed.provider_payload["metadata_checks"]
+        )
+        assert observed.metadata_matches is expected

@@ -554,10 +554,15 @@ class YouTubeUploadController:
             + "<fieldset><legend><b>Privacy</b> (choose one)</legend>"
             + choices
             + (
-                "<p>This package was approved private-first. Unverified API projects can "
-                "only upload private videos.</p>"
-                if private_first
-                else ""
+                "<p>This is an evidence-only, never-release package: only a Private upload is "
+                "accepted, and it can never be released through Conveyor.</p>"
+                if manifest.get("release_policy") == "never_release"
+                else (
+                    "<p>This package was approved private-first. Unverified API projects can "
+                    "only upload private videos.</p>"
+                    if private_first
+                    else ""
+                )
             )
             + "</fieldset>"
             + _rows(

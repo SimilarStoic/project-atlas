@@ -97,6 +97,41 @@ def pilot_timing(value: dict[str, Any]) -> tuple[str, datetime, datetime]:
     return f"{year}-W{week:02d}", start.astimezone(UTC), end.astimezone(UTC)
 
 
+# Evidence-only packages: frozen, permanent never-release policy. The schema predates it, so
+# such a package (and its approval) carries release_route "manual" purely as a legacy-schema
+# compatibility sentinel; it never authorizes a release of any kind.
+NEVER_RELEASE_POLICY = "never_release"
+NEVER_RELEASE_TIMING = {"mode": "never_release"}
+NEVER_RELEASE_WEEK = "never-release"
+NEVER_RELEASE_ROUTE_SENTINEL = "manual"
+
+
+def is_never_release(manifest: dict[str, Any]) -> bool:
+    return isinstance(manifest, dict) and manifest.get("release_policy") == NEVER_RELEASE_POLICY
+
+
+def package_release_week(manifest: dict[str, Any]) -> str:
+    """Validate the release proposition and derive the persisted pilot week."""
+
+    timing = manifest.get("publication_timing")
+    if "release_policy" in manifest:
+        if (
+            manifest["release_policy"] != NEVER_RELEASE_POLICY
+            or manifest.get("release_route") != NEVER_RELEASE_ROUTE_SENTINEL
+            or timing != NEVER_RELEASE_TIMING
+            or manifest.get("private_first") is not True
+        ):
+            raise ValueError(
+                "A never-release package needs exactly release_policy never_release, the "
+                "compatibility release_route manual, never_release timing and private_first."
+            )
+        return NEVER_RELEASE_WEEK
+    if isinstance(timing, dict) and timing.get("mode") == NEVER_RELEASE_TIMING["mode"]:
+        raise ValueError("never_release timing is only valid on a never-release package.")
+    pilot_week, _, _ = pilot_timing(timing)
+    return pilot_week
+
+
 def timing_is_open(value: dict[str, Any], now: datetime) -> bool:
     if now.tzinfo is None:
         raise ValueError("Execution clock must be timezone-aware.")
@@ -448,13 +483,13 @@ class PublishingRepositoryMixin:
         if not isinstance(manifest, dict):
             raise ValueError("Package manifest must be a frozen object.")
         safe_evidence(manifest)
-        pilot_week, _, _ = pilot_timing(manifest.get("publication_timing"))
+        pilot_week = package_release_week(manifest)
         if manifest.get("pilot_slot") != pilot_slot or manifest.get("release_route") not in {
             "api",
             "manual",
         }:
             raise ValueError("Pilot slot and release route must be frozen in the package.")
-        if (manifest["release_route"] == "api") != (
+        if not is_never_release(manifest) and (manifest["release_route"] == "api") != (
             manifest["publication_timing"]["mode"] == "exact"
         ):
             raise ValueError("API release needs exact time; manual release needs a bounded window.")
@@ -676,6 +711,9 @@ class PublishingRepositoryMixin:
         now: datetime | None,
     ) -> PublicationOperation:
         package = self.get_publishing_package(package_id)
+        if action_kind == "release" and is_never_release(package.manifest):
+            # Checked first: the stored manual route is only a compatibility sentinel.
+            raise ValueError("A never-release package can never be released.")
         approval = self.effective_publication_approval(package_id)
         if approval is None or action_kind not in {"upload", "release"}:
             raise ValueError(
@@ -834,11 +872,18 @@ class PublishingRepositoryMixin:
         package's channel pilot week consumes that week.
         """
 
+        if is_never_release(package.manifest):
+            return None  # Never-release packages neither consume nor contend for a release week.
         rows = self.connection.execute(
             "SELECT o.id FROM publication_operations o JOIN publishing_packages p "
             "ON p.id = o.package_id WHERE o.id <> ? AND p.channel_id = ? AND p.pilot_week = ? "
-            "AND o.action_kind IN ('release', 'upload')",
-            (exclude_operation_id or "", package.channel_id, package.pilot_week),
+            "AND p.pilot_week <> ? AND o.action_kind IN ('release', 'upload')",
+            (
+                exclude_operation_id or "",
+                package.channel_id,
+                package.pilot_week,
+                NEVER_RELEASE_WEEK,
+            ),
         )
         for row in rows:
             operation = self.get_publication_operation(row["id"])
@@ -997,6 +1042,8 @@ class PublishingRepositoryMixin:
     ) -> PublicationReceipt:
         publication = self.get_platform_publication(publication_id)
         package = self.get_publishing_package(publication.package_id)
+        if is_never_release(package.manifest):
+            raise ValueError("A never-release package can never have a public receipt.")
         release = self.get_publication_operation(release_operation_id)
         status = self.get_publication_status(public_status_id)
         # A later revocation prevents NEW actions, not truthful receipt lineage

@@ -23,6 +23,9 @@ from project_atlas.youtube_preflight import (
 )
 
 VIDEOS_ENDPOINT = "https://www.googleapis.com/youtube/v3/videos"
+# Package declarations for the current SimilarStoic publishing method.
+CAPTIONS_BURNED_IN = "burned_in"
+COVER_PLATFORM_DEFAULT = "platform_default"
 ADAPTER_VERSION = "youtube-readonly-observation-v1"
 
 
@@ -182,7 +185,7 @@ class YouTubeReadOnlyObservationAdapter:
         synthetic = compliance.get("altered_or_synthetic_media") or {}
         declared_synthetic = bool(synthetic.get("declare_to_youtube"))
         made_for_kids = status.get("selfDeclaredMadeForKids", status.get("madeForKids", False))
-        return {
+        checks = {
             "title": snippet.get("title") == manifest.get("title"),
             "description": snippet.get("description") == manifest.get("description"),
             "tags": snippet.get("tags", []) == manifest.get("tags", []),
@@ -191,9 +194,16 @@ class YouTubeReadOnlyObservationAdapter:
             "audience": bool(made_for_kids) is bool(audience.get("made_for_kids")),
             "altered_or_synthetic_media": bool(status.get("containsSyntheticMedia", False))
             is declared_synthetic,
-            "captions_present": content.get("caption") == "true",
-            "custom_cover_present": content.get("hasCustomThumbnail") is True,
         }
+        # A package declaring burned-in captions or the platform-default thumbnail has no
+        # separate caption track or custom cover to verify; asset-backed packages still do.
+        caption = manifest.get("caption_artifact")
+        cover = manifest.get("cover_choice")
+        if not (isinstance(caption, dict) and caption.get("kind") == CAPTIONS_BURNED_IN):
+            checks["captions_present"] = content.get("caption") == "true"
+        if not (isinstance(cover, dict) and cover.get("kind") == COVER_PLATFORM_DEFAULT):
+            checks["custom_cover_present"] = content.get("hasCustomThumbnail") is True
+        return checks
 
     def observe_remote(
         self, remote_id: str, package: PublishingPackage | None = None

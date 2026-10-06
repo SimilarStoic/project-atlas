@@ -18,6 +18,7 @@ from project_atlas.publishing_state import (
     PublicationReceipt,
     PublicationStatusSnapshot,
     PublishingPackage,
+    is_never_release,
     timing_is_open,
 )
 
@@ -110,6 +111,9 @@ class PublishingService:
             )
 
     def _authority(self, package: PublishingPackage, mode: str, action: str) -> None:
+        if action == "release" and is_never_release(package.manifest):
+            # The stored manual route is a compatibility sentinel, never release authority.
+            raise ValueError("A never-release package can never be released.")
         approval = self.repository.effective_publication_approval(package.id)
         route = (
             approval.transfer_route
@@ -142,6 +146,10 @@ class PublishingService:
     ) -> None:
         """A public or unlisted videos.insert is a release: apply the existing release authority."""
 
+        if is_never_release(package.manifest):
+            raise ValueError(
+                "This package is never-release: a public or unlisted upload is refused."
+            )
         approval = self.repository.effective_publication_approval(package.id)
         if approval is None or approval.release_route != "api":
             raise ValueError(
@@ -154,6 +162,13 @@ class PublishingService:
         conflict = self.repository.release_week_conflict(package, exclude_operation_id)
         if conflict:
             raise ValueError(conflict)
+
+    @staticmethod
+    def _refuse_never_release(package: PublishingPackage) -> None:
+        """Every release, transition and receipt path stops here for a never-release package."""
+
+        if is_never_release(package.manifest):
+            raise ValueError("A never-release package can never be released.")
 
     def _expected(self, package: PublishingPackage, upload_operation_id: str) -> PublishingPackage:
         """Values the remote object must match: founder-confirmed upload values when present."""
@@ -576,6 +591,7 @@ class PublishingService:
     def reserve_release(self, publication_id: str) -> PublicationOperation:
         publication = self.repository.get_platform_publication(publication_id)
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_never_release(package)
         self._target(publication.channel_id)
         mode = package.manifest["release_route"]
         self._authority(package, mode, "release")
@@ -614,6 +630,7 @@ class PublishingService:
         if publication.remote_id is None:
             raise ValueError("Purged API identity cannot be released without new authority.")
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_never_release(package)
         self._target(publication.channel_id)
         self._authority(package, "api", "release")
         if (
@@ -691,6 +708,7 @@ class PublishingService:
         if publication.remote_id is None:
             raise ValueError("Purged API identity cannot be reconciled as a new receipt.")
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_never_release(package)
         self._target(publication.channel_id)
         self._historical_authority(package, release)
         if release.action_kind != "release" or release.package_id != package.id:
