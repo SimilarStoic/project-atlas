@@ -341,7 +341,7 @@ consent.
 - `/youtube/upload` is served only when configured, only on a loopback bind to a loopback peer, with Host/Origin
   checks, a single-use nonce, anti-framing headers and the YouTube API Terms section 9.1 upload notice.
 - After dispatch, an uncertain outcome is shown as unknown and reconciliation-required, never as nothing sent.
-- Versioned acceptance: Conveyor Privacy Policy version `2026-10-05` (constant `POLICY_VERSION`, matching the published
+- Versioned acceptance: Conveyor Privacy Policy version `2026-10-06` (constant `POLICY_VERSION`, matching the published
   page) must be accepted before any authorization or YouTube API use; a changed version requires re-acceptance.
   Acceptance, revocation and data deletion live at `/youtube/privacy` and are reachable without acceptance.
 - Revoke (button and `youtube_consent revoke`) revokes each stored token with Google (only HTTP 200 counts as

@@ -39,8 +39,8 @@ from project_atlas.youtube_preflight import (
     verify_exact_channel,
 )
 
-# The version declared on the published policy page ("Policy version: 2026-10-05").
-POLICY_VERSION = "2026-10-05"
+# The version declared on the published policy page ("Policy version: 2026-10-06").
+POLICY_VERSION = "2026-10-06"
 PRIVACY_POLICY_URL = "https://conveyoros.co.uk/privacy/"
 YOUTUBE_TERMS_URL = "https://www.youtube.com/t/terms"
 GOOGLE_PRIVACY_URL = "https://www.google.com/policies/privacy"

@@ -386,12 +386,12 @@ def test_no_authorization_or_api_call_without_current_acceptance(env, tmp_path, 
 
 def test_policy_version_change_requires_reacceptance(tmp_path, monkeypatch):
     registry = ConsentRegistry(tmp_path / "state.json")
-    assert POLICY_VERSION == "2026-10-05"
+    assert POLICY_VERSION == "2026-10-06"
     registry.accept("founder", CLOCK)
     assert registry.is_current()
     monkeypatch.setattr(youtube_consent, "POLICY_VERSION", "2027-01-01")
     assert not registry.is_current()
-    assert registry.accepted_version() == "2026-10-05"
+    assert registry.accepted_version() == "2026-10-06"
     registry.accept("founder", CLOCK)
     assert registry.is_current() and registry.accepted_version() == "2027-01-01"
 
