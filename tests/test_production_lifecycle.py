@@ -2509,3 +2509,293 @@ def test_transcription_failure_is_recorded_once_and_never_retried(
         assert repository.list_production_evidence(run_id, "snapshot") == []
     finally:
         server.server_close()
+
+
+# --- Successor runs adopting accepted acquisitions -----------------------------------------
+
+GLOBAL_AUTHORITY = "visual-reference-authority-similarstoic-global-illustration-v1"
+
+
+def _accepted_source(tmp_path, monkeypatch, prefix: str, *, retry_round: bool = False):
+    """A source run whose every current acquisition has a passing human review."""
+
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path))
+    request, keys = _request(
+        server,
+        tmp_path,
+        prefix,
+        image_calls=3 if retry_round else 2,
+        narration_authorized=False,
+    )
+    post_json(server, "/api/v2/productions", request)
+    service = server.production_service
+    to_pass = keys
+    if retry_round:
+        start_key, finish_key = keys
+        service.review_acquisition(
+            prefix, _review([start_key], "passed") + _review([finish_key], "failed")
+        )
+        service.resume(prefix)
+        to_pass = [finish_key]
+    with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
+        service.review_acquisition(prefix, _review(to_pass, "passed"))
+    return runtime, server, generator, request, keys
+
+
+def _related_request(
+    server, prefix: str, base: dict, *, adopt_from: str | None, spec_metadata: dict | None = None
+) -> dict:
+    """The same production shape on a new VisualPlan, optionally adopting from ``adopt_from``."""
+
+    repository = server.repository
+    plan = create_authorized_visual_plan(server, prefix)
+    scene_ids, specs = [], {}
+    for sequence, variant_key in enumerate(("start", "finish"), 1):
+        scene = repository.create_scene_under_visual_plan_authorization(
+            f"{prefix}-scene-{sequence}", plan.id, sequence, f"Narration {sequence}", "Intent"
+        )
+        spec = repository.create_asset_spec_under_scene_authorization(
+            f"{prefix}-spec-{sequence}",
+            scene.id,
+            "character",
+            "Explain the current narration beat.",
+            f"Canonical world state {sequence}",
+            f"Draw state {sequence} without text.",
+            character_profile_id=HAMSTER_PROFILE,
+            metadata=spec_metadata,
+        )
+        scene_ids.append(scene.id)
+        specs[variant_key] = spec.id
+    request = json.loads(json.dumps(base))
+    request.pop("adopt_acquisitions_from", None)
+    request.update({"id": prefix, "visual_plan_id": plan.id})
+    world = request["worlds"][0]
+    world["scene_ids"] = scene_ids
+    world["transitions"][0]["scene_id"] = scene_ids[1]
+    for variant in world["entities"][0]["variants"]:
+        variant["asset_spec_id"] = specs[variant["key"]]
+    for item, scene_id in zip(request["timeline"], scene_ids, strict=True):
+        item["scene_id"] = scene_id
+    if adopt_from is not None:
+        request["adopt_acquisitions_from"] = adopt_from
+        request["forecast"]["image_calls"] = 0
+    return request
+
+
+def _derived_digests(repository, source_asset_ids) -> dict[str, str]:
+    rows = repository.connection.execute(
+        "SELECT content_digest, metadata_json FROM assets WHERE source_kind = 'derived'"
+    ).fetchall()
+    return {
+        json.loads(row["metadata_json"])["source_asset_id"]: row["content_digest"]
+        for row in rows
+        if json.loads(row["metadata_json"]).get("source_asset_id") in source_asset_ids
+    }
+
+
+def test_successor_adopts_only_current_accepted_assets_with_zero_image_calls(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    _runtime, server, generator, source_request, keys = _accepted_source(
+        tmp_path, monkeypatch, "adopt-src", retry_round=True
+    )
+    repository, service = server.repository, server.production_service
+    source_id, successor_id = source_request["id"], "adopt-next"
+    try:
+        finish_key = keys[1]
+        source_active = service._acquisition_map(source_id)
+        earlier_finish = [
+            e.asset_id
+            for e in repository.list_production_evidence(source_id, "acquisition")
+            if e.payload["variant_key"] == "finish"
+        ][0]
+        assert earlier_finish != source_active[finish_key]["asset_id"]
+        source_evidence_before = {e.id for e in repository.list_production_evidence(source_id)}
+        source_reviews_before = repository.list_production_qa_reviews(source_id)
+        source_events_before = repository.list_production_run_events(source_id)
+        image_calls = len(generator.inputs)
+        generator.failure = GenerationFailure("adoption must never reach the image provider")
+
+        def unreachable(*_args, **_kwargs):
+            raise AssertionError("the generation service was reached during adoption")
+
+        monkeypatch.setattr(server.generation_service, "generate_asset_spec", unreachable)
+        successor = _related_request(server, successor_id, source_request, adopt_from=source_id)
+        successor["narration_authorized"] = True
+        started, status = post_json(server, "/api/v2/productions", successor)
+        assert status == 201
+        assert started["production"]["status"] == "acquisition_review_pending"
+        assert len(generator.inputs) == image_calls
+
+        adopted = repository.list_production_evidence(successor_id, "acquisition")
+        assert len(adopted) == 2
+        for item in adopted:
+            key = tuple(item.payload[name] for name in ("world_key", "entity_key", "variant_key"))
+            source_asset = repository.get_asset(source_active[key]["asset_id"])
+            new_asset = repository.get_asset(item.asset_id)
+            provenance = item.payload["adopted_from"]
+            # No generation happened in the successor.
+            assert item.generation_execution_id is None and item.payload["outcome"] == "adopted"
+            assert new_asset.source_kind == "imported" and new_asset.generation_execution_id is None
+            assert provenance["source_run_id"] == source_id
+            assert provenance["source_asset_id"] == source_asset.id != earlier_finish
+            assert provenance["source_asset_sha256"] == source_asset.content_digest
+            assert new_asset.content_digest == source_asset.content_digest
+            assert (
+                sha256(repository.managed_asset_path(new_asset.id).read_bytes()).hexdigest()
+                == source_asset.content_digest
+            )
+            source_acquisition = [
+                e
+                for e in repository.list_production_evidence(source_id, "acquisition")
+                if e.asset_id == source_asset.id
+            ][-1]
+            assert provenance["source_acquisition_evidence_id"] == source_acquisition.id
+            assert provenance["source_generation_execution_id"] == (
+                source_acquisition.generation_execution_id
+            )
+            review = next(
+                r
+                for r in source_reviews_before
+                if r.id == provenance["source_acquisition_review_id"]
+            )
+            assert review.outcome == "passed" and review.evidence["asset_id"] == source_asset.id
+            assert new_asset.asset_spec_id == item.payload["asset_spec_id"]
+            assert new_asset.asset_spec_id == provenance["successor_asset_spec_id"]
+            assert new_asset.asset_spec_id.startswith(f"{successor_id}-spec-")
+
+        # The source run is unchanged apart from one appended lineage record.
+        source_evidence_after = {e.id for e in repository.list_production_evidence(source_id)}
+        assert source_evidence_after - source_evidence_before == {f"{source_id}:successor_run:1"}
+        [lineage] = repository.list_production_evidence(source_id, "successor_run")
+        assert lineage.payload["successor_run_id"] == successor_id
+        assert repository.list_production_qa_reviews(source_id) == source_reviews_before
+        assert repository.list_production_run_events(source_id) == source_events_before
+
+        # A fresh human acquisition review is still required in the successor.
+        successor_run = repository.get_production_run(successor_id)
+        assert set(service._variant_review_states(successor_run).values()) == {"pending"}
+        assert repository.list_production_qa_reviews(successor_id) == []
+        reviewed, status = post_json(
+            server, f"/api/v2/productions/{successor_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
+        assert len(generator.inputs) == image_calls
+        adopted_ids = {item.asset_id for item in adopted}
+        source_ids = {value["asset_id"] for value in source_active.values()}
+        successor_rasters = _derived_digests(repository, adopted_ids)
+        source_rasters = _derived_digests(repository, source_ids)
+        assert set(successor_rasters) == adopted_ids
+        assert sorted(successor_rasters.values()) == sorted(source_rasters.values())
+    finally:
+        server.server_close()
+
+
+def test_adoption_fails_closed_before_any_provider_call(tmp_path, monkeypatch, transcription):
+    _runtime, server, generator, source_request, keys = _accepted_source(
+        tmp_path, monkeypatch, "refuse-src"
+    )
+    repository = server.repository
+    source_id = source_request["id"]
+    try:
+        pending = _related_request(server, "pending-src", source_request, adopt_from=None)
+        post_json(server, "/api/v2/productions", pending)
+        rejected = _related_request(server, "rejected-src", source_request, adopt_from=None)
+        post_json(server, "/api/v2/productions", rejected)
+        server.production_service.review_acquisition(
+            "rejected-src", _review(keys[:1], "failed") + _review(keys[1:], "passed")
+        )
+        image_calls = len(generator.inputs)
+        runs_before = repository.connection.execute(
+            "SELECT COUNT(*) FROM production_runs"
+        ).fetchone()[0]
+
+        def attempt(prefix, match, *, adopt_from=source_id, mutate=None, spec_metadata=None):
+            request = _related_request(
+                server, prefix, source_request, adopt_from=adopt_from, spec_metadata=spec_metadata
+            )
+            if mutate:
+                mutate(request)
+            failed, status = _post_error(server, "/api/v2/productions", request)
+            assert status == 400 and match in failed["error"], (prefix, failed)
+
+        attempt("no-source", "does not exist", adopt_from="no-such-run")
+        attempt("self-adopt", "own acquisitions", adopt_from="self-adopt")
+        attempt(
+            "nonzero-calls",
+            "image_calls must be 0",
+            mutate=lambda r: r["forecast"].__setitem__("image_calls", 1),
+        )
+        attempt(
+            "no-verification",
+            "verification_calls = 1",
+            mutate=lambda r: r["forecast"].pop("verification_calls"),
+        )
+
+        def rename_finish(request):
+            world = request["worlds"][0]
+            world["entities"][0]["variants"][1]["key"] = "end"
+            world["transitions"][0]["operations"][0]["value"] = "end"
+
+        attempt("key-mismatch", "same semantic variants", mutate=rename_finish)
+        attempt("from-pending", "passing acquisition review", adopt_from="pending-src")
+        attempt("from-rejected", "passing acquisition review", adopt_from="rejected-src")
+        attempt(
+            "authority-mismatch",
+            "authority mismatch",
+            spec_metadata={"visual_authority_ids": [GLOBAL_AUTHORITY]},
+        )
+        active = server.production_service._acquisition_map(source_id)
+        corrupt = repository.managed_asset_path(active[keys[0]]["asset_id"])
+        corrupt.write_bytes(corrupt.read_bytes() + b"tampered")
+        attempt("corrupt-bytes", "persisted SHA-256")
+
+        assert len(generator.inputs) == image_calls
+        assert (
+            repository.connection.execute("SELECT COUNT(*) FROM production_runs").fetchone()[0]
+            == runs_before
+        )
+        assert repository.list_production_evidence(source_id, "successor_run") == []
+    finally:
+        server.server_close()
+
+
+def test_a_rejected_adopted_image_is_never_replaced_by_generation(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    _runtime, server, generator, source_request, keys = _accepted_source(
+        tmp_path, monkeypatch, "reject-src"
+    )
+    service = server.production_service
+    try:
+        image_calls = len(generator.inputs)
+        successor = _related_request(
+            server, "reject-next", source_request, adopt_from=source_request["id"]
+        )
+        post_json(server, "/api/v2/productions", successor)
+        reviewed = service.review_acquisition(
+            "reject-next", _review(keys[:1], "failed") + _review(keys[1:], "passed")
+        )
+        assert (reviewed["status"], reviewed["stage"]) == ("failed", "acquisition_review")
+        with pytest.raises(ProductionLifecycleError, match="never generates images"):
+            service.resume("reject-next")
+        assert len(generator.inputs) == image_calls
+        assert len(server.repository.list_production_evidence("reject-next", "acquisition")) == 2
+    finally:
+        server.server_close()
+
+
+def test_requests_without_adoption_keep_the_image_call_floor(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _request(server, tmp_path, "no-adoption", image_calls=0)
+        assert "adopt_acquisitions_from" not in request
+        failed, status = _post_error(server, "/api/v2/productions", request)
+        assert status == 400 and "below the 2 variants" in failed["error"]
+        assert generator.inputs == []
+    finally:
+        server.server_close()

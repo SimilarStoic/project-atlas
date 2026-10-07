@@ -98,8 +98,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the narration completeness gate and versioned narration retakes, the verified local full suite is
-  **488 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+- After successor-run adoption of accepted acquisitions, the verified local full suite is
+  **492 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -190,10 +190,15 @@ to the founder-accepted final artifact.
 
 ## Open lessons from Production 10
 
-Production 10 (`production-10`, Ofgem energy price cap) has all eight images accepted. Its narration take 1
-(`production-10-narration-1`) audibly repeats "including prepayment" and predates the completeness gate, so it has no
-verification record; retime and the retime recommendation now refuse it. Recovery is a founder-authorized versioned
-narration retake through the gate above.
+Production 10 (`production-10`, Ofgem energy price cap) has all eight images accepted. Both narration takes failed
+completeness verification with repeated material in the same passage: `production-10:narration_verification:1`
+(take 1) and `production-10:narration_verification:2` (the authorized retake). `production-10` remains failed at
+stage `narration_verification`. In isolated non-production calibration
+(`D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-loop\`), the full Script with only the figure
+sentence rewritten as spoken copy ("Take a typical household paying by Direct Debit. Ofgem puts it at £1,723 a
+year. That's £60 more.") passed in both takes B1 and B2 (121/121/121); the founder heard both as good and preferred
+B1 as more realistic and fluid. The supported learning is only that this rewrite materially outperformed the
+existing wording for Daniel; it belongs to the OPEN speakability lesson below. No successor run has been started.
 
 The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
@@ -202,7 +207,8 @@ completion, P11 or later work must check this list and must not silently treat a
 - Retime must run by default before founder whole-video review (P10 v1's estimated scene timing ran visibly behind its
   narration until a manual retime).
 - Daniel script-speakability preflight, based on the founder A/B evidence in
-  `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\` (non-production calibration).
+  `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\` and the P10 loop calibration in
+  `...\narration-tests\2026-10-07-loop\` (both non-production calibration).
 - The same environment plus the same viewpoint must lock room geometry, furniture scale and persistent fixture
   identity across beats.
 - Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
@@ -384,6 +390,24 @@ Versioned narration retake (`retake_narration`, also `POST /api/v2/productions/{
   failing take stops at `narration_verification`. Earlier takes, snapshots, renders and reviews remain history.
 - Runs frozen without the verification forecast can authorize one check of a specific take with
   `POST .../narration-verification-authorization`; a check is never repeated for the same take.
+
+Successor-run adoption of accepted acquisitions (optional frozen request field `adopt_acquisitions_from`):
+
+- A successor production with its own revised Script, VisualPlan, Scenes and AssetSpecs may adopt every accepted
+  image of a predecessor run instead of generating. The first version is all-or-nothing: the source run must exist
+  and differ from the successor, the semantic variant keys (world, entity, variant) must match exactly, every
+  source variant's current active asset must have a passing acquisition review (earlier rejected or superseded
+  assets are never adopted), and the successor freezes `forecast.image_calls: 0`, `narration_calls: 1` and
+  `verification_calls: 1`. There is no fallback to image generation; the generation service is never reached.
+- Before the run is created, each adoption is verified: source bytes against their SHA-256, intrinsic size and
+  full-frame aspect, and the source generation's recorded authority (style, character profile and reference set,
+  global visual authority, and every recorded visual authority such as the environment anchor) against the
+  successor's request and AssetSpec. Any failure refuses the request with zero provider calls.
+- Adopted bytes are imported under the successor's AssetSpecs. Successor acquisition evidence records `adopted`
+  provenance (source run, asset and SHA-256, generation execution, acquisition evidence and passing review,
+  successor AssetSpec) and no generation execution. The successor stops at `acquisition_review_pending` and needs a
+  fresh normal human acquisition review; a rejected adopted image is never replaced. The source run is not
+  mutated; it gains one appended `successor_run` lineage record. Packaging of the source is not a refusal reason.
 
 Explicit claim-timed citation overlays are supported.
 

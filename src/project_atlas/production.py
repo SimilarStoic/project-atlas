@@ -1044,6 +1044,22 @@ class ProductionLifecycleService:
     def _acquire(self, run: Any) -> None:
         self.repository.append_production_run_event(run.id, "acquiring", "acquisition", {})
         states = self._variant_review_states(run)
+        if run.request.get("adopt_acquisitions_from"):
+            # An adoption successor never reaches the generation service.
+            try:
+                adopted = self._adopt_acquisitions(run, states)
+                self.repository.append_production_run_event(
+                    run.id,
+                    "acquisition_review_pending",
+                    "acquisition_review",
+                    {
+                        "acquired_variants": adopted,
+                        "adopted_from": run.request["adopt_acquisitions_from"],
+                    },
+                )
+            except Exception as error:
+                self._fail(run.id, "acquisition", error)
+            return
         existing = {
             key: value
             for key, value in self._acquisition_map(run.id).items()
@@ -1519,6 +1535,7 @@ class ProductionLifecycleService:
             "forecast",
             "narration_authorized",
             "citations",
+            "adopt_acquisitions_from",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -1546,6 +1563,21 @@ class ProductionLifecycleService:
             raise ProductionRequestError(
                 "Production forecast verification_calls must equal 1 when present."
             )
+        adopting = "adopt_acquisitions_from" in request
+        if adopting:
+            source_id = request["adopt_acquisitions_from"]
+            if not isinstance(source_id, str) or not _SAFE_KEY.fullmatch(source_id):
+                raise ProductionRequestError("adopt_acquisitions_from must name a production run.")
+            if source_id == request["id"]:
+                raise ProductionRequestError("A production cannot adopt its own acquisitions.")
+            if image_calls != 0:
+                raise ProductionRequestError(
+                    "An adoption successor never generates images: forecast.image_calls must be 0."
+                )
+            if forecast.get("verification_calls") != 1:
+                raise ProductionRequestError(
+                    "An adoption successor must plan forecast.verification_calls = 1."
+                )
         authority = request.get("authority")
         authority_fields = {
             "character_profile_id",
@@ -1576,7 +1608,7 @@ class ProductionLifecycleService:
             raise ProductionRequestError("World scene order must cover the exact VisualPlan.")
         if "citations" in request:
             self._validate_citations(request["visual_plan_id"], plan_scenes, request["citations"])
-        if image_calls < len(variant_keys):
+        if not adopting and image_calls < len(variant_keys):
             raise ProductionRequestError(
                 f"Production forecast image_calls ({image_calls}) is below the "
                 f"{len(variant_keys)} variants this request must acquire."
@@ -1591,6 +1623,10 @@ class ProductionLifecycleService:
                 raise ProductionRequestError("Timeline transition is unsupported.")
             if index == len(timeline) - 1 and item.get("transition_to_next") is not None:
                 raise ProductionRequestError("Final timeline item cannot transition.")
+        if adopting:
+            # Every adoption check runs before the run exists, so a refused adoption leaves
+            # nothing behind and no provider is reachable.
+            self._adoption_plan(request)
         return json.loads(json.dumps(request, sort_keys=True))
 
     def _validate_world_input(
@@ -1799,6 +1835,200 @@ class ProductionLifecycleService:
             for world, entity, variant, _spec in self._variant_specs(request)
         )
 
+    @staticmethod
+    def _variant_sizes(request: dict[str, Any]) -> dict[tuple[str, str, str], list]:
+        return {
+            (world["key"], entity["key"], variant["key"]): list(variant["intrinsic_size_wu"])
+            for world in request["worlds"]
+            for entity in world["entities"]
+            for variant in entity["variants"]
+        }
+
+    def _adoption_plan(self, request: dict[str, Any]) -> list[dict[str, Any]]:
+        """Resolve and verify every adopted acquisition; all-or-nothing, no provider access.
+
+        Each successor variant adopts exactly the source run's current active asset for the
+        same semantic key, which must carry a passing acquisition review, unaltered bytes, an
+        admissible shape and generation provenance matching the successor's authority.
+        """
+
+        source_id = request["adopt_acquisitions_from"]
+        try:
+            source = self.repository.get_production_run(source_id)
+        except KeyError:
+            raise ProductionRequestError(
+                f"Adoption source production {source_id!r} does not exist."
+            ) from None
+        successor_specs = {
+            (world, entity, variant): spec
+            for world, entity, variant, spec in self._variant_specs(request)
+        }
+        source_specs = {
+            (world, entity, variant): spec
+            for world, entity, variant, spec in self._variant_specs(source.request)
+        }
+        if set(successor_specs) != set(source_specs):
+            raise ProductionRequestError(
+                "Adoption requires exactly the same semantic variants as the source production."
+            )
+        states = self._variant_review_states(source)
+        active = self._acquisition_map(source.id)
+        if set(active) != set(source_specs) or any(
+            states.get(key) != "passed" for key in source_specs
+        ):
+            raise ProductionRequestError(
+                "Every source variant's current asset must have a passing acquisition review."
+            )
+        self._assert_variant_spec_authority(request)
+        source_sizes, successor_sizes = (
+            self._variant_sizes(source.request),
+            self._variant_sizes(request),
+        )
+        full_frame = self._full_frame_variant_keys(request)
+        reviews = [
+            review
+            for review in self.repository.list_production_qa_reviews(source.id)
+            if review.scope == "acquisition"
+        ]
+        evidence = sorted(
+            self.repository.list_production_evidence(source.id, "acquisition"),
+            key=lambda item: int(item.id.rsplit(":", 1)[1]),
+        )
+        plan = []
+        for key, successor_spec_id in successor_specs.items():
+            asset_id = active[key]["asset_id"]
+            asset = self.repository.get_asset(asset_id)
+            source_evidence = [item for item in evidence if item.asset_id == asset_id][-1]
+            passing = [
+                review
+                for review in reviews
+                if review.evidence.get("asset_id") == asset_id and review.outcome == "passed"
+            ]
+            execution_id = source_evidence.generation_execution_id
+            if execution_id is None:
+                raise ProductionRequestError(
+                    f"Source variant {key} has no generation provenance to adopt."
+                )
+            content = self.repository.managed_asset_path(asset_id).read_bytes()
+            if asset.content_digest is None or sha256(content).hexdigest() != (
+                asset.content_digest
+            ):
+                raise ProductionRequestError(
+                    f"Source variant {key} bytes do not match their persisted SHA-256."
+                )
+            if successor_sizes[key] != source_sizes[key]:
+                raise ProductionRequestError(
+                    f"Successor variant {key} intrinsic size differs from its source."
+                )
+            if key in full_frame:
+                aspect = full_frame_aspect_error(
+                    *self.adapter.source_dimensions(asset_id), FRAME_SIZE
+                )
+                if aspect is not None:
+                    raise ProductionRequestError(f"Source variant {key}: {aspect}")
+            mismatch = self._execution_authority_mismatch(request, execution_id)
+            if mismatch is not None:
+                raise ProductionRequestError(f"Adoption authority mismatch for {key}: {mismatch}")
+            successor_spec = self.repository.get_asset_spec(successor_spec_id)
+            source_spec = self.repository.get_asset_spec(source_specs[key])
+            if successor_spec.character_profile_id != source_spec.character_profile_id:
+                raise ProductionRequestError(
+                    f"Adoption authority mismatch for {key}: character profile differs."
+                )
+            recorded = sorted(
+                item.visual_reference_authority_id
+                for item in self.repository.list_generation_execution_visual_authorities(
+                    execution_id
+                )
+            )
+            required = sorted(
+                [request["authority"]["visual_reference_authority_id"]]
+                + list(successor_spec.metadata.get("visual_authority_ids") or [])
+            )
+            if recorded != required:
+                raise ProductionRequestError(
+                    f"Adoption authority mismatch for {key}: the source generation used visual "
+                    f"authorities {recorded}, the successor requires {required}."
+                )
+            plan.append(
+                {
+                    "key": key,
+                    "content": content,
+                    "media_type": asset.media_type,
+                    "provenance": {
+                        "source_run_id": source.id,
+                        "source_asset_id": asset_id,
+                        "source_asset_sha256": asset.content_digest,
+                        "source_generation_execution_id": execution_id,
+                        "source_acquisition_evidence_id": source_evidence.id,
+                        "source_acquisition_review_id": passing[-1].id,
+                        "successor_asset_spec_id": successor_spec_id,
+                    },
+                }
+            )
+        return plan
+
+    def _adopt_acquisitions(self, run: Any, states: dict[tuple[str, str, str], str]) -> int:
+        """Import every verified source asset under the successor's own AssetSpecs.
+
+        No generation occurs, so adopted evidence carries no generation execution. A rejected
+        adopted image is never replaced: an adoption successor has no image-generation path.
+        """
+
+        if any(state == "rejected" for state in states.values()):
+            raise ProductionRequestError(
+                "An adopted acquisition was rejected; an adoption successor never generates "
+                "images, so a new production decision is required."
+            )
+        plan = self._adoption_plan(run.request)
+        existing = self._acquisition_map(run.id)
+        attempt = len(self.repository.list_production_evidence(run.id, "acquisition"))
+        for item in plan:
+            if item["key"] in existing:
+                continue
+            attempt += 1
+            provenance = item["provenance"]
+            asset = self.repository.import_asset_under_asset_spec_authorization(
+                f"asset-{run.id}-adopted-{attempt}",
+                provenance["successor_asset_spec_id"],
+                item["content"],
+                item["media_type"],
+                self.generation_service.storage,
+                metadata={"adopted_from": provenance},
+            )
+            if asset.content_digest != provenance["source_asset_sha256"]:
+                raise ProductionRequestError("Adopted bytes differ from the source asset.")
+            world_key, entity_key, variant_key = item["key"]
+            self.repository.create_production_evidence(
+                f"{run.id}:acquisition:attempt:{attempt}",
+                run.id,
+                "acquisition",
+                {
+                    "world_key": world_key,
+                    "entity_key": entity_key,
+                    "variant_key": variant_key,
+                    "asset_spec_id": provenance["successor_asset_spec_id"],
+                    "outcome": "adopted",
+                    "adopted_from": provenance,
+                    "asset_id": asset.id,
+                },
+                asset_id=asset.id,
+            )
+        source_id = run.request["adopt_acquisitions_from"]
+        lineage = self.repository.list_production_evidence(source_id, "successor_run")
+        if not any(item.payload.get("successor_run_id") == run.id for item in lineage):
+            self.repository.create_production_evidence(
+                f"{source_id}:successor_run:{len(lineage) + 1}",
+                source_id,
+                "successor_run",
+                {
+                    "successor_run_id": run.id,
+                    "relationship": "adopt_acquisitions_from",
+                    "adopted_variants": len(plan),
+                },
+            )
+        return len(plan)
+
     def _acquisition_map(self, run_id: str) -> dict[tuple[str, str, str], dict[str, Any]]:
         """Return each variant's active asset: its latest admitted acquisition attempt."""
 
@@ -1835,6 +2065,12 @@ class ProductionLifecycleService:
             raise ProductionRequestError(
                 "Generation would resolve a different character reference set."
             )
+        self._assert_variant_spec_authority(request)
+
+    def _assert_variant_spec_authority(self, request: dict[str, Any]) -> None:
+        """Every variant AssetSpec carries the character authority its role requires."""
+
+        authority = request["authority"]
         for world in request["worlds"]:
             for entity in world["entities"]:
                 for variant in entity["variants"]:
