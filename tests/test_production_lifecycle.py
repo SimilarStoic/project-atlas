@@ -476,7 +476,7 @@ def test_canonical_v2_http_lifecycle_is_resumable_and_founder_distinct(
             server.repository.connection.execute(
                 "SELECT MAX(version) FROM schema_migrations"
             ).fetchone()[0]
-            == 28
+            == 29
         )
         with pytest.raises(sqlite3.IntegrityError, match="immutable"):
             server.repository.connection.execute(

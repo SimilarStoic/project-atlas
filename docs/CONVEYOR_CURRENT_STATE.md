@@ -98,8 +98,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After versioned narrator profiles and bounded prefer-mode narration selection, the verified local full suite
-  is **526 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+- After migration 29 and the founder-attested retrospective publication recorder (not applied to the protected
+  runtime), the verified local full suite is **547 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -182,7 +182,21 @@ to the founder-accepted final artifact.
 | P9 | `production-9-attempt-2:founder-review:1` | `production-9-attempt-2-artifact-3` (`4c0a8bb23cff0ba8487f0ca0aa92950d60c100e75b63f463b1f6ea26f6b2132f`, 34.400 s) | https://youtube.com/shorts/Dd76ERbxg_w | 2026-10-05 (date only) |
 
 - Neither release has a Conveyor PublishingPackage, approval, release operation, platform publication or publication
-  receipt, so runtime release-week accounting cannot see them (P8: 2026-W40; P9: 2026-W41).
+  receipt in the protected runtime, so runtime release-week accounting cannot see them (P8: 2026-W40; P9: 2026-W41).
+  They are **not yet reconciled**.
+- Recording support exists in the repository but has **not** been run against the live runtime: the one-time
+  recorder `python -m project_atlas.publishing_retrospective record` (with `--dry-run` on a temporary copy, or
+  `--backup-root` for the separately authorized live step) writes the retrospective series
+  `similarstoic-youtube-external-reconciliation-v1` (P8 slot 1, P9 slot 2). Per release it records one
+  `retrospective_external` package (the actual historical title and description: P9 from its SHA-verified
+  `production-9/publish` files, P8 from the founder-pasted YouTube Studio text with its provenance noted), one
+  `attest_external` decision, one upload and one release operation (each a single founder `succeeded` event, never
+  reserved or dispatched by Conveyor), a `founder_manual` platform identity and a founder-attested receipt (P8 second
+  precision, P9 day precision). It refuses unless the production is founder-accepted, its latest whole-video QA passed
+  on the exact artifact, that artifact is the current render and its stored and on-disk SHA-256 equal the frozen value.
+  It makes no network or provider call, is idempotent on an exact rerun, fails closed on partial or conflicting state,
+  never touches the P9 never-release audit package, and takes a verified SQLite backup before any live write. Release
+  conflicts stay per channel and ISO week, across all pilot keys.
 - P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
 - P7 remains private evidence only, with no founder acceptance. P10 is in progress and not published (see below).
 - Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
@@ -548,16 +562,33 @@ its only API-route package is the never-release private audit-evidence package b
 
 ## Schema authority
 
-Application schema authority is the `schema_migrations` table with contiguous versions **1 through 28**. The current
-maximum application migration is **28**. Migration 28 adds only append-only production-run events, cross-stage
-evidence, QA-review outcomes and founder-review decisions; existing generation, persistent-scene, narration and media
-tables remain authoritative for their artifacts.
+Application schema authority is the `schema_migrations` table. The repository/application migration set is
+contiguous **1 through 29**. **The protected production runtime remains on 28**: migration 29 is implemented and
+tested in the repository but has **not** been applied to the protected runtime, and it is not the live schema
+authority until a separately authorized live step applies it after a verified backup. Migration 28 adds only
+append-only production-run events, cross-stage evidence, QA-review outcomes and founder-review decisions; existing
+generation, persistent-scene, narration and media tables remain authoritative for their artifacts.
+
+Migration 29 (founder-attested retrospective publications) rebuilds two publishing tables under the existing
+foreign-key rebuild mode, preserving every existing row:
+
+- `publication_gate_decisions` gains the decision `attest_external` (no routes, sequence 1 only). Triggers allow it
+  only on a `retrospective_external` package, and allow such a package nothing else, so it can never become
+  `approve` authority for an upload, release, observation or receipt.
+- `publication_receipts.public_status_id` may be NULL only for a founder-attested receipt
+  (`timestamp_source = 'founder-attestation'`, manual, `public_at` present, second or day precision, no observed
+  time); a trigger binds every status-less receipt to an `attest_external` decision and vice versa. Ordinary receipts
+  still require a verified public observation. Channel-week uniqueness is unchanged.
+- Operations under an attestation must be manual with intent schema `retrospective-external-v1`.
+- Attested receipts are excluded from the YouTube API-data purge (they hold no API data); provenance stays
+  append-only and immutable.
 
 `PRAGMA user_version = 0` does not mean that no application migrations exist. `PRAGMA schema_version = 203` is
 SQLite's internal schema-cookie counter, not the Conveyor application migration version.
 
-Migrations 25–27 remain immutable historical provenance. Migration 28 is current application schema authority and was
-applied to the protected production runtime on 1 October 2026 after a dedicated pre-migration backup. Subsequent
+Migrations 25–27 remain immutable historical provenance. Migration 28 is the protected runtime's current schema
+authority and was applied to the protected production runtime on 1 October 2026 after a dedicated pre-migration
+backup. Subsequent
 authorized Production #7-era activity produced legitimate runtime writes; the old pre-migration hash is historical.
 
 For read-only database auditing, do not instantiate application repository code: repository construction can apply

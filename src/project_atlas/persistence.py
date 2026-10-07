@@ -14,7 +14,7 @@ from typing import Any
 from project_atlas.demo_data import OPPORTUNITIES, content_payload
 from project_atlas.production_persistence import ProductionRepositoryMixin
 from project_atlas.production_schema import MIGRATION_28
-from project_atlas.publishing_schema import MIGRATION_25
+from project_atlas.publishing_schema import MIGRATION_25, MIGRATION_29
 from project_atlas.publishing_state import PublishingRepositoryMixin
 from project_atlas.scene_persistence import PersistentSceneRepositoryMixin
 from project_atlas.scene_schema import MIGRATION_27
@@ -1546,10 +1546,11 @@ MIGRATIONS: tuple[Migration, ...] = (
     ),
     MIGRATION_27,
     MIGRATION_28,
+    MIGRATION_29,
 )
 
 
-MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23, 26})
+MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23, 26, 29})
 
 
 class AtlasRepository(

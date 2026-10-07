@@ -29,7 +29,9 @@ _PURGE_FIELDS = {
 }
 
 
-def _immutable(table: str, columns: tuple[str, ...], *, purgeable: bool = False) -> tuple[str, str]:
+def _immutable(
+    table: str, columns: tuple[str, ...], *, purgeable: bool = False, purge_guard: str = ""
+) -> tuple[str, str]:
     """Generate explicit source-defined triggers; purge only designated provider fields."""
 
     stable = " AND ".join(f"NEW.{column} IS OLD.{column}" for column in columns)
@@ -41,6 +43,8 @@ def _immutable(table: str, columns: tuple[str, ...], *, purgeable: bool = False)
     )
     if table == "platform_publications":
         purge += " AND OLD.identity_source = 'api'"
+    if purge_guard:
+        purge += f" AND {purge_guard}"
     allowed = purge if purgeable else "0"
     return (
         f"CREATE TRIGGER {table}_immutable_update BEFORE UPDATE ON {table} "
@@ -413,5 +417,145 @@ MIGRATION_25: tuple[int, tuple[str, ...]] = (
         statement
         for table, columns, purgeable in _TABLES
         for statement in _immutable(table, columns, purgeable=purgeable)
+    ),
+)
+
+
+def _table_columns(table: str) -> tuple[str, ...]:
+    return next(columns for name, columns, _purgeable in _TABLES if name == table)
+
+
+# Founder-attested retrospective publications (releases made outside Conveyor, e.g. a manual
+# YouTube Studio release). The founder attestation is an authored fact, never an observation,
+# and never authority for any new external action.
+RETROSPECTIVE_RELEASE_POLICY = "retrospective_external"
+RETROSPECTIVE_INTENT_SCHEMA = "retrospective-external-v1"
+FOUNDER_ATTESTATION_SOURCE = "founder-attestation"
+
+MIGRATION_29: tuple[int, tuple[str, ...]] = (
+    29,
+    (
+        # publication_gate_decisions: add the attest_external decision kind.
+        "ALTER TABLE publication_gate_decisions RENAME TO publication_gate_decisions_v28",
+        """
+        CREATE TABLE publication_gate_decisions (
+          id TEXT PRIMARY KEY, package_id TEXT NOT NULL, package_digest TEXT NOT NULL
+            CHECK (length(package_digest) = 64), sequence INTEGER NOT NULL CHECK (sequence >= 1),
+          decision TEXT NOT NULL
+            CHECK (decision IN ('approve', 'reject', 'revoke', 'attest_external')),
+          founder_actor TEXT NOT NULL CHECK (length(trim(founder_actor)) > 0),
+          transfer_route TEXT NULL CHECK (transfer_route IN ('api', 'manual')),
+          release_route TEXT NULL CHECK (release_route IN ('api', 'manual')),
+          timing_json TEXT NOT NULL, comment TEXT NULL, created_at TEXT NOT NULL,
+          UNIQUE (package_id, sequence), UNIQUE (id, package_id),
+          CHECK (decision <> 'approve' OR
+            (transfer_route IS NOT NULL AND release_route IS NOT NULL)),
+          CHECK (decision <> 'attest_external' OR
+            (transfer_route IS NULL AND release_route IS NULL AND sequence = 1)),
+          FOREIGN KEY (package_id) REFERENCES publishing_packages(id) ON DELETE RESTRICT
+        )
+        """,
+        "INSERT INTO publication_gate_decisions (id, package_id, package_digest, sequence, "
+        "decision, founder_actor, transfer_route, release_route, timing_json, comment, "
+        "created_at) SELECT id, package_id, package_digest, sequence, decision, founder_actor, "
+        "transfer_route, release_route, timing_json, comment, created_at "
+        "FROM publication_gate_decisions_v28",
+        "DROP TABLE publication_gate_decisions_v28",
+        """
+        CREATE TRIGGER publication_gate_exact_digest BEFORE INSERT ON publication_gate_decisions
+        WHEN NEW.package_digest <> (SELECT package_digest FROM publishing_packages
+                                    WHERE id = NEW.package_id)
+        BEGIN SELECT RAISE(ABORT, 'gate package digest mismatch'); END
+        """,
+        # Attestation belongs only to retrospective packages, and they accept nothing else.
+        """
+        CREATE TRIGGER publication_gate_attestation_scope BEFORE INSERT
+        ON publication_gate_decisions
+        WHEN (NEW.decision = 'attest_external') IS NOT (
+          json_extract((SELECT manifest_json FROM publishing_packages WHERE id = NEW.package_id),
+                       '$.release_policy') IS 'retrospective_external')
+        BEGIN SELECT RAISE(ABORT, 'attest_external is only for retrospective packages'); END
+        """,
+        # An operation under attestation records a past founder action; it is never a request.
+        """
+        CREATE TRIGGER publication_operation_attestation_scope BEFORE INSERT
+        ON publication_operations
+        WHEN ((SELECT decision FROM publication_gate_decisions WHERE id = NEW.gate_decision_id)
+              IS 'attest_external')
+          IS NOT (NEW.execution_mode = 'manual'
+                  AND json_extract(NEW.intent_json, '$.schema') IS 'retrospective-external-v1')
+        BEGIN SELECT RAISE(ABORT, 'retrospective operations need founder attestation'); END
+        """,
+        # publication_receipts: a founder-attested receipt has no observed public status.
+        "ALTER TABLE publication_receipts RENAME TO publication_receipts_v28",
+        """
+        CREATE TABLE publication_receipts (
+          id TEXT PRIMARY KEY, publication_id TEXT NOT NULL UNIQUE, package_id TEXT NOT NULL,
+          gate_decision_id TEXT NOT NULL, release_operation_id TEXT NOT NULL UNIQUE,
+          public_status_id TEXT NULL UNIQUE,
+          execution_mode TEXT NOT NULL CHECK (execution_mode IN ('api', 'manual')),
+          channel_id TEXT NOT NULL, pilot_week TEXT NOT NULL,
+          public_at TEXT NULL, timestamp_source TEXT NOT NULL,
+          timestamp_precision TEXT NOT NULL, first_public_observed_at TEXT NULL,
+          receipt_digest TEXT NULL CHECK (receipt_digest IS NULL OR length(receipt_digest) = 64),
+          created_at TEXT NOT NULL, provider_purged_at TEXT NULL,
+          UNIQUE (channel_id, pilot_week),
+          CHECK ((public_at IS NULL) = (receipt_digest IS NULL)),
+          CHECK ((timestamp_source = 'founder-attestation') = (public_status_id IS NULL)),
+          CHECK (public_status_id IS NOT NULL OR (
+            execution_mode = 'manual' AND public_at IS NOT NULL
+            AND first_public_observed_at IS NULL AND provider_purged_at IS NULL
+            AND timestamp_precision IN ('second', 'day'))),
+          FOREIGN KEY (publication_id) REFERENCES platform_publications(id) ON DELETE RESTRICT,
+          FOREIGN KEY (package_id) REFERENCES publishing_packages(id) ON DELETE RESTRICT,
+          FOREIGN KEY (gate_decision_id, package_id)
+            REFERENCES publication_gate_decisions(id, package_id) ON DELETE RESTRICT,
+          FOREIGN KEY (release_operation_id)
+            REFERENCES publication_operations(id) ON DELETE RESTRICT,
+          FOREIGN KEY (public_status_id)
+            REFERENCES publication_status_snapshots(id) ON DELETE RESTRICT
+        )
+        """,
+        "INSERT INTO publication_receipts (id, publication_id, package_id, gate_decision_id, "
+        "release_operation_id, public_status_id, execution_mode, channel_id, pilot_week, "
+        "public_at, timestamp_source, timestamp_precision, first_public_observed_at, "
+        "receipt_digest, created_at, provider_purged_at) SELECT id, publication_id, package_id, "
+        "gate_decision_id, release_operation_id, public_status_id, execution_mode, channel_id, "
+        "pilot_week, public_at, timestamp_source, timestamp_precision, "
+        "first_public_observed_at, receipt_digest, created_at, provider_purged_at "
+        "FROM publication_receipts_v28",
+        "DROP TABLE publication_receipts_v28",
+        """
+        CREATE TRIGGER publication_receipt_public_state BEFORE INSERT ON publication_receipts
+        WHEN NEW.public_status_id IS NOT NULL AND NOT EXISTS (
+          SELECT 1 FROM publication_status_snapshots s
+          WHERE s.id = NEW.public_status_id AND s.publication_id = NEW.publication_id
+            AND s.privacy = 'public' AND s.processing = 'succeeded'
+            AND s.verification = 'passed' AND s.api_locked = 0
+        )
+        BEGIN SELECT RAISE(ABORT, 'receipt requires verified public observation'); END
+        """,
+        """
+        CREATE TRIGGER publication_receipt_attestation_scope BEFORE INSERT
+        ON publication_receipts
+        WHEN (NEW.public_status_id IS NULL) IS NOT (
+          (SELECT decision FROM publication_gate_decisions WHERE id = NEW.gate_decision_id)
+          IS 'attest_external')
+        BEGIN SELECT RAISE(ABORT, 'only founder-attested receipts may lack public status'); END
+        """,
+        """
+        CREATE TRIGGER publication_receipt_weekly_limit BEFORE INSERT ON publication_receipts
+        WHEN EXISTS (SELECT 1 FROM publication_receipts r WHERE r.channel_id = NEW.channel_id
+                     AND r.pilot_week = NEW.pilot_week)
+        BEGIN SELECT RAISE(ABORT, 'channel pilot week already consumed'); END
+        """,
+    )
+    + _immutable("publication_gate_decisions", _table_columns("publication_gate_decisions"))
+    + _immutable(
+        "publication_receipts",
+        _table_columns("publication_receipts"),
+        purgeable=True,
+        # A founder attestation is authored fact, not YouTube API data: never purged.
+        purge_guard="OLD.public_status_id IS NOT NULL",
     ),
 )

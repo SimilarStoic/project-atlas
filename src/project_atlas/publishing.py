@@ -19,6 +19,7 @@ from project_atlas.publishing_state import (
     PublicationStatusSnapshot,
     PublishingPackage,
     is_never_release,
+    is_retrospective,
     timing_is_open,
 )
 
@@ -164,6 +165,16 @@ class PublishingService:
             raise ValueError(conflict)
 
     @staticmethod
+    def _refuse_retrospective(package: PublishingPackage) -> None:
+        """A founder-attested past release is a record only: no observation or new action."""
+
+        if is_retrospective(package.manifest):
+            raise ValueError(
+                "A retrospective founder-attested package records a past external release; it "
+                "authorizes no observation, upload, release or receipt."
+            )
+
+    @staticmethod
     def _refuse_never_release(package: PublishingPackage) -> None:
         """Every release, transition and receipt path stops here for a never-release package."""
 
@@ -262,6 +273,7 @@ class PublishingService:
         """
 
         package = self.repository.get_publishing_package(package_id)
+        self._refuse_retrospective(package)
         self._target(package.channel_id)
         self._authority(package, package.manifest["transfer_route"], "upload")
         if attempt < 1:
@@ -402,6 +414,7 @@ class PublishingService:
         package = self.repository.get_publishing_package(operation.package_id)
         if operation.action_kind != "upload" or operation.execution_mode != "api":
             raise ValueError("This command requires a reserved API private-upload operation.")
+        self._refuse_retrospective(package)
         self._target(package.channel_id)
         self._authority(package, "api", "upload")
         if self.repository.get_publication_operation_events(operation_id)[-1].kind != "reserved":
@@ -501,6 +514,7 @@ class PublishingService:
     ) -> PlatformPublication:
         operation = self.repository.get_publication_operation(operation_id)
         package = self.repository.get_publishing_package(operation.package_id)
+        self._refuse_retrospective(package)
         self._target(package.channel_id)
         self._authority(package, "manual", "upload")
         if operation.action_kind != "upload" or operation.execution_mode != "manual":
@@ -564,8 +578,9 @@ class PublishingService:
             raise ValueError(
                 "Purged API identity requires fresh authorized binding before observation."
             )
-        self._target(publication.channel_id)
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_retrospective(package)
+        self._target(publication.channel_id)
         result = self.adapter.observe_remote(
             publication.remote_id, self._expected(package, publication.upload_operation_id)
         )
@@ -591,6 +606,7 @@ class PublishingService:
     def reserve_release(self, publication_id: str) -> PublicationOperation:
         publication = self.repository.get_platform_publication(publication_id)
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_retrospective(package)
         self._refuse_never_release(package)
         self._target(publication.channel_id)
         mode = package.manifest["release_route"]
@@ -630,6 +646,7 @@ class PublishingService:
         if publication.remote_id is None:
             raise ValueError("Purged API identity cannot be released without new authority.")
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_retrospective(package)
         self._refuse_never_release(package)
         self._target(publication.channel_id)
         self._authority(package, "api", "release")
@@ -708,6 +725,7 @@ class PublishingService:
         if publication.remote_id is None:
             raise ValueError("Purged API identity cannot be reconciled as a new receipt.")
         package = self.repository.get_publishing_package(publication.package_id)
+        self._refuse_retrospective(package)
         self._refuse_never_release(package)
         self._target(publication.channel_id)
         self._historical_authority(package, release)

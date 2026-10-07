@@ -201,9 +201,9 @@ def _add_expanded_assets(repo, world, versions):
 
 
 def test_migration_27_is_additive_and_integral(tmp_path):
-    assert [version for version, _ in MIGRATIONS] == list(range(1, 29))
+    assert [version for version, _ in MIGRATIONS] == list(range(1, 30))
     repo = AtlasRepository(tmp_path / "clean.sqlite")
-    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 28
+    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 29
     tables = {
         row[0]
         for row in repo.connection.execute(
@@ -228,7 +228,7 @@ def test_schema_26_upgrade_and_failed_27_are_atomic(tmp_path, monkeypatch):
     upgraded = AtlasRepository(path)
     assert (
         upgraded.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0]
-        == 28
+        == 29
     )
     assert upgraded.connection.execute("SELECT count(*) FROM opportunities").fetchone()[0] == count
     upgraded.close()

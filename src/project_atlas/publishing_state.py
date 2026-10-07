@@ -11,6 +11,8 @@ from hashlib import sha256
 from math import isfinite
 from typing import Any
 
+from project_atlas.publishing_schema import RETROSPECTIVE_RELEASE_POLICY
+
 TARGET_CHANNEL = "UC1cX-OTF9-LZeNo5TaFgrgQ"
 RAW_METRICS = frozenset(
     {
@@ -60,17 +62,6 @@ def pilot_timing(value: dict[str, Any]) -> tuple[str, datetime, datetime]:
     if not isinstance(value, dict) or value.get("timezone") != "Europe/London":
         raise ValueError("Pilot timing must identify Europe/London explicitly.")
 
-    def last_sunday(year: int, month: int) -> int:
-        _, last_day = monthrange(year, month)
-        weekday = datetime(year, month, last_day).weekday()
-        return last_day - ((weekday + 1) % 7)
-
-    def london_offset(moment_utc: datetime) -> timedelta:
-        year = moment_utc.year
-        spring = datetime(year, 3, last_sunday(year, 3), 1, tzinfo=UTC)
-        autumn = datetime(year, 10, last_sunday(year, 10), 1, tzinfo=UTC)
-        return timedelta(hours=1) if spring <= moment_utc < autumn else timedelta(0)
-
     def read(name: str) -> datetime:
         try:
             moment = datetime.fromisoformat(value[name])
@@ -110,10 +101,104 @@ def is_never_release(manifest: dict[str, Any]) -> bool:
     return isinstance(manifest, dict) and manifest.get("release_policy") == NEVER_RELEASE_POLICY
 
 
+# Founder-attested retrospective packages record a release that already happened outside
+# Conveyor. They are written only by the one-time recorder and authorize nothing.
+
+
+def is_retrospective(manifest: dict[str, Any]) -> bool:
+    policy = manifest.get("release_policy") if isinstance(manifest, dict) else None
+    return policy == RETROSPECTIVE_RELEASE_POLICY
+
+
+def london_offset(moment_utc: datetime) -> timedelta:
+    """Europe/London UTC offset at one instant (BST from the last Sunday of March)."""
+
+    def last_sunday(year: int, month: int) -> int:
+        _, last_day = monthrange(year, month)
+        weekday = datetime(year, month, last_day).weekday()
+        return last_day - ((weekday + 1) % 7)
+
+    year = moment_utc.year
+    spring = datetime(year, 3, last_sunday(year, 3), 1, tzinfo=UTC)
+    autumn = datetime(year, 10, last_sunday(year, 10), 1, tzinfo=UTC)
+    return timedelta(hours=1) if spring <= moment_utc < autumn else timedelta(0)
+
+
+def retrospective_release_week(timing: dict[str, Any]) -> str:
+    """ISO week of a founder-attested public time (second) or London-local date (day)."""
+
+    if not isinstance(timing, dict) or timing.get("timezone") != "Europe/London":
+        raise ValueError("Retrospective timing must identify Europe/London explicitly.")
+    if timing.get("mode") != "retrospective":
+        raise ValueError("Retrospective timing mode is required.")
+    if timing.get("precision") == "second" and set(timing) == {
+        "mode",
+        "timezone",
+        "precision",
+        "public_at",
+    }:
+        try:
+            moment = datetime.fromisoformat(timing["public_at"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Attested public time must be ISO 8601.") from exc
+        if (
+            moment.tzinfo is None
+            or moment.microsecond
+            or moment.utcoffset() != london_offset(moment.astimezone(UTC))
+        ):
+            raise ValueError("Attested public time must carry the Europe/London offset.")
+        local_date = moment.date()
+    elif timing.get("precision") == "day" and set(timing) == {
+        "mode",
+        "timezone",
+        "precision",
+        "public_date",
+    }:
+        try:
+            local_date = datetime.strptime(timing["public_date"], "%Y-%m-%d").date()
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Attested public date must be YYYY-MM-DD.") from exc
+    else:
+        raise ValueError("Retrospective timing needs exactly a second time or a day date.")
+    year, week, _ = local_date.isocalendar()
+    return f"{year}-W{week:02d}"
+
+
+def package_identity_digest(
+    pilot_key: str,
+    pilot_slot: int,
+    version: int,
+    predecessor_id: str | None,
+    artifact_id: str,
+    artifact_digest: str,
+    channel_id: str,
+    manifest: dict[str, Any],
+) -> str:
+    return digest(
+        {
+            "schema": "publishing-package-v1",
+            "pilot_key": pilot_key,
+            "pilot_slot": pilot_slot,
+            "version": version,
+            "predecessor_id": predecessor_id,
+            "artifact_id": artifact_id,
+            "artifact_digest": artifact_digest,
+            "platform": "youtube",
+            "channel_id": channel_id,
+            "manifest": manifest,
+        }
+    )
+
+
 def package_release_week(manifest: dict[str, Any]) -> str:
     """Validate the release proposition and derive the persisted pilot week."""
 
     timing = manifest.get("publication_timing")
+    if is_retrospective(manifest):
+        raise ValueError(
+            "A retrospective external package is written only by the founder-attestation "
+            "recorder; it never enters the ordinary publishing path."
+        )
     if "release_policy" in manifest:
         if (
             manifest["release_policy"] != NEVER_RELEASE_POLICY
@@ -339,7 +424,7 @@ class PublicationReceipt:
     package_id: str
     gate_decision_id: str
     release_operation_id: str
-    public_status_id: str
+    public_status_id: str | None  # NULL only for a founder-attested retrospective receipt.
     execution_mode: str
     channel_id: str
     pilot_week: str
@@ -493,18 +578,16 @@ class PublishingRepositoryMixin:
             manifest["publication_timing"]["mode"] == "exact"
         ):
             raise ValueError("API release needs exact time; manual release needs a bounded window.")
-        identity = {
-            "schema": "publishing-package-v1",
-            "pilot_key": pilot_key,
-            "pilot_slot": pilot_slot,
-            "version": version,
-            "predecessor_id": predecessor_id,
-            "artifact_id": artifact_id,
-            "artifact_digest": artifact_digest,
-            "platform": "youtube",
-            "channel_id": channel_id,
-            "manifest": manifest,
-        }
+        package_digest = package_identity_digest(
+            pilot_key,
+            pilot_slot,
+            version,
+            predecessor_id,
+            artifact_id,
+            artifact_digest,
+            channel_id,
+            manifest,
+        )
         with self.connection:
             self.connection.execute(
                 "INSERT INTO publishing_packages VALUES "
@@ -520,7 +603,7 @@ class PublishingRepositoryMixin:
                     channel_id,
                     pilot_week,
                     canonical_json(manifest),
-                    digest(identity),
+                    package_digest,
                     stamp(),
                 ),
             )
@@ -1274,10 +1357,12 @@ class PublishingRepositoryMixin:
                     "provider_purged_at = ? WHERE receipt_id = ? AND provider_purged_at IS NULL",
                     (stamp(), receipt["id"]),
                 )
+            # A founder-attested receipt (no public status) holds no YouTube API data.
             self.connection.execute(
                 "UPDATE publication_receipts SET public_at = NULL, "
                 "first_public_observed_at = NULL, receipt_digest = NULL, "
-                "provider_purged_at = ? WHERE publication_id = ? AND provider_purged_at IS NULL",
+                "provider_purged_at = ? WHERE publication_id = ? AND provider_purged_at IS NULL "
+                "AND public_status_id IS NOT NULL",
                 (stamp(), publication_id),
             )
             self.connection.execute(
