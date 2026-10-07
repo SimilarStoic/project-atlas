@@ -226,13 +226,15 @@ passed completeness verification (121/121/121); the weighted render `production-
 The narration-aligned retimed render `production-10-r2-artifact-2` (SHA-256
 `66b0b2ed6fa5d3fedce41a98895600288e47f732af8172b6a8eff0e4adde2276`, 37.633 s) passed human whole-video QA
 (`production-10-r2:qa:whole-video:1`) and was accepted by the founder (`production-10-r2:founder-review:1`); the run
-is `founder_accepted` and that artifact is the accepted artifact. P10-R2 now has exactly one publishing package,
-created 7 October 2026 through the normal `prepare_package` path after a verified backup and read-only confirmation
-of that accepted artifact and SHA-256 (packaging does not itself enforce the founder-accepted render):
-`publishing-package-similarstoic-youtube-pilot-1-slot-3-v1` (pilot key `similarstoic-youtube-controlled-pilot-v1`,
-slot 3, version 1; package digest `acfd4be7f0a84d77214d5f1c9d23bb8c6da8f5a4d4b52daedb3d3bfe5ee654f9`), manual
+is `founder_accepted` and that artifact is the accepted artifact. Its **current publishing package is
+`publishing-package-similarstoic-youtube-pilot-1-slot-3-v2`** (pilot key `similarstoic-youtube-controlled-pilot-v1`,
+slot 3, version 2; package digest `0ab9aaec3da51739c8892c2696aa76921ca0562d5d7279c1c1b046cae5b01f2c`), created
+7 October 2026 through the normal `prepare_package` path after a verified backup and read-only confirmation of that
+accepted artifact and SHA-256 (packaging does not itself enforce the founder-accepted render). v2 differs from its
+immutable predecessor `publishing-package-similarstoic-youtube-pilot-1-slot-3-v1` (digest
+`acfd4be7f0a84d77214d5f1c9d23bb8c6da8f5a4d4b52daedb3d3bfe5ee654f9`) only in the description's Sources line. Manual
 transfer and manual release, publication window 2026-10-12T00:00 to 2026-10-19T00:00 Europe/London (2026-W42,
-clear). It has **no gate approval, no upload, no observation and no publication**.
+clear). Neither version has **any gate approval, upload, observation or publication**.
 
 The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
