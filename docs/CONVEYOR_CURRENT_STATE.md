@@ -200,8 +200,8 @@ to the founder-accepted final artifact.
   never touches the P9 never-release audit package, and takes a verified SQLite backup before any live write. Release
   conflicts stay per channel and ISO week, across all pilot keys.
 - P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
-- P7 remains private evidence only, with no founder acceptance. P10 (as `production-10-r2`) is founder-accepted and
-  packaged, but has no gate approval and is not uploaded or published (see below).
+- P7 remains private evidence only, with no founder acceptance. P10 (as `production-10-r2`) is founder-accepted,
+  packaged and founder-approved for a manual 2026-W42 release, but is not uploaded or published (see below).
 - Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
   here the same day with URL, artifact ID and SHA-256, and then recorded in runtime as founder-attested provenance
   under its own explicit authorization.
@@ -234,7 +234,12 @@ accepted artifact and SHA-256 (packaging does not itself enforce the founder-acc
 immutable predecessor `publishing-package-similarstoic-youtube-pilot-1-slot-3-v1` (digest
 `acfd4be7f0a84d77214d5f1c9d23bb8c6da8f5a4d4b52daedb3d3bfe5ee654f9`) only in the description's Sources line. Manual
 transfer and manual release, publication window 2026-10-12T00:00 to 2026-10-19T00:00 Europe/London (2026-W42,
-clear). Neither version has **any gate approval, upload, observation or publication**.
+clear). **v2 is founder-approved** for that manual W42 release: gate decision
+`publication-gate-similarstoic-youtube-pilot-1-slot-3-v2-founder-approval` (7 October 2026, after a verified backup;
+routes manual/manual, timing = the package window). v1 has no decision. P10 is **not uploaded and not published**;
+there are no publication operations. The publish-day runbook and SHA-manifested copy-paste metadata are kept outside
+the repository in `D:\ConveyorOS\channels\SimilarStoic\production-10\publish\`; the manual route needs only the
+`youtube.readonly` authorization.
 
 The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
