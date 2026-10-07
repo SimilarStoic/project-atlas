@@ -60,6 +60,10 @@ authorization and Migration 26 before synthesis. Configuration has no OpenAI/Mar
 Existing explicit local/OpenAI adapters remain available for other callers; they are not SimilarStoic defaults.
 Credentials remain in `INWORLD_API_KEY`, never ordinary provenance. No live verification is performed by this task.
 
+Every production narration take must pass independent Script-completeness verification (a prompt-free `whisper-1`
+transcription of the exact persisted WAV, strictly reconciled against the approved Script) before it is admitted for
+captions, snapshot or render; see `CONVEYOR_CURRENT_STATE.md`.
+
 Source Migration 26 admits truthful Inworld execution provenance using the established constraint-rebuild pattern.
 The persistent runtime was subsequently migrated to 26 under separate founder authority on 22 September 2026.
 The [23 September read-only reconciliation](../CURRENT_STATUS.md#verified-pilot-and-runtime-state--23-september-2026)

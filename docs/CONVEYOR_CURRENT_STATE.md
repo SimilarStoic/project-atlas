@@ -98,9 +98,9 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the order-independent YouTube tags check, the verified local full suite is **439 passed,
-  0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action; the frozen request is
-  unchanged and a run makes at most one narration call.
+- After the narration completeness gate and versioned narration retakes, the verified local full suite is
+  **488 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+  the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -184,9 +184,30 @@ to the founder-accepted final artifact.
 - Neither release has a Conveyor PublishingPackage, approval, release operation, platform publication or publication
   receipt, so runtime release-week accounting cannot see them (P8: 2026-W40; P9: 2026-W41).
 - P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
-- P7 remains private evidence only, with no founder acceptance. P10 has not started.
+- P7 remains private evidence only, with no founder acceptance. P10 is in progress and not published (see below).
 - Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
   here the same day with URL, artifact ID and SHA-256, until Conveyor can record such a publication in runtime.
+
+## Open lessons from Production 10
+
+Production 10 (`production-10`, Ofgem energy price cap) has all eight images accepted. Its narration take 1
+(`production-10-narration-1`) audibly repeats "including prepayment" and predates the completeness gate, so it has no
+verification record; retime and the retime recommendation now refuse it. Recovery is a founder-authorized versioned
+narration retake through the gate above.
+
+The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
+extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
+completion, P11 or later work must check this list and must not silently treat an OPEN lesson as completed.
+
+- Retime must run by default before founder whole-video review (P10 v1's estimated scene timing ran visibly behind its
+  narration until a manual retime).
+- Daniel script-speakability preflight, based on the founder A/B evidence in
+  `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\` (non-production calibration).
+- The same environment plus the same viewpoint must lock room geometry, furniture scale and persistent fixture
+  identity across beats.
+- Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
+- Acquisition review must inspect limbs, props and straps zoomed in, not only at full frame.
+- The runtime must record the P8 and P9 manual public releases before P10 is published.
 
 ## Creative operating rules
 
@@ -290,6 +311,9 @@ v2 production requests now:
   any synthesizer call when it is not `true`;
 - treat `forecast.image_calls` as a frozen per-run ceiling counted per recorded provider generation call, including
   failed calls (`forecast.narration_calls` must be 1);
+- may plan the standard narration completeness check with `forecast.verification_calls: 1` (exactly 1 when present).
+  Requests frozen without it stay valid and unchanged, but get no transcription spend authority: their check needs a
+  recorded founder narration-verification authorization;
 - check generation authority before any provider call and the persisted execution provenance after each call; a
   mismatched execution counts as a call but is never admitted as an acquisition;
 - require full-frame integrated beats to carry the request's character authority, while non-full-frame
@@ -322,7 +346,44 @@ Canonical post-narration retiming (`retime`, also `POST /api/v2/productions/{run
 - Outputs are versioned, and all prior snapshots, renders and reviews are preserved.
 - The newest successful render is the current render; later human whole-video QA binds to it.
 - Retime is refused after a founder decision, or once any render of the run has been packaged.
+- Retime (and the read-only retime recommendation) is refused unless the current narration take passed its
+  completeness verification, so timing is always computed from the current verified take.
 - A failed retime has no recovery path yet.
+
+Narration completeness gate (`src/project_atlas/narration_verification.py`, enforced in
+`ProductionLifecycleService`):
+
+- Every new production narration take is independently checked after synthesis and persistence, before it can feed
+  captions, a snapshot or a render. The exact persisted WAV (bound to its SHA-256) is transcribed once by prompt-free
+  OpenAI `whisper-1`, the Productions 1-4 method, and strictly reconciled against the canonical approved Script.
+- Normalization `narration-completeness-v1` removes only differences that do not change the spoken words: case,
+  punctuation, ordinary contractions, token splits/joins, approved pronunciation aliases (written or approved spoken
+  form) and numbers, currency and percentages (one canonical spoken form). Any remaining insertion, omission,
+  repetition or substitution fails closed; there is no verification override. The Script stays the only authority.
+- Each check is recorded once as versioned `narration_verification` production evidence (no migration) with the
+  narration asset and execution IDs, WAV SHA-256, method/model, transcript, expected/recovered token counts,
+  normalization version, structured differences and outcome (`passed`, `failed`, or `error` when transcription
+  itself failed). A take is never transcribed twice; there is no automatic provider retry.
+- A failed or unverified take is preserved but never admitted: the run stops at stage `narration_verification`,
+  resume never regenerates or overwrites it, and snapshot creation and retime refuse a current take without a passing
+  verification.
+- Narration takes are versioned monotonically (`:narration-execution:N`, `{run}-narration-N`,
+  `:narration:evidence:N`, `:narration_verification:N`); snapshots, renders and automated cell QA are versioned and
+  bound to the exact narration take they use.
+
+Versioned narration retake (`retake_narration`, also `POST /api/v2/productions/{run}/narration-retake`):
+
+- Requires a recorded founder retake authorization (`POST .../narration-retake-authorization`) naming the run's
+  current defective narration asset, `authorized_by` and a reason. One authorization permits exactly one provider
+  take and that take's single completeness check, and is consumed by it.
+- Allowed only when every acquired variant is accepted, the run awaits or is failing whole-video review (or stopped at
+  a failed narration verification), no founder decision exists and no render has been packaged.
+- Reuses the approved Script unchanged and all accepted imagery, worlds and scene states; no image provider is
+  reachable. A passing take produces a new snapshot/render/cell-QA candidate bound to the new take, timed from the
+  request's narration weights over the new take's duration (earlier retime durations are never copied forward); a
+  failing take stops at `narration_verification`. Earlier takes, snapshots, renders and reviews remain history.
+- Runs frozen without the verification forecast can authorize one check of a specific take with
+  `POST .../narration-verification-authorization`; a check is never repeated for the same take.
 
 Explicit claim-timed citation overlays are supported.
 

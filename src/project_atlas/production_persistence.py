@@ -23,10 +23,12 @@ _TRANSITIONS = {
     "acquiring": {"acquisition_review_pending", "failed"},
     "acquisition_review_pending": {"assembling", "failed"},
     "assembling": {"narrating", "failed"},
-    "narrating": {"rendering", "failed"},
+    # Narration then its completeness verification are successive stages of narrating.
+    "narrating": {"narrating", "rendering", "failed"},
     "rendering": {"qa_review_pending", "failed"},
-    # A bounded post-narration retime re-renders approved inputs before human QA.
-    "qa_review_pending": {"private_founder_review_ready", "failed", "rendering"},
+    # A bounded post-narration retime re-renders approved inputs before human QA; a
+    # founder-authorized narration retake re-narrates before re-rendering.
+    "qa_review_pending": {"private_founder_review_ready", "failed", "rendering", "narrating"},
     "private_founder_review_ready": {"founder_accepted", "founder_rejected"},
     "founder_accepted": set(),
     "founder_rejected": set(),

@@ -18,6 +18,12 @@ from project_atlas.generation import (
     GenerationFailure,
 )
 from project_atlas.media import MediaRuntimeError, MediaService, NarrationSynthesis
+from project_atlas.narration_verification import (
+    NORMALIZATION_VERSION,
+    VERIFICATION_METHOD,
+    NarrationVerificationError,
+    Transcription,
+)
 from project_atlas.production import (
     DERIVED_RASTER_NAMESPACE,
     SCENE_ADAPTER_VERSION,
@@ -45,6 +51,33 @@ REALISTIC_SOURCE_SIZE = (941, 1672)
 HAMSTER_PROFILE = "character-profile-similarstoic-hamster-core-v1"
 # A minimal technically admissible full-frame source (exact 9:16) for non-media tests.
 NINE_BY_SIXTEEN_PNG = encode_rgba_png(9, 16, bytes([250, 248, 240, 255]) * 9 * 16)
+
+
+class FakeTranscriber:
+    """Offline stand-in for the independent recognizer; queued transcripts, else the Script."""
+
+    def __init__(self) -> None:
+        self.calls: list[Path] = []
+        self.queue: list[str | Exception] = []
+
+    def __call__(self, path: Path) -> Transcription:
+        self.calls.append(path)
+        heard = self.queue.pop(0) if self.queue else "Narration."
+        if isinstance(heard, Exception):
+            raise heard
+        return Transcription(heard, "OpenAI", "whisper-1", ({"word": "x", "start": 0, "end": 1},))
+
+
+@pytest.fixture(autouse=True)
+def transcription(monkeypatch) -> FakeTranscriber:
+    """No test may reach the real transcription provider."""
+
+    fake = FakeTranscriber()
+    monkeypatch.setattr(
+        "project_atlas.narration_verification.WhisperTranscriber.transcribe",
+        lambda _self, path: fake(path),
+    )
+    return fake
 
 
 def realistic_source_png(runtime, tmp_path: Path) -> bytes:
@@ -225,6 +258,7 @@ def _request(
             "forecast": {
                 "image_calls": image_calls,
                 "narration_calls": 1,
+                "verification_calls": 1,
                 "real_provider_calls": 0,
             },
             "narration_authorized": narration_authorized,
@@ -1785,7 +1819,7 @@ def _single_beat_worlds_request(server, tmp_path: Path, prefix: str, count: int)
             }
             for index, scene_id in enumerate(scenes)
         ],
-        "forecast": {"image_calls": count, "narration_calls": 1},
+        "forecast": {"image_calls": count, "narration_calls": 1, "verification_calls": 1},
         "narration_authorized": True,
     }
 
@@ -2047,3 +2081,431 @@ def test_tampered_citation_timing_fails_closed() -> None:
             MediaService._citation_filter(
                 {**settings, "citation_overlay": overlay}, scenes, Path(".")
             )
+
+
+# --- Narration completeness gate and versioned narration retakes ---------------------------
+
+
+def _sine_seconds(runtime, tmp_path: Path, seconds: float, name: str) -> Path:
+    path = tmp_path / name
+    runtime._run(
+        [
+            runtime.ffmpeg_path,
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            f"sine=frequency=440:sample_rate=48000:duration={seconds}",
+            "-c:a",
+            "pcm_s16le",
+            str(path),
+        ]
+    )
+    return path
+
+
+def _reviewed_run(tmp_path, monkeypatch, prefix: str, *, planned: bool = True):
+    """A run whose acquisition is approved; returns the review response (may be a 422)."""
+
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path), calls)
+    request, keys = _request(server, tmp_path, prefix)
+    if not planned:
+        del request["forecast"]["verification_calls"]
+    started, status = post_json(server, "/api/v2/productions", request)
+    assert status == 201
+    return runtime, server, generator, calls, request, keys
+
+
+def _authorize_retake(server, run_id: str, version: int = 1) -> dict:
+    authorized, status = post_json(
+        server,
+        f"/api/v2/productions/{run_id}/narration-retake-authorization",
+        {
+            "evidence": {
+                "authorized_by": "founder",
+                "defective_narration_asset_id": f"{run_id}-narration-{version}",
+                "reason": "The take does not match the approved Script.",
+            }
+        },
+    )
+    assert status == 200
+    return authorized["production"]
+
+
+def test_narration_gate_verifies_the_exact_take_before_any_snapshot(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    server, _generator, request = _render_ready_run(tmp_path, monkeypatch, "gate-pass")
+    repository = server.repository
+    try:
+        run_id = request["id"]
+        narration = repository.get_narration_asset(f"{run_id}-narration-1")
+        [verification] = repository.list_production_evidence(run_id, "narration_verification")
+        assert verification.id == f"{run_id}:narration_verification:1"
+        assert verification.narration_asset_id == narration.id
+        assert verification.narration_generation_execution_id == f"{run_id}:narration-execution:1"
+        payload = verification.payload
+        assert payload["outcome"] == "passed" and payload["differences"] == []
+        assert payload["narration_asset_id"] == narration.id
+        assert payload["narration_execution_id"] == f"{run_id}:narration-execution:1"
+        assert payload["wav_sha256"] == narration.content_digest
+        assert (payload["method"], payload["model"]) == (VERIFICATION_METHOD, "whisper-1")
+        assert payload["normalization_version"] == NORMALIZATION_VERSION
+        assert payload["transcript"] == "Narration."
+        assert payload["expected_token_count"] == payload["recovered_token_count"] == 1
+        # The exact persisted WAV was transcribed once, before the snapshot existed.
+        assert len(transcription.calls) == 1
+        assert sha256(transcription.calls[0].read_bytes()).hexdigest() == narration.content_digest
+        stages = [event.stage for event in repository.list_production_run_events(run_id)]
+        assert stages.index("narration_verification") < stages.index("render")
+        snapshot_evidence = repository.list_production_evidence(run_id, "snapshot")
+        assert snapshot_evidence[0].created_at >= verification.created_at
+        status = server.production_service.status(run_id)
+        assert status["current_narration"] == {
+            "version": 1,
+            "narration_asset_id": narration.id,
+            "verification": "passed",
+        }
+    finally:
+        server.server_close()
+
+
+def test_failed_verification_keeps_take_1_and_blocks_snapshot_until_retake_2(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    transcription.queue.append("Narration. Narration.")
+    _runtime, server, generator, calls, request, keys = _reviewed_run(
+        tmp_path, monkeypatch, "gate-fail"
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        failed, status = _post_error(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 422 and failed["stage"] == "narration_verification"
+        assert "repetition" in failed["error"] and "retake is required" in failed["error"]
+        # The generated take and its failed check are preserved; nothing is admitted.
+        assert repository.get_narration_asset(f"{run_id}-narration-1")
+        assert (
+            repository.get_narration_generation_execution(f"{run_id}:narration-execution:1").outcome
+            == "succeeded"
+        )
+        [verification] = repository.list_production_evidence(run_id, "narration_verification")
+        assert verification.payload["outcome"] == "failed"
+        assert [
+            (item["kind"], item["observed"]) for item in verification.payload["differences"]
+        ] == [("repetition", ["narration"])]
+        assert repository.list_production_evidence(run_id, "snapshot") == []
+        assert repository.list_production_evidence(run_id, "render") == []
+        assert failed["production"]["current_narration"]["verification"] == "failed"
+
+        # Resume never regenerates, re-verifies, collides with or admits the failed take.
+        with pytest.raises(ProductionLifecycleError, match="failed completeness verification"):
+            service.resume(run_id)
+        assert (len(calls), len(transcription.calls)) == (1, 1)
+        assert repository.list_production_evidence(run_id, "snapshot") == []
+        with pytest.raises(ProductionRequestError, match="unconsumed founder retake"):
+            service.retake_narration(run_id)
+        assert len(calls) == 1
+
+        image_calls = len(generator.inputs)
+        generator.failure = GenerationFailure("image provider must not be called by a retake")
+        _authorize_retake(server, run_id)
+        retaken, status = post_json(server, f"/api/v2/productions/{run_id}/narration-retake", {})
+        assert status == 200
+        production = retaken["production"]
+        assert production["status"] == "qa_review_pending"
+        assert production["current_narration"] == {
+            "version": 2,
+            "narration_asset_id": f"{run_id}-narration-2",
+            "verification": "passed",
+        }
+        assert (len(calls), len(transcription.calls), len(generator.inputs)) == (2, 2, image_calls)
+        attempts = {
+            item.id: item for item in repository.list_production_evidence(run_id, "narration")
+        }
+        assert set(attempts) == {f"{run_id}:narration:evidence:1", f"{run_id}:narration:evidence:2"}
+        assert attempts[f"{run_id}:narration:evidence:2"].payload["retake_authorization_id"] == (
+            f"{run_id}:narration-retake-authorization:1"
+        )
+        assert repository.get_narration_generation_execution(f"{run_id}:narration-execution:2")
+        assert repository.get_narration_asset(f"{run_id}-narration-1")
+        assert {
+            item.id: item.payload["outcome"]
+            for item in repository.list_production_evidence(run_id, "narration_verification")
+        } == {
+            f"{run_id}:narration_verification:1": "failed",
+            f"{run_id}:narration_verification:2": "passed",
+        }
+        snapshot = repository.get_final_media_input_snapshot(
+            server.production_service._current_evidence(
+                run_id, "snapshot"
+            ).final_media_input_snapshot_id
+        )
+        assert snapshot.narration_asset_id == f"{run_id}-narration-2"
+        # One authorization permits exactly one retake.
+        with pytest.raises(ProductionRequestError, match="unconsumed"):
+            service.retake_narration(run_id)
+        assert len(calls) == 2
+    finally:
+        server.server_close()
+
+
+def test_retake_binds_a_new_candidate_recomputes_timing_and_keeps_history(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "retake-flow")
+    repository, service = server.repository, server.production_service
+    runtime = media_runtime_or_skip()
+    run_id = request["id"]
+    try:
+        old_durations = _durations_for(server, run_id, 2)
+        service.retime(run_id, old_durations, "founder", "First pacing pass.")
+        old_snapshots = {
+            v: repository.get_final_media_input_snapshot(f"{run_id}:snapshot:{v}") for v in (1, 2)
+        }
+        old_artifacts = {
+            v: repository.get_final_media_artifact(f"{run_id}-artifact-{v}") for v in (1, 2)
+        }
+        failed = service.record_qa(
+            run_id, {"outcome": "failed", "evidence": {"narration": "repeated phrase"}}
+        )
+        assert (failed["status"], failed["stage"]) == ("failed", "qa")
+        image_calls = len(generator.inputs)
+        generator.failure = GenerationFailure("image provider must not be called by a retake")
+        calls: list[str] = []
+        _fake_narration(monkeypatch, _sine_seconds(runtime, tmp_path, 2, "take-2.wav"), calls)
+        _authorize_retake(server, run_id)
+        result = service.retake_narration(run_id)
+
+        assert result["status"] == "qa_review_pending"
+        assert result["current_render"] == {
+            "version": 3,
+            "final_media_artifact_id": f"{run_id}-artifact-3",
+        }
+        narration_1 = repository.get_narration_asset(f"{run_id}-narration-1")
+        narration_2 = repository.get_narration_asset(f"{run_id}-narration-2")
+        snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:3")
+        assert snapshot.narration_asset_id == narration_2.id
+        assert sum(item["duration_ms"] for item in snapshot.scene_inputs) == narration_2.duration_ms
+        assert narration_2.duration_ms != narration_1.duration_ms
+        # Accepted imagery and scene states are reused exactly; no image provider call.
+        for new, original in zip(snapshot.scene_inputs, old_snapshots[1].scene_inputs, strict=True):
+            assert new["resolved_state_id"] == original["resolved_state_id"]
+            assert new["source_assets"] == original["source_assets"]
+        assert len(generator.inputs) == image_calls and len(calls) == 1
+        # Earlier snapshots, renders and reviews remain immutable, queryable history.
+        for version in (1, 2):
+            assert (
+                repository.get_final_media_input_snapshot(f"{run_id}:snapshot:{version}")
+                == old_snapshots[version]
+            )
+            assert old_snapshots[version].narration_asset_id == narration_1.id
+            assert (
+                repository.get_final_media_artifact(f"{run_id}-artifact-{version}")
+                == old_artifacts[version]
+            )
+        cells = {
+            r.id: r.final_media_artifact_id
+            for r in repository.list_production_qa_reviews(run_id)
+            if r.scope == "cell"
+        }
+        assert cells == {
+            f"{run_id}:qa:cell:1": f"{run_id}-artifact-1",
+            f"{run_id}:qa:cell:2": f"{run_id}-artifact-2",
+            f"{run_id}:qa:cell:3": f"{run_id}-artifact-3",
+        }
+        # Timing from the defective take never carries forward.
+        with pytest.raises(ProductionRequestError, match="sum exactly"):
+            service.retime(run_id, old_durations, "founder", "Old take durations.")
+        passed = service.record_qa(run_id, {"outcome": "passed", "evidence": {"take": "clean"}})
+        assert passed["status"] == "private_founder_review_ready"
+        latest_review = max(
+            (r for r in repository.list_production_qa_reviews(run_id) if r.scope == "whole_video"),
+            key=lambda r: r.id,
+        )
+        assert latest_review.final_media_artifact_id == f"{run_id}-artifact-3"
+    finally:
+        server.server_close()
+
+
+def test_retake_refuses_ineligible_runs_without_provider_calls(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    from project_atlas.publishing_state import TARGET_CHANNEL
+    from tests.test_publishing import _manifest
+
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "retake-guard")
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        _forbid_providers(monkeypatch, generator)
+        for evidence, match in (
+            (None, "evidence object"),
+            ({"defective_narration_asset_id": "x", "reason": "r"}, "authorized_by"),
+            ({"authorized_by": "founder", "reason": "r"}, "defective_narration_asset_id"),
+            ({"authorized_by": "founder", "defective_narration_asset_id": "x"}, "reason"),
+            (
+                {"authorized_by": "f", "defective_narration_asset_id": "nope", "reason": "r"},
+                "not a take",
+            ),
+        ):
+            with pytest.raises(ProductionRequestError, match=match):
+                service.authorize_narration_retake(run_id, evidence)
+        _authorize_retake(server, run_id)
+        artifact = repository.get_final_media_artifact(f"{run_id}-artifact-1")
+        repository.create_publishing_package(
+            "retake-package",
+            "retake-pilot",
+            1,
+            1,
+            artifact.id,
+            artifact.content_digest,
+            TARGET_CHANNEL,
+            _manifest(),
+        )
+        with pytest.raises(ProductionRequestError, match="packaged"):
+            service.retake_narration(run_id)
+        service.record_qa(run_id, {"outcome": "passed", "evidence": {}})
+        with pytest.raises(ProductionRequestError, match="awaiting or failing"):
+            service.retake_narration(run_id)
+        assert len(repository.list_production_evidence(run_id, "narration")) == 1
+    finally:
+        server.server_close()
+
+
+def test_snapshot_retime_and_recommendation_refuse_an_unverified_current_take(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    server, generator, request = _render_ready_run(tmp_path, monkeypatch, "backstop")
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        _forbid_providers(monkeypatch, generator)
+        run = repository.get_production_run(run_id)
+        plan = repository.get_visual_plan(run.visual_plan_id)
+        unverified = server.media_service.import_narration(
+            f"{run_id}-narration-9",
+            plan.script_id,
+            (tmp_path / "narration.wav").read_bytes(),
+            "audio/wav",
+        )
+        repository.create_production_evidence(
+            f"{run_id}:narration:evidence:9",
+            run_id,
+            "narration",
+            {"outcome": "succeeded", "brand_key": "similarstoic", "narration_version": 9},
+            narration_asset_id=unverified.id,
+        )
+        states = {
+            item.payload["scene_id"]: item.resolved_state_id
+            for item in repository.list_production_evidence(run_id, "scene_state")
+        }
+        events = repository.latest_production_run_event(run_id).sequence
+        with pytest.raises(ProductionRequestError, match="no passing completeness verification"):
+            service._ensure_snapshot(run, states, unverified)
+        total = unverified.duration_ms
+        with pytest.raises(ProductionRequestError, match="no passing completeness verification"):
+            service.retime(run_id, [total // 2, total - total // 2], "founder", "x")
+        with pytest.raises(ProductionRequestError, match="no passing completeness verification"):
+            service.recommend_retime(run_id)
+        assert len(repository.list_production_evidence(run_id, "snapshot")) == 1
+        assert repository.latest_production_run_event(run_id).sequence == events
+        assert len(transcription.calls) == 1
+    finally:
+        server.server_close()
+
+
+def test_frozen_requests_without_the_forecast_need_separate_verification_authority(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    _runtime, server, _generator, calls, request, keys = _reviewed_run(
+        tmp_path, monkeypatch, "legacy-gate", planned=False
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        run_before = repository.get_production_run(run_id)
+        assert "verification_calls" not in run_before.request["forecast"]
+        failed, status = _post_error(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 422 and failed["stage"] == "narration_verification"
+        assert "not authorized" in failed["error"]
+        assert (len(calls), len(transcription.calls)) == (1, 0)
+        with pytest.raises(ProductionRequestError, match="not a take"):
+            service.authorize_narration_verification(
+                run_id, {"authorized_by": "founder", "narration_asset_id": "unknown"}
+            )
+        authorized, status = post_json(
+            server,
+            f"/api/v2/productions/{run_id}/narration-verification-authorization",
+            {
+                "evidence": {
+                    "authorized_by": "founder",
+                    "narration_asset_id": f"{run_id}-narration-1",
+                }
+            },
+        )
+        assert status == 200
+        resumed, status = post_json(server, f"/api/v2/productions/{run_id}/resume", {})
+        assert status == 200 and resumed["production"]["status"] == "qa_review_pending"
+        assert (len(calls), len(transcription.calls)) == (1, 1)
+        run_after = repository.get_production_run(run_id)
+        assert (run_after.request, run_after.request_digest) == (
+            run_before.request,
+            run_before.request_digest,
+        )
+        with pytest.raises(ProductionRequestError, match="never repeated"):
+            service.authorize_narration_verification(
+                run_id, {"authorized_by": "founder", "narration_asset_id": f"{run_id}-narration-1"}
+            )
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize("value", [0, 2, True, "1"])
+def test_new_requests_may_plan_exactly_one_verification_call(tmp_path, value) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _request(server, tmp_path, "forecast-verify")
+        assert request["forecast"]["verification_calls"] == 1
+        request["forecast"]["verification_calls"] = value
+        failed, status = _post_error(server, "/api/v2/productions", request)
+        assert status == 400 and "verification_calls" in failed["error"]
+        assert generator.inputs == []
+    finally:
+        server.server_close()
+
+
+def test_transcription_failure_is_recorded_once_and_never_retried(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    transcription.queue.append(
+        NarrationVerificationError("Narration transcription failed; no automatic retry.")
+    )
+    _runtime, server, _generator, calls, request, keys = _reviewed_run(
+        tmp_path, monkeypatch, "gate-error"
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        failed, status = _post_error(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 422 and failed["stage"] == "narration_verification"
+        [verification] = repository.list_production_evidence(run_id, "narration_verification")
+        assert verification.payload["outcome"] == "error"
+        assert "no automatic retry" in verification.payload["error"]
+        with pytest.raises(ProductionLifecycleError):
+            service.resume(run_id)
+        assert (len(calls), len(transcription.calls)) == (1, 1)
+        assert repository.list_production_evidence(run_id, "snapshot") == []
+    finally:
+        server.server_close()

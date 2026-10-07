@@ -14,6 +14,13 @@ from typing import Any
 from project_atlas import speech_timing
 from project_atlas.generation import GenerationService
 from project_atlas.media import FfmpegRuntime, MediaService
+from project_atlas.narration import SIMILARSTOIC_PRONUNCIATION_ALIASES
+from project_atlas.narration_verification import (
+    NORMALIZATION_VERSION,
+    VERIFICATION_METHOD,
+    WhisperTranscriber,
+    verify_narration_audio,
+)
 from project_atlas.persistence import AtlasRepository
 from project_atlas.scene_media import load_persistent_scene_frame, unwritten_alpha_pixels
 from project_atlas.scene_model import (
@@ -228,10 +235,13 @@ class ProductionLifecycleService:
         repository: AtlasRepository,
         generation_service: GenerationService,
         media_service: MediaService,
+        transcriber: Any | None = None,
     ) -> None:
         self.repository = repository
         self.generation_service = generation_service
         self.media_service = media_service
+        # Independent recognizer for the narration completeness gate (never the TTS provider).
+        self.transcriber = transcriber or WhisperTranscriber()
         self.adapter = ManagedAssetSceneAdapter(repository, media_service.runtime)
 
     def start(self, request: dict[str, Any]) -> dict[str, Any]:
@@ -281,6 +291,353 @@ class ProductionLifecycleService:
         return run.request.get("narration_authorized") is True or bool(
             self.repository.list_production_evidence(run.id, "narration_authorization")
         )
+
+    def authorize_narration_verification(
+        self, run_id: str, evidence: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Record founder authority for one completeness check of one exact narration take.
+
+        Needed only by requests frozen before the verification forecast existed; such runs
+        never receive transcription spend authority implicitly. Idempotent per take.
+        """
+
+        self.repository.get_production_run(run_id)
+        actor, asset_id = self._authorization_fields(
+            evidence, "narration_asset_id", "Narration verification authorization"
+        )
+        attempt = self._narration_attempt_for_asset(run_id, asset_id)
+        if self._narration_verification(run_id, attempt) is not None:
+            raise ProductionRequestError(
+                "That narration take was already verified; verification is never repeated."
+            )
+        existing = self.repository.list_production_evidence(
+            run_id, "narration_verification_authorization"
+        )
+        if not any(item.narration_asset_id == asset_id for item in existing):
+            self.repository.create_production_evidence(
+                f"{run_id}:narration-verification-authorization:{len(existing) + 1}",
+                run_id,
+                "narration_verification_authorization",
+                evidence | {"authorized_by": actor, "narration_asset_id": asset_id},
+                narration_asset_id=asset_id,
+            )
+        return self.status(run_id)
+
+    def authorize_narration_retake(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
+        """Record one founder authorization for exactly one replacement narration take."""
+
+        self.repository.get_production_run(run_id)
+        actor, asset_id = self._authorization_fields(
+            evidence, "defective_narration_asset_id", "Narration retake authorization"
+        )
+        reason = evidence.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ProductionRequestError("Narration retake authorization requires a reason.")
+        self._narration_attempt_for_asset(run_id, asset_id)
+        existing = self.repository.list_production_evidence(
+            run_id, "narration_retake_authorization"
+        )
+        self.repository.create_production_evidence(
+            f"{run_id}:narration-retake-authorization:{len(existing) + 1}",
+            run_id,
+            "narration_retake_authorization",
+            evidence
+            | {
+                "run_id": run_id,
+                "authorized_by": actor,
+                "defective_narration_asset_id": asset_id,
+                "reason": reason.strip(),
+            },
+            narration_asset_id=asset_id,
+        )
+        return self.status(run_id)
+
+    def retake_narration(self, run_id: str) -> dict[str, Any]:
+        """Replace a defective narration take with the next versioned, verified take.
+
+        Bounded recovery inside the same run: the approved Script, accepted imagery, worlds and
+        scene states are reused, no image provider is reachable, one founder authorization
+        permits one provider take (and its one completeness check), and every earlier take,
+        snapshot, render and review stays immutable history. A passing take produces a new
+        narration-bound snapshot/render/cell-QA candidate; a failing take stops the run.
+        """
+
+        run = self.repository.get_production_run(run_id)
+        latest = self.repository.latest_production_run_event(run_id)
+        eligible = latest is not None and (
+            (latest.status == "qa_review_pending" and latest.stage == "qa")
+            or (
+                latest.status == "failed"
+                and latest.stage == "qa"
+                and latest.error_code == "whole_video_qa_failed"
+            )
+            or (latest.status == "failed" and latest.stage == "narration_verification")
+        )
+        if not eligible:
+            raise ProductionRequestError(
+                "A narration retake requires a production awaiting or failing whole-video "
+                "review, or one stopped by a failed narration verification."
+            )
+        if not self._all_variants_passed(run):
+            raise ProductionRequestError(
+                "A narration retake requires every acquired variant to be accepted."
+            )
+        if self._founder_review_payload(run_id) is not None:
+            raise ProductionRequestError("A narration retake is refused after a founder decision.")
+        if self._render_artifacts_published(run_id):
+            raise ProductionRequestError("A narration retake is refused once a render is packaged.")
+        current = self._current_narration_attempt(run_id)
+        if current is None or current.narration_asset_id is None:
+            raise ProductionRequestError("There is no narration take to replace.")
+        consumed = {
+            attempt.payload.get("retake_authorization_id")
+            for attempt in self._narration_attempts(run_id)
+        }
+        authorization = next(
+            (
+                item
+                for item in sorted(
+                    self.repository.list_production_evidence(
+                        run_id, "narration_retake_authorization"
+                    ),
+                    key=self._evidence_version,
+                )
+                if item.id not in consumed
+            ),
+            None,
+        )
+        if authorization is None:
+            raise ProductionRequestError(
+                "A narration retake requires an unconsumed founder retake authorization; "
+                "no provider call made."
+            )
+        if authorization.narration_asset_id != current.narration_asset_id:
+            raise ProductionRequestError(
+                "The retake authorization names a different narration take than the current one."
+            )
+        version = self._next_narration_version(run_id)
+        self.repository.append_production_run_event(
+            run_id,
+            "narrating",
+            "narration_retake",
+            {"narration_version": version, "retake_authorization_id": authorization.id},
+        )
+        try:
+            states = self._ensure_scene_states(run)
+            attempt = self._generate_narration_attempt(run, version, authorization.id)
+            self._admit_narration(run, attempt)
+            narration = self.repository.get_narration_asset(attempt.narration_asset_id)
+            snapshot = self._ensure_snapshot(run, states, narration)
+            artifact = self._ensure_render(run, snapshot)
+            self._ensure_automated_cell_qa(run, states, artifact)
+            self.repository.append_production_run_event(
+                run_id,
+                "qa_review_pending",
+                "qa",
+                {
+                    "artifact_id": artifact.id,
+                    "narration_version": version,
+                    "whole_video_review": "pending",
+                },
+            )
+        except Exception as error:
+            stopped = self.repository.latest_production_run_event(run_id)
+            self._fail(run_id, stopped.stage if stopped else "narration_retake", error)
+        return self.status(run_id)
+
+    # --- Versioned narration attempts and the completeness gate ---------------------------
+
+    @staticmethod
+    def _authorization_fields(evidence: Any, asset_field: str, label: str) -> tuple[str, str]:
+        if not isinstance(evidence, dict):
+            raise ProductionRequestError(f"{label} requires an evidence object.")
+        actor, asset_id = evidence.get("authorized_by"), evidence.get(asset_field)
+        if not isinstance(actor, str) or not actor.strip():
+            raise ProductionRequestError(f"{label} requires authorized_by.")
+        if not isinstance(asset_id, str) or not asset_id.strip():
+            raise ProductionRequestError(f"{label} requires {asset_field}.")
+        return actor.strip(), asset_id.strip()
+
+    def _narration_attempts(self, run_id: str) -> list[Any]:
+        return sorted(
+            self.repository.list_production_evidence(run_id, "narration"),
+            key=self._evidence_version,
+        )
+
+    def _current_narration_attempt(self, run_id: str) -> Any | None:
+        attempts = self._narration_attempts(run_id)
+        return attempts[-1] if attempts else None
+
+    def _narration_attempt_for_asset(self, run_id: str, asset_id: str) -> Any:
+        for attempt in self._narration_attempts(run_id):
+            if attempt.narration_asset_id == asset_id:
+                return attempt
+        raise ProductionRequestError("The named narration asset is not a take of this run.")
+
+    def _narration_verification(self, run_id: str, attempt: Any) -> Any | None:
+        identity = f"{run_id}:narration_verification:{self._evidence_version(attempt)}"
+        for item in self.repository.list_production_evidence(run_id, "narration_verification"):
+            if item.id == identity:
+                return item
+        return None
+
+    def _next_narration_version(self, run_id: str) -> int:
+        """Next take version: never reuses an attempt, verification or provider identity."""
+
+        versions = [
+            self._evidence_version(item)
+            for item in self.repository.list_production_evidence(run_id)
+            if item.evidence_type in {"narration", "narration_verification"}
+        ]
+        version = 1 + max(versions, default=0)
+
+        def exists(getter, identity: str) -> bool:
+            try:
+                getter(identity)
+            except KeyError:
+                return False
+            return True
+
+        while exists(
+            self.repository.get_narration_generation_execution,
+            f"{run_id}:narration-execution:{version}",
+        ) or exists(self.repository.get_narration_asset, f"{run_id}-narration-{version}"):
+            version += 1
+        return version
+
+    def _generate_narration_attempt(
+        self, run: Any, version: int, retake_authorization_id: str | None = None
+    ) -> Any:
+        """Make exactly one provider narration call and record it as one versioned take."""
+
+        plan = self.repository.get_visual_plan(run.visual_plan_id)
+        result = self.media_service.generate_brand_narration(
+            f"{run.id}:narration-execution:{version}",
+            f"{run.id}-narration-{version}",
+            plan.script_id,
+            brand_key="similarstoic",
+            execution_authorized=True,
+        )
+        payload = {
+            "outcome": result.execution.outcome,
+            "brand_key": "similarstoic",
+            "narration_version": version,
+        }
+        if retake_authorization_id is not None:
+            payload["retake_authorization_id"] = retake_authorization_id
+        attempt = self.repository.create_production_evidence(
+            f"{run.id}:narration:evidence:{version}",
+            run.id,
+            "narration",
+            payload,
+            narration_generation_execution_id=result.execution.id,
+            narration_asset_id=result.narration_asset.id if result.narration_asset else None,
+        )
+        if result.narration_asset is None:
+            raise RuntimeError("Approved SimilarStoic narration generation failed.")
+        return attempt
+
+    def _verification_allowed(self, run: Any, attempt: Any) -> bool:
+        """A take's single check is planned, retake-covered or separately authorized."""
+
+        if attempt.payload.get("retake_authorization_id"):
+            return True
+        if (
+            self._evidence_version(attempt) == 1
+            and run.request["forecast"].get("verification_calls") == 1
+        ):
+            return True
+        return any(
+            item.narration_asset_id == attempt.narration_asset_id
+            for item in self.repository.list_production_evidence(
+                run.id, "narration_verification_authorization"
+            )
+        )
+
+    def _verify_narration_attempt(self, run: Any, attempt: Any) -> Any:
+        """Run (at most once per take) and record the independent completeness check."""
+
+        existing = self._narration_verification(run.id, attempt)
+        if existing is not None:
+            return existing
+        version = self._evidence_version(attempt)
+        self.repository.append_production_run_event(
+            run.id, "narrating", "narration_verification", {"narration_version": version}
+        )
+        if not self._verification_allowed(run, attempt):
+            raise ProductionRequestError(
+                "Narration completeness verification is not authorized; no provider call made."
+            )
+        narration = self.repository.get_narration_asset(attempt.narration_asset_id)
+        script = self.repository.get_script(narration.script_id)
+        try:
+            report = verify_narration_audio(
+                self.media_service.storage.path(narration.storage_path),
+                narration.content_digest,
+                script.narration_text,
+                self.transcriber,
+                SIMILARSTOIC_PRONUNCIATION_ALIASES,
+            )
+        except Exception as error:
+            # A failed check is recorded so the same take is never transcribed again.
+            report = {
+                "method": VERIFICATION_METHOD,
+                "outcome": "error",
+                "error_code": type(error).__name__,
+                "error": str(error)[:1000],
+            }
+        return self.repository.create_production_evidence(
+            f"{run.id}:narration_verification:{version}",
+            run.id,
+            "narration_verification",
+            {
+                "narration_version": version,
+                "narration_asset_id": narration.id,
+                "narration_execution_id": attempt.narration_generation_execution_id,
+                "normalization_version": NORMALIZATION_VERSION,
+                "wav_sha256": narration.content_digest,
+                **report,
+            },
+            narration_generation_execution_id=attempt.narration_generation_execution_id,
+            narration_asset_id=narration.id,
+        )
+
+    def _admit_narration(self, run: Any, attempt: Any) -> None:
+        """Fail closed unless this take passed its completeness check."""
+
+        verification = self._verify_narration_attempt(run, attempt)
+        if verification.payload.get("outcome") == "passed":
+            return
+        payload = verification.payload
+        if payload.get("outcome") == "error":
+            detail = payload.get("error", "verification error")
+        else:
+            detail = "; ".join(
+                f"{item['kind']}: expected {' '.join(item['expected']) or '-'} / "
+                f"heard {' '.join(item['observed']) or '-'}"
+                for item in payload.get("differences", [])[:5]
+            )
+        raise ProductionRequestError(
+            f"Narration take {payload.get('narration_version')} failed completeness "
+            f"verification ({detail}); a separately authorized narration retake is required."
+        )
+
+    def _require_verified_narration(self, run_id: str, narration: Any) -> None:
+        """Backstop: only the current, verified take may feed a snapshot, render or retime."""
+
+        attempt = self._current_narration_attempt(run_id)
+        verification = self._narration_verification(run_id, attempt) if attempt else None
+        if (
+            attempt is None
+            or attempt.narration_asset_id != narration.id
+            or verification is None
+            or verification.narration_asset_id != narration.id
+            or verification.payload.get("outcome") != "passed"
+        ):
+            raise ProductionRequestError(
+                "The current narration has no passing completeness verification; it cannot "
+                "feed a snapshot, render or retime."
+            )
 
     def resume(self, run_id: str) -> dict[str, Any]:
         run = self.repository.get_production_run(run_id)
@@ -445,6 +802,8 @@ class ProductionLifecycleService:
         narration = self.repository.get_narration_asset(
             self._current_evidence(run_id, "narration").narration_asset_id
         )
+        # Timing is always recomputed from the current verified take, never a previous one.
+        self._require_verified_narration(run_id, narration)
         plan = self.repository.get_visual_plan(run.visual_plan_id)
         script = self.repository.get_script(plan.script_id)
         scenes = self.repository.list_scenes_for_visual_plan(run.visual_plan_id)
@@ -521,6 +880,7 @@ class ProductionLifecycleService:
         narration = self.repository.get_narration_asset(
             self._current_evidence(run_id, "narration").narration_asset_id
         )
+        self._require_verified_narration(run_id, narration)
         if sum(durations_ms) != narration.duration_ms:
             raise ProductionRequestError(
                 f"Retime durations must sum exactly to the narration's {narration.duration_ms} ms."
@@ -644,6 +1004,8 @@ class ProductionLifecycleService:
         reviews = self.repository.list_production_qa_reviews(run_id)
         renders = [item for item in evidence if item.evidence_type == "render"]
         current = max(renders, key=self._evidence_version) if renders else None
+        narration = self._current_narration_attempt(run_id)
+        verification = self._narration_verification(run_id, narration) if narration else None
         return {
             "id": run.id,
             "visual_plan_id": run.visual_plan_id,
@@ -659,6 +1021,15 @@ class ProductionLifecycleService:
             "qa_reviews": [asdict(item) for item in reviews],
             "founder_review": self._founder_review_payload(run_id),
             "narration_authorized": self._narration_authorized(run),
+            "current_narration": (
+                {
+                    "version": self._evidence_version(narration),
+                    "narration_asset_id": narration.narration_asset_id,
+                    "verification": verification.payload.get("outcome") if verification else None,
+                }
+                if narration
+                else None
+            ),
             "current_render": (
                 {
                     "version": self._evidence_version(current),
@@ -847,40 +1218,55 @@ class ProductionLifecycleService:
         return state_ids
 
     def _ensure_narration(self, run: Any) -> Any:
-        existing = self.repository.list_production_evidence(run.id, "narration")
-        if existing:
-            return self.repository.get_narration_asset(existing[-1].narration_asset_id)
-        self.repository.append_production_run_event(run.id, "narrating", "narration", {})
-        # The frozen request or a recorded founder authorization may authorize narration.
-        if not self._narration_authorized(run):
-            raise ProductionRequestError(
-                "Narration is not authorized by this production request; no provider call made."
+        """Return the current take only once it has passed the completeness gate.
+
+        An existing take is never regenerated or overwritten: a failed or unverifiable take
+        stops the run until a separately authorized retake produces the next version.
+        """
+
+        attempt = self._current_narration_attempt(run.id)
+        if attempt is None:
+            self.repository.append_production_run_event(run.id, "narrating", "narration", {})
+            # The frozen request or a recorded founder authorization may authorize narration.
+            if not self._narration_authorized(run):
+                raise ProductionRequestError(
+                    "Narration is not authorized by this production request; no provider call made."
+                )
+            attempt = self._generate_narration_attempt(run, self._next_narration_version(run.id))
+        verification = self._narration_verification(run.id, attempt)
+        latest = self.repository.latest_production_run_event(run.id)
+        if (verification is None or verification.payload.get("outcome") != "passed") and (
+            latest is None or latest.status != "narrating"
+        ):
+            # Re-entering an unadmitted take (e.g. on resume) is recorded, never repeated silently.
+            self.repository.append_production_run_event(
+                run.id,
+                "narrating",
+                "narration_verification",
+                {"narration_version": self._evidence_version(attempt)},
             )
-        plan = self.repository.get_visual_plan(run.visual_plan_id)
-        result = self.media_service.generate_brand_narration(
-            f"{run.id}:narration-execution:1",
-            f"{run.id}-narration-1",
-            plan.script_id,
-            brand_key="similarstoic",
-            execution_authorized=True,
-        )
-        self.repository.create_production_evidence(
-            f"{run.id}:narration:evidence:1",
-            run.id,
-            "narration",
-            {"outcome": result.execution.outcome, "brand_key": "similarstoic"},
-            narration_generation_execution_id=result.execution.id,
-            narration_asset_id=result.narration_asset.id if result.narration_asset else None,
-        )
-        if result.narration_asset is None:
-            raise RuntimeError("Approved SimilarStoic narration generation failed.")
-        return result.narration_asset
+        if attempt.narration_asset_id is None:
+            raise ProductionRequestError(
+                f"Narration take {self._evidence_version(attempt)} produced no audio; a "
+                "separately authorized narration retake is required."
+            )
+        self._admit_narration(run, attempt)
+        return self.repository.get_narration_asset(attempt.narration_asset_id)
 
     def _ensure_snapshot(self, run: Any, states: dict[str, str], narration: Any) -> Any:
-        if self.repository.list_production_evidence(run.id, "snapshot"):
-            return self.repository.get_final_media_input_snapshot(
-                self._current_evidence(run.id, "snapshot").final_media_input_snapshot_id
+        """Return or create the snapshot bound to exactly this verified narration take."""
+
+        self._require_verified_narration(run.id, narration)
+        bound = []
+        for item in self.repository.list_production_evidence(run.id, "snapshot"):
+            snapshot = self.repository.get_final_media_input_snapshot(
+                item.final_media_input_snapshot_id
             )
+            if snapshot.narration_asset_id == narration.id:
+                bound.append((self._evidence_version(item), snapshot))
+        if bound:
+            return max(bound, key=lambda pair: pair[0])[1]
+        version = self._next_render_version(run.id)
         timeline = {item["scene_id"]: item for item in run.request["timeline"]}
         scene_ids = self._plan_scene_ids(run.visual_plan_id)
         total_weight = sum(item["duration_weight"] for item in timeline.values())
@@ -905,36 +1291,51 @@ class ProductionLifecycleService:
                 }
             )
         snapshot = self.media_service.create_persistent_scene_snapshot(
-            f"{run.id}:snapshot:1",
+            f"{run.id}:snapshot:{version}",
             run.visual_plan_id,
             narration.id,
             inputs,
             run.request.get("citations"),
         )
         self.repository.create_production_evidence(
-            f"{run.id}:snapshot:evidence:1",
+            f"{run.id}:snapshot:evidence:{version}",
             run.id,
             "snapshot",
-            {"schema_version": snapshot.snapshot_schema_version},
+            {
+                "schema_version": snapshot.snapshot_schema_version,
+                "render_version": version,
+                "narration_asset_id": narration.id,
+            },
             final_media_input_snapshot_id=snapshot.id,
         )
         return snapshot
 
     def _ensure_render(self, run: Any, snapshot: Any) -> Any:
-        if self.repository.list_production_evidence(run.id, "render"):
-            return self.repository.get_final_media_artifact(
-                self._current_evidence(run.id, "render").final_media_artifact_id
-            )
+        """Return or create the render of exactly this snapshot, at the snapshot's version."""
+
+        for item in sorted(
+            self.repository.list_production_evidence(run.id, "render"),
+            key=self._evidence_version,
+            reverse=True,
+        ):
+            if item.render_execution_id and (
+                self.repository.get_render_execution(
+                    item.render_execution_id
+                ).final_media_input_snapshot_id
+                == snapshot.id
+            ):
+                return self.repository.get_final_media_artifact(item.final_media_artifact_id)
+        version = int(snapshot.id.rsplit(":", 1)[1])
         self.repository.append_production_run_event(run.id, "rendering", "render", {})
         artifact = self.media_service.render(
-            f"{run.id}:render-execution:1", f"{run.id}-artifact-1", snapshot.id
+            f"{run.id}:render-execution:{version}", f"{run.id}-artifact-{version}", snapshot.id
         )
         execution = self.repository.get_render_execution(artifact.render_execution_id)
         self.repository.create_production_evidence(
-            f"{run.id}:render:evidence:1",
+            f"{run.id}:render:evidence:{version}",
             run.id,
             "render",
-            {"technical_validation": artifact.technical_validation},
+            {"technical_validation": artifact.technical_validation, "render_version": version},
             render_execution_id=execution.id,
             final_media_artifact_id=artifact.id,
         )
@@ -942,10 +1343,12 @@ class ProductionLifecycleService:
 
     def _ensure_automated_cell_qa(self, run: Any, states: dict[str, str], artifact: Any) -> None:
         if any(
-            review.scope == "cell" for review in self.repository.list_production_qa_reviews(run.id)
+            review.scope == "cell" and review.final_media_artifact_id == artifact.id
+            for review in self.repository.list_production_qa_reviews(run.id)
         ):
             return
-        self._record_automated_cell_qa(run, states, artifact, f"{run.id}:qa:cell:1")
+        version = int(artifact.id.rsplit("-", 1)[1])
+        self._record_automated_cell_qa(run, states, artifact, f"{run.id}:qa:cell:{version}")
 
     def _record_automated_cell_qa(
         self, run: Any, states: dict[str, str], artifact: Any, review_id: str
@@ -1135,6 +1538,14 @@ class ProductionLifecycleService:
             forecast.get("narration_calls"), bool
         ):
             raise ProductionRequestError("Production forecast narration_calls must equal 1.")
+        # Optional for backward compatibility: a request that plans the standard narration
+        # completeness check freezes exactly one verification (transcription) call.
+        if "verification_calls" in forecast and (
+            forecast["verification_calls"] != 1 or isinstance(forecast["verification_calls"], bool)
+        ):
+            raise ProductionRequestError(
+                "Production forecast verification_calls must equal 1 when present."
+            )
         authority = request.get("authority")
         authority_fields = {
             "character_profile_id",

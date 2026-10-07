@@ -841,6 +841,9 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             "/founder-review": "founder_review",
             "/retime": "retime",
             "/narration-authorization": "narration_authorization",
+            "/narration-verification-authorization": "narration_verification_authorization",
+            "/narration-retake-authorization": "narration_retake_authorization",
+            "/narration-retake": "narration_retake",
         }
         for suffix, command in production_commands.items():
             if path.startswith(production_prefix) and path.endswith(suffix):
@@ -879,6 +882,25 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                         production = self.server.production_service.authorize_narration(
                             run_id, payload.get("evidence")
                         )
+                    elif command in {
+                        "narration_verification_authorization",
+                        "narration_retake_authorization",
+                    }:
+                        label = command.replace("_", " ").capitalize()
+                        payload = self._read_json_object(f"{label} command")
+                        self._reject_unsupported_fields(payload, {"evidence"}, f"{label} command")
+                        service = self.server.production_service
+                        authorize = (
+                            service.authorize_narration_verification
+                            if command == "narration_verification_authorization"
+                            else service.authorize_narration_retake
+                        )
+                        production = authorize(run_id, payload.get("evidence"))
+                    elif command == "narration_retake":
+                        payload = self._read_json_object("Narration retake command")
+                        if payload:
+                            raise ProductionRequestError("Narration retake payload must be empty.")
+                        production = self.server.production_service.retake_narration(run_id)
                     elif command == "retime":
                         payload = self._read_json_object("Production retime command")
                         self._reject_unsupported_fields(
