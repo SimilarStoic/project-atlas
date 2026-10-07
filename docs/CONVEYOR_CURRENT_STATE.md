@@ -256,7 +256,10 @@ completion, P11 or later work must check this list and must not silently treat a
   `fb4137108b09bba7c31bc0d9851c8e3ffb55408ae0f0d3f40b3215effd6d2478`; founder verdict "I2 preferred"). The I2
   instruction is now narrator profile `similarstoic-daniel-v2` for new requests, with provisional prefer-mode
   sentence-delivery selection (see Canonical v2 fidelity and safeguards). That calibration covers one Script; a
-  pre-synthesis script-speakability check does not exist yet, so this lesson stays OPEN.
+  pre-synthesis script-speakability check does not exist yet, so this lesson stays OPEN. The script check must also
+  flag a sourced number whose stated category differs from its source: P10 said "default tariffs: around 20
+  million", while Ofgem gives about 22 million households on default tariffs and about 20 million on standard
+  variable tariffs including prepayment.
 - The same environment plus the same viewpoint must lock room geometry, furniture scale and persistent fixture
   identity across beats.
 - Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
@@ -264,6 +267,16 @@ completion, P11 or later work must check this list and must not silently treat a
 
 Completed: the runtime now records the P8 and P9 manual public releases (founder-attested receipts above), so
 that lesson is closed.
+
+Before P11:
+
+- New SimilarStoic requests must explicitly set the v2 narrator (`similarstoic-daniel-v2`), the
+  `similarstoic-sentence-delivery-v1` policy in `prefer` mode and N = 3 automatic attempts until these become the
+  channel default; a request without them silently gets the legacy v1, single-take behaviour.
+- The controlled pilot series `similarstoic-youtube-controlled-pilot-v1` is full (slots 1-3 are used), so an ongoing
+  publishing series is needed before the next package.
+- The manual publishing steps (reserve upload, complete manual private upload, observe, reserve release, reconcile
+  receipt) have no CLI yet; the P10 runbook drives them from a Python session.
 
 ## Creative operating rules
 
@@ -366,7 +379,8 @@ v2 production requests now:
 - require an explicit boolean `narration_authorized`, frozen into the request digest; narration fails closed before
   any synthesizer call when it is not `true`;
 - treat `forecast.image_calls` as a frozen per-run ceiling counted per recorded provider generation call, including
-  failed calls (`forecast.narration_calls` must be 1);
+  failed calls (`forecast.narration_calls` must be 1 for legacy requests; a request with a `delivery_policy` freezes
+  `narration_calls = verification_calls = N`, N = 1-3, see the bounded-attempts section below);
 - may plan the standard narration completeness check with `forecast.verification_calls: 1` (exactly 1 when present).
   Requests frozen without it stay valid and unchanged, but get no transcription spend authority: their check needs a
   recorded founder narration-verification authorization;
