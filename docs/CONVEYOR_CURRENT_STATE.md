@@ -98,8 +98,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After migration 29 and the founder-attested retrospective publication recorder (not applied to the protected
-  runtime), the verified local full suite is **547 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+- After migration 29 and the founder-attested retrospective publication recorder, the verified local full suite is
+  **547 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -181,12 +181,14 @@ to the founder-accepted final artifact.
 | P8 | `production-8-attempt-2:founder-review:1` | `production-8-attempt-2-artifact-2` (`6f2b248a14002efc1a2e39ba930efb442a5b7a2eb8e293e6924334379a95c000`, 30.220 s) | https://youtube.com/shorts/MbVZPnX_b_s | 2026-10-04 13:57:41 Europe/London |
 | P9 | `production-9-attempt-2:founder-review:1` | `production-9-attempt-2-artifact-3` (`4c0a8bb23cff0ba8487f0ca0aa92950d60c100e75b63f463b1f6ea26f6b2132f`, 34.400 s) | https://youtube.com/shorts/Dd76ERbxg_w | 2026-10-05 (date only) |
 
-- Neither release has a Conveyor PublishingPackage, approval, release operation, platform publication or publication
-  receipt in the protected runtime, so runtime release-week accounting cannot see them (P8: 2026-W40; P9: 2026-W41).
-  They are **not yet reconciled**.
-- Recording support exists in the repository but has **not** been run against the live runtime: the one-time
-  recorder `python -m project_atlas.publishing_retrospective record` (with `--dry-run` on a temporary copy, or
-  `--backup-root` for the separately authorized live step) writes the retrospective series
+- **P8 and P9 are reconciled in the protected runtime** (7 October 2026, founder-authorized, after verified backup
+  `D:\ConveyorBackups\pre-migration-29-retrospective-publications-20261007-215103\conveyor.db`, SHA-256 `00a5e9d833a5a607fedf7e365a699b6951c2982b738a934afcd4b3877b2b769c`). Founder-attested receipts:
+  P8 `publication-receipt-similarstoic-youtube-external-reconciliation-v1-slot-1` (2026-W40, `MbVZPnX_b_s`, second
+  precision) and P9 `publication-receipt-similarstoic-youtube-external-reconciliation-v1-slot-2` (2026-W41,
+  `Dd76ERbxg_w`, day precision). Runtime release-week accounting now sees W40 and W41 as occupied for the channel;
+  W42 is clear. No YouTube or provider call was made, and every pre-existing publishing row is unchanged.
+- They were recorded by the one-time recorder `python -m project_atlas.publishing_retrospective record` (rehearsed
+  with `--dry-run` on a temporary copy, then run live with `--backup-root`), which writes the retrospective series
   `similarstoic-youtube-external-reconciliation-v1` (P8 slot 1, P9 slot 2). Per release it records one
   `retrospective_external` package (the actual historical title and description: P9 from its SHA-verified
   `production-9/publish` files, P8 from the founder-pasted YouTube Studio text with its provenance noted), one
@@ -198,9 +200,11 @@ to the founder-accepted final artifact.
   never touches the P9 never-release audit package, and takes a verified SQLite backup before any live write. Release
   conflicts stay per channel and ISO week, across all pilot keys.
 - P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
-- P7 remains private evidence only, with no founder acceptance. P10 is in progress and not published (see below).
+- P7 remains private evidence only, with no founder acceptance. P10 (as `production-10-r2`) is founder-accepted but
+  not packaged or published (see below).
 - Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
-  here the same day with URL, artifact ID and SHA-256, until Conveyor can record such a publication in runtime.
+  here the same day with URL, artifact ID and SHA-256, and then recorded in runtime as founder-attested provenance
+  under its own explicit authorization.
 
 ## Open lessons from Production 10
 
@@ -218,9 +222,13 @@ The successor run `production-10-r2` exists. It froze founder-approved Script v2
 the figure sentence rewritten as above) with `adopt_acquisitions_from: production-10`, adopted exactly the eight
 currently accepted P10 images (each SHA-matched to its accepted source, zero image calls) and passed a fresh human
 acquisition review. Its single narration take `production-10-r2-narration-1` (legacy request, so the v1 narrator)
-passed completeness verification (121/121/121); the weighted render `production-10-r2-artifact-1` is intermediate
-and the narration-aligned retimed render `production-10-r2-artifact-2` is the candidate. It is awaiting whole-video
-QA and founder review: there is no founder acceptance, no publishing package and no publication.
+passed completeness verification (121/121/121); the weighted render `production-10-r2-artifact-1` is intermediate.
+The narration-aligned retimed render `production-10-r2-artifact-2` (SHA-256
+`66b0b2ed6fa5d3fedce41a98895600288e47f732af8172b6a8eff0e4adde2276`, 37.633 s) passed human whole-video QA
+(`production-10-r2:qa:whole-video:1`) and was accepted by the founder (`production-10-r2:founder-review:1`); the run
+is `founder_accepted` and that artifact is the accepted artifact. No publishing package and no publication exist
+yet. Packaging does not itself enforce that a package uses the current founder-accepted render, so that identity
+and SHA-256 are a fail-closed precondition for any P10 package; P10's earliest real release week is 2026-W42.
 
 The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
@@ -242,7 +250,9 @@ completion, P11 or later work must check this list and must not silently treat a
   identity across beats.
 - Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
 - Acquisition review must inspect limbs, props and straps zoomed in, not only at full frame.
-- The runtime must record the P8 and P9 manual public releases before P10 is published.
+
+Completed: the runtime now records the P8 and P9 manual public releases (founder-attested receipts above), so
+that lesson is closed.
 
 ## Creative operating rules
 
@@ -562,10 +572,10 @@ its only API-route package is the never-release private audit-evidence package b
 
 ## Schema authority
 
-Application schema authority is the `schema_migrations` table. The repository/application migration set is
-contiguous **1 through 29**. **The protected production runtime remains on 28**: migration 29 is implemented and
-tested in the repository but has **not** been applied to the protected runtime, and it is not the live schema
-authority until a separately authorized live step applies it after a verified backup. Migration 28 adds only
+Application schema authority is the `schema_migrations` table with contiguous versions **1 through 29**, in the
+repository and in the protected production runtime. Migration 29 was applied to the protected runtime on
+7 October 2026 under founder authorization, after a verified backup, together with the P8/P9 recording. Migration 28
+adds only
 append-only production-run events, cross-stage evidence, QA-review outcomes and founder-review decisions; existing
 generation, persistent-scene, narration and media tables remain authoritative for their artifacts.
 
@@ -586,9 +596,8 @@ foreign-key rebuild mode, preserving every existing row:
 `PRAGMA user_version = 0` does not mean that no application migrations exist. `PRAGMA schema_version = 203` is
 SQLite's internal schema-cookie counter, not the Conveyor application migration version.
 
-Migrations 25–27 remain immutable historical provenance. Migration 28 is the protected runtime's current schema
-authority and was applied to the protected production runtime on 1 October 2026 after a dedicated pre-migration
-backup. Subsequent
+Migrations 25–28 remain immutable historical provenance. Migration 28 was applied to the protected production
+runtime on 1 October 2026 after a dedicated pre-migration backup; migration 29 on 7 October 2026. Subsequent
 authorized Production #7-era activity produced legitimate runtime writes; the old pre-migration hash is historical.
 
 For read-only database auditing, do not instantiate application repository code: repository construction can apply
