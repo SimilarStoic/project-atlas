@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from project_atlas import narration_delivery
@@ -50,6 +53,8 @@ def test_sentence_and_internal_pauses_are_classified_against_script_punctuation(
 def test_a_missing_sentence_pause_scores_zero_and_falls_below_target() -> None:
     words, silences = _words(SCRIPT, {1: 500, 5: 300, 9: 600})
     report = assess_delivery(SCRIPT, words, silences)
+    # "four. | Five" is timestamped on both sides but silent: a genuine 0 ms boundary.
+    assert report["unresolved_sentence_boundaries"] == []
     assert [b["pause_ms"] for b in report["sentence_boundaries"]] == [500.0, 0.0, 300.0, 600.0]
     assert report["score_ms"] == round((0 + 300 + 500) / 3, 1)
     assert report["outcome"] == "below_target" and report["score_ms"] < PROVISIONAL_TARGET_MS
@@ -97,3 +102,51 @@ def test_policy_is_versioned_provisional_and_cites_its_calibration() -> None:
     )
     assert narration_delivery.MODES == ("record_only", "prefer", "enforce")
     assert narration_delivery.IMPLEMENTED_MODES == ("record_only", "prefer")
+
+
+LONG_SCRIPT = (
+    "Alpha beta gamma delta epsilon. Zeta eta theta iota kappa. Lambda mu nu xi omicron. "
+    "Pi rho sigma tau upsilon. Phi chi psi omega final."
+)
+
+
+def test_an_untimed_word_at_a_sentence_boundary_is_unreliable_not_a_zero_pause() -> None:
+    gaps = {4: 450, 9: 450, 14: 450, 19: 450}
+    words, silences = _words(LONG_SCRIPT, gaps)
+    assert assess_delivery(LONG_SCRIPT, words, silences)["outcome"] == "passed"
+    # The recognizer drops "Lambda", the word opening sentence three: 24 of 25 tokens align.
+    missing = [item for item in words if item["word"] != "Lambda"]
+    report = assess_delivery(LONG_SCRIPT, missing, silences)
+    assert report["aligned_token_fraction"] == 0.96 >= narration_delivery.MIN_ALIGNED_FRACTION
+    assert report["unresolved_sentence_boundaries"] == ["kappa. | Lambda"]
+    assert report["outcome"] == "unreliable" and report["score_ms"] is None
+    assert report["alignment_reliable"] is False and report["sentence_boundaries"] is None
+
+
+def test_the_recorded_calibration_takes_reproduce_their_scores() -> None:
+    fixture = json.loads(
+        (Path(__file__).parent / "fixtures" / "sentence_delivery_calibration.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    scores = {}
+    for case in fixture["cases"]:
+        report = assess_delivery(
+            fixture["script"],
+            case["words"],
+            [tuple(item) for item in case["internal_silences_ms"]],
+        )
+        assert report["unresolved_sentence_boundaries"] == [], case["take"]
+        assert [b["pause_ms"] for b in report["sentence_boundaries"]] == (
+            case["expected_sentence_boundary_pauses_ms"]
+        ), case["take"]
+        scores[case["take"]] = (report["score_ms"], report["outcome"])
+    assert scores == {
+        "B1": (401.9, "passed"),
+        "S1": (439.2, "passed"),
+        "I2": (415.4, "passed"),
+        "I3": (313.4, "below_target"),
+        "I1": (310.1, "below_target"),
+        "P10-R2 narration-1": (300.5, "below_target"),
+        "S3": (218.0, "below_target"),
+    }

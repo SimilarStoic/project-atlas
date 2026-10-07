@@ -108,7 +108,8 @@ def assess_delivery(
     """Classify internal silences against Script punctuation and score sentence boundaries.
 
     Outcomes: ``passed`` (score at or above target), ``below_target``, ``unreliable``
-    (alignment cannot support classification) or ``not_applicable`` (too few sentences).
+    (alignment cannot support classification, including any sentence boundary whose
+    neighbouring words lack timestamps) or ``not_applicable`` (too few sentences).
     """
 
     expected, script_words = _script_tokens(script)
@@ -131,6 +132,14 @@ def assess_delivery(
                 "at_ms": (times[index][1] + times[index + 1][0]) / 2,
             }
         )
+    # A sentence boundary is scored only when the words on both sides carry timestamps; an
+    # unresolved boundary is never treated as a 0 ms pause.
+    resolved = {j["after_word_index"] for j in junctions if j["kind"] == "sentence"}
+    unresolved = [
+        f"{script_words[index]} | {script_words[index + 1]}"
+        for index in sentence_ends
+        if index not in resolved
+    ]
     boundary_ms = {index: 0.0 for index in sentence_ends}
     internal, unclassified = [], []
     for start, end in internal_silences:
@@ -160,6 +169,7 @@ def assess_delivery(
         bool(words)
         and aligned >= MIN_ALIGNED_FRACTION
         and len(unclassified) <= MAX_UNCLASSIFIED_SILENCES
+        and not unresolved
     )
     if len(sentence_ends) < MIN_SENTENCE_BOUNDARIES:
         outcome, score = "not_applicable", None
@@ -175,6 +185,7 @@ def assess_delivery(
         "aligned_token_fraction": round(aligned, 3),
         "alignment_reliable": reliable,
         "unclassified_silences": unclassified,
+        "unresolved_sentence_boundaries": unresolved,
         "sentence_boundaries": boundaries if reliable else None,
         "internal_pauses": internal if reliable else None,
         "score_ms": score,

@@ -22,7 +22,8 @@ Both profiles share every other setting exactly:
 - Timestamps: `WORD`; text normalization: `ON`; enhancement: `false`; pronunciation alias `ISA` → `eye-suh`.
 
 **Frozen-profile rule.** A production request may freeze `narrator: {profile_id, profile_sha256}`; unknown profiles
-and digest mismatches are refused. A request without one resolves to v1 at runtime and nothing is added to it, so an
+and digest mismatches are refused, at request time and again before every narration provider call (drift fails
+closed; no other profile is substituted). A request without one resolves to v1 at runtime and nothing is added to it, so an
 older frozen request (including `production-7`, `production-8`, `production-9`, `production-10` and
 `production-10-r2`, and any retake on them) keeps its historical narrator. Changing a profile's wording in place
 would no longer be the calibrated configuration: add a new profile instead.

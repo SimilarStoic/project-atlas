@@ -514,9 +514,29 @@ class ProductionLifecycleService:
         return max(selections, key=self._evidence_version) if selections else None
 
     @staticmethod
-    def _narrator_profile_id(run: Any) -> str:
-        # A request that froze no narrator keeps the historical narrator it was frozen under.
-        return (run.request.get("narrator") or {}).get("profile_id", LEGACY_NARRATOR_PROFILE_ID)
+    def _frozen_narrator_profile(run: Any) -> Any:
+        """Resolve the narrator a request froze, refusing any drift before provider access.
+
+        A request that froze no narrator keeps the historical v1 narrator it was frozen under.
+        """
+
+        frozen = run.request.get("narrator")
+        if frozen is None:
+            return narrator_profile(LEGACY_NARRATOR_PROFILE_ID)
+        try:
+            profile = narrator_profile(frozen["profile_id"])
+        except ValueError as error:
+            raise ProductionRequestError(
+                f"The frozen narrator profile {frozen['profile_id']!r} no longer resolves to a "
+                f"valid registered profile ({error}); no narration provider call made."
+            ) from None
+        if profile.settings_sha256 != frozen["profile_sha256"]:
+            raise ProductionRequestError(
+                f"The frozen narrator profile {frozen['profile_id']!r} no longer matches the "
+                f"registered profile (frozen settings {frozen['profile_sha256']}, registered "
+                f"{profile.settings_sha256}); no narration provider call made."
+            )
+        return profile
 
     def _narration_attempt_for_asset(self, run_id: str, asset_id: str) -> Any:
         for attempt in self._narration_attempts(run_id):
@@ -561,7 +581,7 @@ class ProductionLifecycleService:
         """Make exactly one provider narration call and record it as one versioned take."""
 
         plan = self.repository.get_visual_plan(run.visual_plan_id)
-        profile = narrator_profile(self._narrator_profile_id(run))
+        profile = self._frozen_narrator_profile(run)
         result = self.media_service.generate_brand_narration(
             f"{run.id}:narration-execution:{version}",
             f"{run.id}-narration-{version}",

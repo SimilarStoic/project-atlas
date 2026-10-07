@@ -99,7 +99,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
 - After versioned narrator profiles and bounded prefer-mode narration selection, the verified local full suite
-  is **523 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+  is **526 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -433,7 +433,9 @@ Versioned narrator profiles (`project_atlas.narration.NARRATOR_PROFILES`, the si
 - A new request may freeze `narrator: {profile_id, profile_sha256}`; an unknown profile or digest mismatch is refused.
   A request that froze no narrator (every request up to and including `production-10-r2`) resolves to v1 at runtime;
   nothing is written into its frozen request, so its digest and `start()` idempotence are unchanged.
-- Narration evidence records the profile id and settings digest; the execution keeps the exact settings used.
+- Before every narration provider call the frozen `profile_sha256` is re-checked against the registered profile;
+  any drift fails closed with no provider call and is never replaced by another profile. Narration evidence records
+  the profile id and settings digest; the execution keeps the exact settings used.
 
 Bounded automatic narration attempts and prefer-mode delivery selection (new requests only):
 
@@ -446,7 +448,8 @@ Bounded automatic narration attempts and prefer-mode delivery selection (new req
   punctuation: no extra transcription. Classifier `sentence-pause-classifier-v1`; score = mean of the lowest
   max(3, ceil(n/4)) sentence-boundary pauses; provisional target 358 ms from one Script's calibration, not a settled
   quality law. Evidence `{run}:narration_delivery:N` is bound to the narration asset, WAV SHA-256 and completeness
-  evidence; outcomes are `passed`, `below_target`, `unreliable` (alignment cannot support classification) or
+  evidence; outcomes are `passed`, `below_target`, `unreliable` (alignment cannot support classification,
+  including any sentence boundary without timestamps on both sides, which is never scored as a 0 ms pause) or
   `not_applicable` (fewer than three sentence boundaries).
 - Prefer loop: an incomplete take, or a complete take below target or unreliable, leads to the next take while the
   frozen budget remains; a complete take at or above target (or not applicable) is selected at once. When the budget is

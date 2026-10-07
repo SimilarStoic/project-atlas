@@ -3242,3 +3242,56 @@ def test_real_scoring_of_a_one_sentence_script_is_not_applicable_and_selects(
         assert selection.payload["target_met"] is None
     finally:
         server.server_close()
+
+
+def test_narrator_drift_after_freezing_fails_closed_before_any_narration_call(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    from project_atlas import narration as narration_module
+
+    server, generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "narrator-drift", 3, [1, 2, 3]
+    )
+    repository = server.repository
+    run_id = request["id"]
+    try:
+        frozen = repository.get_production_run(run_id)
+        assert frozen.request["narrator"] == V2_PROFILE
+        # A later code change re-registers v2 with different, internally consistent settings.
+        current = narration_module.NARRATOR_PROFILES["similarstoic-daniel-v2"]
+        instruction = current.instruction + " Speak faster."
+        probe = replace(
+            current,
+            instruction=instruction,
+            instruction_sha256=sha256(instruction.encode()).hexdigest(),
+        )
+        drifted = replace(
+            probe,
+            settings_sha256=narration_module.settings_sha256(
+                narration_module.InworldNarrationSynthesizer(profile=probe).settings
+            ),
+        )
+        monkeypatch.setitem(narration_module.NARRATOR_PROFILES, "similarstoic-daniel-v2", drifted)
+        assert narration_module.narrator_profile("similarstoic-daniel-v2") == drifted
+
+        failed, status = _post_error(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 422 and failed["stage"] == "narration"
+        assert "no longer matches the registered profile" in failed["error"]
+        assert (len(calls), len(transcription.calls)) == (0, 0)
+        assert repository.list_production_evidence(run_id, "narration") == []
+        assert (
+            repository.connection.execute(
+                "SELECT COUNT(*) FROM narration_generation_executions"
+            ).fetchone()[0]
+            == 0
+        )
+        after = repository.get_production_run(run_id)
+        assert (after.request, after.request_digest) == (frozen.request, frozen.request_digest)
+        # Resuming cannot substitute the drifted profile either.
+        with pytest.raises(ProductionLifecycleError, match="no longer matches"):
+            server.production_service.resume(run_id)
+        assert len(calls) == 0 and len(generator.inputs) == 2
+    finally:
+        server.server_close()
