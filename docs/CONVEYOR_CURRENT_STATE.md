@@ -200,8 +200,8 @@ to the founder-accepted final artifact.
   never touches the P9 never-release audit package, and takes a verified SQLite backup before any live write. Release
   conflicts stay per channel and ISO week, across all pilot keys.
 - P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
-- P7 remains private evidence only, with no founder acceptance. P10 (as `production-10-r2`) is founder-accepted but
-  not packaged or published (see below).
+- P7 remains private evidence only, with no founder acceptance. P10 (as `production-10-r2`) is founder-accepted and
+  packaged, but has no gate approval and is not uploaded or published (see below).
 - Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
   here the same day with URL, artifact ID and SHA-256, and then recorded in runtime as founder-attested provenance
   under its own explicit authorization.
@@ -226,9 +226,13 @@ passed completeness verification (121/121/121); the weighted render `production-
 The narration-aligned retimed render `production-10-r2-artifact-2` (SHA-256
 `66b0b2ed6fa5d3fedce41a98895600288e47f732af8172b6a8eff0e4adde2276`, 37.633 s) passed human whole-video QA
 (`production-10-r2:qa:whole-video:1`) and was accepted by the founder (`production-10-r2:founder-review:1`); the run
-is `founder_accepted` and that artifact is the accepted artifact. No publishing package and no publication exist
-yet. Packaging does not itself enforce that a package uses the current founder-accepted render, so that identity
-and SHA-256 are a fail-closed precondition for any P10 package; P10's earliest real release week is 2026-W42.
+is `founder_accepted` and that artifact is the accepted artifact. P10-R2 now has exactly one publishing package,
+created 7 October 2026 through the normal `prepare_package` path after a verified backup and read-only confirmation
+of that accepted artifact and SHA-256 (packaging does not itself enforce the founder-accepted render):
+`publishing-package-similarstoic-youtube-pilot-1-slot-3-v1` (pilot key `similarstoic-youtube-controlled-pilot-v1`,
+slot 3, version 1; package digest `acfd4be7f0a84d77214d5f1c9d23bb8c6da8f5a4d4b52daedb3d3bfe5ee654f9`), manual
+transfer and manual release, publication window 2026-10-12T00:00 to 2026-10-19T00:00 Europe/London (2026-W42,
+clear). It has **no gate approval, no upload, no observation and no publication**.
 
 The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
