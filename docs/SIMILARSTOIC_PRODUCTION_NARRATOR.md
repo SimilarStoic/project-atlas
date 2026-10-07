@@ -4,15 +4,38 @@ Founder decision, 22 September 2026: **Daniel is the founder-approved SimilarSto
 not a provisional candidate. The narrator search is resolved. This supersedes the historical uninstructed Marin
 development baseline and narrator-selection holds, not the separate production/publication execution gates.
 
-## Exact configuration
+## Narrator profiles
+
+`project_atlas.narration.NARRATOR_PROFILES` is the single narrator authority. Profiles are immutable and
+append-only; each pins its instruction SHA-256 and the SHA-256 of its canonical settings JSON.
+
+| Profile | Use | Instruction SHA-256 | Settings SHA-256 |
+| --- | --- | --- | --- |
+| `similarstoic-daniel-v1` | historical; every request that froze no narrator | `4334ac0e…b5cb` | `9c8e560b…50f2e` |
+| `similarstoic-daniel-v2` | current; new requests freeze it | `abd56573…bff4cb` | `8e06b555…d27c24` |
+
+Both profiles share every other setting exactly:
 
 - Provider: Inworld; persisted engine kind `inworld_tts`.
 - Model: `inworld-tts-2`; provider-native SYSTEM voice `Daniel`; locale `en-US`.
 - Delivery: `BALANCED`; WAV, 48 kHz mono; speaking rate `1.0`.
-- Timestamps: `WORD`; text normalization: `ON`; enhancement: `false`.
-- Instruction SHA-256: `4334ac0e0cb2e5c0870a8ef7f0b1d5f40bf0afc8381b108d7916e7d1e6f3b5cb`.
+- Timestamps: `WORD`; text normalization: `ON`; enhancement: `false`; pronunciation alias `ISA` → `eye-suh`.
 
-Exact approved instruction (no appended style brief):
+**Frozen-profile rule.** A production request may freeze `narrator: {profile_id, profile_sha256}`; unknown profiles
+and digest mismatches are refused. A request without one resolves to v1 at runtime and nothing is added to it, so an
+older frozen request (including `production-7`, `production-8`, `production-9`, `production-10` and
+`production-10-r2`, and any retake on them) keeps its historical narrator. Changing a profile's wording in place
+would no longer be the calibrated configuration: add a new profile instead.
+
+v2 is v1 plus one appended sentence-delivery brief, exactly as tested in founder-preferred calibration take I2
+(`narration-tests/2026-10-07-sentence-delivery/`, manifest SHA-256
+`fb4137108b09bba7c31bc0d9851c8e3ffb55408ae0f0d3f40b3215effd6d2478`, founder verdict "I2 preferred"):
+
+> Keep the delivery natural and conversational. Give each complete sentence a clear ending and a brief natural beat
+> before beginning the next sentence. Do not rush sentence openings. Keep declarative sentence endings settled rather
+> than using exaggerated rising or falling intonation.
+
+The v1 instruction (no appended style brief):
 
 > Speak like a relaxed, intelligent young adult explaining something useful to a friend. Conversational, grounded and lightly amused. Confident without selling. Let humour land through understatement, not performance. Use natural clause-level pauses and relaxed sentence endings. Never sound like an announcer, corporate presenter, finance guru, advertisement, podcast intro, or hyperactive social-media creator. Do not add, omit or paraphrase words.
 
@@ -54,15 +77,25 @@ chain: narration, completeness validation, alignment, captions, duration-depende
 
 ## Implementation and execution boundary
 
-`project_atlas.narration.resolve_narrator("similarstoic")` resolves offline with no credential access or provider call.
-`MediaService.generate_brand_narration` reuses the immutable narration lifecycle; it requires explicit execution
-authorization and Migration 26 before synthesis. Configuration has no OpenAI/Marin fallback or automatic retry.
+`project_atlas.narration.resolve_narrator("similarstoic", profile_id=...)` resolves offline with no credential access
+or provider call (no profile id resolves v1). `MediaService.generate_brand_narration` passes the request's frozen
+profile and reuses the immutable narration lifecycle; it requires explicit execution authorization and Migration 26
+before synthesis. Configuration has no OpenAI/Marin fallback and no retry beyond the frozen attempt budget.
 Existing explicit local/OpenAI adapters remain available for other callers; they are not SimilarStoic defaults.
 Credentials remain in `INWORLD_API_KEY`, never ordinary provenance. No live verification is performed by this task.
 
 Every production narration take must pass independent Script-completeness verification (a prompt-free `whisper-1`
 transcription of the exact persisted WAV, strictly reconciled against the approved Script) before it is admitted for
 captions, snapshot or render; see `CONVEYOR_CURRENT_STATE.md`.
+
+**Bounded attempts and provisional delivery selection.** A new request that freezes v2 may also freeze the
+`similarstoic-sentence-delivery-v1` policy in `prefer` (or `record_only`) mode with a budget of N = 1-3 takes, each
+with one completeness check. Complete takes get a sentence-boundary pacing score from that check's own word
+timestamps (no extra transcription); a take at or above the provisional 358 ms target is selected at once, otherwise
+the next take runs while the budget remains and the best complete take is selected. Pacing never fails a run; no
+complete take within N fails closed. The target is provisional calibration from one Script, not a quality law; the
+founder's normal whole-video verdict remains the judgement, and `enforce` mode is not enabled. A founder-authorized
+retake stays one take outside the automatic budget.
 
 Source Migration 26 admits truthful Inworld execution provenance using the established constraint-rebuild pattern.
 The persistent runtime was subsequently migrated to 26 under separate founder authority on 22 September 2026.

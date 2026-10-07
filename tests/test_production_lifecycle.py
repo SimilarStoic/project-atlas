@@ -2799,3 +2799,446 @@ def test_requests_without_adoption_keep_the_image_call_floor(tmp_path) -> None:
         assert generator.inputs == []
     finally:
         server.server_close()
+
+
+# --- Versioned narrator profile, bounded attempts and prefer-mode delivery selection ----------
+
+V2_PROFILE = {
+    "profile_id": "similarstoic-daniel-v2",
+    "profile_sha256": "8e06b555cc23e8b653dae76cf95b04f74e43e0ac2282f7be900775f286d27c24",
+}
+V1_INSTRUCTION_SHA = "4334ac0e0cb2e5c0870a8ef7f0b1d5f40bf0afc8381b108d7916e7d1e6f3b5cb"
+V2_INSTRUCTION_SHA = "abd56573e2c068f147b84403c3322f42b16733a7e9d2a5f97643298256bff4cb"
+
+
+def _policy_request(server, tmp_path, prefix, budget: int, mode: str = "prefer"):
+    request, keys = _request(server, tmp_path, prefix)
+    request["narrator"] = dict(V2_PROFILE)
+    request["delivery_policy"] = {"policy_id": "similarstoic-sentence-delivery-v1", "mode": mode}
+    request["forecast"]["narration_calls"] = budget
+    request["forecast"]["verification_calls"] = budget
+    return request, keys
+
+
+def _take_sequence(monkeypatch, wavs: list[Path], calls: list) -> None:
+    """Fake Inworld: take N returns wavs[N-1] and records the instruction it was given."""
+
+    def synthesize(engine, text):
+        calls.append(engine.settings["instruction"])
+        assert engine.execution_authorized and text == "Narration."
+        if len(calls) > len(wavs):
+            raise AssertionError("narration provider called beyond the frozen budget")
+        return NarrationSynthesis(
+            wavs[len(calls) - 1].read_bytes(),
+            "audio/wav",
+            engine.engine_kind,
+            engine.engine_identity,
+            engine.voice_identity,
+            engine.locale,
+            engine.settings,
+        )
+
+    monkeypatch.setattr(
+        "project_atlas.narration.InworldNarrationSynthesizer.synthesize", synthesize
+    )
+
+
+def _scores(monkeypatch, results: list) -> list:
+    """Queue delivery outcomes; records the recognizer words each assessment received."""
+
+    seen = []
+
+    def assess(script, words, silences, target_ms=358):
+        seen.append(list(words))
+        outcome, score = results.pop(0)
+        return {
+            "classifier_version": "sentence-pause-classifier-v1",
+            "score_rule": "mean of the lowest max(3, ceil(n/4)) sentence-boundary pauses",
+            "target_ms": target_ms,
+            "aligned_token_fraction": 0.0 if outcome == "unreliable" else 1.0,
+            "alignment_reliable": outcome != "unreliable",
+            "unclassified_silences": [],
+            "sentence_boundaries": None if outcome == "unreliable" else [],
+            "internal_pauses": None if outcome == "unreliable" else [],
+            "score_ms": score,
+            "outcome": outcome,
+        }
+
+    monkeypatch.setattr("project_atlas.narration_delivery.assess_delivery", assess)
+    return seen
+
+
+def _policy_run(tmp_path, monkeypatch, prefix, budget, seconds, mode="prefer"):
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
+    server = _server(tmp_path, generator, runtime)
+    calls: list[str] = []
+    wavs = [_sine_seconds(runtime, tmp_path, s, f"take-{i}.wav") for i, s in enumerate(seconds, 1)]
+    _take_sequence(monkeypatch, wavs, calls)
+    request, keys = _policy_request(server, tmp_path, prefix, budget, mode)
+    created, status = post_json(server, "/api/v2/productions", request)
+    assert status == 201, created
+    return server, generator, calls, request, keys
+
+
+def _instruction_sha(repository, run_id: str, version: int) -> str:
+    execution = repository.get_narration_generation_execution(
+        f"{run_id}:narration-execution:{version}"
+    )
+    return sha256(execution.settings["instruction"].encode()).hexdigest()
+
+
+def test_legacy_requests_keep_the_v1_narrator_and_need_no_delivery_evidence(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    # Shaped like production-8: narration authorized in the frozen request, no new fields.
+    server, _generator, request = _render_ready_run(tmp_path, monkeypatch, "legacy-v1")
+    repository = server.repository
+    run_id = request["id"]
+    try:
+        run = repository.get_production_run(run_id)
+        assert "narrator" not in run.request and "delivery_policy" not in run.request
+        frozen = json.dumps(
+            server.production_service._validate_request(request),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+        assert run.request_digest == sha256(frozen.encode()).hexdigest()
+        again = server.production_service.start(request)
+        assert again["request_digest"] == run.request_digest
+        assert _instruction_sha(repository, run_id, 1) == V1_INSTRUCTION_SHA
+        [attempt] = repository.list_production_evidence(run_id, "narration")
+        assert attempt.payload["narrator_profile_id"] == "similarstoic-daniel-v1"
+        for kind in ("narration_delivery", "narration_selection"):
+            assert repository.list_production_evidence(run_id, kind) == []
+        status_payload = server.production_service.status(run_id)
+        assert status_payload["narration_selection"] is None
+        assert status_payload["status"] == "qa_review_pending"
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize(
+    ("mutate", "match"),
+    [
+        (lambda r: r["narrator"].update(profile_id="similarstoic-daniel-v9"), "Unknown narrator"),
+        (lambda r: r["narrator"].update(profile_sha256="0" * 64), "profile_sha256"),
+        (lambda r: r["narrator"].update(extra="x"), "exactly {profile_id"),
+        (lambda r: r.pop("narrator"), "must freeze a narrator profile"),
+        (lambda r: r["delivery_policy"].update(mode="enforce"), "not enabled"),
+        (lambda r: r["delivery_policy"].update(mode="loud"), "Unknown delivery policy mode"),
+        (lambda r: r["delivery_policy"].update(policy_id="other"), "Unknown delivery policy"),
+        (lambda r: r["forecast"].update(narration_calls=4, verification_calls=4), "between 1"),
+        (lambda r: r["forecast"].update(verification_calls=2), "must equal narration_calls"),
+        (
+            lambda r: (r.pop("delivery_policy"), r["forecast"].update(narration_calls=3)),
+            "narration_calls must equal 1",
+        ),
+    ],
+)
+def test_profile_and_policy_requests_are_validated_before_any_call(tmp_path, mutate, match) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _policy_request(server, tmp_path, "policy-validate", 3)
+        mutate(request)
+        failed, status = _post_error(server, "/api/v2/productions", request)
+        assert status == 400 and match in failed["error"], failed
+        assert generator.inputs == []
+    finally:
+        server.server_close()
+
+
+def test_first_on_target_take_is_selected_immediately_with_the_v2_profile(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    seen = _scores(monkeypatch, [("passed", 401.0)])
+    server, _generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "prefer-first", 3, [1, 2, 3]
+    )
+    repository = server.repository
+    run_id = request["id"]
+    try:
+        assert repository.get_production_run(run_id).request["narrator"] == V2_PROFILE
+        reviewed, status = post_json(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
+        # One take, one completeness check; the delivery score reused that same transcription.
+        assert (len(calls), len(transcription.calls)) == (1, 1)
+        assert _instruction_sha(repository, run_id, 1) == V2_INSTRUCTION_SHA
+        [attempt] = repository.list_production_evidence(run_id, "narration")
+        assert attempt.payload["narrator_profile_id"] == "similarstoic-daniel-v2"
+        assert attempt.payload["narrator_profile_sha256"] == V2_PROFILE["profile_sha256"]
+        narration = repository.get_narration_asset(f"{run_id}-narration-1")
+        [verification] = repository.list_production_evidence(run_id, "narration_verification")
+        [delivery] = repository.list_production_evidence(run_id, "narration_delivery")
+        assert seen == [verification.payload["transcript_words"]]
+        assert delivery.id == f"{run_id}:narration_delivery:1"
+        assert delivery.narration_asset_id == narration.id
+        assert delivery.payload["wav_sha256"] == narration.content_digest
+        assert delivery.payload["completeness_evidence_id"] == verification.id
+        assert delivery.payload["policy"]["mode"] == "prefer"
+        assert delivery.payload["policy"]["target_ms"] == 358
+        assert delivery.payload["silence_detection"]["noise_db"] == -35
+        [selection] = repository.list_production_evidence(run_id, "narration_selection")
+        assert selection.payload["reason"] == "target_met"
+        assert selection.payload["target_met"] is True
+        assert selection.payload["wav_sha256"] == narration.content_digest
+        snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:1")
+        assert snapshot.narration_asset_id == narration.id
+    finally:
+        server.server_close()
+
+
+def test_best_of_budget_selects_an_earlier_take_and_it_alone_renders_and_retimes(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    # Take 1 is incomplete, take 2 scores 340, take 3 scores 320: take 2 is selected.
+    transcription.queue.extend(["Narration. Narration.", "Narration.", "Narration."])
+    _scores(monkeypatch, [("below_target", 340.0), ("below_target", 320.0)])
+    server, generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "best-of", 3, [1, 2, 3]
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        reviewed, status = post_json(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
+        assert (len(calls), len(transcription.calls)) == (3, 3)
+        outcomes = {
+            item.id: item.payload["outcome"]
+            for item in repository.list_production_evidence(run_id, "narration_verification")
+        }
+        assert outcomes == {
+            f"{run_id}:narration_verification:1": "failed",
+            f"{run_id}:narration_verification:2": "passed",
+            f"{run_id}:narration_verification:3": "passed",
+        }
+        # An incomplete take is never scored.
+        scored = {
+            item.id for item in repository.list_production_evidence(run_id, "narration_delivery")
+        }
+        assert scored == {f"{run_id}:narration_delivery:2", f"{run_id}:narration_delivery:3"}
+        [selection] = repository.list_production_evidence(run_id, "narration_selection")
+        take_2 = repository.get_narration_asset(f"{run_id}-narration-2")
+        assert selection.narration_asset_id == take_2.id
+        assert selection.payload["reason"] == "best_reliable_score_after_budget"
+        assert selection.payload["target_met"] is False
+        assert selection.payload["pacing_unusable"] is False
+        assert [c["score_ms"] for c in selection.payload["candidates"]] == [None, 340.0, 320.0]
+        assert selection.payload["automatic_calls_used"] == 3
+        snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:1")
+        assert snapshot.narration_asset_id == take_2.id
+        assert sum(item["duration_ms"] for item in snapshot.scene_inputs) == take_2.duration_ms
+        assert reviewed["production"]["current_narration"]["narration_asset_id"] == take_2.id
+        _forbid_providers(monkeypatch, generator)
+        # Retime binds the selected take: durations must sum to take 2, not the later take 3.
+        assert service._current_narration_asset(run_id).id == take_2.id
+        take_3 = repository.get_narration_asset(f"{run_id}-narration-3")
+        with pytest.raises(ProductionRequestError, match="sum exactly"):
+            service.retime(run_id, [1000, take_3.duration_ms - 1000], "founder", "Wrong take.")
+        first = take_2.duration_ms // 3
+        retimed = service.retime(
+            run_id, [first, take_2.duration_ms - first], "founder", "Align to take 2."
+        )
+        assert retimed["status"] == "qa_review_pending"
+        snapshot_2 = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:2")
+        assert snapshot_2.narration_asset_id == take_2.id
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize(
+    ("mode", "budget", "results", "reason", "takes", "unusable"),
+    [
+        (
+            "prefer",
+            2,
+            [("unreliable", None), ("unreliable", None)],
+            "earliest_complete_no_reliable_score",
+            2,
+            True,
+        ),
+        ("record_only", 3, [("below_target", 200.0)], "first_complete_take", 1, False),
+    ],
+)
+def test_unscorable_and_record_only_takes_select_the_earliest_complete_take(
+    tmp_path, monkeypatch, transcription, mode, budget, results, reason, takes, unusable
+) -> None:
+    _scores(monkeypatch, list(results))
+    server, _generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, f"earliest-{mode}", budget, [1, 2, 3], mode
+    )
+    repository = server.repository
+    run_id = request["id"]
+    try:
+        reviewed, status = post_json(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
+        assert (len(calls), len(transcription.calls)) == (takes, takes)
+        [selection] = repository.list_production_evidence(run_id, "narration_selection")
+        assert selection.narration_asset_id == f"{run_id}-narration-1"
+        assert selection.payload["reason"] == reason
+        assert selection.payload["target_met"] is False
+        assert selection.payload["pacing_unusable"] is unusable
+        # Pacing alone never fails a run in prefer or record_only mode.
+        assert reviewed["production"]["narration_selection"]["reason"] == reason
+    finally:
+        server.server_close()
+
+
+def test_no_complete_take_fails_closed_after_exactly_the_frozen_budget(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    transcription.queue.extend(["Narration. Narration.", "Narration. Narration."])
+    _scores(monkeypatch, [])
+    server, generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "exhausted", 2, [1, 2]
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        failed, status = _post_error(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 422 and failed["stage"] == "narration_selection"
+        latest = repository.latest_production_run_event(run_id)
+        assert latest.error_code == "narration_budget_exhausted"
+        assert (len(calls), len(transcription.calls)) == (2, 2)
+        for kind in ("narration_selection", "narration_delivery", "snapshot", "render"):
+            assert repository.list_production_evidence(run_id, kind) == []
+        # Resuming spends nothing and admits nothing.
+        with pytest.raises(ProductionLifecycleError, match="automatic narration attempts"):
+            service.resume(run_id)
+        assert (len(calls), len(transcription.calls)) == (2, 2)
+        assert repository.list_production_evidence(run_id, "snapshot") == []
+        # The explicit founder-authorized retake remains the bounded recovery.
+        retake_calls: list[str] = []
+        retake_wav = _sine_seconds(media_runtime_or_skip(), tmp_path, 2, "retake.wav")
+        _take_sequence(monkeypatch, [retake_wav], retake_calls)
+        _scores(monkeypatch, [("below_target", 100.0)])
+        _authorize_retake(server, run_id, version=2)
+        retaken = service.retake_narration(run_id)
+        assert retaken["status"] == "qa_review_pending" and len(retake_calls) == 1
+        [selection] = repository.list_production_evidence(run_id, "narration_selection")
+        assert selection.payload["reason"] == "founder_authorized_retake"
+        assert selection.narration_asset_id == f"{run_id}-narration-3"
+        assert service._automatic_narration_calls(run_id) == 2
+        assert len(generator.inputs) == 2
+    finally:
+        server.server_close()
+
+
+def test_resume_reuses_a_persisted_selection_without_calls_or_duplicates(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    _scores(monkeypatch, [("passed", 420.0)])
+    server, _generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "resume-selection", 3, [1, 2, 3]
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        original = ProductionLifecycleService._ensure_snapshot
+
+        def crash(*_args, **_kwargs):
+            raise RuntimeError("simulated crash before the snapshot")
+
+        monkeypatch.setattr(ProductionLifecycleService, "_ensure_snapshot", crash)
+        _failed, status = _post_error(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 422
+        assert len(repository.list_production_evidence(run_id, "narration_selection")) == 1
+        monkeypatch.setattr(ProductionLifecycleService, "_ensure_snapshot", original)
+        resumed = service.resume(run_id)
+        assert resumed["status"] == "qa_review_pending"
+        assert (len(calls), len(transcription.calls)) == (1, 1)
+        assert len(repository.list_production_evidence(run_id, "narration_selection")) == 1
+        assert len(repository.list_production_evidence(run_id, "narration_delivery")) == 1
+        snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:1")
+        assert snapshot.narration_asset_id == f"{run_id}-narration-1"
+    finally:
+        server.server_close()
+
+
+def test_policy_retakes_reselect_when_complete_and_never_refill_the_budget(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    _scores(monkeypatch, [("passed", 400.0), ("below_target", 150.0)])
+    server, generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "policy-retake", 1, [1, 2, 3]
+    )
+    repository, service = server.repository, server.production_service
+    run_id = request["id"]
+    try:
+        _reviewed, status = post_json(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 200 and len(calls) == 1
+        # A passing retake becomes the new selection even though its pacing is below target.
+        _authorize_retake(server, run_id, version=1)
+        retaken = service.retake_narration(run_id)
+        assert retaken["status"] == "qa_review_pending" and len(calls) == 2
+        selections = sorted(
+            repository.list_production_evidence(run_id, "narration_selection"),
+            key=lambda item: item.id,
+        )
+        reasons = [item.payload["reason"] for item in selections]
+        assert reasons == ["target_met", "founder_authorized_retake"]
+        assert selections[1].narration_asset_id == f"{run_id}-narration-2"
+        assert selections[1].payload["target_met"] is False
+        [delivery_2] = [
+            item
+            for item in repository.list_production_evidence(run_id, "narration_delivery")
+            if item.narration_asset_id == f"{run_id}-narration-2"
+        ]
+        assert delivery_2.payload["outcome"] == "below_target"
+        current = service._current_evidence(run_id, "snapshot")
+        snapshot = repository.get_final_media_input_snapshot(current.final_media_input_snapshot_id)
+        assert snapshot.narration_asset_id == f"{run_id}-narration-2"
+        assert retaken["current_narration"]["narration_asset_id"] == f"{run_id}-narration-2"
+        # One authorization, one take; the automatic budget is neither consumed nor refilled.
+        with pytest.raises(ProductionRequestError, match="unconsumed"):
+            service.retake_narration(run_id)
+        assert service._automatic_narration_calls(run_id) == 1
+        # A retake that fails completeness leaves the current selection unchanged.
+        transcription.queue.append("Narration. Narration.")
+        _authorize_retake(server, run_id, version=2)
+        with pytest.raises(ProductionLifecycleError, match="failed completeness"):
+            service.retake_narration(run_id)
+        assert len(calls) == 3
+        assert service._current_selection(run_id).id == selections[1].id
+        assert repository.get_narration_asset(f"{run_id}-narration-3")
+        assert len(repository.list_production_evidence(run_id, "narration_selection")) == 2
+        assert len(generator.inputs) == 2
+    finally:
+        server.server_close()
+
+
+def test_real_scoring_of_a_one_sentence_script_is_not_applicable_and_selects(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    server, _generator, calls, request, keys = _policy_run(
+        tmp_path, monkeypatch, "real-score", 3, [1, 2, 3]
+    )
+    repository = server.repository
+    run_id = request["id"]
+    try:
+        _reviewed, status = post_json(
+            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+        )
+        assert status == 200 and len(calls) == 1
+        [delivery] = repository.list_production_evidence(run_id, "narration_delivery")
+        assert delivery.payload["outcome"] == "not_applicable"
+        assert delivery.payload["classifier_version"] == "sentence-pause-classifier-v1"
+        [selection] = repository.list_production_evidence(run_id, "narration_selection")
+        assert selection.payload["reason"] == "delivery_not_applicable"
+        assert selection.payload["target_met"] is None
+    finally:
+        server.server_close()

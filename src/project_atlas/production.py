@@ -11,10 +11,14 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from project_atlas import speech_timing
+from project_atlas import narration_delivery, speech_timing
 from project_atlas.generation import GenerationService
 from project_atlas.media import FfmpegRuntime, MediaService
-from project_atlas.narration import SIMILARSTOIC_PRONUNCIATION_ALIASES
+from project_atlas.narration import (
+    LEGACY_NARRATOR_PROFILE_ID,
+    SIMILARSTOIC_PRONUNCIATION_ALIASES,
+    narrator_profile,
+)
 from project_atlas.narration_verification import (
     NORMALIZATION_VERSION,
     VERIFICATION_METHOD,
@@ -52,6 +56,8 @@ FULL_FRAME_ASPECT_TOLERANCE = 0.005
 FULL_FRAME_SCALE_FILTER = (
     "scale={width}:{height}:flags=lanczos+accurate_rnd+full_chroma_int+bitexact"
 )
+# The largest automatic narration-attempt budget a delivery-policy request may freeze.
+MAX_NARRATION_ATTEMPTS = 3
 
 
 class ProductionLifecycleError(RuntimeError):
@@ -65,6 +71,12 @@ class ProductionLifecycleError(RuntimeError):
 
 class ProductionRequestError(ValueError):
     """The external command does not describe one complete canonical production."""
+
+
+class NarrationBudgetExhaustedError(ProductionRequestError):
+    """Every frozen automatic narration attempt was used without a complete take."""
+
+    error_code = "narration_budget_exhausted"
 
 
 def full_frame_aspect_error(width: int, height: int, target_size: tuple[int, int]) -> str | None:
@@ -371,7 +383,10 @@ class ProductionLifecycleService:
                 and latest.stage == "qa"
                 and latest.error_code == "whole_video_qa_failed"
             )
-            or (latest.status == "failed" and latest.stage == "narration_verification")
+            or (
+                latest.status == "failed"
+                and latest.stage in {"narration_verification", "narration_selection"}
+            )
         )
         if not eligible:
             raise ProductionRequestError(
@@ -426,6 +441,19 @@ class ProductionLifecycleService:
             states = self._ensure_scene_states(run)
             attempt = self._generate_narration_attempt(run, version, authorization.id)
             self._admit_narration(run, attempt)
+            if run.request.get("delivery_policy"):
+                # Scored from the same transcription; the score never blocks a founder retake.
+                delivery = self._ensure_delivery(
+                    run, attempt, self._narration_verification(run_id, attempt)
+                )
+                self._select_narration(
+                    run,
+                    attempt,
+                    "founder_authorized_retake",
+                    [self._candidate(attempt, "passed", delivery)],
+                    target_met=delivery.payload["outcome"] == "passed",
+                    pacing_unusable=delivery.payload["outcome"] == "unreliable",
+                )
             narration = self.repository.get_narration_asset(attempt.narration_asset_id)
             snapshot = self._ensure_snapshot(run, states, narration)
             artifact = self._ensure_render(run, snapshot)
@@ -465,8 +493,30 @@ class ProductionLifecycleService:
         )
 
     def _current_narration_attempt(self, run_id: str) -> Any | None:
+        """The selected take once a delivery-policy run has selected one, else the latest take."""
+
+        selection = self._current_selection(run_id)
+        if selection is not None:
+            return self._narration_attempt_for_asset(run_id, selection.narration_asset_id)
         attempts = self._narration_attempts(run_id)
         return attempts[-1] if attempts else None
+
+    def _current_narration_asset(self, run_id: str) -> Any:
+        attempt = self._current_narration_attempt(run_id)
+        if attempt is None:
+            raise ProductionRequestError("Production has no narration evidence record.")
+        return self.repository.get_narration_asset(attempt.narration_asset_id)
+
+    def _current_selection(self, run_id: str) -> Any | None:
+        """The newest narration_selection; earlier selections remain immutable history."""
+
+        selections = self.repository.list_production_evidence(run_id, "narration_selection")
+        return max(selections, key=self._evidence_version) if selections else None
+
+    @staticmethod
+    def _narrator_profile_id(run: Any) -> str:
+        # A request that froze no narrator keeps the historical narrator it was frozen under.
+        return (run.request.get("narrator") or {}).get("profile_id", LEGACY_NARRATOR_PROFILE_ID)
 
     def _narration_attempt_for_asset(self, run_id: str, asset_id: str) -> Any:
         for attempt in self._narration_attempts(run_id):
@@ -511,17 +561,21 @@ class ProductionLifecycleService:
         """Make exactly one provider narration call and record it as one versioned take."""
 
         plan = self.repository.get_visual_plan(run.visual_plan_id)
+        profile = narrator_profile(self._narrator_profile_id(run))
         result = self.media_service.generate_brand_narration(
             f"{run.id}:narration-execution:{version}",
             f"{run.id}-narration-{version}",
             plan.script_id,
             brand_key="similarstoic",
             execution_authorized=True,
+            narrator_profile_id=profile.profile_id,
         )
         payload = {
             "outcome": result.execution.outcome,
             "brand_key": "similarstoic",
             "narration_version": version,
+            "narrator_profile_id": profile.profile_id,
+            "narrator_profile_sha256": profile.settings_sha256,
         }
         if retake_authorization_id is not None:
             payload["retake_authorization_id"] = retake_authorization_id
@@ -541,6 +595,10 @@ class ProductionLifecycleService:
         """A take's single check is planned, retake-covered or separately authorized."""
 
         if attempt.payload.get("retake_authorization_id"):
+            return True
+        # A delivery-policy request froze one check per automatic take within its budget, and
+        # automatic takes are never generated beyond that budget.
+        if run.request.get("delivery_policy"):
             return True
         if (
             self._evidence_version(attempt) == 1
@@ -638,6 +696,17 @@ class ProductionLifecycleService:
                 "The current narration has no passing completeness verification; it cannot "
                 "feed a snapshot, render or retime."
             )
+        if self.repository.get_production_run(run_id).request.get("delivery_policy"):
+            selection = self._current_selection(run_id)
+            if (
+                selection is None
+                or selection.narration_asset_id != narration.id
+                or self._delivery_evidence(run_id, attempt) is None
+            ):
+                raise ProductionRequestError(
+                    "The narration is not the current selected take with delivery evidence; it "
+                    "cannot feed a snapshot, render or retime."
+                )
 
     def resume(self, run_id: str) -> dict[str, Any]:
         run = self.repository.get_production_run(run_id)
@@ -799,9 +868,7 @@ class ProductionLifecycleService:
         run = self.repository.get_production_run(run_id)
         if not self.repository.list_production_evidence(run_id, "narration"):
             raise ProductionRequestError("Production has no narration to align scene timing to.")
-        narration = self.repository.get_narration_asset(
-            self._current_evidence(run_id, "narration").narration_asset_id
-        )
+        narration = self._current_narration_asset(run_id)
         # Timing is always recomputed from the current verified take, never a previous one.
         self._require_verified_narration(run_id, narration)
         plan = self.repository.get_visual_plan(run.visual_plan_id)
@@ -877,9 +944,7 @@ class ProductionLifecycleService:
             for value in durations_ms
         ):
             raise ProductionRequestError("Retime durations must be positive integer milliseconds.")
-        narration = self.repository.get_narration_asset(
-            self._current_evidence(run_id, "narration").narration_asset_id
-        )
+        narration = self._current_narration_asset(run_id)
         self._require_verified_narration(run_id, narration)
         if sum(durations_ms) != narration.duration_ms:
             raise ProductionRequestError(
@@ -1006,6 +1071,7 @@ class ProductionLifecycleService:
         current = max(renders, key=self._evidence_version) if renders else None
         narration = self._current_narration_attempt(run_id)
         verification = self._narration_verification(run_id, narration) if narration else None
+        selection = self._current_selection(run_id)
         return {
             "id": run.id,
             "visual_plan_id": run.visual_plan_id,
@@ -1036,6 +1102,17 @@ class ProductionLifecycleService:
                     "final_media_artifact_id": current.final_media_artifact_id,
                 }
                 if current
+                else None
+            ),
+            "narration_selection": (
+                {
+                    "id": selection.id,
+                    "narration_asset_id": selection.narration_asset_id,
+                    "reason": selection.payload["reason"],
+                    "target_met": selection.payload["target_met"],
+                    "pacing_unusable": selection.payload["pacing_unusable"],
+                }
+                if selection
                 else None
             ),
             "created_at": run.created_at,
@@ -1240,6 +1317,8 @@ class ProductionLifecycleService:
         stops the run until a separately authorized retake produces the next version.
         """
 
+        if run.request.get("delivery_policy"):
+            return self._ensure_selected_narration(run)
         attempt = self._current_narration_attempt(run.id)
         if attempt is None:
             self.repository.append_production_run_event(run.id, "narrating", "narration", {})
@@ -1268,6 +1347,245 @@ class ProductionLifecycleService:
             )
         self._admit_narration(run, attempt)
         return self.repository.get_narration_asset(attempt.narration_asset_id)
+
+    def _ensure_selected_narration(self, run: Any) -> Any:
+        """Select one complete take within the frozen automatic attempt budget.
+
+        Each take gets exactly one completeness check and one delivery score computed from that
+        check's own transcription. A persisted selection is reused unchanged. Provider or
+        transcription failures stop the run; only take content (incomplete, below target or
+        unscorable) moves on to the next take, and never beyond the frozen budget.
+        """
+
+        selection = self._current_selection(run.id)
+        if selection is not None:
+            return self.repository.get_narration_asset(selection.narration_asset_id)
+        if not self._narration_attempts(run.id):
+            self.repository.append_production_run_event(run.id, "narrating", "narration", {})
+        if not self._narration_authorized(run):
+            raise ProductionRequestError(
+                "Narration is not authorized by this production request; no provider call made."
+            )
+        mode = run.request["delivery_policy"]["mode"]
+        budget = run.request["forecast"]["narration_calls"]
+        while True:
+            candidates = []
+            for attempt in self._narration_attempts(run.id):
+                if attempt.payload.get("retake_authorization_id"):
+                    continue
+                candidate = self._evaluate_automatic_take(run, attempt)
+                candidates.append(candidate)
+                if candidate["completeness"] != "passed":
+                    continue
+                delivery = candidate["delivery_outcome"]
+                if mode == "record_only":
+                    return self._finish_selection(
+                        run, attempt, "first_complete_take", candidates, delivery
+                    )
+                if delivery in {"passed", "not_applicable"}:
+                    reason = "target_met" if delivery == "passed" else "delivery_not_applicable"
+                    return self._finish_selection(run, attempt, reason, candidates, delivery)
+            used = self._automatic_narration_calls(run.id)
+            if used >= budget:
+                return self._select_after_budget(run, candidates, budget)
+            self.repository.append_production_run_event(
+                run.id,
+                "narrating",
+                "narration",
+                {"automatic_attempt": used + 1, "attempt_budget": budget},
+            )
+            self._generate_narration_attempt(run, self._next_narration_version(run.id))
+
+    def _evaluate_automatic_take(self, run: Any, attempt: Any) -> dict[str, Any]:
+        """Verify (once) and score (once) one automatic take; infrastructure failures stop."""
+
+        version = self._evidence_version(attempt)
+        if attempt.narration_asset_id is None:
+            raise ProductionRequestError(
+                f"Narration take {version} produced no audio; no automatic take follows a "
+                "provider failure. A separately authorized narration retake is required."
+            )
+        verification = self._verify_narration_attempt(run, attempt)
+        outcome = verification.payload.get("outcome")
+        if outcome == "error":
+            raise ProductionRequestError(
+                f"Narration take {version} could not be verified "
+                f"({verification.payload.get('error', 'verification error')}); no automatic take "
+                "follows a transcription failure. A separately authorized retake is required."
+            )
+        delivery = (
+            self._ensure_delivery(run, attempt, verification) if outcome == "passed" else None
+        )
+        return self._candidate(attempt, outcome, delivery)
+
+    def _candidate(self, attempt: Any, completeness: str, delivery: Any) -> dict[str, Any]:
+        return {
+            "narration_version": self._evidence_version(attempt),
+            "narration_asset_id": attempt.narration_asset_id,
+            "completeness": completeness,
+            "delivery_outcome": delivery.payload["outcome"] if delivery else None,
+            "score_ms": delivery.payload["score_ms"] if delivery else None,
+        }
+
+    def _finish_selection(
+        self, run: Any, attempt: Any, reason: str, candidates: list, delivery: str | None
+    ) -> Any:
+        self._select_narration(
+            run,
+            attempt,
+            reason,
+            candidates,
+            target_met=None if delivery == "not_applicable" else delivery == "passed",
+            pacing_unusable=delivery == "unreliable",
+        )
+        return self.repository.get_narration_asset(attempt.narration_asset_id)
+
+    def _select_after_budget(self, run: Any, candidates: list, budget: int) -> Any:
+        """Budget used: the best reliably scored complete take, else the earliest complete one."""
+
+        complete = [item for item in candidates if item["completeness"] == "passed"]
+        if not complete:
+            self.repository.append_production_run_event(
+                run.id, "narrating", "narration_selection", {"attempt_budget": budget}
+            )
+            raise NarrationBudgetExhaustedError(
+                f"All {budget} automatic narration attempts were used without a complete take; "
+                "no snapshot or render. A founder-authorized narration retake is the explicit "
+                "recovery."
+            )
+        scored = [item for item in complete if item["score_ms"] is not None]
+        if scored:
+            best = max(scored, key=lambda item: (item["score_ms"], -item["narration_version"]))
+            reason, unusable = "best_reliable_score_after_budget", False
+        else:
+            best = complete[0]
+            reason, unusable = "earliest_complete_no_reliable_score", True
+        attempt = self._narration_attempt_for_asset(run.id, best["narration_asset_id"])
+        self._select_narration(
+            run, attempt, reason, candidates, target_met=False, pacing_unusable=unusable
+        )
+        return self.repository.get_narration_asset(attempt.narration_asset_id)
+
+    def _automatic_narration_calls(self, run_id: str) -> int:
+        """Provider calls already spent on automatic takes, counting any orphaned execution."""
+
+        attempts = {self._evidence_version(item): item for item in self._narration_attempts(run_id)}
+        used = 0
+        for version in range(1, self._next_narration_version(run_id)):
+            attempt = attempts.get(version)
+            if attempt is not None:
+                used += not attempt.payload.get("retake_authorization_id")
+                continue
+            try:
+                self.repository.get_narration_generation_execution(
+                    f"{run_id}:narration-execution:{version}"
+                )
+            except KeyError:
+                continue
+            used += 1
+        return used
+
+    def _delivery_evidence(self, run_id: str, attempt: Any) -> Any | None:
+        identity = f"{run_id}:narration_delivery:{self._evidence_version(attempt)}"
+        for item in self.repository.list_production_evidence(run_id, "narration_delivery"):
+            if item.id == identity and item.narration_asset_id == attempt.narration_asset_id:
+                return item
+        return None
+
+    def _ensure_delivery(self, run: Any, attempt: Any, verification: Any) -> Any:
+        """Score one complete take from its own completeness transcription; no provider call."""
+
+        existing = self._delivery_evidence(run.id, attempt)
+        if existing is not None:
+            return existing
+        version = self._evidence_version(attempt)
+        narration = self.repository.get_narration_asset(attempt.narration_asset_id)
+        path = self.media_service.storage.path(narration.storage_path)
+        if sha256(path.read_bytes()).hexdigest() != narration.content_digest:
+            raise ProductionRequestError("Narration bytes differ from the persisted digest.")
+        if verification.payload.get("wav_sha256") != narration.content_digest:
+            raise ProductionRequestError("The completeness check was made on different audio.")
+        self.repository.append_production_run_event(
+            run.id, "narrating", "narration_delivery", {"narration_version": version}
+        )
+        silences = [
+            speech_timing.Silence(start, end)
+            for start, end in self.media_service.runtime.detect_silences(path)
+        ]
+        _onset, _end, internal = speech_timing._speech_bounds(silences, narration.duration_ms)
+        script = self.repository.get_script(narration.script_id)
+        policy = run.request["delivery_policy"]
+        report = narration_delivery.assess_delivery(
+            script.narration_text,
+            list(verification.payload.get("transcript_words") or []),
+            [(pause.start_ms, pause.end_ms) for pause in internal],
+        )
+        return self.repository.create_production_evidence(
+            f"{run.id}:narration_delivery:{version}",
+            run.id,
+            "narration_delivery",
+            {
+                "narration_version": version,
+                "narration_asset_id": narration.id,
+                "wav_sha256": narration.content_digest,
+                "completeness_evidence_id": verification.id,
+                "transcript_source": "completeness verification response (no extra transcription)",
+                "script_id": script.id,
+                "script_sha256": sha256(script.narration_text.encode()).hexdigest(),
+                "silence_detection": dict(self.media_service.runtime.SILENCE_DETECTION),
+                "policy": self._policy_record(policy),
+                **report,
+            },
+            narration_generation_execution_id=attempt.narration_generation_execution_id,
+            narration_asset_id=narration.id,
+        )
+
+    @staticmethod
+    def _policy_record(policy: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "policy_id": policy["policy_id"],
+            "policy_version": narration_delivery.POLICY_VERSION,
+            "mode": policy["mode"],
+            "score_rule": narration_delivery.SCORE_RULE,
+            "target_ms": narration_delivery.PROVISIONAL_TARGET_MS,
+            "target_evidence": narration_delivery.TARGET_EVIDENCE,
+        }
+
+    def _select_narration(
+        self,
+        run: Any,
+        attempt: Any,
+        reason: str,
+        candidates: list[dict[str, Any]],
+        *,
+        target_met: bool | None,
+        pacing_unusable: bool,
+    ) -> Any:
+        """Append one versioned selection; the newest selection is the current narration."""
+
+        selections = self.repository.list_production_evidence(run.id, "narration_selection")
+        version = 1 + max((self._evidence_version(item) for item in selections), default=0)
+        narration = self.repository.get_narration_asset(attempt.narration_asset_id)
+        return self.repository.create_production_evidence(
+            f"{run.id}:narration_selection:{version}",
+            run.id,
+            "narration_selection",
+            {
+                "selection_version": version,
+                "narration_asset_id": narration.id,
+                "narration_version": self._evidence_version(attempt),
+                "wav_sha256": narration.content_digest,
+                "reason": reason,
+                "target_met": target_met,
+                "pacing_unusable": pacing_unusable,
+                "candidates": candidates,
+                "attempt_budget": run.request["forecast"]["narration_calls"],
+                "automatic_calls_used": self._automatic_narration_calls(run.id),
+                "policy": self._policy_record(run.request["delivery_policy"]),
+            },
+            narration_generation_execution_id=attempt.narration_generation_execution_id,
+            narration_asset_id=narration.id,
+        )
 
     def _ensure_snapshot(self, run: Any, states: dict[str, str], narration: Any) -> Any:
         """Return or create the snapshot bound to exactly this verified narration take."""
@@ -1523,6 +1841,41 @@ class ProductionLifecycleService:
             )
         return Operation(action, entity_key, operation_value)
 
+    @staticmethod
+    def _validate_narrator(value: Any) -> None:
+        """A frozen narrator names one registered profile by id and settings digest."""
+
+        if not isinstance(value, dict) or set(value) != {"profile_id", "profile_sha256"}:
+            raise ProductionRequestError(
+                "Production narrator must be exactly {profile_id, profile_sha256}."
+            )
+        if not all(isinstance(item, str) for item in value.values()):
+            raise ProductionRequestError("Production narrator fields must be text.")
+        try:
+            profile = narrator_profile(value["profile_id"])
+        except ValueError as error:
+            raise ProductionRequestError(str(error)) from None
+        if value["profile_sha256"] != profile.settings_sha256:
+            raise ProductionRequestError(
+                "Production narrator profile_sha256 does not match the registered profile."
+            )
+
+    @staticmethod
+    def _validate_delivery_policy(value: Any) -> None:
+        if not isinstance(value, dict) or set(value) != {"policy_id", "mode"}:
+            raise ProductionRequestError(
+                "Production delivery_policy must be exactly {policy_id, mode}."
+            )
+        if value["policy_id"] != narration_delivery.POLICY_ID:
+            raise ProductionRequestError(f"Unknown delivery policy {value['policy_id']!r}.")
+        if value["mode"] not in narration_delivery.MODES:
+            raise ProductionRequestError(f"Unknown delivery policy mode {value['mode']!r}.")
+        if value["mode"] not in narration_delivery.IMPLEMENTED_MODES:
+            raise ProductionRequestError(
+                f"Delivery policy mode {value['mode']!r} is not enabled; use record_only or "
+                "prefer."
+            )
+
     def _validate_request(self, request: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(request, dict):
             raise ProductionRequestError("Production request must be an object.")
@@ -1536,6 +1889,8 @@ class ProductionLifecycleService:
             "narration_authorized",
             "citations",
             "adopt_acquisitions_from",
+            "narrator",
+            "delivery_policy",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -1551,18 +1906,44 @@ class ProductionLifecycleService:
         image_calls = forecast.get("image_calls")
         if not isinstance(image_calls, int) or isinstance(image_calls, bool):
             raise ProductionRequestError("Production forecast image_calls must be an integer.")
-        if forecast.get("narration_calls") != 1 or isinstance(
-            forecast.get("narration_calls"), bool
-        ):
-            raise ProductionRequestError("Production forecast narration_calls must equal 1.")
-        # Optional for backward compatibility: a request that plans the standard narration
-        # completeness check freezes exactly one verification (transcription) call.
-        if "verification_calls" in forecast and (
-            forecast["verification_calls"] != 1 or isinstance(forecast["verification_calls"], bool)
-        ):
-            raise ProductionRequestError(
-                "Production forecast verification_calls must equal 1 when present."
-            )
+        narration_calls = forecast.get("narration_calls")
+        if "narrator" in request:
+            self._validate_narrator(request["narrator"])
+        if "delivery_policy" in request:
+            # A delivery-policy request freezes a bounded budget of automatic takes, each with
+            # exactly one completeness (transcription) check.
+            self._validate_delivery_policy(request["delivery_policy"])
+            if "narrator" not in request:
+                raise ProductionRequestError(
+                    "A delivery_policy request must freeze a narrator profile."
+                )
+            if (
+                not isinstance(narration_calls, int)
+                or isinstance(narration_calls, bool)
+                or not 1 <= narration_calls <= MAX_NARRATION_ATTEMPTS
+            ):
+                raise ProductionRequestError(
+                    "Production forecast narration_calls must be between 1 and "
+                    f"{MAX_NARRATION_ATTEMPTS} with a delivery_policy."
+                )
+            verification_calls = forecast.get("verification_calls")
+            if verification_calls != narration_calls or isinstance(verification_calls, bool):
+                raise ProductionRequestError(
+                    "Production forecast verification_calls must equal narration_calls with a "
+                    "delivery_policy."
+                )
+        else:
+            if narration_calls != 1 or isinstance(narration_calls, bool):
+                raise ProductionRequestError("Production forecast narration_calls must equal 1.")
+            # Optional for backward compatibility: a request that plans the standard narration
+            # completeness check freezes exactly one verification (transcription) call.
+            if "verification_calls" in forecast and (
+                forecast["verification_calls"] != 1
+                or isinstance(forecast["verification_calls"], bool)
+            ):
+                raise ProductionRequestError(
+                    "Production forecast verification_calls must equal 1 when present."
+                )
         adopting = "adopt_acquisitions_from" in request
         if adopting:
             source_id = request["adopt_acquisitions_from"]
@@ -1574,9 +1955,10 @@ class ProductionLifecycleService:
                 raise ProductionRequestError(
                     "An adoption successor never generates images: forecast.image_calls must be 0."
                 )
-            if forecast.get("verification_calls") != 1:
+            if forecast.get("verification_calls") != narration_calls:
                 raise ProductionRequestError(
-                    "An adoption successor must plan forecast.verification_calls = 1."
+                    "An adoption successor must plan forecast.verification_calls = "
+                    f"{narration_calls}."
                 )
         authority = request.get("authority")
         authority_fields = {
@@ -2212,7 +2594,7 @@ class ProductionLifecycleService:
             "failed",
             stage,
             {},
-            error_code=type(error).__name__,
+            error_code=getattr(error, "error_code", type(error).__name__),
             error_message=str(error),
         )
         raise ProductionLifecycleError(run_id, stage, str(error)) from error

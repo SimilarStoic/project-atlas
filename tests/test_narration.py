@@ -1,6 +1,7 @@
 """Offline Daniel configuration and additive migration proof; no live provider access."""
 
 import base64
+import dataclasses
 import io
 import json
 import sqlite3
@@ -18,10 +19,17 @@ from project_atlas.media import (
     NarrationSynthesisError,
 )
 from project_atlas.narration import (
+    CURRENT_NARRATOR_PROFILE_ID,
+    LEGACY_NARRATOR_PROFILE_ID,
+    NARRATOR_PROFILES,
+    SIMILARSTOIC_INSTRUCTION,
     SIMILARSTOIC_INSTRUCTION_SHA256,
+    SIMILARSTOIC_INSTRUCTION_V2,
     SIMILARSTOIC_PRONUNCIATION_ALIASES,
     apply_pronunciation_aliases,
+    narrator_profile,
     resolve_narrator,
+    settings_sha256,
 )
 from project_atlas.persistence import MIGRATIONS, AtlasRepository
 
@@ -251,4 +259,90 @@ def test_brand_service_persists_inworld_without_changing_script(tmp_path, monkey
     assert repo.get_script(script.id) == script
     assert calls == [script.narration_text]
     assert repo.connection.execute("PRAGMA foreign_key_check").fetchall() == []
+    repo.close()
+
+
+# --- Versioned narrator profiles ---------------------------------------------------------------
+
+V2_ADDITION = (
+    "Keep the delivery natural and conversational. Give each complete sentence a clear ending "
+    "and a brief natural beat before beginning the next sentence. Do not rush sentence openings. "
+    "Keep declarative sentence endings settled rather than using exaggerated rising or falling "
+    "intonation."
+)
+
+
+def test_profiles_pin_the_historical_and_the_calibrated_daniel_exactly():
+    v1, v2 = narrator_profile("similarstoic-daniel-v1"), narrator_profile("similarstoic-daniel-v2")
+    assert v1.profile_id == LEGACY_NARRATOR_PROFILE_ID
+    assert v2.profile_id == CURRENT_NARRATOR_PROFILE_ID
+    assert v1.instruction == SIMILARSTOIC_INSTRUCTION
+    assert sha256(v1.instruction.encode()).hexdigest() == (
+        "4334ac0e0cb2e5c0870a8ef7f0b1d5f40bf0afc8381b108d7916e7d1e6f3b5cb"
+    )
+    # The exact instruction of founder-preferred calibration take I2, never reworded.
+    assert v2.instruction == SIMILARSTOIC_INSTRUCTION + " " + V2_ADDITION
+    assert sha256(v2.instruction.encode()).hexdigest() == (
+        "abd56573e2c068f147b84403c3322f42b16733a7e9d2a5f97643298256bff4cb"
+    )
+    assert (v1.settings_sha256, v2.settings_sha256) == (
+        "9c8e560b2a761df11b107db96ce92b989137cb6b55117f7465dcbe4361750f2e",
+        "8e06b555cc23e8b653dae76cf95b04f74e43e0ac2282f7be900775f286d27c24",
+    )
+    s1 = resolve_narrator("similarstoic").settings
+    s2 = resolve_narrator("similarstoic", profile_id="similarstoic-daniel-v2").settings
+    assert settings_sha256(s1) == v1.settings_sha256 and settings_sha256(s2) == v2.settings_sha256
+    # Only the instruction differs: model, voice, BALANCED, rate 1.0, audio and aliases are kept.
+    assert {key for key in s1 if s1[key] != s2[key]} == {"instruction"} and set(s1) == set(s2)
+    assert s2["deliveryMode"] == "BALANCED" and s2["audioConfig"]["speakingRate"] == 1.0
+
+
+def test_unknown_or_tampered_profiles_never_resolve(monkeypatch):
+    with pytest.raises(ValueError, match="Unknown narrator profile"):
+        resolve_narrator("similarstoic", profile_id="similarstoic-daniel-v9")
+    tampered = dataclasses.replace(
+        NARRATOR_PROFILES["similarstoic-daniel-v2"], instruction="Read it like an announcer."
+    )
+    monkeypatch.setitem(NARRATOR_PROFILES, "similarstoic-daniel-v2", tampered)
+    with pytest.raises(ValueError, match="instruction hash mismatch"):
+        narrator_profile("similarstoic-daniel-v2")
+
+
+def test_brand_service_synthesizes_with_the_frozen_profile(tmp_path, monkeypatch):
+    repo = AtlasRepository(tmp_path / "profile.db")
+    script = repo.get_script("script-isa-deadline-video-v1")
+    used = []
+
+    def synthesize(engine, text):
+        used.append(engine.settings["instruction"])
+        return NarrationSynthesis(
+            b"offline fixture",
+            "audio/wav",
+            engine.engine_kind,
+            engine.engine_identity,
+            engine.voice_identity,
+            engine.locale,
+            engine.settings,
+        )
+
+    monkeypatch.setattr(
+        "project_atlas.narration.InworldNarrationSynthesizer.synthesize", synthesize
+    )
+    runtime = SimpleNamespace(
+        probe=lambda path: SimpleNamespace(media_type="audio", duration_ms=1000),
+        assert_audible=lambda path: None,
+    )
+    service = MediaService(repo, runtime, LocalMediaStorage(tmp_path / "media"))
+    result = service.generate_brand_narration(
+        "daniel-v2-execution",
+        "daniel-v2-asset",
+        script.id,
+        brand_key="similarstoic",
+        execution_authorized=True,
+        narrator_profile_id="similarstoic-daniel-v2",
+    )
+    assert used == [SIMILARSTOIC_INSTRUCTION_V2]
+    assert settings_sha256(result.execution.settings) == (
+        NARRATOR_PROFILES["similarstoic-daniel-v2"].settings_sha256
+    )
     repo.close()

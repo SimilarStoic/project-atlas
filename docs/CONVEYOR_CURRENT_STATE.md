@@ -98,8 +98,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After successor-run adoption of accepted acquisitions, the verified local full suite is
-  **492 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+- After versioned narrator profiles and bounded prefer-mode narration selection, the verified local full suite
+  is **523 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -198,7 +198,15 @@ stage `narration_verification`. In isolated non-production calibration
 sentence rewritten as spoken copy ("Take a typical household paying by Direct Debit. Ofgem puts it at £1,723 a
 year. That's £60 more.") passed in both takes B1 and B2 (121/121/121); the founder heard both as good and preferred
 B1 as more realistic and fluid. The supported learning is only that this rewrite materially outperformed the
-existing wording for Daniel; it belongs to the OPEN speakability lesson below. No successor run has been started.
+existing wording for Daniel; it belongs to the OPEN speakability lesson below.
+
+The successor run `production-10-r2` exists. It froze founder-approved Script v2 (`production-10-script-v2`, only
+the figure sentence rewritten as above) with `adopt_acquisitions_from: production-10`, adopted exactly the eight
+currently accepted P10 images (each SHA-matched to its accepted source, zero image calls) and passed a fresh human
+acquisition review. Its single narration take `production-10-r2-narration-1` (legacy request, so the v1 narrator)
+passed completeness verification (121/121/121); the weighted render `production-10-r2-artifact-1` is intermediate
+and the narration-aligned retimed render `production-10-r2-artifact-2` is the candidate. It is awaiting whole-video
+QA and founder review: there is no founder acceptance, no publishing package and no publication.
 
 The following lessons are **OPEN: they are not current implemented behaviour**. Each must land as an enforced
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
@@ -208,7 +216,14 @@ completion, P11 or later work must check this list and must not silently treat a
   narration until a manual retime).
 - Daniel script-speakability preflight, based on the founder A/B evidence in
   `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\` and the P10 loop calibration in
-  `...\narration-tests\2026-10-07-loop\` (both non-production calibration).
+  `...\narration-tests\2026-10-07-loop\` (both non-production calibration). Further evidence:
+  `...\2026-10-07-delivery-mode\` (STABLE did not reduce take-to-take variation and take S2 repeated the same
+  passage that failed both P10 takes; founder preferred S1's pacing and S3's rhythm/personality, with S3's
+  sentence openings too quick) and `...\2026-10-07-sentence-delivery\` (manifest SHA-256
+  `fb4137108b09bba7c31bc0d9851c8e3ffb55408ae0f0d3f40b3215effd6d2478`; founder verdict "I2 preferred"). The I2
+  instruction is now narrator profile `similarstoic-daniel-v2` for new requests, with provisional prefer-mode
+  sentence-delivery selection (see Canonical v2 fidelity and safeguards). That calibration covers one Script; a
+  pre-synthesis script-speakability check does not exist yet, so this lesson stays OPEN.
 - The same environment plus the same viewpoint must lock room geometry, furniture scale and persistent fixture
   identity across beats.
 - Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
@@ -397,8 +412,8 @@ Successor-run adoption of accepted acquisitions (optional frozen request field `
   image of a predecessor run instead of generating. The first version is all-or-nothing: the source run must exist
   and differ from the successor, the semantic variant keys (world, entity, variant) must match exactly, every
   source variant's current active asset must have a passing acquisition review (earlier rejected or superseded
-  assets are never adopted), and the successor freezes `forecast.image_calls: 0`, `narration_calls: 1` and
-  `verification_calls: 1`. There is no fallback to image generation; the generation service is never reached.
+  assets are never adopted), and the successor freezes `forecast.image_calls: 0` and `verification_calls` equal to
+  its `narration_calls`. There is no fallback to image generation; the generation service is never reached.
 - Before the run is created, each adoption is verified: source bytes against their SHA-256, intrinsic size and
   full-frame aspect, and the source generation's recorded authority (style, character profile and reference set,
   global visual authority, and every recorded visual authority such as the environment anchor) against the
@@ -408,6 +423,44 @@ Successor-run adoption of accepted acquisitions (optional frozen request field `
   successor AssetSpec) and no generation execution. The successor stops at `acquisition_review_pending` and needs a
   fresh normal human acquisition review; a rejected adopted image is never replaced. The source run is not
   mutated; it gains one appended `successor_run` lineage record. Packaging of the source is not a refusal reason.
+
+Versioned narrator profiles (`project_atlas.narration.NARRATOR_PROFILES`, the single narrator authority):
+
+- `similarstoic-daniel-v1` is the historical Daniel configuration (instruction SHA-256 `4334ac0e…b5cb`);
+  `similarstoic-daniel-v2` is identical except the exact founder-preferred calibration instruction (SHA-256
+  `abd56573e2c068f147b84403c3322f42b16733a7e9d2a5f97643298256bff4cb`). Each profile pins the SHA-256 of its canonical
+  settings JSON; profiles are append-only.
+- A new request may freeze `narrator: {profile_id, profile_sha256}`; an unknown profile or digest mismatch is refused.
+  A request that froze no narrator (every request up to and including `production-10-r2`) resolves to v1 at runtime;
+  nothing is written into its frozen request, so its digest and `start()` idempotence are unchanged.
+- Narration evidence records the profile id and settings digest; the execution keeps the exact settings used.
+
+Bounded automatic narration attempts and prefer-mode delivery selection (new requests only):
+
+- A request that freezes `delivery_policy: {policy_id: similarstoic-sentence-delivery-v1, mode}` must also freeze a
+  narrator and `forecast.narration_calls = verification_calls = N` (1-3). Modes are `record_only` and `prefer`;
+  `enforce` is defined but refused. Requests without a delivery policy behave exactly as before (one take, one check,
+  latest verified take).
+- Each automatic take gets one completeness check and, if complete, one delivery score computed from that check's
+  own `whisper-1` word timestamps, the existing silence detection (−35 dB / 0.12 s) and the canonical Script
+  punctuation: no extra transcription. Classifier `sentence-pause-classifier-v1`; score = mean of the lowest
+  max(3, ceil(n/4)) sentence-boundary pauses; provisional target 358 ms from one Script's calibration, not a settled
+  quality law. Evidence `{run}:narration_delivery:N` is bound to the narration asset, WAV SHA-256 and completeness
+  evidence; outcomes are `passed`, `below_target`, `unreliable` (alignment cannot support classification) or
+  `not_applicable` (fewer than three sentence boundaries).
+- Prefer loop: an incomplete take, or a complete take below target or unreliable, leads to the next take while the
+  frozen budget remains; a complete take at or above target (or not applicable) is selected at once. When the budget is
+  used, the best reliably scored complete take is selected, else the earliest complete take (`target_met: false`,
+  `pacing_unusable` recorded); pacing never fails a run. No complete take fails closed before snapshot/render with
+  `narration_budget_exhausted`. `record_only` selects the first complete take and only records its score.
+  Provider or transcription failures stop the run rather than spending another take.
+- Each selection is versioned `{run}:narration_selection:N` evidence (selected asset and WAV SHA-256, reason,
+  candidates and scores, policy). Snapshot, retime, recommendation and render use the newest selection; a resume
+  reuses a persisted selection with no provider call. Calls are counted before every take and never exceed N.
+- A founder-authorized retake on a policy run is still one take plus one check, never consumes or refills the
+  automatic budget and never starts the loop; if complete it is scored (never blocked by pacing) and appended as a new
+  selection with reason `founder_authorized_retake`, otherwise the current selection is unchanged. A run whose budget
+  was exhausted remains eligible for that explicit retake.
 
 Explicit claim-timed citation overlays are supported.
 

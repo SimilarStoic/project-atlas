@@ -755,8 +755,12 @@ class MediaService:
         *,
         brand_key: str,
         execution_authorized: bool = False,
+        narrator_profile_id: str | None = None,
     ) -> NarrationGenerationResult:
         """Use approved brand configuration through the existing immutable lifecycle.
+
+        ``narrator_profile_id`` is the profile a production request froze; without one the
+        brand resolves to its historical narrator.
 
         Callers must obtain separate execution/spend authority and migrate the
         target database before invoking this explicit, non-default entry point.
@@ -776,7 +780,9 @@ class MediaService:
             execution_id,
             narration_id,
             script_id,
-            synthesizer=resolve_narrator(brand_key, execution_authorized=True),
+            synthesizer=resolve_narrator(
+                brand_key, execution_authorized=True, profile_id=narrator_profile_id
+            ),
         )
 
     def generate_local_narration(
