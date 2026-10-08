@@ -98,8 +98,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After migration 29 and the founder-attested retrospective publication recorder, the verified local full suite is
-  **547 passed, 0 skipped, 0 failed**. Post-acquisition founder narration authorization is a recorded action;
+- After the SimilarStoic new-run defaults, the narration-aligned first candidate and Editorial Readiness evaluator
+  v2, the verified local full suite is **567 passed, 0 skipped, 0 failed** (no migration). Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -245,34 +245,37 @@ The following lessons are **OPEN: they are not current implemented behaviour**. 
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
 completion, P11 or later work must check this list and must not silently treat an OPEN lesson as completed.
 
-- Retime must run by default before founder whole-video review (P10 v1's estimated scene timing ran visibly behind its
-  narration until a manual retime).
-- Daniel script-speakability preflight, based on the founder A/B evidence in
-  `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\` and the P10 loop calibration in
-  `...\narration-tests\2026-10-07-loop\` (both non-production calibration). Further evidence:
-  `...\2026-10-07-delivery-mode\` (STABLE did not reduce take-to-take variation and take S2 repeated the same
-  passage that failed both P10 takes; founder preferred S1's pacing and S3's rhythm/personality, with S3's
-  sentence openings too quick) and `...\2026-10-07-sentence-delivery\` (manifest SHA-256
-  `fb4137108b09bba7c31bc0d9851c8e3ffb55408ae0f0d3f40b3215effd6d2478`; founder verdict "I2 preferred"). The I2
-  instruction is now narrator profile `similarstoic-daniel-v2` for new requests, with provisional prefer-mode
-  sentence-delivery selection (see Canonical v2 fidelity and safeguards). That calibration covers one Script; a
-  pre-synthesis script-speakability check does not exist yet, so this lesson stays OPEN. The script check must also
-  flag a sourced number whose stated category differs from its source: P10 said "default tariffs: around 20
-  million", while Ofgem gives about 22 million households on default tariffs and about 20 million on standard
-  variable tariffs including prepayment.
 - The same environment plus the same viewpoint must lock room geometry, furniture scale and persistent fixture
   identity across beats.
 - Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
 - Acquisition review must inspect limbs, props and straps zoomed in, not only at full frame.
+- The script-side preflight below flags lines and figures before synthesis, but whether a flagged line is spoken
+  cleanly by Daniel remains founder/editorial judgement; it has one Script of calibration evidence (the founder A/B
+  in `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\`, the P10 loop calibration in
+  `...\2026-10-07-loop\`, `...\2026-10-07-delivery-mode\` and `...\2026-10-07-sentence-delivery\`, manifest SHA-256
+  `fb4137108b09bba7c31bc0d9851c8e3ffb55408ae0f0d3f40b3215effd6d2478`, founder verdict "I2 preferred", now narrator
+  profile `similarstoic-daniel-v2`). How a punctuated fixed term such as "Buy now, pay later" should be voiced is
+  still undecided; no speech-form change exists.
+
+**Implemented, awaiting first production validation on P11** (each is code and offline tests only; no production
+has yet exercised it):
+
+- Narration-aligned retiming now happens by default before founder whole-video review: new SimilarStoic runs
+  freeze `scene_timing: narration-aligned-v1`, so the first candidate's scene boundaries are aligned to the selected
+  verified take (see Canonical v2 fidelity and safeguards). This closes the P10 v1 lesson in code only.
+- The script-side preflight exists: the deterministic Editorial Readiness evaluator v2 records advisory findings for
+  a sourced figure whose stated category does not match its frozen source quote (the P10 case: "default tariffs:
+  around 20 million", while Ofgem gives about 22 million households on default tariffs and about 20 million on
+  standard variable tariffs including prepayment), nearby phrase repetition, and Daniel speakability rules. An
+  Approve over such findings requires a comment.
+- New SimilarStoic runs default to the v2 narrator, the prefer-mode sentence-delivery policy and N = 3 (see
+  Canonical v2 fidelity and safeguards).
 
 Completed: the runtime now records the P8 and P9 manual public releases (founder-attested receipts above), so
 that lesson is closed.
 
 Before P11:
 
-- New SimilarStoic requests must explicitly set the v2 narrator (`similarstoic-daniel-v2`), the
-  `similarstoic-sentence-delivery-v1` policy in `prefer` mode and N = 3 automatic attempts until these become the
-  channel default; a request without them silently gets the legacy v1, single-take behaviour.
 - The controlled pilot series `similarstoic-youtube-controlled-pilot-v1` is full (slots 1-3 are used), so an ongoing
   publishing series is needed before the next package.
 - The manual publishing steps (reserve upload, complete manual private upload, observe, reserve release, reconcile
@@ -408,6 +411,54 @@ Full-frame aspect admission:
 Automated cell QA claims only persistent-aggregate verification and compositor coverage
 (`conveyor-automated-cell-v2`); perceptual final-frame quality remains human review.
 
+SimilarStoic new-run defaults (`NEW_RUN_DEFAULTS["similarstoic"]` in `production.py`; the v2 lifecycle is
+SimilarStoic-bound, so there is no global default):
+
+- `start()` first checks whether the run id exists. An existing run never consults today's defaults: any omitted
+  defaultable field (`narrator`, `delivery_policy`, `scene_timing`, `forecast.narration_calls`,
+  `forecast.verification_calls`) is reconstructed from that run's own frozen request, then validated and
+  digest-compared, so the raw and the frozen forms both stay idempotent whatever the defaults later become, and an
+  explicit conflicting value still fails. Runs frozen without these fields keep their historical request exactly.
+- A new run that omits all four narration fields freezes narrator `CURRENT_NARRATOR_PROFILE_ID`
+  (`similarstoic-daniel-v2`, its settings digest computed at freeze), delivery policy
+  `similarstoic-sentence-delivery-v1` in `prefer` mode and N = 3. The legacy copy-paste shape (a narration budget
+  without a narrator) is refused with a message naming the default. Explicit choices (for example N = 2, or an
+  explicit v1 single take) are kept; an explicit spend ceiling is never raised.
+- `scene_timing` carries no spend, so a new run without it freezes `narration-aligned-v1` even when the narration
+  fields were explicit. `weighted-v1` is the explicit choice of the historical weighted first candidate.
+
+Narration-aligned first candidate (`scene_timing: narration-aligned-v1`):
+
+- At `start()`, before any provider call, the Scene narration excerpts must concatenate to the Script under
+  `speech_timing.script_words`; otherwise the request is refused.
+- After the existing completeness gate, the first snapshot's durations come from the selected verified take through
+  the same computation as the retime recommendation; a narration retake re-aligns to its new take. Each such render
+  has versioned `{run}:scene_timing:{version}` evidence (policy, source, durations, weights and weighted durations,
+  boundaries, timing and silence settings, narration asset and WAV SHA-256), shown in `status().current_render`.
+- Sources are `narration_aligned`, `weighted_fallback` (alignment raised; weighted timing is recorded as a recovery
+  state only) and `manual_retime` (a founder `retime` of such a run, referencing its retime evidence, actor, reason
+  and durations). Whole-video QA `passed` is refused only while the current render is `weighted_fallback`; `failed`
+  is always allowed, and a founder retime then produces a reviewable render.
+- Runs that froze no `scene_timing`, or `weighted-v1`, are timed from the narration weights exactly as before,
+  including on resume and retake, and record no scene-timing evidence.
+
+Script preflight (Editorial Readiness evaluator `deterministic-editorial-readiness` v2,
+`src/project_atlas/script_preflight.py` and `narration.speakability_findings`):
+
+- Before the Editorial Gate, the exact Script and its frozen ScriptClaimSet evidence are checked. Findings are
+  `blocking: false`, `requires_editorial_judgement: true`; the outcome stays `Ready` and the Script is never
+  mutated. Figures are recognised only through the completeness normalization (`narration-completeness-v1`).
+- `SCRIPT_NUMBER_QUALIFIER_MISMATCH` (a qualifier beside a Script figure appears in the frozen quotes only beside a
+  different figure, or shares no word with the quote for that figure), `SOURCED_NUMBER_WITHOUT_QUOTE` and
+  `SCRIPT_NUMBER_NOT_IN_FROZEN_EVIDENCE` are channel-neutral, as is `SCRIPT_PHRASE_REPETITION` (a canonical run of
+  three or more words repeated in the same or the next sentence).
+- `SPEAKABILITY_*` rules (two or more figures in a sentence, a dash or colon joining a figure, the narrator's
+  punctuated fixed-term list, sentences over 28 words) belong to the narrator brand in `narration.py` and are found
+  through the new-run default narrator. They are provisional calibration from one Script.
+- Automated findings are evidence; whether a figure or line is wrong is editorial judgement. An Approve decision
+  over an assessment with such findings requires a non-empty comment. Stored v1 assessments and their decisions
+  resolve unchanged.
+
 Canonical post-narration retiming (`retime`, also `POST /api/v2/productions/{run}/retime`):
 
 - It is available only from `qa_review_pending`, or after a failed whole-video QA (`failed` at stage `qa`).
@@ -451,7 +502,8 @@ Versioned narration retake (`retake_narration`, also `POST /api/v2/productions/{
 - Reuses the approved Script unchanged and all accepted imagery, worlds and scene states; no image provider is
   reachable. A passing take produces a new snapshot/render/cell-QA candidate bound to the new take, timed from the
   request's narration weights over the new take's duration (earlier retime durations are never copied forward); a
-  failing take stops at `narration_verification`. Earlier takes, snapshots, renders and reviews remain history.
+  failing take stops at `narration_verification`. A `narration-aligned-v1` run's new candidate is aligned to the
+  new take instead. Earlier takes, snapshots, renders and reviews remain history.
 - Runs frozen without the verification forecast can authorize one check of a specific take with
   `POST .../narration-verification-authorization`; a check is never repeated for the same take.
 
@@ -705,13 +757,13 @@ gaps are:
 - source-credit projection;
 - character continuity;
 - scene density;
-- speech-aligned initial beat timing (a post-narration retime recommendation exists);
 - ceiling counting of generation calls that raise before acquisition evidence is persisted. This covers both a paid
   provider call that raises before evidence is recorded, and a provider call that returns an asset but whose
   post-provider technical inspection or probe raises before evidence is recorded;
 - image size on reference-conditioned calls: a configured image size may be recorded in provenance but is not sent
   on reference-conditioned image-edit calls, so those calls use the provider's default size;
-- initial beat timing is estimated before narration exists and may require a post-narration retime;
+- runs frozen without `scene_timing` (every run up to and including `production-10-r2`) keep narration-weighted
+  first candidates and may require a post-narration retime;
 - provider word timestamps are requested but not persisted; captions use pause-aligned estimates between pauses;
 - packaging does not yet require the current, founder-accepted render.
 

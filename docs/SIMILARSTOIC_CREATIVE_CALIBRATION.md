@@ -49,8 +49,8 @@ of this approved method.
   conversational, grounded, lightly amused, confident without selling, with understated humour and natural
   clause-level pauses; never announcer, corporate presenter, finance guru, advert, podcast intro, or hyperactive
   creator. Do not add, omit, or paraphrase script words.
-- Use narration-weighted semantic timing, purposeful transitions, mobile-readable captions, and the established
-  render path. Review acquisition quality before assembly and the complete result before founder review.
+- Timeline weights express semantic intent; the first candidate uses narration-aligned scene boundaries. Use
+  purposeful transitions, mobile-readable captions, and the established render path. Review acquisition quality before assembly and the complete result before founder review.
 
 #### A.1 Founder-validated findings (Productions 8 and 9)
 
@@ -68,15 +68,16 @@ Each finding is recorded once, with the single executable place that now enforce
 | Duplicated objects or features | No duplicated limbs, facial features or objects | core-v4 `duplication` | P9 Attempt 1 |
 | One identity image under-constrained poses | Identity plus approved multi-pose reference | Latest `CharacterReferenceSet` (v2) | P9 Attempt 2 |
 | Props invited readable digits, dates or lettering | No embedded text of any kind in generated source art; props stay allowed with blank or non-legible surfaces | core-v4 global avoid (unconditional text ban) and global `detail`; authoring asks for blank props | P9 handset, post box, calendar |
-| Narration needed approval after images, but runs were frozen without it | A recorded founder action may authorize narration post-acquisition; one narration call per run | `authorize_narration` in `production.py` | P9 Attempt 2 |
+| Narration needed approval after images, but runs were frozen without it | A recorded founder action may authorize narration post-acquisition. Legacy requests take one call; delivery-policy requests freeze N = 1–3 automatic takes. New SimilarStoic runs default to `similarstoic-daniel-v2`, `similarstoic-sentence-delivery-v1` prefer, N = 3 | `authorize_narration`; new-run narration default in `start()` (`production.py`) | P9 Attempt 2; narration-tests 2026-10-07-sentence-delivery |
 | Captions ran ahead of speech and across scene changes | Pause-aligned phrase captions from the exact narration | `speech_timing.py` via `create_persistent_scene_snapshot` | P9 render v3 |
-| Estimated beat timing did not follow the narration | Scene boundaries at sentence-final pause midpoints, applied only after founder approval | `recommend_retime` + `retime` | P8 v2, P9 v2 |
+| Estimated beat timing did not follow the narration | Scene boundaries at the pause ending each scene's narration excerpt (matched pause midpoint, else estimated word gap), applied to the first candidate for `scene_timing: narration-aligned-v1` runs (the default for new runs); later retimes remain founder-approved | `_ensure_snapshot` + `recommend_retime`/`retime` | P8 v2, P9 v2; P10 v1; P10-R2 artifact-2 |
 | A provider network failure interrupted acquisition | A technical provider failure stops the run; resume needs explicit founder authorization | Lifecycle `failed` state and `resume` | P9 Attempt 2 beat 8 |
 
 Open finding (not yet a rule): with Daniel, a fixed term such as "Buy now, pay later" was voiced as separate
-utterances (a pitch reset and an unpunctuated pause). Evaluate on Production 10's narration before choosing any
-mechanism; no speech-form change is implemented, and captions and parity checks continue to derive from the approved
-script.
+utterances (a pitch reset and an unpunctuated pause). The P10 Script contained no comma-bearing fixed term, so it was
+not evaluated. Fixed terms on the narrator's list are now flagged before synthesis by the editorial readiness
+evaluator v2. No speech-form change is implemented; captions and parity checks still derive from the approved
+Script.
 
 ### B. Useful production-shape defaults
 

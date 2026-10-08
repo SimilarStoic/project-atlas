@@ -1489,7 +1489,7 @@ def test_editorial_readiness_assessments_are_append_only_and_server_derived(tmp_
         }
         assert not_ready.schema_version == 1
         assert not_ready.evaluator_id == "deterministic-editorial-readiness"
-        assert not_ready.evaluator_version == "v1"
+        assert not_ready.evaluator_version == "v2"
 
         empty_script = repository.create_script_under_content_piece_readiness(
             "editorial-readiness-empty-script", piece.id, "Empty set narration."
@@ -1653,7 +1653,14 @@ def test_migration_18_adds_editorial_readiness_assessments_without_backfill(tmp_
         repository.close()
 
 
-def _create_ready_editorial_package(repository: AtlasRepository, prefix: str):
+def _create_ready_editorial_package(
+    repository: AtlasRepository,
+    prefix: str,
+    *,
+    narration: str = "Narration.",
+    claim_text: str = "Frozen claim.",
+    reference: str = "p. 1",
+):
     """Create one minimal exact Ready package for Editorial Gate tests."""
 
     opportunity_id = f"{prefix}-opportunity"
@@ -1662,7 +1669,7 @@ def _create_ready_editorial_package(repository: AtlasRepository, prefix: str):
     )
     pack = repository.create_research_pack(f"{prefix}-pack", opportunity_id, 1, "Research")
     claim = repository.create_claim(
-        f"{prefix}-claim", pack.id, "Frozen claim.", "fact", "low", "stable", "reviewed", ""
+        f"{prefix}-claim", pack.id, claim_text, "fact", "low", "stable", "reviewed", ""
     )
     source = repository.create_source(
         f"{prefix}-source",
@@ -1672,7 +1679,7 @@ def _create_ready_editorial_package(repository: AtlasRepository, prefix: str):
         f"https://example.test/{prefix}",
         "2026-08-20T00:00:00+00:00",
     )
-    repository.link_claim_evidence(claim.id, source.id, "supports", "p. 1")
+    repository.link_claim_evidence(claim.id, source.id, "supports", reference)
     research_ready = repository.create_research_readiness_assessment(
         f"{prefix}-research-ready",
         pack.id,
@@ -1699,7 +1706,7 @@ def _create_ready_editorial_package(repository: AtlasRepository, prefix: str):
         f"{prefix}-piece", opportunity_id, angle.id, "video", "Working title"
     )
     script = repository.create_script_under_content_piece_readiness(
-        f"{prefix}-script", piece.id, "Narration."
+        f"{prefix}-script", piece.id, narration
     )
     repository.create_script_claim_set(f"{prefix}-claim-set", script.id, [claim.id])
     title = repository.create_title_option_under_content_piece_readiness(
@@ -6636,5 +6643,103 @@ def test_provider_attempt_boundaries_preserve_reference_lineage(tmp_path) -> Non
             pass
         else:
             raise AssertionError("Consumed CharacterReferenceSet provenance was deleted.")
+    finally:
+        repository.close()
+
+
+def test_editorial_readiness_v2_records_advisory_script_preflight_evidence(tmp_path) -> None:
+    """Evaluator v2 flags figures, repetition and speakability without blocking or rewriting."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        narration = (
+            "It only covers default tariffs: around 20 million households, including " "prepayment."
+        )
+        piece, script, package, assessment = _create_ready_editorial_package(
+            repository,
+            "preflight",
+            narration=narration,
+            claim_text="Ofgem says the cap protects around 22 million households.",
+            reference=(
+                "The energy price cap protects around 22 million households on default tariffs. "
+                "Households on Standard Variable Tariffs (SVT): around 20 million."
+            ),
+        )
+        before = repository.connection.execute(
+            "SELECT * FROM scripts WHERE id = ?", (script.id,)
+        ).fetchone()
+        assert assessment.outcome == "Ready"
+        assert assessment.evaluator_version == "v2"
+        findings = assessment.findings["findings"]
+        codes = [item["code"] for item in findings]
+        assert "SCRIPT_NUMBER_QUALIFIER_MISMATCH" in codes
+        assert "SPEAKABILITY_FIGURE_JOINED_BY_DASH_OR_COLON" in codes
+        assert all(
+            item["blocking"] is False and item["requires_editorial_judgement"] is True
+            for item in findings
+        )
+        speakability = [item for item in findings if item["code"].startswith("SPEAKABILITY_")]
+        assert {item["evidence"]["narrator_profile_id"] for item in speakability} == {
+            "similarstoic-daniel-v2"
+        }
+
+        for comment in (None, "   "):
+            with pytest.raises(ValueError, match="requires a comment"):
+                repository.create_editorial_gate_decision(
+                    f"preflight-approve-{len(comment or '')}",
+                    package.id,
+                    assessment.id,
+                    "Approve",
+                    "founder",
+                    comment,
+                )
+        # Revise and Reject need no acknowledgement; Approve with a comment resolves.
+        repository.create_editorial_gate_decision(
+            "preflight-revise", package.id, assessment.id, "Revise", "founder"
+        )
+        approve = repository.create_editorial_gate_decision(
+            "preflight-approve",
+            package.id,
+            assessment.id,
+            "Approve",
+            "founder",
+            "Figure qualifier checked against Ofgem notes; colon kept deliberately.",
+        )
+        plan = repository.create_visual_plan_under_editorial_gate(
+            "preflight-plan", approve.id, "Operational visual direction"
+        )
+        assert repository._require_gate_authorized_visual_plan(plan.id).id == plan.id
+        after = repository.connection.execute(
+            "SELECT * FROM scripts WHERE id = ?", (script.id,)
+        ).fetchone()
+        assert tuple(after) == tuple(before)
+    finally:
+        repository.close()
+
+
+def test_historical_v1_assessments_and_decisions_still_resolve(tmp_path) -> None:
+    """A stored v1 Ready assessment with no findings keeps authorizing its exact lineage."""
+
+    repository = AtlasRepository(tmp_path / "atlas.db")
+    try:
+        piece, script, package, _assessment = _create_ready_editorial_package(
+            repository, "historical", narration="Prices rose 9% in a year."
+        )
+        repository.connection.execute(
+            "INSERT INTO editorial_readiness_assessments (id, editorial_package_snapshot_id, "
+            "assessment_schema_version, evaluator_id, evaluator_version, outcome, findings_json, "
+            "created_at) VALUES (?, ?, 1, 'deterministic-editorial-readiness', 'v1', 'Ready', "
+            "'{\"findings\":[]}', '2026-09-01T00:00:00+00:00')",
+            ("historical-v1-ready", package.id),
+        )
+        historical = repository.get_editorial_readiness_assessment("historical-v1-ready")
+        assert historical.evaluator_version == "v1"
+        approve = repository.create_editorial_gate_decision(
+            "historical-approve", package.id, historical.id, "Approve", "founder"
+        )
+        plan = repository.create_visual_plan_under_editorial_gate(
+            "historical-plan", approve.id, "Operational visual direction"
+        )
+        assert repository._require_gate_authorized_visual_plan(plan.id).id == plan.id
     finally:
         repository.close()

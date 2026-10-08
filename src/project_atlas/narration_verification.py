@@ -260,6 +260,36 @@ def normalize_tokens(text: str) -> list[str]:
     return canonical
 
 
+# Canonical tokens that only spell a figure (numbers, units of amount), never a qualifier.
+FIGURE_WORDS = frozenset(
+    _NUMBER_WORDS
+    | {"point", "percent"}
+    | {unit for pair in _CURRENCIES.values() for unit in pair}
+    | {_ordinal([word])[0] for word in _ONES[1:] + _TENS[2:]}
+)
+
+
+def spoken_figures(text: str) -> list[list[str]]:
+    """Canonical spoken tokens of each figure written with digits in ``text``, in order.
+
+    Uses exactly the ``NORMALIZATION_VERSION`` amount grammar; figures written in words are
+    not detected as figures.
+    """
+
+    prepared = unicodedata.normalize("NFKC", text).replace("’", "'").replace("‘", "'").lower()
+    prepared = re.sub(r"\bper\s+cent\b", "percent", prepared)
+    figures = []
+    for match in _AMOUNT.finditer(prepared):
+        end = match.end()
+        # normalize_tokens spells a "%" left outside the amount match as "percent" afterwards.
+        if prepared[end : end + 1] == "%":
+            end += 1
+        tokens = normalize_tokens(prepared[match.start() : end])
+        if tokens:
+            figures.append(tokens)
+    return figures
+
+
 def _apply_aliases(tokens: list[str], aliases: tuple[tuple[str, str], ...]) -> tuple[list, list]:
     """Map an approved spoken alias form back to its written Script token."""
 

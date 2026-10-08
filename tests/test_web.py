@@ -95,7 +95,7 @@ def ensure_character_reference_set(server, storage_root: Path) -> str:
     ).id
 
 
-def create_authorized_visual_plan(server, prefix: str):
+def create_authorized_visual_plan(server, prefix: str, narration: str = "Narration."):
     """Create an exact v0.24-approved VisualPlan for v0.25 HTTP lifecycle tests."""
 
     repository = server.repository
@@ -142,7 +142,7 @@ def create_authorized_visual_plan(server, prefix: str):
         f"{prefix}-piece", opportunity_id, angle.id, "video", "Working title"
     )
     script = repository.create_script_under_content_piece_readiness(
-        f"{prefix}-script", piece.id, "Narration."
+        f"{prefix}-script", piece.id, narration
     )
     repository.create_script_claim_set(f"{prefix}-claim-set", script.id, [claim.id])
     title = repository.create_title_option_under_content_piece_readiness(
@@ -1915,7 +1915,7 @@ def test_editorial_readiness_assessment_api_is_server_derived_and_append_only(
         assert assessment["findings"]["findings"][0]["code"] == "SCRIPT_CLAIM_SET_MISSING"
         assert assessment["findings"]["findings"][0]["blocking"] is True
         assert assessment["evaluator_id"] == "deterministic-editorial-readiness"
-        assert assessment["evaluator_version"] == "v1"
+        assert assessment["evaluator_version"] == "v2"
         history, status = request_json(Request(f"{base_url}{endpoint}"))
         assert status == 200
         assert history["assessments"] == [assessment]

@@ -16,7 +16,9 @@ import wave
 from dataclasses import dataclass
 from hashlib import sha256
 
+from project_atlas import script_preflight
 from project_atlas.media import NarrationSynthesis, NarrationSynthesisError
+from project_atlas.narration_verification import spoken_figures
 
 SIMILARSTOIC_INSTRUCTION = (
     "Speak like a relaxed, intelligent young adult explaining something useful to a friend. "
@@ -40,6 +42,14 @@ SIMILARSTOIC_INSTRUCTION_V2_SHA256 = (
     "abd56573e2c068f147b84403c3322f42b16733a7e9d2a5f97643298256bff4cb"
 )
 SIMILARSTOIC_PRONUNCIATION_ALIASES = (("ISA", "eye-suh"),)
+# Pre-synthesis speakability evidence for Daniel (advisory; the Script is never rewritten).
+# Calibration: P10's figure sentence failed both takes while the spoken rewrite with one
+# figure per sentence passed (narration-tests/2026-10-07-loop); Daniel voiced the punctuated
+# fixed term "Buy now, pay later" as separate utterances (P9).
+SIMILARSTOIC_SPEAKABILITY_RULESET = "similarstoic-daniel-speakability-v1"
+SIMILARSTOIC_FIXED_TERMS = ("Buy now, pay later",)
+SIMILARSTOIC_MAX_SENTENCE_WORDS = 28
+_FIGURE_JOINS = re.compile(r"\s+[-–—]\s+|[–—]|:(?!\d)")
 
 
 @dataclass(frozen=True)
@@ -100,6 +110,69 @@ def narrator_profile(profile_id: str) -> NarratorProfile:
     ):
         raise ValueError(f"Narrator profile {profile_id!r} settings hash mismatch.")
     return profile
+
+
+# Speakability rules belong to a narrator's brand; a brand without rules gets no findings.
+SPEAKABILITY_RULES = {
+    "similarstoic": (
+        SIMILARSTOIC_SPEAKABILITY_RULESET,
+        SIMILARSTOIC_FIXED_TERMS,
+        SIMILARSTOIC_MAX_SENTENCE_WORDS,
+    )
+}
+
+
+def speakability_findings(text: str, profile_id: str) -> list[dict]:
+    """Advisory pre-synthesis findings for lines this narrator may not speak cleanly."""
+
+    profile = narrator_profile(profile_id)
+    rules = SPEAKABILITY_RULES.get(profile.brand_key)
+    if rules is None:
+        return []
+    ruleset, fixed_terms, max_words = rules
+    findings = []
+
+    def report(code: str, message: str, evidence: dict) -> None:
+        evidence = evidence | {"narrator_profile_id": profile.profile_id}
+        findings.append(script_preflight.finding(code, message, evidence, ruleset))
+
+    for index, sentence in enumerate(script_preflight.sentences(text)):
+        base = {"sentence_index": index, "sentence": sentence}
+        figures = spoken_figures(sentence)
+        if len(figures) >= 2:
+            report(
+                "SPEAKABILITY_MULTIPLE_FIGURES",
+                "The sentence carries more than one figure; consider one figure per sentence.",
+                base | {"figures": [" ".join(figure) for figure in figures]},
+            )
+        segments = _FIGURE_JOINS.split(sentence)
+        joins = [
+            position
+            for position in range(len(segments) - 1)
+            if spoken_figures(segments[position]) or spoken_figures(segments[position + 1])
+        ]
+        if joins:
+            report(
+                "SPEAKABILITY_FIGURE_JOINED_BY_DASH_OR_COLON",
+                "A dash or colon joins a figure onto the sentence.",
+                base | {"joined_segments": [segments[i : i + 2] for i in joins]},
+            )
+        words = len(sentence.split())
+        if words > max_words:
+            report(
+                "SPEAKABILITY_LONG_SENTENCE",
+                f"The sentence has {words} words (provisional limit {max_words}).",
+                base | {"word_count": words, "limit": max_words},
+            )
+    folded = " ".join(text.split()).casefold()
+    for term in fixed_terms:
+        if re.search(r"[,;:–—-]", term) and " ".join(term.split()).casefold() in folded:
+            report(
+                "SPEAKABILITY_FIXED_TERM_PUNCTUATION",
+                "A fixed term with internal punctuation may be voiced as separate utterances.",
+                {"term": term},
+            )
+    return findings
 
 
 def apply_pronunciation_aliases(

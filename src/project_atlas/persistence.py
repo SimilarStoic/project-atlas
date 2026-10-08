@@ -564,7 +564,7 @@ EDITORIAL_READINESS_OUTCOMES = frozenset({"Ready", "NotReady"})
 EDITORIAL_GATE_DECISION_OUTCOMES = frozenset({"Approve", "Revise", "Reject"})
 EDITORIAL_READINESS_ASSESSMENT_SCHEMA_VERSION = 1
 EDITORIAL_READINESS_EVALUATOR_ID = "deterministic-editorial-readiness"
-EDITORIAL_READINESS_EVALUATOR_VERSION = "v1"
+EDITORIAL_READINESS_EVALUATOR_VERSION = "v2"
 VISUAL_REFERENCE_AUTHORITY_ROLES = frozenset(
     {
         "global_illustration_style",
@@ -5044,7 +5044,25 @@ class AtlasRepository(
                 }
             ]
         self._validate_script_claim_set_frozen_provenance(claim_set)
-        return []
+        return self._script_preflight_findings(snapshot.script_id)
+
+    def _script_preflight_findings(self, script_id: str) -> list[dict[str, Any]]:
+        """Advisory pre-synthesis Script evidence (evaluator v2); never blocks or rewrites.
+
+        Figure qualifiers and nearby repetition are channel-neutral; speakability rules come
+        from the channel narrator named by the production new-run default.
+        """
+
+        from project_atlas import narration, script_preflight
+        from project_atlas.production import NEW_RUN_DEFAULTS, PRODUCTION_BRAND_KEY
+
+        text = self.get_script(script_id).narration_text
+        narrator = NEW_RUN_DEFAULTS[PRODUCTION_BRAND_KEY]["narrator_profile_id"]
+        return (
+            script_preflight.number_findings(text, self.script_claim_set_payload(script_id))
+            + script_preflight.repetition_findings(text)
+            + narration.speakability_findings(text, narrator)
+        )
 
     def _validate_editorial_package_snapshot_integrity(
         self, snapshot: EditorialPackageSnapshot
@@ -5088,6 +5106,15 @@ class AtlasRepository(
             raise ValueError("EditorialGateDecision actor must be non-empty text.")
         if comment is not None and not isinstance(comment, str):
             raise ValueError("EditorialGateDecision comment must be text or null.")
+        judged = [
+            finding
+            for finding in assessment.findings.get("findings", [])
+            if isinstance(finding, dict) and finding.get("requires_editorial_judgement")
+        ]
+        if outcome == "Approve" and judged and not (comment or "").strip():
+            raise ValueError(
+                "Approving an assessment with editorial-judgement findings requires a comment."
+            )
 
     def _validate_editorial_gate_decision_lineage(
         self, decision: EditorialGateDecision

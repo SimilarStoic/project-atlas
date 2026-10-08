@@ -15,6 +15,7 @@ from project_atlas import narration_delivery, speech_timing
 from project_atlas.generation import GenerationService
 from project_atlas.media import FfmpegRuntime, MediaService
 from project_atlas.narration import (
+    CURRENT_NARRATOR_PROFILE_ID,
     LEGACY_NARRATOR_PROFILE_ID,
     SIMILARSTOIC_PRONUNCIATION_ALIASES,
     narrator_profile,
@@ -58,6 +59,25 @@ FULL_FRAME_SCALE_FILTER = (
 )
 # The largest automatic narration-attempt budget a delivery-policy request may freeze.
 MAX_NARRATION_ATTEMPTS = 3
+# Canonical v2 production is SimilarStoic-bound (narration brand, pronunciation aliases and
+# acquisition review profile); a second channel needs an explicit request channel first.
+PRODUCTION_BRAND_KEY = "similarstoic"
+# Scene timing policies a request may freeze. A request that froze none keeps the historical
+# narration-weighted first candidate; "weighted-v1" is that behaviour chosen explicitly.
+SCENE_TIMING_ALIGNED = "narration-aligned-v1"
+SCENE_TIMING_WEIGHTED = "weighted-v1"
+SCENE_TIMING_POLICIES = (SCENE_TIMING_ALIGNED, SCENE_TIMING_WEIGHTED)
+# Channel defaults frozen into NEW runs only. Existing runs never consult this constant: an
+# omitted field on resubmission is reconstructed from the run's own frozen request.
+NEW_RUN_DEFAULTS = {
+    "similarstoic": {
+        "narrator_profile_id": CURRENT_NARRATOR_PROFILE_ID,
+        "delivery_policy": {"policy_id": narration_delivery.POLICY_ID, "mode": "prefer"},
+        "narration_attempts": 3,
+        "scene_timing": SCENE_TIMING_ALIGNED,
+    }
+}
+_NARRATION_FORECAST_FIELDS = ("narration_calls", "verification_calls")
 
 
 class ProductionLifecycleError(RuntimeError):
@@ -257,15 +277,18 @@ class ProductionLifecycleService:
         self.adapter = ManagedAssetSceneAdapter(repository, media_service.runtime)
 
     def start(self, request: dict[str, Any]) -> dict[str, Any]:
-        normalized = self._validate_request(request)
-        run_id = normalized["id"]
+        if not isinstance(request, dict):
+            raise ProductionRequestError("Production request must be an object.")
+        run_id = request.get("id")
+        if not isinstance(run_id, str) or not _SAFE_KEY.fullmatch(run_id):
+            raise ProductionRequestError("Production id must be a safe stable key.")
         try:
             existing = self.repository.get_production_run(run_id)
         except KeyError:
-            run = self.repository.create_production_run(
-                run_id, normalized["visual_plan_id"], normalized
-            )
-        else:
+            existing = None
+        if existing is not None:
+            # Never consult today's channel defaults for a run that already exists.
+            normalized = self._validate_request(self._reconstruct_from_frozen(request, existing))
             frozen = json.dumps(
                 normalized, sort_keys=True, separators=(",", ":"), ensure_ascii=False
             )
@@ -274,8 +297,73 @@ class ProductionLifecycleService:
                     "Production identity already exists with a different immutable request."
                 )
             return self.status(run_id)
+        normalized = self._validate_request(self._apply_new_run_defaults(request))
+        run = self.repository.create_production_run(
+            run_id, normalized["visual_plan_id"], normalized
+        )
         self._acquire(run)
         return self.status(run_id)
+
+    @staticmethod
+    def _reconstruct_from_frozen(request: dict[str, Any], existing: Any) -> dict[str, Any]:
+        """Fill omitted defaultable fields from the run's own frozen request, nothing else.
+
+        Explicit supplied values are kept, so a conflict with the frozen request still fails
+        the digest comparison; a field the run never froze stays absent.
+        """
+
+        frozen = existing.request
+        reconstructed = json.loads(json.dumps(request))
+        for field in ("narrator", "delivery_policy", "scene_timing"):
+            if field not in reconstructed and field in frozen:
+                reconstructed[field] = frozen[field]
+        forecast, frozen_forecast = reconstructed.get("forecast"), frozen.get("forecast", {})
+        if isinstance(forecast, dict):
+            for field in _NARRATION_FORECAST_FIELDS:
+                if field not in forecast and field in frozen_forecast:
+                    forecast[field] = frozen_forecast[field]
+        return reconstructed
+
+    @staticmethod
+    def _apply_new_run_defaults(request: dict[str, Any]) -> dict[str, Any]:
+        """Freeze the current channel defaults into a new run's omitted fields.
+
+        Narration defaults apply only when every narration field is omitted; explicit
+        choices are kept and an explicit spend ceiling is never raised. The legacy
+        copy-paste shape (a narration budget with no narrator) is refused.
+        """
+
+        defaults = NEW_RUN_DEFAULTS[PRODUCTION_BRAND_KEY]
+        result = json.loads(json.dumps(request))
+        forecast = result.get("forecast")
+        forecast_fields = (
+            [field for field in _NARRATION_FORECAST_FIELDS if field in forecast]
+            if isinstance(forecast, dict)
+            else []
+        )
+        if "narrator" not in result and "delivery_policy" not in result:
+            if forecast_fields:
+                raise ProductionRequestError(
+                    "New SimilarStoic production requests default to narrator "
+                    f"{defaults['narrator_profile_id']} with delivery policy "
+                    f"{defaults['delivery_policy']['policy_id']} "
+                    f"({defaults['delivery_policy']['mode']}) and "
+                    f"{defaults['narration_attempts']} automatic narration attempts; omit "
+                    "narrator, delivery_policy, narration_calls and verification_calls to use "
+                    "that default, or freeze a narrator explicitly to choose otherwise."
+                )
+            if isinstance(forecast, dict):
+                profile = narrator_profile(defaults["narrator_profile_id"])
+                result["narrator"] = {
+                    "profile_id": profile.profile_id,
+                    "profile_sha256": profile.settings_sha256,
+                }
+                result["delivery_policy"] = dict(defaults["delivery_policy"])
+                for field in _NARRATION_FORECAST_FIELDS:
+                    forecast[field] = defaults["narration_attempts"]
+        # Scene timing carries no spend, so it defaults independently of the narration fields.
+        result.setdefault("scene_timing", defaults["scene_timing"])
+        return result
 
     def authorize_narration(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
         """Record a durable founder narration authorization without touching the frozen request.
@@ -586,13 +674,13 @@ class ProductionLifecycleService:
             f"{run.id}:narration-execution:{version}",
             f"{run.id}-narration-{version}",
             plan.script_id,
-            brand_key="similarstoic",
+            brand_key=PRODUCTION_BRAND_KEY,
             execution_authorized=True,
             narrator_profile_id=profile.profile_id,
         )
         payload = {
             "outcome": result.execution.outcome,
-            "brand_key": "similarstoic",
+            "brand_key": PRODUCTION_BRAND_KEY,
             "narration_version": version,
             "narrator_profile_id": profile.profile_id,
             "narrator_profile_sha256": profile.settings_sha256,
@@ -825,7 +913,19 @@ class ProductionLifecycleService:
         if outcome not in {"passed", "failed"} or not isinstance(evidence, dict):
             raise ProductionRequestError("Whole-video review requires outcome and evidence.")
         # Human whole-video review always binds to the current (latest) render.
-        artifact = self._current_evidence(run_id, "render").final_media_artifact_id
+        render = self._current_evidence(run_id, "render")
+        artifact = render.final_media_artifact_id
+        timing = self._scene_timing(run_id, self._evidence_version(render))
+        if (
+            outcome == "passed"
+            and timing is not None
+            and timing.payload["source"] == "weighted_fallback"
+        ):
+            raise ProductionRequestError(
+                "The current render uses weighted fallback timing because narration alignment "
+                "failed; it is a recovery state and cannot pass whole-video review. Record a "
+                "failed review and apply a founder-approved retime."
+            )
         previous = [
             review
             for review in self.repository.list_production_qa_reviews(run_id)
@@ -891,14 +991,8 @@ class ProductionLifecycleService:
         narration = self._current_narration_asset(run_id)
         # Timing is always recomputed from the current verified take, never a previous one.
         self._require_verified_narration(run_id, narration)
-        plan = self.repository.get_visual_plan(run.visual_plan_id)
-        script = self.repository.get_script(plan.script_id)
-        scenes = self.repository.list_scenes_for_visual_plan(run.visual_plan_id)
-        timing = self.media_service.narration_speech_timing(narration, script.narration_text)
         try:
-            recommendation = speech_timing.recommend_scene_durations(
-                timing, [scene.narration_excerpt for scene in scenes]
-            )
+            scenes, timing, recommendation = self._narration_alignment(run, narration)
         except ValueError as error:
             raise ProductionRequestError(str(error)) from error
         snapshots = self.repository.list_production_evidence(run_id, "snapshot")
@@ -928,6 +1022,22 @@ class ProductionLifecycleService:
                 "silence_detection": dict(self.media_service.runtime.SILENCE_DETECTION),
             },
         }
+
+    def _narration_alignment(self, run: Any, narration: Any) -> tuple[list[Any], Any, dict]:
+        """Scene boundaries at the pause ending each scene's excerpt, on exactly this take.
+
+        The single computation behind the read-only recommendation and the automatic
+        narration-aligned first candidate. Raises ValueError when alignment is impossible.
+        """
+
+        plan = self.repository.get_visual_plan(run.visual_plan_id)
+        script = self.repository.get_script(plan.script_id)
+        scenes = self.repository.list_scenes_for_visual_plan(run.visual_plan_id)
+        timing = self.media_service.narration_speech_timing(narration, script.narration_text)
+        recommendation = speech_timing.recommend_scene_durations(
+            timing, [scene.narration_excerpt for scene in scenes]
+        )
+        return scenes, timing, recommendation
 
     def retime(
         self, run_id: str, durations_ms: list[int], actor: str, reason: str
@@ -1068,6 +1178,20 @@ class ProductionLifecycleService:
                 render_execution_id=artifact.render_execution_id,
                 final_media_artifact_id=artifact.id,
             )
+            if run.request.get("scene_timing") == SCENE_TIMING_ALIGNED:
+                self._record_scene_timing(
+                    run,
+                    version,
+                    narration,
+                    snapshot,
+                    "manual_retime",
+                    list(durations_ms),
+                    {
+                        "retime_evidence_id": f"{run.id}:retime:evidence:{version}",
+                        "actor": actor.strip(),
+                        "reason": reason.strip(),
+                    },
+                )
             self.repository.append_production_run_event(
                 run.id,
                 "qa_review_pending",
@@ -1092,6 +1216,7 @@ class ProductionLifecycleService:
         narration = self._current_narration_attempt(run_id)
         verification = self._narration_verification(run_id, narration) if narration else None
         selection = self._current_selection(run_id)
+        timing = self._scene_timing(run_id, self._evidence_version(current)) if current else None
         return {
             "id": run.id,
             "visual_plan_id": run.visual_plan_id,
@@ -1120,6 +1245,16 @@ class ProductionLifecycleService:
                 {
                     "version": self._evidence_version(current),
                     "final_media_artifact_id": current.final_media_artifact_id,
+                    "scene_timing": (
+                        {
+                            "id": timing.id,
+                            "policy": timing.payload["policy"],
+                            "source": timing.payload["source"],
+                            "durations_ms": timing.payload["durations_ms"],
+                        }
+                        if timing
+                        else None
+                    ),
                 }
                 if current
                 else None
@@ -1625,7 +1760,7 @@ class ProductionLifecycleService:
         scene_ids = self._plan_scene_ids(run.visual_plan_id)
         total_weight = sum(item["duration_weight"] for item in timeline.values())
         remaining = narration.duration_ms
-        inputs = []
+        weighted = []
         for index, scene_id in enumerate(scene_ids):
             duration = (
                 remaining
@@ -1635,15 +1770,34 @@ class ProductionLifecycleService:
                 )
             )
             remaining -= duration
-            inputs.append(
-                {
-                    "scene_id": scene_id,
-                    "resolved_state_id": states[scene_id],
-                    "duration_ms": duration,
-                    "motion": "static",
-                    "transition_to_next": timeline[scene_id]["transition_to_next"],
-                }
-            )
+            weighted.append(duration)
+        durations, timing_record = weighted, None
+        if run.request.get("scene_timing") == SCENE_TIMING_ALIGNED:
+            # Aligned to exactly the take that just passed the completeness gate above.
+            try:
+                _scenes, timing, recommendation = self._narration_alignment(run, narration)
+            except ValueError as error:
+                timing_record = ("weighted_fallback", {"fallback_reason": str(error)[:1000]})
+            else:
+                durations = recommendation["durations_ms"]
+                timing_record = (
+                    "narration_aligned",
+                    {
+                        "boundaries": recommendation["boundaries"],
+                        "timing_evidence": speech_timing.timing_evidence(timing),
+                        "silence_detection": dict(self.media_service.runtime.SILENCE_DETECTION),
+                    },
+                )
+        inputs = [
+            {
+                "scene_id": scene_id,
+                "resolved_state_id": states[scene_id],
+                "duration_ms": duration,
+                "motion": "static",
+                "transition_to_next": timeline[scene_id]["transition_to_next"],
+            }
+            for scene_id, duration in zip(scene_ids, durations, strict=True)
+        ]
         snapshot = self.media_service.create_persistent_scene_snapshot(
             f"{run.id}:snapshot:{version}",
             run.visual_plan_id,
@@ -1662,7 +1816,54 @@ class ProductionLifecycleService:
             },
             final_media_input_snapshot_id=snapshot.id,
         )
+        if timing_record is not None:
+            source, detail = timing_record
+            detail["duration_weights"] = [
+                timeline[scene_id]["duration_weight"] for scene_id in scene_ids
+            ]
+            detail["weighted_durations_ms"] = weighted
+            self._record_scene_timing(run, version, narration, snapshot, source, durations, detail)
         return snapshot
+
+    def _record_scene_timing(
+        self,
+        run: Any,
+        version: int,
+        narration: Any,
+        snapshot: Any,
+        source: str,
+        durations_ms: list[int],
+        detail: dict[str, Any],
+    ) -> Any:
+        """Append the scene-timing provenance of one render version (same version)."""
+
+        attempt = self._narration_attempt_for_asset(run.id, narration.id)
+        return self.repository.create_production_evidence(
+            f"{run.id}:scene_timing:{version}",
+            run.id,
+            "scene_timing",
+            {
+                "policy": run.request["scene_timing"],
+                "source": source,
+                "render_version": version,
+                "scene_ids": [item["scene_id"] for item in snapshot.scene_inputs],
+                "durations_ms": list(durations_ms),
+                "narration_asset_id": narration.id,
+                "narration_version": self._evidence_version(attempt),
+                "wav_sha256": narration.content_digest,
+                "narration_duration_ms": narration.duration_ms,
+                **detail,
+            },
+            narration_asset_id=narration.id,
+            final_media_input_snapshot_id=snapshot.id,
+        )
+
+    def _scene_timing(self, run_id: str, render_version: int) -> Any | None:
+        identity = f"{run_id}:scene_timing:{render_version}"
+        for item in self.repository.list_production_evidence(run_id, "scene_timing"):
+            if item.id == identity:
+                return item
+        return None
 
     def _ensure_render(self, run: Any, snapshot: Any) -> Any:
         """Return or create the render of exactly this snapshot, at the snapshot's version."""
@@ -1911,6 +2112,7 @@ class ProductionLifecycleService:
             "adopt_acquisitions_from",
             "narrator",
             "delivery_policy",
+            "scene_timing",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -2017,6 +2219,13 @@ class ProductionLifecycleService:
             )
         if [item.get("scene_id") for item in timeline] != plan_scenes:
             raise ProductionRequestError("Timeline must cover the exact VisualPlan in sequence.")
+        if "scene_timing" in request:
+            if request["scene_timing"] not in SCENE_TIMING_POLICIES:
+                raise ProductionRequestError(
+                    f"Production scene_timing must be one of {', '.join(SCENE_TIMING_POLICIES)}."
+                )
+            if request["scene_timing"] == SCENE_TIMING_ALIGNED:
+                self._require_excerpts_join_script(request["visual_plan_id"])
         for index, item in enumerate(timeline):
             if not isinstance(item.get("duration_weight"), int) or item["duration_weight"] <= 0:
                 raise ProductionRequestError("Timeline duration weights must be positive integers.")
@@ -2176,6 +2385,28 @@ class ProductionLifecycleService:
             closure = transition.get("allowed_derived_entities", [])
             if not isinstance(closure, list) or any(item not in entity_keys for item in closure):
                 raise ProductionRequestError("Derived-entity closure is invalid.")
+
+    def _require_excerpts_join_script(self, plan_id: str) -> None:
+        """Narration-aligned timing needs scene excerpts that concatenate to the Script."""
+
+        plan = self.repository.get_visual_plan(plan_id)
+        script = self.repository.get_script(plan.script_id)
+        try:
+            excerpt_words = [
+                word
+                for scene in self.repository.list_scenes_for_visual_plan(plan_id)
+                for word in speech_timing.script_words(scene.narration_excerpt)
+            ]
+            script_words = speech_timing.script_words(script.narration_text)
+        except ValueError as error:
+            raise ProductionRequestError(
+                f"Narration-aligned scene timing cannot be planned: {error}"
+            ) from None
+        if excerpt_words != script_words:
+            raise ProductionRequestError(
+                "Narration-aligned scene timing requires the Scene narration excerpts to "
+                "concatenate exactly to the Script; no provider call made."
+            )
 
     def _validate_citations(self, plan_id: str, plan_scenes: list[str], citations: Any) -> None:
         """Accept only explicit citations whose sources back the Script's frozen claim set."""
@@ -2593,6 +2824,7 @@ class ProductionLifecycleService:
                 f"{run_id}:snapshot:evidence:{version}",
                 f"{run_id}:render:evidence:{version}",
                 f"{run_id}:retime:evidence:{version}",
+                f"{run_id}:scene_timing:{version}",
             }
             & evidence_ids
             or f"{run_id}:qa:cell:{version}" in review_ids
