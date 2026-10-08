@@ -53,7 +53,7 @@ of this approved method.
   purposeful transitions, mobile-readable captions, and the established render path. Review acquisition quality
   before assembly and the complete result before founder review.
 
-#### A.1 Founder-validated findings (Productions 8 and 9)
+#### A.1 Founder-validated findings (Productions 8–10)
 
 Each finding is recorded once, with the single executable place that now enforces it. Topic-specific P9 content
 (the BNPL shop and kitchen, exact beat wording) stays in section C.
@@ -73,6 +73,10 @@ Each finding is recorded once, with the single executable place that now enforce
 | Captions ran ahead of speech and across scene changes | Pause-aligned phrase captions from the exact narration | `speech_timing.py` via `create_persistent_scene_snapshot` | P9 render v3 |
 | Estimated beat timing did not follow the narration | Scene boundaries at the pause ending each scene's narration excerpt (matched pause midpoint, else estimated word gap), applied to the first candidate for `scene_timing: narration-aligned-v1` runs (the default for new runs); later retimes remain founder-approved | `_ensure_snapshot` + `recommend_retime`/`retime` | P8 v2, P9 v2; P10 v1; P10-R2 artifact-2 |
 | A provider network failure interrupted acquisition | A technical provider failure stops the run; resume needs explicit founder authorization | Lifecycle `failed` state and `resume` | P9 Attempt 2 beat 8 |
+| A sourced figure was stated with a different category than its source ("default tariffs: around 20 million") | A Script figure's stated qualifier must match the frozen source quote; mismatches are flagged for editorial judgement before synthesis | Editorial Readiness evaluator v2 (`SCRIPT_NUMBER_QUALIFIER_MISMATCH`, `script_preflight.py`); Approve over findings needs a comment | P10 Script C5 |
+| Full-frame review missed duplicated spouts and a malformed arm | New-run acquisition review inspects props, and limbs and strap for character beats, zoomed in and bound to the asset SHA-256 | v2 acquisition review contract in `review_acquisition` (`production.py`) | P10 acquisition review |
+| The HOME post box was reused as an energy meter | Anchor fixtures keep their identity; any new object is drawn separately | Structured `fixtures` on the pinned `environment_family` authority, one deterministic prompt clause, and per-fixture attestation in the v2 review | P10 HOME beats |
+| Same-room beats drifted in geometry and furniture scale | The same environment plus viewpoint locks room geometry, furniture scale and fixture placement | Frozen `environment_pins` with `viewpoint:<key>` plates in generation and the v2 `geometry_compared_with` set | P10 HOME beats |
 
 Open finding (not yet a rule): with Daniel, a fixed term such as "Buy now, pay later" was voiced as separate
 utterances (a pitch reset and an unpunctuated pause). The P10 Script contained no comma-bearing fixed term, so it was

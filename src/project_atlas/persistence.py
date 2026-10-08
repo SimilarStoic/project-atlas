@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -573,6 +574,55 @@ VISUAL_REFERENCE_AUTHORITY_ROLES = frozenset(
         "special_break_frame",
     }
 )
+# Structured environment identity: an environment_family authority may declare persistent
+# fixtures in its metadata and approved viewpoint plates as members "viewpoint:<key>".
+VIEWPOINT_MEMBER_PREFIX = "viewpoint:"
+_ENVIRONMENT_KEY = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+def environment_fixtures(role: str, metadata: dict[str, Any]) -> list[dict[str, str]]:
+    """Validated persistent fixtures of one authority; an empty list when none are declared."""
+
+    if "fixtures" not in metadata:
+        return []
+    fixtures = metadata["fixtures"]
+    if role != "environment_family":
+        raise ValueError("Only an environment_family authority may declare fixtures.")
+    if not isinstance(fixtures, list) or not fixtures:
+        raise ValueError("Environment fixtures must be a non-empty list when declared.")
+    keys: set[str] = set()
+    validated = []
+    for fixture in fixtures:
+        if (
+            not isinstance(fixture, dict)
+            or not {"key", "identity"} <= set(fixture)
+            or set(fixture) - {"key", "identity", "placement"}
+        ):
+            raise ValueError("An environment fixture is exactly {key, identity[, placement]}.")
+        key = fixture["key"]
+        if not isinstance(key, str) or not _ENVIRONMENT_KEY.fullmatch(key) or key in keys:
+            raise ValueError("Environment fixture keys must be unique lowercase safe keys.")
+        if not all(isinstance(value, str) and value.strip() for value in fixture.values()):
+            raise ValueError("Environment fixture identity and placement must be text.")
+        keys.add(key)
+        validated.append(dict(fixture))
+    return validated
+
+
+def environment_viewpoints(role: str, member_roles: list[str]) -> list[str]:
+    """Validated viewpoint keys named by an authority's "viewpoint:<key>" member roles."""
+
+    keys = []
+    for member_role in member_roles:
+        if not member_role.startswith(VIEWPOINT_MEMBER_PREFIX):
+            continue
+        if role != "environment_family":
+            raise ValueError("Only an environment_family authority may have viewpoint plates.")
+        key = member_role[len(VIEWPOINT_MEMBER_PREFIX) :]
+        if not _ENVIRONMENT_KEY.fullmatch(key) or key in keys:
+            raise ValueError("Viewpoint plate keys must be unique lowercase safe keys.")
+        keys.append(key)
+    return keys
 
 
 @dataclass(frozen=True)
@@ -4622,6 +4672,8 @@ class AtlasRepository(
         authority_metadata = {} if metadata is None else metadata
         if not isinstance(authority_metadata, dict):
             raise ValueError("VisualReferenceAuthority metadata must be an object.")
+        environment_fixtures(role, authority_metadata)
+        environment_viewpoints(role, [member_role.strip() for _, member_role in members])
         parent_id = self._normalized_optional_identifier(parent_authority_id)
         if role == "global_illustration_style" and parent_id is not None:
             raise ValueError("A global illustration authority cannot have a parent authority.")
@@ -5702,6 +5754,15 @@ class AtlasRepository(
                     or frozen_member.get("member_role") != member.member_role
                 ):
                     raise ValueError("Frozen visual-authority members do not match persistence.")
+            # Pinned environment identity, when frozen, must be the authority's own.
+            if "fixtures" in frozen and frozen["fixtures"] != environment_fixtures(
+                authority.role, authority.metadata
+            ):
+                raise ValueError("Frozen environment fixtures do not match their authority.")
+            if "viewpoint" in frozen and frozen["viewpoint"] not in environment_viewpoints(
+                authority.role, [member.member_role for member in persisted_members]
+            ):
+                raise ValueError("Frozen viewpoint is not a plate of its authority.")
             if authority.role == "global_illustration_style":
                 global_ids.append(authority.id)
             selected.append(

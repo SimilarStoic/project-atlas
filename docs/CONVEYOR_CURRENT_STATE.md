@@ -98,9 +98,9 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the SimilarStoic new-run defaults, the narration-aligned first candidate and Editorial Readiness evaluator
-  v2 (with its fail-closed fix-up), the verified local full suite is **569 passed, 0 skipped, 0 failed** (no
-  migration). Post-acquisition founder narration authorization is a recorded action;
+- After the SimilarStoic new-run defaults, the narration-aligned first candidate, Editorial Readiness evaluator v2
+  and the pinned environment identity with the v2 acquisition review, the verified local full suite is **586
+  passed, 0 skipped, 0 failed** (no migration). Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -246,10 +246,6 @@ The following lessons are **OPEN: they are not current implemented behaviour**. 
 extension of an existing Conveyor mechanism, not as an operator habit or a parallel subsystem. Any prompt for P10
 completion, P11 or later work must check this list and must not silently treat an OPEN lesson as completed.
 
-- The same environment plus the same viewpoint must lock room geometry, furniture scale and persistent fixture
-  identity across beats.
-- Anchor fixtures must never be repurposed as different objects (the HOME post box was reused as an energy meter).
-- Acquisition review must inspect limbs, props and straps zoomed in, not only at full frame.
 - The script-side preflight below flags lines and figures before synthesis, but whether a flagged line is spoken
   cleanly by Daniel remains founder/editorial judgement; it has one Script of calibration evidence (the founder A/B
   in `D:\ConveyorOS\channels\SimilarStoic\narration-tests\2026-10-07-ear\`, the P10 loop calibration in
@@ -271,6 +267,14 @@ has yet exercised it):
   Approve over such findings requires a comment.
 - New SimilarStoic runs default to the v2 narrator, the prefer-mode sentence-delivery policy and N = 3 (see
   Canonical v2 fidelity and safeguards).
+- The same environment plus the same viewpoint locks room geometry, furniture scale and persistent fixture identity:
+  new runs freeze their exact environment authority and viewpoint per AssetSpec, generation sends only that
+  viewpoint's approved plate, and a v2 pass must name the frozen same-family, same-viewpoint comparison set.
+- Anchor fixtures are structured authority data rendered into one deterministic prompt clause, and a v2 pass must
+  attest every pinned fixture as `unchanged` or `not_in_frame` (the HOME post box reused as an energy meter would be
+  a failed review).
+- Acquisition review of new runs requires zoomed inspection of props, and of limbs and strap for character beats,
+  bound to the inspected asset's SHA-256 (see Pinned environment identity and the v2 acquisition review).
 
 Completed: the runtime now records the P8 and P9 manual public releases (founder-attested receipts above), so
 that lesson is closed.
@@ -461,6 +465,35 @@ Script preflight (Editorial Readiness evaluator `deterministic-editorial-readine
 - Automated findings are evidence; whether a figure or line is wrong is editorial judgement. An Approve decision
   over an assessment with such findings requires a non-empty comment. Stored v1 assessments and their decisions
   resolve unchanged.
+
+Pinned environment identity and the v2 acquisition review (new runs; no migration):
+
+- An `environment_family` authority may declare `metadata.fixtures` (`[{key, identity[, placement]}]`, unique
+  lowercase keys) and approved viewpoint plates as members with role `viewpoint:<key>`; both are validated when the
+  authority is created. An AssetSpec may name `environment_viewpoint` beside its `environment_family` (or an
+  explicit environment authority in `visual_authority_ids`). AssetSpecs are never mutated.
+- New runs freeze `acquisition_review_profile: similarstoic-raw-world-acquisition-v2` (a `NEW_RUN_DEFAULTS` field)
+  and `environment_pins`: per AssetSpec that names an environment, the exact `{authority_id, environment_family,
+  viewpoint}` resolved once at `start()` (the latest family version at that moment, or an explicit pin supplied in
+  the request). A missing, extra, ambiguous or contradictory pin, an unknown family, authority or viewpoint, or
+  invalid fixture metadata is refused before any provider call. Existing runs reconstruct an omitted profile and
+  pins from their frozen request, so resubmission stays idempotent whatever the defaults or authorities become.
+- Generation and every reacquisition of a pinned run consume the frozen pin directly and never resolve the latest
+  family version. The recipe freezes the pinned authority's `fixtures` and `viewpoint` (checked against the
+  authority when the execution is recorded), the prompt gains one deterministic fixture clause rendered from the
+  structured fixtures (no new free-text rules and no style-profile change), and only the pinned viewpoint's plate is
+  sent among that authority's viewpoint plates. Each execution's recorded environment authority and viewpoint must
+  equal the pin, or the attempt is never admitted.
+- A v2 `passed` acquisition review must carry `zoom_inspection` with the inspected asset's `asset_sha256` and exactly
+  `props` (plus `limbs` and `strap` when the AssetSpec has a character), all `passed`; `fixtures` for exactly the
+  recorded authority's fixture keys, each `unchanged` or `not_in_frame`; and `geometry_compared_with` equal to the
+  other variants with the same pinned family and viewpoint. Requirements come from the frozen request and the
+  asset's recorded generation authority (the source generation for an adopted asset), never from the latest
+  authority, so they do not change with later reviews, rounds or authority versions. A pass carrying any violation
+  is refused before any review is recorded; a failed review may record the violation. Adoption still requires the
+  exact recorded authorities, now including the successor's pin.
+- Runs frozen without the profile (production-8 through `production-10-r2`, and any historical run awaiting
+  acquisition review) keep the v1 review contract and today's family resolution exactly.
 
 Canonical post-narration retiming (`retime`, also `POST /api/v2/productions/{run}/retime`):
 

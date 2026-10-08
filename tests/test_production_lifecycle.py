@@ -18,6 +18,8 @@ from project_atlas.generation import (
     DEFAULT_VISUAL_STYLE_PROFILE_ID,
     GeneratedArtifact,
     GenerationFailure,
+    LocalAssetStorage,
+    PromptComposer,
 )
 from project_atlas.media import MediaRuntimeError, MediaService, NarrationSynthesis
 from project_atlas.narration_verification import (
@@ -165,6 +167,7 @@ def _request(
     visual_style_profile_id: str = DEFAULT_VISUAL_STYLE_PROFILE_ID,
     script: str = FIXTURE_SCRIPT,
     excerpts: tuple[str, str] = FIXTURE_EXCERPTS,
+    spec_metadata: tuple[dict | None, dict | None] = (None, None),
 ) -> tuple[dict, list[tuple[str, str, str]]]:
     repository = server.repository
     plan = create_authorized_visual_plan(server, prefix, script)
@@ -188,6 +191,7 @@ def _request(
             f"Canonical world state {sequence}",
             f"Draw state {sequence} without text.",
             character_profile_id=character_profile_id,
+            metadata=spec_metadata[sequence - 1],
         )
         variants.append(
             {
@@ -304,7 +308,33 @@ def _post_error(server, path: str, payload: dict) -> tuple[dict, int]:
     return result, status
 
 
-def _passing_reviews(review_keys) -> dict:
+def _v2_pass_evidence(server, run_id: str, key) -> dict:
+    """A complete v2 pass, derived from the service's own frozen review requirements."""
+
+    service = server.production_service
+    required = service.acquisition_review_requirements(
+        server.repository.get_production_run(run_id), tuple(key)
+    )
+    return {
+        "zoom_inspection": {
+            "asset_sha256": required["asset_sha256"],
+            **{check: "passed" for check in required["zoom_checks"]},
+        },
+        "fixtures": {fixture: "unchanged" for fixture in required["fixture_keys"]},
+        "geometry_compared_with": required["geometry_compared_with"],
+    }
+
+
+def _review_evidence(server, run_id: str, key, outcome: str, base: dict) -> dict:
+    """v1 evidence for runs frozen without the v2 contract; v2 adds the required attestations."""
+
+    request = server.repository.get_production_run(run_id).request
+    if outcome != "passed" or "acquisition_review_profile" not in request:
+        return base
+    return base | _v2_pass_evidence(server, run_id, key)
+
+
+def _passing_reviews(review_keys, server, run_id: str) -> dict:
     return {
         "reviews": [
             {
@@ -312,7 +342,13 @@ def _passing_reviews(review_keys) -> dict:
                 "entity_key": entity,
                 "variant_key": variant,
                 "outcome": "passed",
-                "evidence": {"source_quality": "passed", "semantic_support": "passed"},
+                "evidence": _review_evidence(
+                    server,
+                    run_id,
+                    (world, entity, variant),
+                    "passed",
+                    {"source_quality": "passed", "semantic_support": "passed"},
+                ),
             }
             for world, entity, variant in review_keys
         ]
@@ -381,7 +417,7 @@ def test_canonical_v2_http_lifecycle_is_resumable_and_founder_distinct(
             reviewed, status = post_json(
                 server,
                 "/api/v2/productions/canonical-v2-proof/acquisition-review",
-                _passing_reviews(review_keys),
+                _passing_reviews(review_keys, server, "canonical-v2-proof"),
             )
         except HTTPError as error:
             raise AssertionError(error.read().decode()) from error
@@ -732,7 +768,7 @@ def test_narration_requires_explicit_frozen_authorization(tmp_path, monkeypatch)
         blocked, status = _post_error(
             server,
             "/api/v2/productions/narration-blocked/acquisition-review",
-            _passing_reviews(review_keys),
+            _passing_reviews(review_keys, server, "narration-blocked"),
         )
         assert status == 422
         assert blocked["stage"] == "narration"
@@ -822,7 +858,7 @@ def test_a_frozen_v3_production_stays_v3_and_new_acquisition_fails_closed(
         run = server.repository.get_production_run("frozen-v3")
         digest = run.request_digest
         assert run.request["authority"]["visual_style_profile_id"] == V3_STYLE
-        rejected = _review(keys, "passed")
+        rejected = _review(keys, "passed", server, "frozen-v3")
         rejected[0]["outcome"] = "failed"
         reviewed, status = post_json(
             server, "/api/v2/productions/frozen-v3/acquisition-review", {"reviews": rejected}
@@ -882,7 +918,7 @@ def test_recorded_founder_authorization_permits_exactly_one_narration(
         reviewed, status = post_json(
             server,
             "/api/v2/productions/narration-later/acquisition-review",
-            _passing_reviews(review_keys),
+            _passing_reviews(review_keys, server, "narration-later"),
         )
         assert status == 200
         assert reviewed["production"]["status"] == "qa_review_pending"
@@ -919,7 +955,7 @@ def test_authorization_after_a_blocked_narration_resumes_without_reacquisition(
         blocked, status = _post_error(
             server,
             "/api/v2/productions/narration-after-block/acquisition-review",
-            _passing_reviews(review_keys),
+            _passing_reviews(review_keys, server, "narration-after-block"),
         )
         assert status == 422 and blocked["stage"] == "narration"
         reviews = server.repository.list_production_qa_reviews("narration-after-block")
@@ -962,7 +998,7 @@ def test_frozen_request_authorization_needs_no_record(tmp_path, monkeypatch) -> 
         reviewed, status = post_json(
             server,
             "/api/v2/productions/narration-frozen/acquisition-review",
-            _passing_reviews(review_keys),
+            _passing_reviews(review_keys, server, "narration-frozen"),
         )
         assert reviewed["production"]["status"] == "qa_review_pending"
         assert len(calls) == 1
@@ -1084,14 +1120,16 @@ def _spec_of(generation_input) -> str:
     return generation_input.visual_authority_recipe["asset_spec_id"]
 
 
-def _review(keys, outcome: str) -> list[dict]:
+def _review(keys, outcome: str, server, run_id: str) -> list[dict]:
     return [
         {
             "world_key": world,
             "entity_key": entity,
             "variant_key": variant,
             "outcome": outcome,
-            "evidence": {"source_quality": outcome},
+            "evidence": _review_evidence(
+                server, run_id, (world, entity, variant), outcome, {"source_quality": outcome}
+            ),
         }
         for world, entity, variant in keys
     ]
@@ -1120,7 +1158,10 @@ def test_rejected_variant_is_reacquired_alone_and_later_rounds_supersede_it(
         rejected, status = post_json(
             server,
             "/api/v2/productions/retry-round/acquisition-review",
-            {"reviews": _review([start_key], "passed") + _review([finish_key], "failed")},
+            {
+                "reviews": _review([start_key], "passed", server, "retry-round")
+                + _review([finish_key], "failed", server, "retry-round")
+            },
         )
         assert status == 200
         assert rejected["production"]["status"] == "failed"
@@ -1143,7 +1184,7 @@ def test_rejected_variant_is_reacquired_alone_and_later_rounds_supersede_it(
         both, status = _post_error(
             server,
             "/api/v2/productions/retry-round/acquisition-review",
-            {"reviews": _review(keys, "passed")},
+            {"reviews": _review(keys, "passed", server, "retry-round")},
         )
         assert status == 400
         assert "awaiting review" in both["error"]
@@ -1152,7 +1193,7 @@ def test_rejected_variant_is_reacquired_alone_and_later_rounds_supersede_it(
         passed, status = post_json(
             server,
             "/api/v2/productions/retry-round/acquisition-review",
-            {"reviews": _review([finish_key], "passed")},
+            {"reviews": _review([finish_key], "passed", server, "retry-round")},
         )
         assert status == 200
         assert passed["production"]["status"] == "qa_review_pending"
@@ -1195,7 +1236,10 @@ def test_rejected_image_counts_toward_ceiling_and_blocks_retry_before_provider(t
         post_json(
             server,
             "/api/v2/productions/retry-ceiling/acquisition-review",
-            {"reviews": _review(keys[:1], "passed") + _review(keys[1:], "failed")},
+            {
+                "reviews": _review(keys[:1], "passed", server, "retry-ceiling")
+                + _review(keys[1:], "failed", server, "retry-ceiling")
+            },
         )
         blocked, status = _post_error(server, "/api/v2/productions/retry-ceiling/resume", {})
         assert status == 422
@@ -1267,7 +1311,7 @@ def test_off_aspect_full_frame_result_is_retried_before_founder_review(
         passed, status = post_json(
             server,
             "/api/v2/productions/aspect-admit/acquisition-review",
-            {"reviews": _review(keys, "passed")},
+            {"reviews": _review(keys, "passed", server, "aspect-admit")},
         )
         assert status == 200
         assert passed["production"]["status"] == "qa_review_pending"
@@ -1393,7 +1437,9 @@ def _render_ready_run(tmp_path, monkeypatch, prefix: str, historical: bool = Fal
     else:
         post_json(server, "/api/v2/productions", request)
     reviewed, status = post_json(
-        server, f"/api/v2/productions/{prefix}/acquisition-review", _passing_reviews(keys)
+        server,
+        f"/api/v2/productions/{prefix}/acquisition-review",
+        _passing_reviews(keys, server, prefix),
     )
     assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
     assert len(calls) == 1
@@ -1917,7 +1963,9 @@ def test_retime_production_8_shape_regression(tmp_path, monkeypatch, transcripti
         _start_historical(server, request)
         keys = [(f"beat-{i}", "scene", "beat") for i in range(1, 9)]
         reviewed, _status = post_json(
-            server, "/api/v2/productions/p8-shape/acquisition-review", _passing_reviews(keys)
+            server,
+            "/api/v2/productions/p8-shape/acquisition-review",
+            _passing_reviews(keys, server, "p8-shape"),
         )
         assert reviewed["production"]["status"] == "qa_review_pending"
         narration_id = repository.list_production_evidence("p8-shape", "narration")[
@@ -1992,7 +2040,9 @@ def _cited_render_run(tmp_path, monkeypatch, prefix: str, citations):
         request["citations"] = citations(request)
     post_json(server, "/api/v2/productions", request)
     reviewed, status = post_json(
-        server, f"/api/v2/productions/{prefix}/acquisition-review", _passing_reviews(keys)
+        server,
+        f"/api/v2/productions/{prefix}/acquisition-review",
+        _passing_reviews(keys, server, prefix),
     )
     assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
     return runtime, server, generator, request
@@ -2235,7 +2285,9 @@ def test_failed_verification_keeps_take_1_and_blocks_snapshot_until_retake_2(
     run_id = request["id"]
     try:
         failed, status = _post_error(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 422 and failed["stage"] == "narration_verification"
         assert "repetition" in failed["error"] and "retake is required" in failed["error"]
@@ -2487,7 +2539,9 @@ def test_frozen_requests_without_the_forecast_need_separate_verification_authori
         run_before = repository.get_production_run(run_id)
         assert "verification_calls" not in run_before.request["forecast"]
         failed, status = _post_error(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 422 and failed["stage"] == "narration_verification"
         assert "not authorized" in failed["error"]
@@ -2551,7 +2605,9 @@ def test_transcription_failure_is_recorded_once_and_never_retried(
     run_id = request["id"]
     try:
         failed, status = _post_error(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 422 and failed["stage"] == "narration_verification"
         [verification] = repository.list_production_evidence(run_id, "narration_verification")
@@ -2590,12 +2646,14 @@ def _accepted_source(tmp_path, monkeypatch, prefix: str, *, retry_round: bool = 
     if retry_round:
         start_key, finish_key = keys
         service.review_acquisition(
-            prefix, _review([start_key], "passed") + _review([finish_key], "failed")
+            prefix,
+            _review([start_key], "passed", server, prefix)
+            + _review([finish_key], "failed", server, prefix),
         )
         service.resume(prefix)
         to_pass = [finish_key]
     with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
-        service.review_acquisition(prefix, _review(to_pass, "passed"))
+        service.review_acquisition(prefix, _review(to_pass, "passed", server, prefix))
     return runtime, server, generator, request, keys
 
 
@@ -2629,6 +2687,8 @@ def _related_request(
         specs[variant_key] = spec.id
     request = json.loads(json.dumps(base))
     request.pop("adopt_acquisitions_from", None)
+    # Pins are keyed by the source's own AssetSpecs; the successor freezes its own.
+    request.pop("environment_pins", None)
     request.update({"id": prefix, "visual_plan_id": plan.id})
     world = request["worlds"][0]
     world["scene_ids"] = scene_ids
@@ -2738,7 +2798,9 @@ def test_successor_adopts_only_current_accepted_assets_with_zero_image_calls(
         assert set(service._variant_review_states(successor_run).values()) == {"pending"}
         assert repository.list_production_qa_reviews(successor_id) == []
         reviewed, status = post_json(
-            server, f"/api/v2/productions/{successor_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{successor_id}/acquisition-review",
+            _passing_reviews(keys, server, successor_id),
         )
         assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
         assert len(generator.inputs) == image_calls
@@ -2764,7 +2826,9 @@ def test_adoption_fails_closed_before_any_provider_call(tmp_path, monkeypatch, t
         rejected = _related_request(server, "rejected-src", source_request, adopt_from=None)
         post_json(server, "/api/v2/productions", rejected)
         server.production_service.review_acquisition(
-            "rejected-src", _review(keys[:1], "failed") + _review(keys[1:], "passed")
+            "rejected-src",
+            _review(keys[:1], "failed", server, "rejected-src")
+            + _review(keys[1:], "passed", server, "rejected-src"),
         )
         image_calls = len(generator.inputs)
         runs_before = repository.connection.execute(
@@ -2835,7 +2899,9 @@ def test_a_rejected_adopted_image_is_never_replaced_by_generation(
         )
         post_json(server, "/api/v2/productions", successor)
         reviewed = service.review_acquisition(
-            "reject-next", _review(keys[:1], "failed") + _review(keys[1:], "passed")
+            "reject-next",
+            _review(keys[:1], "failed", server, "reject-next")
+            + _review(keys[1:], "passed", server, "reject-next"),
         )
         assert (reviewed["status"], reviewed["stage"]) == ("failed", "acquisition_review")
         with pytest.raises(ProductionLifecycleError, match="never generates images"):
@@ -3045,7 +3111,9 @@ def test_first_on_target_take_is_selected_immediately_with_the_v2_profile(
     try:
         assert repository.get_production_run(run_id).request["narrator"] == V2_PROFILE
         reviewed, status = post_json(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
         # One take, one completeness check; the delivery score reused that same transcription.
@@ -3088,7 +3156,9 @@ def test_best_of_budget_selects_an_earlier_take_and_it_alone_renders_and_retimes
     run_id = request["id"]
     try:
         reviewed, status = post_json(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
         assert (len(calls), len(transcription.calls)) == (3, 3)
@@ -3160,7 +3230,9 @@ def test_unscorable_and_record_only_takes_select_the_earliest_complete_take(
     run_id = request["id"]
     try:
         reviewed, status = post_json(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 200 and reviewed["production"]["status"] == "qa_review_pending"
         assert (len(calls), len(transcription.calls)) == (takes, takes)
@@ -3187,7 +3259,9 @@ def test_no_complete_take_fails_closed_after_exactly_the_frozen_budget(
     run_id = request["id"]
     try:
         failed, status = _post_error(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 422 and failed["stage"] == "narration_selection"
         latest = repository.latest_production_run_event(run_id)
@@ -3234,7 +3308,9 @@ def test_resume_reuses_a_persisted_selection_without_calls_or_duplicates(
 
         monkeypatch.setattr(ProductionLifecycleService, "_ensure_snapshot", crash)
         _failed, status = _post_error(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 422
         assert len(repository.list_production_evidence(run_id, "narration_selection")) == 1
@@ -3261,7 +3337,9 @@ def test_policy_retakes_reselect_when_complete_and_never_refill_the_budget(
     run_id = request["id"]
     try:
         _reviewed, status = post_json(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 200 and len(calls) == 1
         # A passing retake becomes the new selection even though its pacing is below target.
@@ -3314,7 +3392,9 @@ def test_real_scoring_of_a_one_sentence_script_is_not_applicable_and_selects(
     run_id = request["id"]
     try:
         _reviewed, status = post_json(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 200 and len(calls) == 1
         [delivery] = repository.list_production_evidence(run_id, "narration_delivery")
@@ -3358,7 +3438,9 @@ def test_narrator_drift_after_freezing_fails_closed_before_any_narration_call(
         assert narration_module.narrator_profile("similarstoic-daniel-v2") == drifted
 
         failed, status = _post_error(
-            server, f"/api/v2/productions/{run_id}/acquisition-review", _passing_reviews(keys)
+            server,
+            f"/api/v2/productions/{run_id}/acquisition-review",
+            _passing_reviews(keys, server, run_id),
         )
         assert status == 422 and failed["stage"] == "narration"
         assert "no longer matches the registered profile" in failed["error"]
@@ -3540,6 +3622,7 @@ def test_an_adoption_successor_with_the_defaults_plans_matching_verification(tmp
         request["adopt_acquisitions_from"] = "missing-source"
         defaulted = service._apply_new_run_defaults(request)
         assert defaulted["forecast"]["verification_calls"] == 3
+        defaulted["environment_pins"] = service._latest_environment_pins(defaulted)
         # Validation reaches the adoption source lookup: the forecast rule is satisfied.
         with pytest.raises(ProductionRequestError, match="does not exist"):
             service._validate_request(defaulted)
@@ -3568,7 +3651,9 @@ def _aligned_run(tmp_path, monkeypatch, transcription, prefix, seconds, scores, 
     created, status = post_json(server, "/api/v2/productions", request)
     assert status == 201, created
     reviewed, status = post_json(
-        server, f"/api/v2/productions/{prefix}/acquisition-review", _passing_reviews(keys)
+        server,
+        f"/api/v2/productions/{prefix}/acquisition-review",
+        _passing_reviews(keys, server, prefix),
     )
     assert status == 200, reviewed
     return server, calls
@@ -3746,5 +3831,522 @@ def test_a_historical_run_without_scene_timing_passes_review_with_weighted_timin
         assert service.status("historical-qa")["current_render"]["scene_timing"] is None
         passed = service.record_qa("historical-qa", {"outcome": "passed", "evidence": {"ok": 1}})
         assert passed["status"] == "private_founder_review_ready"
+    finally:
+        server.server_close()
+
+
+# --- Item 3: pinned environment identity and the v2 acquisition review contract -----------
+
+HOME_FAMILY = "p11-home"
+HOME_FIXTURES = [
+    {
+        "key": "post_box",
+        "identity": "plain unmarked tall wall-mounted post box",
+        "placement": "left wall",
+    },
+    {"key": "table", "identity": "small wooden table"},
+]
+
+
+def _environment_asset(server, scene_id: str, key: str) -> str:
+    repository = server.repository
+    spec = repository.create_asset_spec(
+        f"asset-spec-environment-{key}",
+        scene_id,
+        "environment",
+        f"Provide {key} environment evidence.",
+        f"An exact approved {key} plate.",
+        "Use the exact imported plate bytes.",
+    )
+    content = b"\x89PNG\r\n\x1a\n" + key.encode()
+    storage = LocalAssetStorage(server.generation_service.storage.root)
+    asset_id = f"asset-environment-{key}"
+    stored = storage.write(spec.id, asset_id, content, "image/png")
+    repository.create_asset(
+        asset_id,
+        spec.id,
+        1,
+        storage.relative_path(stored),
+        "image/png",
+        "imported",
+        content_digest=sha256(content).hexdigest(),
+    )
+    return asset_id
+
+
+def _home_authority(
+    server,
+    scene_id: str,
+    tag: str,
+    *,
+    family: str = HOME_FAMILY,
+    authority_key: str = "p11-home",
+    fixtures=HOME_FIXTURES,
+    viewpoints=("front", "side"),
+):
+    members = [(_environment_asset(server, scene_id, f"{tag}-anchor"), "environment-anchor")]
+    members += [
+        (_environment_asset(server, scene_id, f"{tag}-{viewpoint}"), f"viewpoint:{viewpoint}")
+        for viewpoint in viewpoints
+    ]
+    metadata = {"environment_family": family}
+    if fixtures is not None:
+        metadata["fixtures"] = fixtures
+    return server.repository.create_visual_reference_authority(
+        f"visual-reference-authority-{authority_key}-{tag}",
+        authority_key,
+        "environment_family",
+        "Home",
+        "Environment identity reference.",
+        members,
+        parent_authority_id=GLOBAL_AUTHORITY,
+        metadata=metadata,
+    )
+
+
+def _home_request(server, tmp_path, prefix, viewpoints=("front", "front"), **kwargs):
+    request, keys = _request(
+        server,
+        tmp_path,
+        prefix,
+        spec_metadata=tuple(
+            (
+                {"environment_family": HOME_FAMILY, "environment_viewpoint": viewpoint}
+                if viewpoint
+                else {"environment_family": HOME_FAMILY}
+            )
+            for viewpoint in viewpoints
+        ),
+        **kwargs,
+    )
+    return request, keys
+
+
+def _environment_entry(generation_input) -> dict:
+    [entry] = [
+        item
+        for item in generation_input.visual_authority_recipe["authorities"]
+        if item["usage_role"] == "environment_family"
+    ]
+    return entry
+
+
+def test_new_runs_freeze_the_v2_contract_and_exact_environment_pins(tmp_path, monkeypatch) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service, repository = server.production_service, server.repository
+    try:
+        request, keys = _home_request(server, tmp_path, "pinned")
+        scene_id = request["timeline"][0]["scene_id"]
+        authority = _home_authority(server, scene_id, "v1")
+        raw = json.loads(json.dumps(request))
+        created, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201, created
+        run = repository.get_production_run("pinned")
+        assert run.request["acquisition_review_profile"] == "similarstoic-raw-world-acquisition-v2"
+        specs = [
+            variant["asset_spec_id"] for variant in request["worlds"][0]["entities"][0]["variants"]
+        ]
+        assert run.request["environment_pins"] == {
+            spec: {
+                "authority_id": authority.id,
+                "environment_family": HOME_FAMILY,
+                "viewpoint": "front",
+            }
+            for spec in specs
+        }
+        assert len(generator.inputs) == 2
+        for generation_input in generator.inputs:
+            entry = _environment_entry(generation_input)
+            assert entry["authority_id"] == authority.id
+            assert entry["fixtures"] == HOME_FIXTURES and entry["viewpoint"] == "front"
+            clause = PromptComposer.fixture_clause(HOME_FIXTURES)
+            assert generation_input.prompt.count(clause) == 1
+            assert "post_box: plain unmarked tall wall-mounted post box (left wall)" in clause
+            sent = {image.asset_id for image in generation_input.reference_images}
+            assert {"asset-environment-v1-anchor", "asset-environment-v1-front"} <= sent
+            assert "asset-environment-v1-side" not in sent
+
+        required = service.acquisition_review_requirements(run, keys[0])
+        assert required["zoom_checks"] == ["props", "limbs", "strap"]
+        assert required["fixture_keys"] == ["post_box", "table"]
+        assert required["geometry_compared_with"] == ["main-world/explanation/finish"]
+        assert service.acquisition_review_requirements(run, keys[1])["geometry_compared_with"] == [
+            "main-world/explanation/start"
+        ]
+
+        # Resubmission never re-resolves pins or consults today's defaults.
+        _home_authority(server, scene_id, "v2", fixtures=[{"key": "meter", "identity": "meter"}])
+        monkeypatch.setitem(
+            production_module.NEW_RUN_DEFAULTS["similarstoic"],
+            "acquisition_review_profile",
+            "similarstoic-raw-world-acquisition-v9",
+        )
+        for form in (raw, run.request):
+            again = service.start(json.loads(json.dumps(form)))
+            assert again["request_digest"] == run.request_digest
+        assert repository.get_production_run("pinned").request == run.request
+    finally:
+        server.server_close()
+
+
+def test_a_newer_authority_version_is_used_neither_by_reacquisition_nor_by_review(
+    tmp_path,
+) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service, repository = server.production_service, server.repository
+    try:
+        request, keys = _home_request(
+            server, tmp_path, "newer", image_calls=3, narration_authorized=False
+        )
+        scene_id = request["timeline"][0]["scene_id"]
+        pinned = _home_authority(server, scene_id, "v1")
+        post_json(server, "/api/v2/productions", request)
+        run = repository.get_production_run("newer")
+        before = [service.acquisition_review_requirements(run, key) for key in keys]
+        newer = _home_authority(
+            server, scene_id, "v2", fixtures=[{"key": "meter", "identity": "energy meter"}]
+        )
+        assert newer.version == pinned.version + 1
+        start_key, finish_key = keys
+        service.review_acquisition(
+            "newer",
+            _review([start_key], "passed", server, "newer")
+            + _review([finish_key], "failed", server, "newer"),
+        )
+        service.resume("newer")
+        assert len(generator.inputs) == 3
+        entry = _environment_entry(generator.inputs[-1])
+        assert (entry["authority_id"], entry["fixtures"]) == (pinned.id, HOME_FIXTURES)
+        after = service.acquisition_review_requirements(run, finish_key)
+        assert after["fixture_keys"] == ["post_box", "table"]
+        assert after["asset_id"] != before[1]["asset_id"]
+        # The comparison set is fixed by the frozen plan and pins, whatever the round.
+        assert after["geometry_compared_with"] == before[1]["geometry_compared_with"]
+        assert (
+            service.acquisition_review_requirements(run, start_key)["geometry_compared_with"]
+            == before[0]["geometry_compared_with"]
+        )
+        with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
+            service.review_acquisition("newer", _review([finish_key], "passed", server, "newer"))
+        rounds = [
+            review.profile["profile"]
+            for review in repository.list_production_qa_reviews("newer")
+            if review.scope == "acquisition"
+        ]
+        assert rounds == ["similarstoic-raw-world-acquisition-v2"] * 3
+    finally:
+        server.server_close()
+
+
+def _valid_pass(server, run_id, key) -> dict:
+    return {
+        "world_key": key[0],
+        "entity_key": key[1],
+        "variant_key": key[2],
+        "outcome": "passed",
+        "evidence": {"source_quality": "passed"} | _v2_pass_evidence(server, run_id, key),
+    }
+
+
+def test_v2_passes_are_exact_and_carry_no_violation(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service, repository = server.production_service, server.repository
+    try:
+        request, keys = _home_request(server, tmp_path, "strict", narration_authorized=False)
+        _home_authority(server, request["timeline"][0]["scene_id"], "v1")
+        post_json(server, "/api/v2/productions", request)
+        start_key, finish_key = keys
+
+        def zoom(update):
+            def mutate(evidence):
+                evidence["zoom_inspection"].update(update)
+
+            return mutate
+
+        def drop(field, inner=None):
+            def mutate(evidence):
+                (evidence[inner] if inner else evidence).pop(field)
+
+            return mutate
+
+        def setfield(field, value):
+            def mutate(evidence):
+                evidence[field] = value
+
+            return mutate
+
+        cases = [
+            (drop("zoom_inspection"), "requires zoom_inspection"),
+            (drop("strap", "zoom_inspection"), "requires zoom_inspection"),
+            (zoom({"asset_sha256": "0" * 64}), "different asset"),
+            (zoom({"limbs": "failed"}), "failed zoom check"),
+            (drop("post_box", "fixtures"), "fixtures for exactly"),
+            (
+                setfield("fixtures", {"post_box": "unchanged", "table": "repurposed"}),
+                "only fixture",
+            ),
+            (
+                setfield(
+                    "fixtures", {"post_box": "unchanged", "table": "unchanged", "x": "unchanged"}
+                ),
+                "fixtures for exactly",
+            ),
+            (setfield("geometry_compared_with", []), "geometry_compared_with"),
+        ]
+        for mutate, match in cases:
+            bad = _valid_pass(server, "strict", start_key)
+            mutate(bad["evidence"])
+            reviews = [bad, _valid_pass(server, "strict", finish_key)]
+            with pytest.raises(ProductionRequestError, match=match):
+                service.review_acquisition("strict", reviews)
+            assert not [
+                r
+                for r in repository.list_production_qa_reviews("strict")
+                if r.scope == "acquisition"
+            ]
+        # A failed review may record the violation itself.
+        violation = _valid_pass(server, "strict", start_key)
+        violation["outcome"] = "failed"
+        violation["evidence"]["fixtures"]["post_box"] = "repurposed_as_energy_meter"
+        status = service.review_acquisition(
+            "strict", [violation, _valid_pass(server, "strict", finish_key)]
+        )
+        assert status["status"] == "failed" and status["stage"] == "acquisition_review"
+    finally:
+        server.server_close()
+
+
+def test_characterless_variants_need_only_the_props_zoom_check(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, keys = _request(
+            server,
+            tmp_path,
+            "props-only",
+            character_profile_id=None,
+            intrinsic_size_wu=(540, 960),
+            narration_authorized=False,
+        )
+        post_json(server, "/api/v2/productions", request)
+        run = server.repository.get_production_run("props-only")
+        required = server.production_service.acquisition_review_requirements(run, keys[0])
+        assert run.request["environment_pins"] == {}
+        assert (
+            required["zoom_checks"],
+            required["fixture_keys"],
+            required["geometry_compared_with"],
+        ) == (
+            ["props"],
+            [],
+            [],
+        )
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "missing",
+        "contradictory-viewpoint",
+        "unknown-authority",
+        "extra",
+        "unknown-family",
+        "unknown-viewpoint",
+        "ambiguous",
+        "viewpoint-without-family",
+        "pins-without-v2",
+    ],
+)
+def test_contradictory_missing_or_invalid_pins_are_refused_before_any_call(tmp_path, case) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        metadata = {
+            "unknown-family": ({"environment_family": "nowhere"}, None),
+            "unknown-viewpoint": (
+                {"environment_family": HOME_FAMILY, "environment_viewpoint": "roof"},
+                None,
+            ),
+            "viewpoint-without-family": ({"environment_viewpoint": "front"}, None),
+        }.get(case, ({"environment_family": HOME_FAMILY, "environment_viewpoint": "front"}, None))
+        request, _keys = _request(server, tmp_path, "refused", spec_metadata=metadata)
+        scene_id = request["timeline"][0]["scene_id"]
+        authority = _home_authority(server, scene_id, "v1")
+        spec = request["worlds"][0]["entities"][0]["variants"][0]["asset_spec_id"]
+        pin = {
+            "authority_id": authority.id,
+            "environment_family": HOME_FAMILY,
+            "viewpoint": "front",
+        }
+        expected = {
+            "missing": "missing for AssetSpecs",
+            "contradictory-viewpoint": "contradicts its AssetSpec",
+            "unknown-authority": "unknown authority",
+            "extra": "without an environment",
+            "unknown-family": "unknown environment family",
+            "unknown-viewpoint": "unknown viewpoint",
+            "ambiguous": "ambiguous",
+            "viewpoint-without-family": "viewpoint without an environment family",
+            "pins-without-v2": "acquisition_review_profile must be",
+        }[case]
+        if case == "missing":
+            request["environment_pins"] = {}
+        elif case == "contradictory-viewpoint":
+            request["environment_pins"] = {spec: pin | {"viewpoint": "side"}}
+        elif case == "unknown-authority":
+            request["environment_pins"] = {spec: pin | {"authority_id": "nope"}}
+        elif case == "extra":
+            other = request["worlds"][0]["entities"][0]["variants"][1]["asset_spec_id"]
+            request["environment_pins"] = {spec: pin, other: pin}
+        elif case == "ambiguous":
+            _home_authority(server, scene_id, "twin", authority_key="p11-home-twin")
+        elif case == "pins-without-v2":
+            request["acquisition_review_profile"] = "similarstoic-raw-world-acquisition-v1"
+        failed, status = _post_error(server, "/api/v2/productions", request)
+        assert status == 400 and expected in failed["error"], failed
+        assert generator.inputs == []
+        with pytest.raises(KeyError):
+            server.repository.get_production_run("refused")
+    finally:
+        server.server_close()
+
+
+def test_environment_authorities_refuse_invalid_fixture_and_viewpoint_metadata(tmp_path) -> None:
+    server = _server(tmp_path, ValidFakeImageGenerator())
+    try:
+        request, _keys = _request(server, tmp_path, "metadata")
+        scene_id = request["timeline"][0]["scene_id"]
+        for fixtures, match in [
+            ([], "non-empty list"),
+            ([{"key": "Post Box", "identity": "box"}], "safe keys"),
+            ([{"key": "box", "identity": "a"}, {"key": "box", "identity": "b"}], "safe keys"),
+            ([{"key": "box"}], "exactly {key, identity"),
+            ([{"key": "box", "identity": " "}], "must be text"),
+        ]:
+            with pytest.raises(ValueError, match=match):
+                _home_authority(
+                    server, scene_id, f"bad-{len(match)}-{len(fixtures)}", fixtures=fixtures
+                )
+        with pytest.raises(ValueError, match="Viewpoint plate keys"):
+            _home_authority(server, scene_id, "bad-viewpoint", viewpoints=("Front Door",))
+    finally:
+        server.server_close()
+
+
+def test_v1_frozen_runs_keep_the_v1_review_and_latest_family_resolution(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service, repository = server.production_service, server.repository
+    try:
+        request, keys = _home_request(server, tmp_path, "historical-env", viewpoints=(None, None))
+        scene_id = request["timeline"][0]["scene_id"]
+        _home_authority(server, scene_id, "v1")
+        newest = _home_authority(server, scene_id, "v2")
+        del request["narrator"]
+        request["narration_authorized"] = False
+        _start_historical(server, request)
+        assert service.status("historical-env")["status"] == "acquisition_review_pending"
+        run = repository.get_production_run("historical-env")
+        assert "acquisition_review_profile" not in run.request
+        assert "environment_pins" not in run.request
+        # Historical resolution is unchanged: the latest family version, no fixture clause.
+        for generation_input in generator.inputs:
+            entry = _environment_entry(generation_input)
+            assert entry["authority_id"] == newest.id
+            assert "fixtures" not in entry and "viewpoint" not in entry
+            assert "Persistent environment fixtures" not in generation_input.prompt
+        with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
+            service.review_acquisition(
+                "historical-env", _review(keys, "passed", server, "historical-env")
+            )
+        reviews = [
+            r
+            for r in repository.list_production_qa_reviews("historical-env")
+            if r.scope == "acquisition"
+        ]
+        assert [r.profile for r in reviews] == [
+            {"profile": "similarstoic-raw-world-acquisition-v1"}
+        ] * 2
+        assert all("zoom_inspection" not in r.evidence for r in reviews)
+    finally:
+        server.server_close()
+
+
+def test_a_seeded_historical_run_pending_review_keeps_the_v1_contract(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service = server.production_service
+    try:
+        request, keys = _request(server, tmp_path, "pending-v1", narration_authorized=False)
+        del request["narrator"]
+        _start_historical(server, request)
+        assert service.status("pending-v1")["status"] == "acquisition_review_pending"
+        # The v1 contract needs no zoom, fixture or comparison attestation.
+        v1_reviews = [
+            {
+                "world_key": world,
+                "entity_key": entity,
+                "variant_key": variant,
+                "outcome": "passed",
+                "evidence": {"source_quality": "passed"},
+            }
+            for world, entity, variant in keys
+        ]
+        with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
+            service.review_acquisition("pending-v1", v1_reviews)
+        assert service._all_variants_passed(server.repository.get_production_run("pending-v1"))
+    finally:
+        server.server_close()
+
+
+def test_adoption_takes_review_requirements_from_the_source_execution(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service, repository = server.production_service, server.repository
+    try:
+        source_request, keys = _home_request(
+            server, tmp_path, "env-src", viewpoints=(None, None), narration_authorized=False
+        )
+        scene_id = source_request["timeline"][0]["scene_id"]
+        pinned = _home_authority(server, scene_id, "v1")
+        post_json(server, "/api/v2/productions", source_request)
+        with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
+            service.review_acquisition("env-src", _review(keys, "passed", server, "env-src"))
+        image_calls = len(generator.inputs)
+
+        successor = _related_request(
+            server,
+            "env-next",
+            source_request,
+            adopt_from="env-src",
+            spec_metadata={"environment_family": HOME_FAMILY},
+        )
+        created, status = post_json(server, "/api/v2/productions", successor)
+        assert status == 201, created
+        run = repository.get_production_run("env-next")
+        assert {pin["authority_id"] for pin in run.request["environment_pins"].values()} == {
+            pinned.id
+        }
+        required = service.acquisition_review_requirements(run, keys[0])
+        assert required["fixture_keys"] == ["post_box", "table"]
+        assert required["geometry_compared_with"] == []
+
+        # A newer family version would pin a different authority than the source recorded.
+        _home_authority(server, scene_id, "v2")
+        refused = _related_request(
+            server,
+            "env-refused",
+            source_request,
+            adopt_from="env-src",
+            spec_metadata={"environment_family": HOME_FAMILY},
+        )
+        failed, status = _post_error(server, "/api/v2/productions", refused)
+        assert status == 400 and "different environment authority" in failed["error"], failed
+        assert len(generator.inputs) == image_calls
     finally:
         server.server_close()

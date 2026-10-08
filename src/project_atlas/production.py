@@ -26,7 +26,11 @@ from project_atlas.narration_verification import (
     WhisperTranscriber,
     verify_narration_audio,
 )
-from project_atlas.persistence import AtlasRepository
+from project_atlas.persistence import (
+    AtlasRepository,
+    environment_fixtures,
+    environment_viewpoints,
+)
 from project_atlas.scene_media import load_persistent_scene_frame, unwritten_alpha_pixels
 from project_atlas.scene_model import (
     Affine,
@@ -65,6 +69,12 @@ PRODUCTION_BRAND_KEY = "similarstoic"
 # The only scene timing a request may freeze. Every new run freezes it; only runs frozen
 # before it existed have none and keep their historical narration-weighted first candidate.
 SCENE_TIMING_ALIGNED = "narration-aligned-v1"
+# Acquisition review contracts. v1 is the historical contract of every run frozen without a
+# profile; v2 (new runs) adds zoomed inspection, fixture identity and the viewpoint comparison,
+# all derived from the run's frozen environment pins and recorded generation authority.
+ACQUISITION_REVIEW_V1 = "similarstoic-raw-world-acquisition-v1"
+ACQUISITION_REVIEW_V2 = "similarstoic-raw-world-acquisition-v2"
+FIXTURE_REVIEW_STATES = ("unchanged", "not_in_frame")
 # Channel defaults frozen into NEW runs only. Existing runs never consult this constant: an
 # omitted field on resubmission is reconstructed from the run's own frozen request.
 NEW_RUN_DEFAULTS = {
@@ -73,6 +83,7 @@ NEW_RUN_DEFAULTS = {
         "delivery_policy": {"policy_id": narration_delivery.POLICY_ID, "mode": "prefer"},
         "narration_attempts": 3,
         "scene_timing": SCENE_TIMING_ALIGNED,
+        "acquisition_review_profile": ACQUISITION_REVIEW_V2,
     }
 }
 _NARRATION_FORECAST_FIELDS = ("narration_calls", "verification_calls")
@@ -295,7 +306,12 @@ class ProductionLifecycleService:
                     "Production identity already exists with a different immutable request."
                 )
             return self.status(run_id)
-        normalized = self._validate_request(self._apply_new_run_defaults(request))
+        defaulted = self._apply_new_run_defaults(request)
+        if "environment_pins" not in defaulted:
+            # Freeze the exact environment selection before any provider call.
+            self._validate_request(defaulted, pins_pending=True)
+            defaulted["environment_pins"] = self._latest_environment_pins(defaulted)
+        normalized = self._validate_request(defaulted)
         run = self.repository.create_production_run(
             run_id, normalized["visual_plan_id"], normalized
         )
@@ -312,7 +328,13 @@ class ProductionLifecycleService:
 
         frozen = existing.request
         reconstructed = json.loads(json.dumps(request))
-        for field in ("narrator", "delivery_policy", "scene_timing"):
+        for field in (
+            "narrator",
+            "delivery_policy",
+            "scene_timing",
+            "acquisition_review_profile",
+            "environment_pins",
+        ):
             if field not in reconstructed and field in frozen:
                 reconstructed[field] = frozen[field]
         forecast, frozen_forecast = reconstructed.get("forecast"), frozen.get("forecast", {})
@@ -359,8 +381,9 @@ class ProductionLifecycleService:
                 result["delivery_policy"] = dict(defaults["delivery_policy"])
                 for field in _NARRATION_FORECAST_FIELDS:
                     forecast[field] = defaults["narration_attempts"]
-        # Scene timing carries no spend, so it defaults independently of the narration fields.
+        # Scene timing and the review contract carry no spend, so they default independently.
         result.setdefault("scene_timing", defaults["scene_timing"])
+        result.setdefault("acquisition_review_profile", defaults["acquisition_review_profile"])
         return result
 
     def authorize_narration(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
@@ -869,6 +892,12 @@ class ProductionLifecycleService:
                 review.get("evidence"), dict
             ):
                 raise ProductionRequestError("Acquisition review requires outcome and evidence.")
+        profile = run.request.get("acquisition_review_profile", ACQUISITION_REVIEW_V1)
+        if profile == ACQUISITION_REVIEW_V2:
+            # Every supplied review is checked before any review is recorded.
+            for key, review in supplied.items():
+                if review["outcome"] == "passed":
+                    self._require_v2_pass_evidence(run, key, review["evidence"])
         any_failed = False
         for index, key in enumerate(sorted(expected), 1):
             review = supplied[key]
@@ -880,7 +909,7 @@ class ProductionLifecycleService:
                 "acquisition",
                 outcome,
                 "human",
-                {"profile": "similarstoic-raw-world-acquisition-v1"},
+                {"profile": profile},
                 evidence | {"asset_id": acquired[key]["asset_id"], "variant": key},
             )
             any_failed |= outcome == "failed"
@@ -896,6 +925,96 @@ class ProductionLifecycleService:
             return self.status(run_id)
         self._assemble_and_render(run)
         return self.status(run_id)
+
+    def acquisition_review_requirements(
+        self, run: Any, key: tuple[str, str, str]
+    ) -> dict[str, Any]:
+        """What a v2 pass of one variant's active asset must attest, from frozen state only.
+
+        Zoom checks follow the AssetSpec; fixture keys come from the environment authority
+        recorded by the asset's generation (the source generation for an adopted asset), which
+        must be the frozen pin; the comparison set comes from the frozen plan and pins, so it
+        never changes with later reviews, rounds or authority versions.
+        """
+
+        spec_id = dict(
+            ((world, entity, variant), spec)
+            for world, entity, variant, spec in self._variant_specs(run.request)
+        )[key]
+        spec = self.repository.get_asset_spec(spec_id)
+        evidence = [
+            item
+            for item in self.repository.list_production_evidence(run.id, "acquisition")
+            if item.asset_id
+            and tuple(item.payload[name] for name in ("world_key", "entity_key", "variant_key"))
+            == key
+        ]
+        active = max(evidence, key=lambda item: int(item.id.rsplit(":", 1)[1]))
+        execution_id = active.generation_execution_id or (
+            active.payload.get("adopted_from") or {}
+        ).get("source_generation_execution_id")
+        recorded = [
+            self.repository.get_visual_reference_authority(item.visual_reference_authority_id)
+            for item in self.repository.list_generation_execution_visual_authorities(execution_id)
+            if item.usage_role == "environment_family"
+        ]
+        pins = run.request["environment_pins"]
+        pin = pins.get(spec_id)
+        if [item.id for item in recorded] != ([pin["authority_id"]] if pin else []):
+            raise ProductionRequestError(
+                f"Variant {'/'.join(key)}: the recorded environment authority contradicts the "
+                "frozen pin."
+            )
+        fixtures = environment_fixtures(recorded[0].role, recorded[0].metadata) if recorded else []
+        compared = []
+        if pin is not None and pin["viewpoint"] is not None:
+            compared = sorted(
+                "/".join(other)
+                for *other, other_spec in self._variant_specs(run.request)
+                if tuple(other) != key
+                and pins.get(other_spec) is not None
+                and (pins[other_spec]["environment_family"], pins[other_spec]["viewpoint"])
+                == (pin["environment_family"], pin["viewpoint"])
+            )
+        return {
+            "variant": "/".join(key),
+            "asset_id": active.asset_id,
+            "asset_sha256": self.repository.get_asset(active.asset_id).content_digest,
+            "zoom_checks": ["props"]
+            + (["limbs", "strap"] if spec.character_profile_id is not None else []),
+            "fixture_keys": [item["key"] for item in fixtures],
+            "geometry_compared_with": compared,
+        }
+
+    def _require_v2_pass_evidence(
+        self, run: Any, key: tuple[str, str, str], evidence: dict[str, Any]
+    ) -> None:
+        required = self.acquisition_review_requirements(run, key)
+        label = f"Acquisition review of {required['variant']}"
+        zoom = evidence.get("zoom_inspection")
+        if not isinstance(zoom, dict) or set(zoom) != {"asset_sha256", *required["zoom_checks"]}:
+            raise ProductionRequestError(
+                f"{label} requires zoom_inspection with asset_sha256 and exactly "
+                f"{required['zoom_checks']}."
+            )
+        if zoom["asset_sha256"] != required["asset_sha256"]:
+            raise ProductionRequestError(f"{label}: zoom_inspection names a different asset.")
+        if any(zoom[check] != "passed" for check in required["zoom_checks"]):
+            raise ProductionRequestError(f"{label}: a pass cannot carry a failed zoom check.")
+        fixtures = evidence.get("fixtures", {})
+        if not isinstance(fixtures, dict) or set(fixtures) != set(required["fixture_keys"]):
+            raise ProductionRequestError(
+                f"{label} requires fixtures for exactly {required['fixture_keys']}."
+            )
+        if any(value not in FIXTURE_REVIEW_STATES for value in fixtures.values()):
+            raise ProductionRequestError(
+                f"{label}: a pass allows only fixture states {list(FIXTURE_REVIEW_STATES)}."
+            )
+        compared = evidence.get("geometry_compared_with", [])
+        if not isinstance(compared, list) or sorted(compared) != required["geometry_compared_with"]:
+            raise ProductionRequestError(
+                f"{label} requires geometry_compared_with " f"{required['geometry_compared_with']}."
+            )
 
     def record_qa(self, run_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         latest = self.repository.latest_production_run_event(run_id)
@@ -1321,7 +1440,15 @@ class ProductionLifecycleService:
                             f"Image-call ceiling of {ceiling} would be exceeded by another "
                             f"provider call; {prior_calls} calls already recorded for this run."
                         )
-                    result = self.generation_service.generate_asset_spec(asset_spec_id)
+                    if "environment_pins" in run.request:
+                        # Generation consumes the frozen pin; it never resolves the latest.
+                        result = self.generation_service.generate_asset_spec(
+                            asset_spec_id,
+                            pinned=True,
+                            environment_pin=run.request["environment_pins"].get(asset_spec_id),
+                        )
+                    else:
+                        result = self.generation_service.generate_asset_spec(asset_spec_id)
                     attempt += 1
                     mismatch = self._execution_authority_mismatch(run.request, result.execution.id)
                     technical = (
@@ -2100,7 +2227,9 @@ class ProductionLifecycleService:
                 "prefer."
             )
 
-    def _validate_request(self, request: dict[str, Any]) -> dict[str, Any]:
+    def _validate_request(
+        self, request: dict[str, Any], *, pins_pending: bool = False
+    ) -> dict[str, Any]:
         if not isinstance(request, dict):
             raise ProductionRequestError("Production request must be an object.")
         allowed = {
@@ -2116,6 +2245,8 @@ class ProductionLifecycleService:
             "narrator",
             "delivery_policy",
             "scene_timing",
+            "acquisition_review_profile",
+            "environment_pins",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -2236,7 +2367,22 @@ class ProductionLifecycleService:
                 raise ProductionRequestError("Timeline transition is unsupported.")
             if index == len(timeline) - 1 and item.get("transition_to_next") is not None:
                 raise ProductionRequestError("Final timeline item cannot transition.")
-        if adopting:
+        if "acquisition_review_profile" in request:
+            if request["acquisition_review_profile"] != ACQUISITION_REVIEW_V2:
+                raise ProductionRequestError(
+                    f"Production acquisition_review_profile must be {ACQUISITION_REVIEW_V2}."
+                )
+            if "environment_pins" not in request and not pins_pending:
+                raise ProductionRequestError(
+                    "A v2 acquisition review contract requires frozen environment_pins."
+                )
+        elif "environment_pins" in request:
+            raise ProductionRequestError(
+                "Frozen environment_pins require the v2 acquisition review contract."
+            )
+        if "environment_pins" in request:
+            self._validate_environment_pins(request)
+        if adopting and not pins_pending:
             # Every adoption check runs before the run exists, so a refused adoption leaves
             # nothing behind and no provider is reachable.
             self._adoption_plan(request)
@@ -2387,6 +2533,131 @@ class ProductionLifecycleService:
             closure = transition.get("allowed_derived_entities", [])
             if not isinstance(closure, list) or any(item not in entity_keys for item in closure):
                 raise ProductionRequestError("Derived-entity closure is invalid.")
+
+    def _environment_needs(self, request: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        """Each variant AssetSpec that names an environment, with what it names."""
+
+        needs = {}
+        for _world, _entity, _variant, spec_id in self._variant_specs(request):
+            spec = self.repository.get_asset_spec(spec_id)
+            metadata = spec.metadata
+            explicit = []
+            for authority_id in metadata.get("visual_authority_ids") or []:
+                try:
+                    authority = self.repository.get_visual_reference_authority(authority_id)
+                except KeyError:
+                    raise ProductionRequestError(
+                        f"AssetSpec {spec_id} names unknown visual authority {authority_id!r}."
+                    ) from None
+                if authority.role == "environment_family":
+                    explicit.append(authority.id)
+            family = metadata.get("environment_family")
+            viewpoint = metadata.get("environment_viewpoint")
+            if family is not None or viewpoint is not None or explicit:
+                if len(explicit) > 1:
+                    raise ProductionRequestError(
+                        f"AssetSpec {spec_id} names more than one environment authority."
+                    )
+                needs[spec_id] = {"family": family, "viewpoint": viewpoint, "explicit": explicit}
+        return needs
+
+    def _latest_environment_pins(self, request: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        """Resolve the environment selection once, at freeze time, for a new run."""
+
+        pins = {}
+        for spec_id, need in self._environment_needs(request).items():
+            if need["explicit"]:
+                authority = self.repository.get_visual_reference_authority(need["explicit"][0])
+            else:
+                if need["family"] is None:
+                    raise ProductionRequestError(
+                        f"AssetSpec {spec_id} names a viewpoint without an environment family."
+                    )
+                matches = [
+                    item
+                    for item in self.repository.list_visual_reference_authorities(
+                        "environment_family"
+                    )
+                    if item.metadata.get("environment_family") == need["family"]
+                ]
+                if not matches:
+                    raise ProductionRequestError(
+                        f"AssetSpec {spec_id} names unknown environment family "
+                        f"{need['family']!r}; no provider call made."
+                    )
+                newest = max(item.version for item in matches)
+                latest = [item for item in matches if item.version == newest]
+                if len(latest) != 1:
+                    raise ProductionRequestError(
+                        f"Environment family {need['family']!r} is ambiguous at version "
+                        f"{newest}; freeze an explicit environment pin."
+                    )
+                authority = latest[0]
+            pins[spec_id] = {
+                "authority_id": authority.id,
+                "environment_family": authority.metadata.get("environment_family"),
+                "viewpoint": need["viewpoint"],
+            }
+        return pins
+
+    def _validate_environment_pins(self, request: dict[str, Any]) -> None:
+        """Each frozen pin is complete, exact and consistent with its AssetSpec."""
+
+        pins = request["environment_pins"]
+        if not isinstance(pins, dict):
+            raise ProductionRequestError("Production environment_pins must be an object.")
+        needs = self._environment_needs(request)
+        missing, extra = set(needs) - set(pins), set(pins) - set(needs)
+        if missing:
+            raise ProductionRequestError(
+                f"Environment pins are missing for AssetSpecs {sorted(missing)}."
+            )
+        if extra:
+            raise ProductionRequestError(
+                f"Environment pins name AssetSpecs without an environment: {sorted(extra)}."
+            )
+        global_id = request["authority"]["visual_reference_authority_id"]
+        for spec_id, pin in pins.items():
+            need = needs[spec_id]
+            if not isinstance(pin, dict) or set(pin) != {
+                "authority_id",
+                "environment_family",
+                "viewpoint",
+            }:
+                raise ProductionRequestError(
+                    "An environment pin is exactly {authority_id, environment_family, viewpoint}."
+                )
+            try:
+                authority = self.repository.get_visual_reference_authority(pin["authority_id"])
+            except (KeyError, TypeError):
+                raise ProductionRequestError(
+                    f"Environment pin for {spec_id} names an unknown authority."
+                ) from None
+            if (
+                authority.role != "environment_family"
+                or authority.parent_authority_id != global_id
+                or pin["environment_family"] != authority.metadata.get("environment_family")
+                or (need["family"] is not None and need["family"] != pin["environment_family"])
+                or (need["explicit"] and need["explicit"] != [authority.id])
+                or pin["viewpoint"] != need["viewpoint"]
+            ):
+                raise ProductionRequestError(
+                    f"Environment pin for {spec_id} contradicts its AssetSpec or authority."
+                )
+            members = self.repository.list_visual_reference_authority_members(authority.id)
+            try:
+                environment_fixtures(authority.role, authority.metadata)
+                viewpoints = environment_viewpoints(
+                    authority.role, [member.member_role for member in members]
+                )
+            except ValueError as error:
+                raise ProductionRequestError(
+                    f"Environment authority {authority.id} is invalid: {error}"
+                ) from None
+            if pin["viewpoint"] is not None and pin["viewpoint"] not in viewpoints:
+                raise ProductionRequestError(
+                    f"Environment pin for {spec_id} names unknown viewpoint {pin['viewpoint']!r}."
+                )
 
     def _require_excerpts_join_script(self, plan_id: str) -> None:
         """Narration-aligned timing needs scene excerpts that concatenate to the Script."""
@@ -2561,7 +2832,7 @@ class ProductionLifecycleService:
                 )
                 if aspect is not None:
                     raise ProductionRequestError(f"Source variant {key}: {aspect}")
-            mismatch = self._execution_authority_mismatch(request, execution_id)
+            mismatch = self._execution_authority_mismatch(request, execution_id, successor_spec_id)
             if mismatch is not None:
                 raise ProductionRequestError(f"Adoption authority mismatch for {key}: {mismatch}")
             successor_spec = self.repository.get_asset_spec(successor_spec_id)
@@ -2576,10 +2847,13 @@ class ProductionLifecycleService:
                     execution_id
                 )
             )
-            required = sorted(
-                [request["authority"]["visual_reference_authority_id"]]
-                + list(successor_spec.metadata.get("visual_authority_ids") or [])
+            required_ids = [request["authority"]["visual_reference_authority_id"]] + list(
+                successor_spec.metadata.get("visual_authority_ids") or []
             )
+            pin = request.get("environment_pins", {}).get(successor_spec_id)
+            if pin is not None and pin["authority_id"] not in required_ids:
+                required_ids.append(pin["authority_id"])
+            required = sorted(required_ids)
             if recorded != required:
                 raise ProductionRequestError(
                     f"Adoption authority mismatch for {key}: the source generation used visual "
@@ -2726,12 +3000,34 @@ class ProductionLifecycleService:
                         )
 
     def _execution_authority_mismatch(
-        self, request: dict[str, Any], execution_id: str
+        self, request: dict[str, Any], execution_id: str, asset_spec_id: str | None = None
     ) -> str | None:
         """Describe any persisted execution provenance that contradicts the run authority."""
 
         authority = request["authority"]
         execution = self.repository.get_generation_execution(execution_id)
+        if "environment_pins" in request:
+            pin = request["environment_pins"].get(asset_spec_id or execution.asset_spec_id)
+            recorded = [
+                item.visual_reference_authority_id
+                for item in self.repository.list_generation_execution_visual_authorities(
+                    execution_id
+                )
+                if item.usage_role == "environment_family"
+            ]
+            if recorded != ([pin["authority_id"]] if pin else []):
+                return (
+                    "Generation execution recorded a different environment authority than the pin."
+                )
+            if pin is not None:
+                recipe = execution.generation_input.get("visual_authority_recipe") or {}
+                entry = next(
+                    item
+                    for item in recipe.get("authorities", [])
+                    if item.get("authority_id") == pin["authority_id"]
+                )
+                if entry.get("viewpoint") != pin["viewpoint"]:
+                    return "Generation execution recorded a different viewpoint than the pin."
         if execution.visual_style_profile_id != authority["visual_style_profile_id"]:
             return "Generation execution recorded a different visual style profile."
         spec = self.repository.get_asset_spec(execution.asset_spec_id)

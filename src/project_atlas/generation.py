@@ -16,6 +16,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from project_atlas.persistence import (
+    VIEWPOINT_MEMBER_PREFIX,
     Asset,
     AssetSpec,
     AtlasRepository,
@@ -23,6 +24,8 @@ from project_atlas.persistence import (
     GenerationExecution,
     VisualReferenceAuthority,
     VisualStyleProfile,
+    environment_fixtures,
+    environment_viewpoints,
 )
 
 # New generations use v4; recorded executions and frozen production runs keep their profile.
@@ -256,6 +259,9 @@ class PromptComposer:
                     f"{authority['usage_role'].replace('_', ' ').title()} authority guidance: "
                     f"{authority['generation_guidance']}"
                 )
+            for authority in visual_authority_recipe["authorities"]:
+                if authority.get("fixtures"):
+                    prompt_parts.append(self.fixture_clause(authority["fixtures"]))
         prompt_parts.append(f"AssetSpec requirement: {asset_spec.generation_prompt}")
         prompt = "\n\n".join(prompt_parts)
         return GenerationInput(
@@ -290,6 +296,21 @@ class PromptComposer:
             character_references=character_references,
             visual_authority_recipe=visual_authority_recipe,
             reference_images=reference_images,
+        )
+
+    @staticmethod
+    def fixture_clause(fixtures: list[dict[str, str]]) -> str:
+        """Render a pinned authority's structured fixtures as one deterministic clause."""
+
+        listed = "; ".join(
+            f"{item['key']}: {item['identity']}"
+            + (f" ({item['placement']})" if item.get("placement") else "")
+            for item in fixtures
+        )
+        return (
+            "Persistent environment fixtures (each stays exactly this object in its place and "
+            f"scale, is never redrawn as a different object, and any other object is drawn "
+            f"separately): {listed}."
         )
 
     @staticmethod
@@ -614,8 +635,19 @@ class GenerationService:
             "name": profile.name,
         }
 
-    def generate_asset_spec(self, asset_spec_id: str) -> GenerationResult:
-        """Synchronously generate and durably register one AssetSpec output."""
+    def generate_asset_spec(
+        self,
+        asset_spec_id: str,
+        *,
+        pinned: bool = False,
+        environment_pin: dict[str, Any] | None = None,
+    ) -> GenerationResult:
+        """Synchronously generate and durably register one AssetSpec output.
+
+        A pinned caller (a production run that froze its environment selection) supplies the
+        exact environment authority and viewpoint; the latest family version is then never
+        resolved. Unpinned callers keep the historical family resolution.
+        """
 
         asset_spec = self.repository.get_asset_spec(asset_spec_id)
         if not self.generator.supports(asset_spec.asset_type):
@@ -633,7 +665,7 @@ class GenerationService:
             )
             reference_set_id = reference_set.id
         visual_authority_recipe, visual_reference_images = self._visual_authority_references_for(
-            asset_spec, len(reference_images)
+            asset_spec, len(reference_images), pinned, environment_pin
         )
         reference_images += visual_reference_images
         self._validate_reference_capacity(reference_images)
@@ -859,7 +891,11 @@ class GenerationService:
         )
 
     def _visual_authority_references_for(
-        self, asset_spec: AssetSpec, prior_reference_count: int
+        self,
+        asset_spec: AssetSpec,
+        prior_reference_count: int,
+        pinned: bool = False,
+        environment_pin: dict[str, Any] | None = None,
     ) -> tuple[dict[str, Any] | None, tuple[ReferenceImage, ...]]:
         """Resolve exact approved non-character authorities and verified reference bytes."""
 
@@ -872,7 +908,22 @@ class GenerationService:
         selected = [global_authority]
         metadata = asset_spec.metadata
         family = metadata.get("environment_family")
-        if family is not None:
+        pinned_environment = None
+        if pinned:
+            # The frozen pin is the selection; the latest family version is never consulted.
+            if environment_pin is not None:
+                pinned_environment = self.repository.get_visual_reference_authority(
+                    environment_pin["authority_id"]
+                )
+                if pinned_environment.role != "environment_family" or (
+                    family is not None
+                    and pinned_environment.metadata.get("environment_family") != family
+                ):
+                    raise ValueError("The frozen environment pin contradicts its AssetSpec.")
+                selected.append(pinned_environment)
+            elif family is not None or metadata.get("environment_viewpoint") is not None:
+                raise ValueError("Pinned generation requires the frozen environment pin.")
+        elif family is not None:
             if not isinstance(family, str) or not family.strip():
                 raise ValueError("AssetSpec environment_family must be non-empty text.")
             family_matches = [
@@ -916,11 +967,13 @@ class GenerationService:
         hints_by_id = metadata.get("visual_authority_adapter_hints", {})
         if not isinstance(hints_by_id, dict):
             raise ValueError("Visual authority adapter hints must be an object.")
+        viewpoint = environment_pin.get("viewpoint") if environment_pin else None
         for selection_order, authority in enumerate(selected, start=1):
             authority_hints = hints_by_id.get(authority.id, {})
             if not isinstance(authority_hints, dict):
                 raise ValueError("Per-authority adapter hints must be objects.")
             frozen_members = []
+            is_pin = pinned_environment is not None and authority.id == pinned_environment.id
             for member in self.repository.list_visual_reference_authority_members(authority.id):
                 asset, content = self.repository.load_verified_visual_reference_asset(
                     member.asset_id
@@ -936,6 +989,14 @@ class GenerationService:
                         "member_role": member.member_role,
                     }
                 )
+                # A pinned viewpoint sends only its own plate among the viewpoint plates.
+                if (
+                    is_pin
+                    and viewpoint is not None
+                    and member.member_role.startswith(VIEWPOINT_MEMBER_PREFIX)
+                    and member.member_role != f"{VIEWPOINT_MEMBER_PREFIX}{viewpoint}"
+                ):
+                    continue
                 reference_images.append(
                     ReferenceImage(
                         asset.id,
@@ -947,19 +1008,29 @@ class GenerationService:
                     )
                 )
                 next_position += 1
-            frozen_authorities.append(
-                {
-                    "selection_order": selection_order,
-                    "usage_role": authority.role,
-                    "authority_id": authority.id,
-                    "authority_key": authority.authority_key,
-                    "authority_version": authority.version,
-                    "parent_authority_id": authority.parent_authority_id,
-                    "generation_guidance": authority.generation_guidance,
-                    "adapter_hints": authority_hints,
-                    "members": frozen_members,
-                }
-            )
+            frozen = {
+                "selection_order": selection_order,
+                "usage_role": authority.role,
+                "authority_id": authority.id,
+                "authority_key": authority.authority_key,
+                "authority_version": authority.version,
+                "parent_authority_id": authority.parent_authority_id,
+                "generation_guidance": authority.generation_guidance,
+                "adapter_hints": authority_hints,
+                "members": frozen_members,
+            }
+            if is_pin:
+                fixtures = environment_fixtures(authority.role, authority.metadata)
+                viewpoints = environment_viewpoints(
+                    authority.role, [member["member_role"] for member in frozen_members]
+                )
+                if viewpoint is not None and viewpoint not in viewpoints:
+                    raise ValueError("The frozen viewpoint is not a plate of its authority.")
+                if fixtures:
+                    frozen["fixtures"] = fixtures
+                if viewpoint is not None:
+                    frozen["viewpoint"] = viewpoint
+            frozen_authorities.append(frozen)
         return (
             {
                 "schema_version": 1,
