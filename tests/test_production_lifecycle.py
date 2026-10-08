@@ -51,6 +51,10 @@ from tests.test_web import (
 # The dimensions gpt-image-2 returned for the approved SimilarStoic beats.
 REALISTIC_SOURCE_SIZE = (941, 1672)
 HAMSTER_PROFILE = "character-profile-similarstoic-hamster-core-v1"
+# The shared fixture Script and its two Scene excerpts, which concatenate exactly to it.
+FIXTURE_SCRIPT = "Narration continues."
+FIXTURE_EXCERPTS = ("Narration", "continues.")
+REPEATED_TAKE = f"{FIXTURE_SCRIPT} {FIXTURE_SCRIPT}"
 _LEGACY_NARRATOR = {
     "profile_id": "similarstoic-daniel-v1",
     "profile_sha256": "9c8e560b2a761df11b107db96ce92b989137cb6b55117f7465dcbe4361750f2e",
@@ -68,7 +72,7 @@ class FakeTranscriber:
 
     def __call__(self, path: Path) -> Transcription:
         self.calls.append(path)
-        heard = self.queue.pop(0) if self.queue else "Narration."
+        heard = self.queue.pop(0) if self.queue else FIXTURE_SCRIPT
         if isinstance(heard, Exception):
             raise heard
         return Transcription(heard, "OpenAI", "whisper-1", ({"word": "x", "start": 0, "end": 1},))
@@ -159,8 +163,8 @@ def _request(
     character_profile_id: str | None = HAMSTER_PROFILE,
     intrinsic_size_wu: tuple[int, int] = (1080, 1920),
     visual_style_profile_id: str = DEFAULT_VISUAL_STYLE_PROFILE_ID,
-    script: str = "Narration.",
-    excerpts: tuple[str, str] = ("Narration 1", "Narration 2"),
+    script: str = FIXTURE_SCRIPT,
+    excerpts: tuple[str, str] = FIXTURE_EXCERPTS,
 ) -> tuple[dict, list[tuple[str, str, str]]]:
     repository = server.repository
     plan = create_authorized_visual_plan(server, prefix, script)
@@ -270,10 +274,9 @@ def _request(
                 "real_provider_calls": 0,
             },
             "narration_authorized": narration_authorized,
-            # The legacy single-take, weighted-timing shape, chosen explicitly: new runs that
-            # omit these fields receive the SimilarStoic channel defaults instead.
+            # An explicit legacy single take; new runs that omit the narration fields receive
+            # the SimilarStoic channel defaults instead. Scene timing defaults to aligned.
             "narrator": _LEGACY_NARRATOR,
-            "scene_timing": "weighted-v1",
         },
         review_keys,
     )
@@ -321,7 +324,7 @@ def _fake_narration(monkeypatch, wav_path: Path, calls: list[str] | None = None)
         if calls is not None:
             calls.append(text)
         assert engine.execution_authorized
-        assert text == "Narration."
+        assert text == FIXTURE_SCRIPT
         return NarrationSynthesis(
             wav_path.read_bytes(),
             "audio/wav",
@@ -1385,7 +1388,7 @@ def _render_ready_run(tmp_path, monkeypatch, prefix: str, historical: bool = Fal
     request, keys = _request(server, tmp_path, prefix)
     if historical:
         # Shaped like every run up to production-10-r2: no narrator, no scene timing.
-        del request["narrator"], request["scene_timing"]
+        del request["narrator"]
         _start_historical(server, request)
     else:
         post_json(server, "/api/v2/productions", request)
@@ -1428,17 +1431,17 @@ def test_retime_recommendation_is_read_only_and_sums_to_the_narration(
         # New canonical snapshots freeze pause-aligned phrase captions, never the 5-word path.
         assert snapshot.render_settings["caption_policy"] == "pause-aligned-phrase-captions-v1"
         assert snapshot.render_settings["caption_timing"]["source"] == "pause_anchored_estimate"
-        assert [cue["text"] for cue in snapshot.caption_cues] == ["Narration."]
+        assert " ".join(cue["text"] for cue in snapshot.caption_cues) == FIXTURE_SCRIPT
 
         url = "/api/v2/productions/recommend/retime-recommendation"
-        mismatch, status = get_json(server, url)
-        # The fixture script ("Narration.") does not concatenate from its scene excerpts.
-        assert status == 400 and "concatenate exactly" in mismatch["error"]
-
         plan = repository.get_visual_plan(run.visual_plan_id)
         script = repository.get_script(plan.script_id)
-        aligned = replace(script, narration_text="Narration 1 Narration 2")
-        monkeypatch.setattr(repository, "get_script", lambda _script_id: aligned)
+        unjoined = replace(script, narration_text="Narration 1 Narration 2")
+        with monkeypatch.context() as patch:
+            patch.setattr(repository, "get_script", lambda _script_id: unjoined)
+            mismatch, status = get_json(server, url)
+        # A Script that does not concatenate from its Scene excerpts cannot be aligned.
+        assert status == 400 and "concatenate exactly" in mismatch["error"]
         before = (
             len(repository.list_production_evidence("recommend")),
             repository.latest_production_run_event("recommend"),
@@ -1516,7 +1519,12 @@ def test_retime_rerenders_approved_inputs_and_rebinds_human_review(tmp_path, mon
         assert production["current_render"] == {
             "version": 2,
             "final_media_artifact_id": f"{run_id}-artifact-2",
-            "scene_timing": None,
+            "scene_timing": {
+                "id": f"{run_id}:scene_timing:2",
+                "policy": "narration-aligned-v1",
+                "source": "manual_retime",
+                "durations_ms": durations,
+            },
         }
         assert len(generator.inputs) == image_calls
         assert production["founder_review"] is None
@@ -1535,7 +1543,10 @@ def test_retime_rerenders_approved_inputs_and_rebinds_human_review(tmp_path, mon
             assert new["resolved_state_id"] == old["resolved_state_id"]
             assert new["source_assets"] == old["source_assets"]
             assert new["transition_to_next"] == old["transition_to_next"]
-        assert snapshot.caption_cues == original_snapshot.caption_cues
+        # Captions still speak the same take; cue grouping may follow the moved scene change.
+        assert " ".join(cue["text"] for cue in snapshot.caption_cues) == " ".join(
+            cue["text"] for cue in original_snapshot.caption_cues
+        )
         assert snapshot.render_settings == original_snapshot.render_settings
 
         # Nothing historical was replaced; new records are versioned alongside it.
@@ -1719,7 +1730,12 @@ def test_retime_source_snapshot_matches_the_current_render_version(tmp_path, mon
         assert result["current_render"] == {
             "version": 3,
             "final_media_artifact_id": f"{run_id}-artifact-3",
-            "scene_timing": None,
+            "scene_timing": {
+                "id": f"{run_id}:scene_timing:3",
+                "policy": "narration-aligned-v1",
+                "source": "manual_retime",
+                "durations_ms": good,
+            },
         }
         assert [
             i["duration_ms"]
@@ -1851,13 +1867,14 @@ def _single_beat_worlds_request(server, tmp_path: Path, prefix: str, count: int)
         ],
         "forecast": {"image_calls": count, "narration_calls": 1, "verification_calls": 1},
         "narration_authorized": True,
-        "narrator": _LEGACY_NARRATOR,
-        "scene_timing": "weighted-v1",
     }
 
 
-def test_retime_production_8_shape_regression(tmp_path, monkeypatch) -> None:
+def test_retime_production_8_shape_regression(tmp_path, monkeypatch, transcription) -> None:
     """Eight full-frame v3 beats over a 30,220 ms narration, retimed to founder durations."""
+
+    # The historical single-beat plan keeps the original one-word fixture Script.
+    transcription.queue.append("Narration.")
 
     runtime = media_runtime_or_skip()
     generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
@@ -1895,8 +1912,9 @@ def test_retime_production_8_shape_regression(tmp_path, monkeypatch) -> None:
     )
     repository, service = server.repository, server.production_service
     try:
+        # Production 8 was frozen before scene timing existed: a historical weighted run.
         request = _single_beat_worlds_request(server, tmp_path, "p8-shape", 8)
-        post_json(server, "/api/v2/productions", request)
+        _start_historical(server, request)
         keys = [(f"beat-{i}", "scene", "beat") for i in range(1, 9)]
         reviewed, _status = post_json(
             server, "/api/v2/productions/p8-shape/acquisition-review", _passing_reviews(keys)
@@ -2187,8 +2205,8 @@ def test_narration_gate_verifies_the_exact_take_before_any_snapshot(
         assert payload["wav_sha256"] == narration.content_digest
         assert (payload["method"], payload["model"]) == (VERIFICATION_METHOD, "whisper-1")
         assert payload["normalization_version"] == NORMALIZATION_VERSION
-        assert payload["transcript"] == "Narration."
-        assert payload["expected_token_count"] == payload["recovered_token_count"] == 1
+        assert payload["transcript"] == FIXTURE_SCRIPT
+        assert payload["expected_token_count"] == payload["recovered_token_count"] == 2
         # The exact persisted WAV was transcribed once, before the snapshot existed.
         assert len(transcription.calls) == 1
         assert sha256(transcription.calls[0].read_bytes()).hexdigest() == narration.content_digest
@@ -2209,7 +2227,7 @@ def test_narration_gate_verifies_the_exact_take_before_any_snapshot(
 def test_failed_verification_keeps_take_1_and_blocks_snapshot_until_retake_2(
     tmp_path, monkeypatch, transcription
 ) -> None:
-    transcription.queue.append("Narration. Narration.")
+    transcription.queue.append(REPEATED_TAKE)
     _runtime, server, generator, calls, request, keys = _reviewed_run(
         tmp_path, monkeypatch, "gate-fail"
     )
@@ -2231,7 +2249,7 @@ def test_failed_verification_keeps_take_1_and_blocks_snapshot_until_retake_2(
         assert verification.payload["outcome"] == "failed"
         assert [
             (item["kind"], item["observed"]) for item in verification.payload["differences"]
-        ] == [("repetition", ["narration"])]
+        ] == [("repetition", ["narration", "continues"])]
         assert repository.list_production_evidence(run_id, "snapshot") == []
         assert repository.list_production_evidence(run_id, "render") == []
         assert failed["production"]["current_narration"]["verification"] == "failed"
@@ -2316,11 +2334,14 @@ def test_retake_binds_a_new_candidate_recomputes_timing_and_keeps_history(
         result = service.retake_narration(run_id)
 
         assert result["status"] == "qa_review_pending"
-        assert result["current_render"] == {
-            "version": 3,
-            "final_media_artifact_id": f"{run_id}-artifact-3",
-            "scene_timing": None,
-        }
+        current_render = dict(result["current_render"])
+        timing = current_render.pop("scene_timing")
+        assert current_render == {"version": 3, "final_media_artifact_id": f"{run_id}-artifact-3"}
+        # The retake candidate is re-aligned to the new take, never copied from a retime.
+        assert (timing["source"], sum(timing["durations_ms"])) == (
+            "narration_aligned",
+            repository.get_narration_asset(f"{run_id}-narration-2").duration_ms,
+        )
         narration_1 = repository.get_narration_asset(f"{run_id}-narration-1")
         narration_2 = repository.get_narration_asset(f"{run_id}-narration-2")
         snapshot = repository.get_final_media_input_snapshot(f"{run_id}:snapshot:3")
@@ -2584,11 +2605,15 @@ def _related_request(
     """The same production shape on a new VisualPlan, optionally adopting from ``adopt_from``."""
 
     repository = server.repository
-    plan = create_authorized_visual_plan(server, prefix)
+    plan = create_authorized_visual_plan(server, prefix, FIXTURE_SCRIPT)
     scene_ids, specs = [], {}
     for sequence, variant_key in enumerate(("start", "finish"), 1):
         scene = repository.create_scene_under_visual_plan_authorization(
-            f"{prefix}-scene-{sequence}", plan.id, sequence, f"Narration {sequence}", "Intent"
+            f"{prefix}-scene-{sequence}",
+            plan.id,
+            sequence,
+            FIXTURE_EXCERPTS[sequence - 1],
+            "Intent",
         )
         spec = repository.create_asset_spec_under_scene_authorization(
             f"{prefix}-spec-{sequence}",
@@ -2853,7 +2878,9 @@ def _policy_request(server, tmp_path, prefix, budget: int, mode: str = "prefer")
     return request, keys
 
 
-def _take_sequence(monkeypatch, wavs: list[Path], calls: list, script: str = "Narration.") -> None:
+def _take_sequence(
+    monkeypatch, wavs: list[Path], calls: list, script: str = FIXTURE_SCRIPT
+) -> None:
     """Fake Inworld: take N returns wavs[N-1] and records the instruction it was given."""
 
     def synthesize(engine, text):
@@ -2954,7 +2981,7 @@ def test_legacy_requests_keep_the_v1_narrator_and_need_no_delivery_evidence(
                     "mode": "record_only",
                 },
                 "narration_attempts": 2,
-                "scene_timing": "weighted-v1",
+                "scene_timing": "narration-aligned-v1",
             },
         )
         again = server.production_service.start(json.loads(json.dumps(request)))
@@ -3052,7 +3079,7 @@ def test_best_of_budget_selects_an_earlier_take_and_it_alone_renders_and_retimes
     tmp_path, monkeypatch, transcription
 ) -> None:
     # Take 1 is incomplete, take 2 scores 340, take 3 scores 320: take 2 is selected.
-    transcription.queue.extend(["Narration. Narration.", "Narration.", "Narration."])
+    transcription.queue.extend([REPEATED_TAKE, FIXTURE_SCRIPT, FIXTURE_SCRIPT])
     _scores(monkeypatch, [("below_target", 340.0), ("below_target", 320.0)])
     server, generator, calls, request, keys = _policy_run(
         tmp_path, monkeypatch, "best-of", 3, [1, 2, 3]
@@ -3151,7 +3178,7 @@ def test_unscorable_and_record_only_takes_select_the_earliest_complete_take(
 def test_no_complete_take_fails_closed_after_exactly_the_frozen_budget(
     tmp_path, monkeypatch, transcription
 ) -> None:
-    transcription.queue.extend(["Narration. Narration.", "Narration. Narration."])
+    transcription.queue.extend([REPEATED_TAKE, REPEATED_TAKE])
     _scores(monkeypatch, [])
     server, generator, calls, request, keys = _policy_run(
         tmp_path, monkeypatch, "exhausted", 2, [1, 2]
@@ -3264,7 +3291,7 @@ def test_policy_retakes_reselect_when_complete_and_never_refill_the_budget(
             service.retake_narration(run_id)
         assert service._automatic_narration_calls(run_id) == 1
         # A retake that fails completeness leaves the current selection unchanged.
-        transcription.queue.append("Narration. Narration.")
+        transcription.queue.append(REPEATED_TAKE)
         _authorize_retake(server, run_id, version=2)
         with pytest.raises(ProductionLifecycleError, match="failed completeness"):
             service.retake_narration(run_id)
@@ -3366,7 +3393,7 @@ def _bare_request(server, tmp_path, prefix):
     request, keys = _request(
         server, tmp_path, prefix, script=ALIGNED_SCRIPT, excerpts=ALIGNED_EXCERPTS
     )
-    del request["narrator"], request["scene_timing"]
+    del request["narrator"]
     del request["forecast"]["narration_calls"], request["forecast"]["verification_calls"]
     # Weighted timing would give 75/25; narration alignment gives a different split.
     request["timeline"][0]["duration_weight"] = 3
@@ -3409,7 +3436,7 @@ def test_new_runs_freeze_the_channel_defaults_and_resubmission_never_consults_th
                     "mode": "record_only",
                 },
                 "narration_attempts": 1,
-                "scene_timing": "weighted-v1",
+                "scene_timing": "narration-aligned-v1",
             },
         )
         for form in (raw, run.request):
@@ -3423,13 +3450,10 @@ def test_new_runs_freeze_the_channel_defaults_and_resubmission_never_consults_th
         def other_budget(value):
             value["forecast"].update(narration_calls=2, verification_calls=2)
 
-        def weighted(value):
-            value["scene_timing"] = "weighted-v1"
-
         def record_only(value):
             value["delivery_policy"] = dict(DEFAULT_POLICY, mode="record_only")
 
-        for mutate in (legacy_narrator, other_budget, weighted, record_only):
+        for mutate in (legacy_narrator, other_budget, record_only):
             conflicting = json.loads(json.dumps(raw))
             mutate(conflicting)
             with pytest.raises(ProductionRequestError, match="different immutable request"):
@@ -3461,14 +3485,16 @@ def test_aligned_timing_needs_excerpts_that_join_the_script_before_any_spend(tmp
     generator = ValidFakeImageGenerator()
     server = _server(tmp_path, generator)
     try:
-        # The fixture Script ("Narration.") does not concatenate from "Narration 1/2".
-        request, _keys = _request(server, tmp_path, "unjoined")
-        del request["scene_timing"]
+        request, _keys = _request(
+            server, tmp_path, "unjoined", excerpts=("Narration 1", "Narration 2")
+        )
         failed, status = _post_error(server, "/api/v2/productions", request)
         assert status == 400 and "concatenate exactly to the Script" in failed["error"], failed
-        request["scene_timing"] = "narration-aligned-v2"
-        failed, status = _post_error(server, "/api/v2/productions", request)
-        assert status == 400 and "scene_timing must be one of" in failed["error"], failed
+        # narration-aligned-v1 is the only scene timing; there is no weighted opt-out.
+        for value in ("weighted-v1", "narration-aligned-v2"):
+            request["scene_timing"] = value
+            failed, status = _post_error(server, "/api/v2/productions", request)
+            assert status == 400 and "must be narration-aligned-v1" in failed["error"], failed
         assert generator.inputs == []
         with pytest.raises(KeyError):
             server.repository.get_production_run("unjoined")
@@ -3667,6 +3693,58 @@ def test_weighted_fallback_cannot_pass_review_until_a_founder_retime(
         )
         assert retimed["current_render"]["scene_timing"]["source"] == "manual_retime"
         passed = service.record_qa("fallback", {"outcome": "passed", "evidence": {"ok": True}})
+        assert passed["status"] == "private_founder_review_ready"
+    finally:
+        server.server_close()
+
+
+def test_an_aligned_render_without_a_timing_record_cannot_pass_review(
+    tmp_path, monkeypatch, transcription
+) -> None:
+    # Simulate an interrupted write: the first render of an aligned run has no timing record.
+    record = ProductionLifecycleService._record_scene_timing
+    monkeypatch.setattr(ProductionLifecycleService, "_record_scene_timing", lambda *a, **k: None)
+    server, _calls = _aligned_run(
+        tmp_path, monkeypatch, transcription, "unrecorded", (2.0,), [("passed", 400)]
+    )
+    repository, service = server.repository, server.production_service
+    try:
+        status = service.status("unrecorded")
+        assert status["status"] == "qa_review_pending"
+        assert repository.list_production_evidence("unrecorded", "scene_timing") == []
+        assert status["current_render"]["scene_timing"] is None
+        with pytest.raises(ProductionRequestError, match="no scene-timing record"):
+            service.record_qa("unrecorded", {"outcome": "passed", "evidence": {"ok": True}})
+        assert not any(
+            review.scope == "whole_video"
+            for review in repository.list_production_qa_reviews("unrecorded")
+        )
+        failed = service.record_qa(
+            "unrecorded", {"outcome": "failed", "evidence": {"timing": "unrecorded"}}
+        )
+        assert (failed["status"], failed["stage"]) == ("failed", "qa")
+
+        monkeypatch.setattr(ProductionLifecycleService, "_record_scene_timing", record)
+        recommended = service.recommend_retime("unrecorded")["recommended_durations_ms"]
+        retimed = service.retime("unrecorded", recommended, "founder", "Apply the aligned cut.")
+        assert retimed["current_render"]["scene_timing"]["source"] == "manual_retime"
+        passed = service.record_qa("unrecorded", {"outcome": "passed", "evidence": {"ok": True}})
+        assert passed["status"] == "private_founder_review_ready"
+    finally:
+        server.server_close()
+
+
+def test_a_historical_run_without_scene_timing_passes_review_with_weighted_timing(
+    tmp_path, monkeypatch
+) -> None:
+    server, _generator, request = _render_ready_run(
+        tmp_path, monkeypatch, "historical-qa", historical=True
+    )
+    service = server.production_service
+    try:
+        assert "scene_timing" not in server.repository.get_production_run("historical-qa").request
+        assert service.status("historical-qa")["current_render"]["scene_timing"] is None
+        passed = service.record_qa("historical-qa", {"outcome": "passed", "evidence": {"ok": 1}})
         assert passed["status"] == "private_founder_review_ready"
     finally:
         server.server_close()

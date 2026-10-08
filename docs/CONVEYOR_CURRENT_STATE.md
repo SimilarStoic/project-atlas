@@ -99,7 +99,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
 - After the SimilarStoic new-run defaults, the narration-aligned first candidate and Editorial Readiness evaluator
-  v2, the verified local full suite is **567 passed, 0 skipped, 0 failed** (no migration). Post-acquisition founder narration authorization is a recorded action;
+  v2 (with its fail-closed fix-up), the verified local full suite is **569 passed, 0 skipped, 0 failed** (no
+  migration). Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
@@ -425,7 +426,7 @@ SimilarStoic-bound, so there is no global default):
   without a narrator) is refused with a message naming the default. Explicit choices (for example N = 2, or an
   explicit v1 single take) are kept; an explicit spend ceiling is never raised.
 - `scene_timing` carries no spend, so a new run without it freezes `narration-aligned-v1` even when the narration
-  fields were explicit. `weighted-v1` is the explicit choice of the historical weighted first candidate.
+  fields were explicit. `narration-aligned-v1` is the only accepted value; there is no weighted opt-out for new runs.
 
 Narration-aligned first candidate (`scene_timing: narration-aligned-v1`):
 
@@ -437,10 +438,12 @@ Narration-aligned first candidate (`scene_timing: narration-aligned-v1`):
   boundaries, timing and silence settings, narration asset and WAV SHA-256), shown in `status().current_render`.
 - Sources are `narration_aligned`, `weighted_fallback` (alignment raised; weighted timing is recorded as a recovery
   state only) and `manual_retime` (a founder `retime` of such a run, referencing its retime evidence, actor, reason
-  and durations). Whole-video QA `passed` is refused only while the current render is `weighted_fallback`; `failed`
-  is always allowed, and a founder retime then produces a reviewable render.
-- Runs that froze no `scene_timing`, or `weighted-v1`, are timed from the narration weights exactly as before,
-  including on resume and retake, and record no scene-timing evidence.
+  and durations). For a `narration-aligned-v1` run, whole-video QA `passed` fails closed when the current render
+  has no scene-timing record or its source is `weighted_fallback`; `failed` is always allowed, and a founder retime
+  then produces a reviewable `manual_retime` render.
+- Only runs frozen before scene timing existed (every run up to and including `production-10-r2`) have no
+  `scene_timing`; they are timed from the narration weights exactly as before, including on resume and retake,
+  record no scene-timing evidence and are not subject to the timing QA rule.
 
 Script preflight (Editorial Readiness evaluator `deterministic-editorial-readiness` v2,
 `src/project_atlas/script_preflight.py` and `narration.speakability_findings`):

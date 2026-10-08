@@ -50,7 +50,8 @@ of this approved method.
   clause-level pauses; never announcer, corporate presenter, finance guru, advert, podcast intro, or hyperactive
   creator. Do not add, omit, or paraphrase script words.
 - Timeline weights express semantic intent; the first candidate uses narration-aligned scene boundaries. Use
-  purposeful transitions, mobile-readable captions, and the established render path. Review acquisition quality before assembly and the complete result before founder review.
+  purposeful transitions, mobile-readable captions, and the established render path. Review acquisition quality
+  before assembly and the complete result before founder review.
 
 #### A.1 Founder-validated findings (Productions 8 and 9)
 

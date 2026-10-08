@@ -62,11 +62,9 @@ MAX_NARRATION_ATTEMPTS = 3
 # Canonical v2 production is SimilarStoic-bound (narration brand, pronunciation aliases and
 # acquisition review profile); a second channel needs an explicit request channel first.
 PRODUCTION_BRAND_KEY = "similarstoic"
-# Scene timing policies a request may freeze. A request that froze none keeps the historical
-# narration-weighted first candidate; "weighted-v1" is that behaviour chosen explicitly.
+# The only scene timing a request may freeze. Every new run freezes it; only runs frozen
+# before it existed have none and keep their historical narration-weighted first candidate.
 SCENE_TIMING_ALIGNED = "narration-aligned-v1"
-SCENE_TIMING_WEIGHTED = "weighted-v1"
-SCENE_TIMING_POLICIES = (SCENE_TIMING_ALIGNED, SCENE_TIMING_WEIGHTED)
 # Channel defaults frozen into NEW runs only. Existing runs never consult this constant: an
 # omitted field on resubmission is reconstructed from the run's own frozen request.
 NEW_RUN_DEFAULTS = {
@@ -916,16 +914,21 @@ class ProductionLifecycleService:
         render = self._current_evidence(run_id, "render")
         artifact = render.final_media_artifact_id
         timing = self._scene_timing(run_id, self._evidence_version(render))
-        if (
-            outcome == "passed"
-            and timing is not None
-            and timing.payload["source"] == "weighted_fallback"
-        ):
-            raise ProductionRequestError(
-                "The current render uses weighted fallback timing because narration alignment "
-                "failed; it is a recovery state and cannot pass whole-video review. Record a "
-                "failed review and apply a founder-approved retime."
-            )
+        aligned = self.repository.get_production_run(run_id).request.get("scene_timing")
+        if outcome == "passed" and aligned == SCENE_TIMING_ALIGNED:
+            # Fail closed: an aligned run's render passes only with recorded aligned timing.
+            if timing is None:
+                raise ProductionRequestError(
+                    "The current render of a narration-aligned run has no scene-timing record; "
+                    "it cannot pass whole-video review. Record a failed review and apply a "
+                    "founder-approved retime."
+                )
+            if timing.payload["source"] == "weighted_fallback":
+                raise ProductionRequestError(
+                    "The current render uses weighted fallback timing because narration "
+                    "alignment failed; it is a recovery state and cannot pass whole-video "
+                    "review. Record a failed review and apply a founder-approved retime."
+                )
         previous = [
             review
             for review in self.repository.list_production_qa_reviews(run_id)
@@ -2220,12 +2223,11 @@ class ProductionLifecycleService:
         if [item.get("scene_id") for item in timeline] != plan_scenes:
             raise ProductionRequestError("Timeline must cover the exact VisualPlan in sequence.")
         if "scene_timing" in request:
-            if request["scene_timing"] not in SCENE_TIMING_POLICIES:
+            if request["scene_timing"] != SCENE_TIMING_ALIGNED:
                 raise ProductionRequestError(
-                    f"Production scene_timing must be one of {', '.join(SCENE_TIMING_POLICIES)}."
+                    f"Production scene_timing must be {SCENE_TIMING_ALIGNED}."
                 )
-            if request["scene_timing"] == SCENE_TIMING_ALIGNED:
-                self._require_excerpts_join_script(request["visual_plan_id"])
+            self._require_excerpts_join_script(request["visual_plan_id"])
         for index, item in enumerate(timeline):
             if not isinstance(item.get("duration_weight"), int) or item["duration_weight"] <= 0:
                 raise ProductionRequestError("Timeline duration weights must be positive integers.")
