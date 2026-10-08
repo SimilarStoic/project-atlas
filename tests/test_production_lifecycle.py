@@ -4259,6 +4259,7 @@ def test_v1_frozen_runs_keep_the_v1_review_and_latest_family_resolution(tmp_path
             entry = _environment_entry(generation_input)
             assert entry["authority_id"] == newest.id
             assert "fixtures" not in entry and "viewpoint" not in entry
+            assert all("sent" not in member for member in entry["members"])
             assert "Persistent environment fixtures" not in generation_input.prompt
         with pytest.raises(ProductionLifecycleError, match="Narration is not authorized"):
             service.review_acquisition(
@@ -4348,5 +4349,134 @@ def test_adoption_takes_review_requirements_from_the_source_execution(tmp_path) 
         failed, status = _post_error(server, "/api/v2/productions", refused)
         assert status == 400 and "different environment authority" in failed["error"], failed
         assert len(generator.inputs) == image_calls
+    finally:
+        server.server_close()
+
+
+def _sent_flags(entry) -> dict[str, bool]:
+    return {member["member_role"]: member["sent"] for member in entry["members"]}
+
+
+def test_pinned_recipes_record_exactly_which_plates_were_sent(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    repository = server.repository
+    try:
+        request, _keys = _home_request(server, tmp_path, "sent", viewpoints=("front", None))
+        _home_authority(server, request["timeline"][0]["scene_id"], "v1")
+        created, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201, created
+        named, unnamed = generator.inputs
+        assert _sent_flags(_environment_entry(named)) == {
+            "environment-anchor": True,
+            "viewpoint:front": True,
+            "viewpoint:side": False,
+        }
+        # A pinned spec without a viewpoint sends no viewpoint plate at all.
+        assert _sent_flags(_environment_entry(unnamed)) == {
+            "environment-anchor": True,
+            "viewpoint:front": False,
+            "viewpoint:side": False,
+        }
+        assert "viewpoint" not in _environment_entry(unnamed)
+        assert {image.asset_id for image in unnamed.reference_images} & {
+            "asset-environment-v1-front",
+            "asset-environment-v1-side",
+        } == set()
+        assert "asset-environment-v1-anchor" in {
+            image.asset_id for image in unnamed.reference_images
+        }
+        # Recorded provenance carries the same flags, and an overstated flag is refused.
+        [execution] = [
+            item
+            for item in repository.list_generation_executions_for_asset_spec(
+                request["worlds"][0]["entities"][0]["variants"][0]["asset_spec_id"]
+            )
+        ]
+        recorded = execution.generation_input
+        entry = next(
+            item
+            for item in recorded["visual_authority_recipe"]["authorities"]
+            if item["usage_role"] == "environment_family"
+        )
+        assert _sent_flags(entry)["viewpoint:side"] is False
+        repository._validate_visual_authority_recipe(recorded)
+        for tamper in ("overstate", "drop"):
+            altered = json.loads(json.dumps(recorded))
+            members = next(
+                item
+                for item in altered["visual_authority_recipe"]["authorities"]
+                if item["usage_role"] == "environment_family"
+            )["members"]
+            if tamper == "overstate":
+                members[2]["sent"] = True
+            else:
+                del members[0]["sent"]
+            with pytest.raises(ValueError, match="sent flags"):
+                repository._validate_visual_authority_recipe(altered)
+    finally:
+        server.server_close()
+
+
+def test_v2_status_exposes_pending_review_requirements_read_only(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service, repository = server.production_service, server.repository
+    try:
+        request, keys = _home_request(
+            server, tmp_path, "visible", image_calls=3, narration_authorized=False
+        )
+        _home_authority(server, request["timeline"][0]["scene_id"], "v1")
+        post_json(server, "/api/v2/productions", request)
+        run = repository.get_production_run("visible")
+        before = len(repository.list_production_evidence("visible"))
+        shown, status = get_json(server, "/api/v2/productions/visible")
+        assert status == 200
+        requirements = shown["production"]["acquisition_review_requirements"]
+        assert requirements == [service.acquisition_review_requirements(run, key) for key in keys]
+        assert requirements[0]["fixture_keys"] == ["post_box", "table"]
+        assert len(repository.list_production_evidence("visible")) == before
+
+        start_key, finish_key = keys
+        service.review_acquisition(
+            "visible",
+            _review([start_key], "passed", server, "visible")
+            + _review([finish_key], "failed", server, "visible"),
+        )
+        # Not awaiting review: nothing to attest yet.
+        assert service.status("visible")["acquisition_review_requirements"] == []
+        service.resume("visible")
+        pending = service.status("visible")["acquisition_review_requirements"]
+        assert [item["variant"] for item in pending] == ["main-world/explanation/finish"]
+        assert pending[0]["asset_id"] != requirements[1]["asset_id"]
+    finally:
+        server.server_close()
+
+
+def test_v1_status_has_no_review_requirements_field(tmp_path) -> None:
+    server = _server(tmp_path, ValidFakeImageGenerator())
+    try:
+        request, _keys = _request(server, tmp_path, "status-v1", narration_authorized=False)
+        del request["narrator"]
+        _start_historical(server, request)
+        shown, status = get_json(server, "/api/v2/productions/status-v1")
+        assert status == 200
+        assert shown["production"]["status"] == "acquisition_review_pending"
+        assert set(shown["production"]) == {
+            "id",
+            "visual_plan_id",
+            "request_digest",
+            "status",
+            "stage",
+            "error",
+            "evidence",
+            "qa_reviews",
+            "founder_review",
+            "narration_authorized",
+            "current_narration",
+            "current_render",
+            "narration_selection",
+            "created_at",
+        }
     finally:
         server.server_close()

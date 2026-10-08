@@ -99,7 +99,7 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
 - After the SimilarStoic new-run defaults, the narration-aligned first candidate, Editorial Readiness evaluator v2
-  and the pinned environment identity with the v2 acquisition review, the verified local full suite is **586
+  and the pinned environment identity with the v2 acquisition review, the verified local full suite is **589
   passed, 0 skipped, 0 failed** (no migration). Post-acquisition founder narration authorization is a recorded action;
   the frozen request is unchanged and each narration take is a separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
@@ -482,8 +482,10 @@ Pinned environment identity and the v2 acquisition review (new runs; no migratio
   family version. The recipe freezes the pinned authority's `fixtures` and `viewpoint` (checked against the
   authority when the execution is recorded), the prompt gains one deterministic fixture clause rendered from the
   structured fixtures (no new free-text rules and no style-profile change), and only the pinned viewpoint's plate is
-  sent among that authority's viewpoint plates. Each execution's recorded environment authority and viewpoint must
-  equal the pin, or the attempt is never admitted.
+  sent among that authority's viewpoint plates; a pinned spec that names no viewpoint sends none of them, so plates
+  of different geometries are never sent together. The recipe records every member of the pinned authority with a
+  `sent` flag, so provenance never overstates the references used (historical recipes carry no flags). Each
+  execution's recorded environment authority and viewpoint must equal the pin, or the attempt is never admitted.
 - A v2 `passed` acquisition review must carry `zoom_inspection` with the inspected asset's `asset_sha256` and exactly
   `props` (plus `limbs` and `strap` when the AssetSpec has a character), all `passed`; `fixtures` for exactly the
   recorded authority's fixture keys, each `unchanged` or `not_in_frame`; and `geometry_compared_with` equal to the
@@ -492,6 +494,10 @@ Pinned environment identity and the v2 acquisition review (new runs; no migratio
   authority, so they do not change with later reviews, rounds or authority versions. A pass carrying any violation
   is refused before any review is recorded; a failed review may record the violation. Adoption still requires the
   exact recorded authorities, now including the successor's pin.
+- For v2 runs, the existing read-only status (`GET /api/v2/productions/{run}`) adds
+  `acquisition_review_requirements`: at `acquisition_review_pending`, one entry per variant awaiting review (variant,
+  asset ID and SHA-256, zoom checks, fixture keys, comparison set), otherwise an empty list. Runs frozen without the
+  profile have no such field; their status is unchanged.
 - Runs frozen without the profile (production-8 through `production-10-r2`, and any historical run awaiting
   acquisition review) keep the v1 review contract and today's family resolution exactly.
 

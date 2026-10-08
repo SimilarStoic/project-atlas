@@ -1339,7 +1339,7 @@ class ProductionLifecycleService:
         verification = self._narration_verification(run_id, narration) if narration else None
         selection = self._current_selection(run_id)
         timing = self._scene_timing(run_id, self._evidence_version(current)) if current else None
-        return {
+        payload = {
             "id": run.id,
             "visual_plan_id": run.visual_plan_id,
             "request_digest": run.request_digest,
@@ -1394,6 +1394,19 @@ class ProductionLifecycleService:
             ),
             "created_at": run.created_at,
         }
+        if run.request.get("acquisition_review_profile") == ACQUISITION_REVIEW_V2:
+            # Read-only reviewer guidance for v2 runs; runs frozen on v1 keep their contract.
+            states = self._variant_review_states(run)
+            payload["acquisition_review_requirements"] = (
+                [
+                    self.acquisition_review_requirements(run, key)
+                    for key in self._variant_keys(run.request)
+                    if states.get(key) == "pending"
+                ]
+                if latest is not None and latest.status == "acquisition_review_pending"
+                else []
+            )
+        return payload
 
     def _acquire(self, run: Any) -> None:
         self.repository.append_production_run_event(run.id, "acquiring", "acquisition", {})

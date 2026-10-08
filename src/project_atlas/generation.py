@@ -16,7 +16,6 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from project_atlas.persistence import (
-    VIEWPOINT_MEMBER_PREFIX,
     Asset,
     AssetSpec,
     AtlasRepository,
@@ -26,6 +25,7 @@ from project_atlas.persistence import (
     VisualStyleProfile,
     environment_fixtures,
     environment_viewpoints,
+    viewpoint_plate_sent,
 )
 
 # New generations use v4; recorded executions and frozen production runs keep their profile.
@@ -980,23 +980,22 @@ class GenerationService:
                 )
                 if asset.content_digest is None:
                     raise ValueError("Visual authority members require immutable digests.")
-                frozen_members.append(
-                    {
-                        "asset_id": asset.id,
-                        "content_digest": asset.content_digest,
-                        "media_type": asset.media_type,
-                        "position": member.position,
-                        "member_role": member.member_role,
-                    }
-                )
-                # A pinned viewpoint sends only its own plate among the viewpoint plates.
-                if (
-                    is_pin
-                    and viewpoint is not None
-                    and member.member_role.startswith(VIEWPOINT_MEMBER_PREFIX)
-                    and member.member_role != f"{VIEWPOINT_MEMBER_PREFIX}{viewpoint}"
-                ):
-                    continue
+                frozen_member = {
+                    "asset_id": asset.id,
+                    "content_digest": asset.content_digest,
+                    "media_type": asset.media_type,
+                    "position": member.position,
+                    "member_role": member.member_role,
+                }
+                frozen_members.append(frozen_member)
+                if is_pin:
+                    # A pinned authority sends only the pinned viewpoint's plate, and no plate
+                    # at all when the spec names no viewpoint, so plates of different
+                    # geometries are never sent together. Provenance records what was sent.
+                    sent = viewpoint_plate_sent(member.member_role, viewpoint)
+                    frozen_member["sent"] = sent
+                    if not sent:
+                        continue
                 reference_images.append(
                     ReferenceImage(
                         asset.id,

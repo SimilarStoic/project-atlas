@@ -609,6 +609,14 @@ def environment_fixtures(role: str, metadata: dict[str, Any]) -> list[dict[str, 
     return validated
 
 
+def viewpoint_plate_sent(member_role: str, viewpoint: str | None) -> bool:
+    """Whether a pinned authority member is sent: non-plates always, plates only when pinned."""
+
+    if not member_role.startswith(VIEWPOINT_MEMBER_PREFIX):
+        return True
+    return viewpoint is not None and member_role == f"{VIEWPOINT_MEMBER_PREFIX}{viewpoint}"
+
+
 def environment_viewpoints(role: str, member_roles: list[str]) -> list[str]:
     """Validated viewpoint keys named by an authority's "viewpoint:<key>" member roles."""
 
@@ -5754,6 +5762,17 @@ class AtlasRepository(
                     or frozen_member.get("member_role") != member.member_role
                 ):
                     raise ValueError("Frozen visual-authority members do not match persistence.")
+            # A pinned authority records, per member, whether it was sent as a reference.
+            flags = [isinstance(item, dict) and "sent" in item for item in members]
+            if any(flags) and (
+                not all(flags)
+                or any(
+                    item["sent"]
+                    is not viewpoint_plate_sent(item["member_role"], frozen.get("viewpoint"))
+                    for item in members
+                )
+            ):
+                raise ValueError("Frozen sent flags do not match the pinned viewpoint.")
             # Pinned environment identity, when frozen, must be the authority's own.
             if "fixtures" in frozen and frozen["fixtures"] != environment_fixtures(
                 authority.role, authority.metadata
