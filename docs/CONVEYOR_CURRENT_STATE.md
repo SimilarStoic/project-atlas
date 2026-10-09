@@ -286,6 +286,59 @@ Before P11:
 - The manual publishing steps (reserve upload, complete manual private upload, observe, reserve release, reconcile
   receipt) have no CLI yet; the P10 runbook drives them from a Python session.
 
+## Production 11 (in progress)
+
+Topic "Why Investing Feels Pointless at First". Every record below was written through the existing repository
+methods and gates; no production run, narration, beat AssetSpec or visual authority exists yet.
+
+- Editorial chain (8 October 2026): `production-11-opportunity`, Idea Gate snapshot
+  `production-11-idea-gate-review-snapshot` and founder Proceed `production-11-idea-gate-decision`;
+  `production-11-research-pack` with sources `production-11-source-s1` (Benartzi and Thaler, QJE 1995),
+  `-s2` (Tversky and Kahneman, JRU 1992) and `-s3` (Gneezy and Potters, QJE 1997), claims
+  `production-11-claim-c1` to `-c4` (verbatim quotes in claim evidence), `production-11-research-readiness`
+  (Ready), `production-11-angle`, `production-11-content-piece`, `production-11-title`, `production-11-hook`,
+  `production-11-script` (version 1, "Script v3"), `production-11-claim-set`, `production-11-editorial-package`,
+  `production-11-editorial-readiness` (Ready, evaluator v2, two advisory `SCRIPT_PHRASE_REPETITION` findings) and
+  the founder Editorial Gate Approve `production-11-editorial-gate-decision`.
+- Visual plan (batch 1): `production-11-visual-plan` (nine Scenes `production-11-scene-1` to `-9`: desk 1-5, lab
+  6-7, garden 8-9; word-count timeline weights 3, 8, 4, 9, 14, 20, 13, 17, 14) and the round-1 anchor AssetSpecs
+  `production-11-desk-anchor-spec`, `production-11-lab-anchor-spec`, `production-11-garden-anchor-spec`.
+- Round-1 plates (3 `gpt-image-2` calls), **withdrawn for production use pending continuity review**: desk
+  `09dcc88d5ea78a52591048a533fdd5acbd95438977fc8c37dddeec6cf58aa941`, lab
+  `7f1f9eea1dcab807b53563ecd49a9d6a2edff34b4fa686ac94f9ec9be6d0c5f9`, garden
+  `bafd7631bfee048509de47648b7b3135133441f23d0068f50ead79f5b91a73c1` (review copies in
+  `D:\ConveyorOS\channels\SimilarStoic\production-11\anchors\round-1\`). The round-1 descriptions requested a
+  frontal camera and an emptied room; the authoring rule and plate review gate in
+  [`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md#environment-plates) now govern
+  new plates. The round-1 records and assets stay unchanged.
+- Backups before each write: `D:\ConveyorBackups\pre-p11-editorial-chain-20261008-171739\`,
+  `pre-p11-editorial-gate-20261008-172325\` and `pre-p11-batch1-plates-20261008-175017\` (each
+  `conveyor.db`, integrity_check ok).
+- Batch 2 (environment authorities, beat AssetSpecs, the production request) is paused until founder plate
+  approval.
+
+## Approved visual evidence
+
+The human quality benchmark for the SimilarStoic treatment; use these for same-illustrator comparison.
+
+- Global style reference `asset-visual-authority-default-scene-language-v1`
+  (`989e0da7b273a42f0bf8c229c1510b904902b1eef3336e626705966e6048ccb2`), the only member of
+  `visual-reference-authority-similarstoic-global-illustration-v1`.
+- P9 room anchors (founder-approved 4 October 2026): home `asset-4b30cc2631964e3ea9ea87985ba434fc`
+  (`3d854b2f8f97b47882833f580caab27dd9ac6068ab3da9ed668eeb2f972a40d2`) and shop
+  `asset-3888589e5e684985949ff716f6fbe5c6` (`6ee6def1bee66265e65615ebd759117807f11be985e104c3def3b0dc02f67453`).
+- P8 room anchors, imported crops of finished P8 Attempt-1 scene art: office `asset-production-8-office-anchor-v1`
+  (`19d1ac7a7a0400b592f2666d400d4a11f9ac9b081317019b934a92929998391a`) and store-room
+  `asset-production-8-storeroom-anchor-v1` (`296dfd01de89dd4bb105be3321cd27e64262992f6ca62a8a6c6ef765fb3489f2`).
+- Approved baseline beats `beat-1.png` to `beat-8.png` in
+  `D:\ConveyorOS\evidence\similarstoic\approved-production-baseline\2026-10-03-v1\next-private-production\`
+  (hashes in that directory's `SHA256-MANIFEST.txt`).
+- P10 accepted scene art (adopted by `production-10-r2`), beats 1-8:
+  `asset-fb7994766a1148d1988e817de92348b2`, `asset-0bd3f8a05e3047fdbb603c925bb3b16c`,
+  `asset-b344b448bc6f479bad81edd03ef633a4`, `asset-9f47eb6b70294f63850f836e49a90b21`,
+  `asset-8b73651001c341819be87c5c422320a1`, `asset-ea15a2e1b98c465e967119a4f1e1935c`,
+  `asset-60f391af8da346018c4ae50aff0cbf73`, `asset-52965b5441be473ea99d9e3c30079744`.
+
 ## Creative operating rules
 
 The current generalized creative rules are:

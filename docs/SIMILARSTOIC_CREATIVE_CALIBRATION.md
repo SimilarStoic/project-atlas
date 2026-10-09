@@ -84,6 +84,24 @@ not evaluated. Fixed terms on the narrator's list are now flagged before synthes
 evaluator v2. No speech-form change is implemented; captions and parity checks still derive from the approved
 Script.
 
+#### Environment plates
+
+Room plates (character-free environment anchors) carry the same-illustrator treatment into every beat generated in
+that room, so they meet the same standard as finished art.
+
+- **Authoring rule.** A `viewpoint:<key>` member role selects a reference plate; it is never a camera instruction.
+  Room-plate descriptions name topic-specific materials and objects, prescribe no camera angle, and use "plain" only
+  for surfaces that must stay blank (no readable text). Beat props stay out of the plate.
+- **Plate review gate.** Before founder approval, place each candidate plate on a contact sheet beside the approved
+  P9 home and shop anchors and two approved baseline beats, and record PASS or FAIL for linework, palette, depth,
+  shadow, texture and richness. A FAIL blocks proposal for approval. Fixture presence, no text and zoomed defect
+  checks remain required in addition.
+- **OPEN conflict (not resolved).** Core-v4 wording ("shading: no soft or tonal shading"; "textured colouring or
+  fills" and "realistic depth rendering" under avoid) conflicts with the approved exemplars, which show soft cast
+  shadows, material texture and room depth. Until a founder decision reconciles them, the approved exemplars listed
+  under "Approved visual evidence" in [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md) are the human
+  quality benchmark.
+
 ### B. Useful production-shape defaults
 
 - The approved evidence uses eight meaningful narration-led visual beats over 38.720 seconds. Treat this as a useful
