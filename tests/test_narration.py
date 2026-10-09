@@ -96,7 +96,7 @@ def test_migration_26_upgrade_preserves_history_and_constraints(tmp_path, monkey
     assert repo.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     assert repo.connection.execute("PRAGMA foreign_key_check").fetchall() == []
     assert repo.get_narration_asset("historical-audio").content_digest == "a" * 64
-    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 29
+    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 30
     repo.close()
 
 

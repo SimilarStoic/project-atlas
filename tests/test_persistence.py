@@ -30,6 +30,7 @@ from project_atlas.generation import (
     asset_spec_snapshot,
 )
 from project_atlas.persistence import MIGRATIONS, AtlasRepository, CharacterProfile
+from tests.reference_approvals import approve_reference_images
 
 
 class FakeImageGenerator:
@@ -141,7 +142,7 @@ def create_visual_authority_asset(
     storage = LocalAssetStorage(storage_root)
     asset_id = f"asset-visual-authority-{key}"
     stored = storage.write(asset_spec.id, asset_id, content, "image/png")
-    return repository.create_asset(
+    asset = repository.create_asset(
         asset_id,
         asset_spec.id,
         1,
@@ -150,6 +151,8 @@ def create_visual_authority_asset(
         "imported",
         content_digest=sha256(content).hexdigest(),
     )
+    approve_reference_images(repository, asset.id)
+    return asset
 
 
 def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_path) -> None:
@@ -161,7 +164,7 @@ def test_fresh_database_migrates_and_seeds_discovery_through_asset_specs(tmp_pat
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         decision_table_sql = repository.connection.execute(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='idea_gate_decisions'"
         ).fetchone()["sql"]
@@ -2186,7 +2189,7 @@ def test_migration_22_preserves_imported_narration_and_adds_generation_provenanc
             for row in repository.connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         tables = {
             row[0]
             for row in repository.connection.execute(
@@ -2795,7 +2798,7 @@ def test_migration_11_adds_reference_lineage_without_backfilling_history(
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='character_reference_sets'"
         ).fetchone()
@@ -2833,7 +2836,7 @@ def test_migration_24_adds_visual_authority_schema_without_backfill(tmp_path) ->
             for row in repository.connection.execute(
                 "SELECT version FROM schema_migrations ORDER BY version"
             )
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         tables = {
             row["name"]
             for row in repository.connection.execute(
@@ -3526,7 +3529,7 @@ def test_existing_v07_database_migrates_to_v08_without_rewriting_existing_assets
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='generation_executions'"
         ).fetchone()
@@ -3720,7 +3723,7 @@ def test_migration_13_preserves_historical_research_packs_with_null_provenance(t
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         assert repository.connection.execute(
             "SELECT name FROM sqlite_master WHERE type = 'index' "
             "AND name = 'idx_research_packs_idea_gate_decision'"
@@ -5989,7 +5992,7 @@ def test_existing_v08_database_upgrades_character_seed_without_legacy_prompt_dri
         assert [
             row["version"]
             for row in repository.connection.execute("SELECT version FROM schema_migrations")
-        ] == list(range(1, 30))
+        ] == list(range(1, 31))
         profile = repository.get_character_profile("character-profile-similarstoic-hamster-core-v1")
         sorting = repository.get_asset_spec("asset-spec-isa-scene-01-hamster-sorting-v1")
         reaction = repository.get_asset_spec("asset-spec-isa-scene-03-hamster-reaction-v1")

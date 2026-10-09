@@ -22,6 +22,7 @@ from project_atlas.generation import (
 )
 from project_atlas.media import FfmpegRuntime, MediaRuntimeError
 from project_atlas.web import create_server
+from tests.reference_approvals import approve_reference_images
 
 MEDIA_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
@@ -90,6 +91,8 @@ def ensure_character_reference_set(server, storage_root: Path) -> str:
         character_profile_id=profile.id,
         content_digest=sha256(content).hexdigest(),
     )
+    # The basis image also serves as the test global style reference.
+    approve_reference_images(repository, "asset-http-reference-basis-v1")
     return repository.create_character_reference_set(
         "character-reference-set-http-basis-v1", profile.id, ["asset-http-reference-basis-v1"]
     ).id

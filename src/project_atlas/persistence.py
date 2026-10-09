@@ -19,6 +19,7 @@ from project_atlas.publishing_schema import MIGRATION_25, MIGRATION_29
 from project_atlas.publishing_state import PublishingRepositoryMixin
 from project_atlas.scene_persistence import PersistentSceneRepositoryMixin
 from project_atlas.scene_schema import MIGRATION_27
+from project_atlas.visual_reference_approvals import MIGRATION_30, VisualReferenceApprovalMixin
 
 
 def now() -> str:
@@ -1605,6 +1606,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     MIGRATION_27,
     MIGRATION_28,
     MIGRATION_29,
+    MIGRATION_30,
 )
 
 
@@ -1612,7 +1614,10 @@ MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23, 26, 29})
 
 
 class AtlasRepository(
-    ProductionRepositoryMixin, PersistentSceneRepositoryMixin, PublishingRepositoryMixin
+    ProductionRepositoryMixin,
+    PersistentSceneRepositoryMixin,
+    PublishingRepositoryMixin,
+    VisualReferenceApprovalMixin,
 ):
     """A small application/repository boundary over SQLite."""
 
@@ -4693,6 +4698,8 @@ class AtlasRepository(
                 raise ValueError("A visual authority parent must be global illustration style.")
         for asset_id in asset_ids:
             self._validate_visual_reference_asset(asset_id)
+        # Plate approval gate: every member image of every role needs an eligible approval.
+        self.require_eligible_reference_images(asset_ids, "Visual authority creation")
         stamp = now()
         with self.connection:
             self.connection.execute("BEGIN IMMEDIATE")

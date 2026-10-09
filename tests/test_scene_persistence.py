@@ -22,6 +22,7 @@ from project_atlas.scene_model import (
     build_fixture_world,
     variant_content_digest,
 )
+from tests.reference_approvals import approve_reference_images
 
 PLAN = "visual-plan-isa-deadline-video-v1"
 SCENES = (
@@ -152,6 +153,7 @@ def _prepared(tmp_path):
             "INSERT INTO character_reference_set_members VALUES (?, ?, ?, ?)",
             (REFERENCE, "asset-actor-a", 1, "2026-09-29T00:00:00+00:00"),
         )
+    approve_reference_images(repo, "asset-wall")
     repo.create_visual_reference_authority(
         AUTHORITY,
         "persistent-proof",
@@ -201,9 +203,9 @@ def _add_expanded_assets(repo, world, versions):
 
 
 def test_migration_27_is_additive_and_integral(tmp_path):
-    assert [version for version, _ in MIGRATIONS] == list(range(1, 30))
+    assert [version for version, _ in MIGRATIONS] == list(range(1, 31))
     repo = AtlasRepository(tmp_path / "clean.sqlite")
-    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 29
+    assert repo.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 30
     tables = {
         row[0]
         for row in repo.connection.execute(
@@ -228,7 +230,7 @@ def test_schema_26_upgrade_and_failed_27_are_atomic(tmp_path, monkeypatch):
     upgraded = AtlasRepository(path)
     assert (
         upgraded.connection.execute("SELECT max(version) FROM schema_migrations").fetchone()[0]
-        == 29
+        == 30
     )
     assert upgraded.connection.execute("SELECT count(*) FROM opportunities").fetchone()[0] == count
     upgraded.close()

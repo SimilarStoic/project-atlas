@@ -15,6 +15,8 @@ import pytest
 from project_atlas import production as production_module
 from project_atlas import speech_timing
 from project_atlas.generation import (
+    DEFAULT_BREAK_FRAME_VISUAL_AUTHORITY_ID,
+    DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID,
     DEFAULT_VISUAL_STYLE_PROFILE_ID,
     GeneratedArtifact,
     GenerationFailure,
@@ -43,6 +45,7 @@ from project_atlas.scene_media import (
 )
 from project_atlas.scene_model import Affine
 from project_atlas.web import create_server
+from tests.reference_approvals import approve_reference_images
 from tests.test_web import (
     create_authorized_visual_plan,
     ensure_character_reference_set,
@@ -527,7 +530,7 @@ def test_canonical_v2_http_lifecycle_is_resumable_and_founder_distinct(
             server.repository.connection.execute(
                 "SELECT MAX(version) FROM schema_migrations"
             ).fetchone()[0]
-            == 29
+            == 30
         )
         with pytest.raises(sqlite3.IntegrityError, match="immutable"):
             server.repository.connection.execute(
@@ -3871,6 +3874,7 @@ def _environment_asset(server, scene_id: str, key: str) -> str:
         "imported",
         content_digest=sha256(content).hexdigest(),
     )
+    approve_reference_images(server.repository, asset_id)
     return asset_id
 
 
@@ -4478,5 +4482,126 @@ def test_v1_status_has_no_review_requirements_field(tmp_path) -> None:
             "narration_selection",
             "created_at",
         }
+    finally:
+        server.server_close()
+
+
+# --- Plate approval gate at new-production authorization -------------------------------------
+
+
+def _withdraw(server, asset_id: str) -> None:
+    history = server.repository.list_plate_approvals(asset_id)
+    server.repository.record_visual_plate_decision(
+        f"withdraw-{asset_id}-{len(history) + 1}",
+        asset_id,
+        "withdrawn",
+        "founder",
+        "founder withdrawal (test)",
+    )
+
+
+def _refused(server, generator, request, authority_id: str) -> None:
+    failed, status = _post_error(server, "/api/v2/productions", request)
+    assert status == 400, failed
+    assert "without an eligible founder approval" in failed["error"], failed
+    assert authority_id in failed["error"] and "No provider call made" in failed["error"]
+    assert generator.inputs == []
+    with pytest.raises(KeyError):
+        server.repository.get_production_run(request["id"])
+
+
+def test_a_withdrawn_global_reference_refuses_new_runs(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _request(server, tmp_path, "gate-global")
+        _withdraw(server, "asset-http-reference-basis-v1")
+        _refused(server, generator, request, GLOBAL_AUTHORITY)
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize("route", ["family", "explicit-pin"])
+def test_a_withdrawn_environment_plate_refuses_new_runs_by_family_or_pin(tmp_path, route) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        request, _keys = _home_request(server, tmp_path, "gate-env")
+        authority = _home_authority(server, request["timeline"][0]["scene_id"], "v1")
+        if route == "explicit-pin":
+            request["environment_pins"] = {
+                variant["asset_spec_id"]: {
+                    "authority_id": authority.id,
+                    "environment_family": HOME_FAMILY,
+                    "viewpoint": "front",
+                }
+                for variant in request["worlds"][0]["entities"][0]["variants"]
+            }
+        # The authority was created while its plates were approved; withdrawal still governs.
+        _withdraw(server, "asset-environment-v1-front")
+        _refused(server, generator, request, authority.id)
+    finally:
+        server.server_close()
+
+
+@pytest.mark.parametrize(
+    ("route", "authority_id", "role"),
+    [
+        ("visual_authority_ids", "visual-reference-authority-gate-explicit", "composition_depth"),
+        ("use_composition_depth", DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID, "composition_depth"),
+        ("special_break_frame", DEFAULT_BREAK_FRAME_VISUAL_AUTHORITY_ID, "special_break_frame"),
+    ],
+)
+def test_a_withdrawn_non_environment_reference_refuses_new_runs(
+    tmp_path, route, authority_id, role
+) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    try:
+        metadata = (
+            {"visual_authority_ids": [authority_id]}
+            if route == "visual_authority_ids"
+            else {route: True}
+        )
+        request, _keys = _request(server, tmp_path, "gate-other", spec_metadata=(metadata, None))
+        image = _environment_asset(server, request["timeline"][0]["scene_id"], f"gate-{route}")
+        server.repository.create_visual_reference_authority(
+            authority_id,
+            f"gate-{route}",
+            role,
+            "Gate reference",
+            "Treatment only.",
+            [(image, "member")],
+            parent_authority_id=GLOBAL_AUTHORITY,
+        )
+        _withdraw(server, image)
+        _refused(server, generator, request, authority_id)
+    finally:
+        server.server_close()
+
+
+def test_frozen_runs_keep_their_established_behaviour_after_a_withdrawal(tmp_path) -> None:
+    generator = ValidFakeImageGenerator()
+    server = _server(tmp_path, generator)
+    service = server.production_service
+    try:
+        request, keys = _request(
+            server, tmp_path, "gate-frozen", image_calls=3, narration_authorized=False
+        )
+        del request["narrator"]
+        _start_historical(server, request)
+        start_key, finish_key = keys
+        service.review_acquisition(
+            "gate-frozen",
+            _review([start_key], "passed", server, "gate-frozen")
+            + _review([finish_key], "failed", server, "gate-frozen"),
+        )
+        _withdraw(server, "asset-http-reference-basis-v1")
+        # Resubmission and reacquisition of a run frozen before the gate are unchanged.
+        again = service.start(json.loads(json.dumps(request)))
+        assert again["status"] == "failed"
+        resumed = service.resume("gate-frozen")
+        assert resumed["status"] == "acquisition_review_pending"
+        assert len(generator.inputs) == 3
     finally:
         server.server_close()

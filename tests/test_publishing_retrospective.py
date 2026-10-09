@@ -253,11 +253,11 @@ def _media(tmp_path: Path) -> Path:
 
 
 def test_fresh_schema_is_contiguous_1_to_29_with_intact_references(tmp_path) -> None:
-    assert [version for version, _ in MIGRATIONS] == list(range(1, 30))
+    assert [version for version, _ in MIGRATIONS] == list(range(1, 31))
     repo = AtlasRepository(tmp_path / "fresh.sqlite")
     try:
         connection = repo.connection
-        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 29
+        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 30
         assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         sql = dict(connection.execute("SELECT name, sql FROM sqlite_master WHERE type = 'table'"))
@@ -298,7 +298,7 @@ def test_upgrade_28_to_29_preserves_every_publishing_row(tmp_path, monkeypatch) 
     upgraded = AtlasRepository(path)
     try:
         connection = upgraded.connection
-        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 29
+        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 30
         assert _snapshot(connection) == before
         assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []

@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Any
 
 from project_atlas import narration_delivery, speech_timing
-from project_atlas.generation import GenerationService
+from project_atlas.generation import (
+    DEFAULT_BREAK_FRAME_VISUAL_AUTHORITY_ID,
+    DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID,
+    GenerationService,
+)
 from project_atlas.media import FfmpegRuntime, MediaService
 from project_atlas.narration import (
     CURRENT_NARRATOR_PROFILE_ID,
@@ -312,6 +316,8 @@ class ProductionLifecycleService:
             self._validate_request(defaulted, pins_pending=True)
             defaulted["environment_pins"] = self._latest_environment_pins(defaulted)
         normalized = self._validate_request(defaulted)
+        # Plate approval gate for new runs only: frozen runs keep their established behaviour.
+        self._require_eligible_references(normalized)
         run = self.repository.create_production_run(
             run_id, normalized["visual_plan_id"], normalized
         )
@@ -2671,6 +2677,44 @@ class ProductionLifecycleService:
                 raise ProductionRequestError(
                     f"Environment pin for {spec_id} names unknown viewpoint {pin['viewpoint']!r}."
                 )
+
+    def _reference_authorities(self, request: dict[str, Any]) -> list[str]:
+        """Every visual reference authority a new run's generation would actually use."""
+
+        ids = [request["authority"]["visual_reference_authority_id"]]
+        ids += [pin["authority_id"] for pin in request.get("environment_pins", {}).values()]
+        for _world, _entity, _variant, spec_id in self._variant_specs(request):
+            metadata = self.repository.get_asset_spec(spec_id).metadata
+            ids += list(metadata.get("visual_authority_ids") or [])
+            if metadata.get("use_composition_depth") is True:
+                ids.append(DEFAULT_COMPOSITION_VISUAL_AUTHORITY_ID)
+            if metadata.get("special_break_frame") is True:
+                ids.append(DEFAULT_BREAK_FRAME_VISUAL_AUTHORITY_ID)
+        return list(dict.fromkeys(ids))
+
+    def _require_eligible_references(self, request: dict[str, Any]) -> None:
+        """Refuse a new run unless every member image of every used authority is eligible now.
+
+        Eligibility is re-read at authorization time, so an image withdrawn after its
+        authority was created is refused; checks use exact member asset IDs and SHA-256s.
+        """
+
+        for authority_id in self._reference_authorities(request):
+            try:
+                self.repository.get_visual_reference_authority(authority_id)
+            except KeyError:
+                raise ProductionRequestError(
+                    f"Visual reference authority {authority_id!r} does not exist; no provider "
+                    "call made."
+                ) from None
+            members = self.repository.list_visual_reference_authority_members(authority_id)
+            try:
+                self.repository.require_eligible_reference_images(
+                    [member.asset_id for member in members],
+                    f"Visual reference authority {authority_id}",
+                )
+            except ValueError as error:
+                raise ProductionRequestError(f"{error} No provider call made.") from None
 
     def _require_excerpts_join_script(self, plan_id: str) -> None:
         """Narration-aligned timing needs scene excerpts that concatenate to the Script."""

@@ -98,10 +98,11 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - The immutable rollback/reference checkpoint is the pre-cleanup tag `pre-conveyor-cleanup-2026-09-30` at
   `f17ab0cf89bc99a95bcfb4a9d28d31d8fc2d0fa3`.
 - The relocated full offline suite originally passed **316 tests**.
-- After the SimilarStoic new-run defaults, the narration-aligned first candidate, Editorial Readiness evaluator v2
-  and the pinned environment identity with the v2 acquisition review, the verified local full suite is **589
-  passed, 0 skipped, 0 failed** (no migration). Post-acquisition founder narration authorization is a recorded action;
-  the frozen request is unchanged and each narration take is a separately authorized single provider call.
+- After the SimilarStoic new-run defaults, the narration-aligned first candidate, Editorial Readiness evaluator v2,
+  the pinned environment identity with the v2 acquisition review and the visual reference approval gate
+  (migration 30), the verified local full suite is **604 passed, 0 skipped, 0 failed**. Post-acquisition founder
+  narration authorization is a recorded action; the frozen request is unchanged and each narration take is a
+  separately authorized single provider call.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -311,11 +312,35 @@ methods and gates; no production run, narration, beat AssetSpec or visual author
   frontal camera and an emptied room; the authoring rule and plate review gate in
   [`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md#environment-plates) now govern
   new plates. The round-1 records and assets stay unchanged.
+- Round-2 plates (`production-11-{desk,lab,garden}-anchor-spec-r2`, 3 calls), **rejected for production use**: the
+  plate review gate failed shadow on all three and palette/texture on desk and garden. Hashes: desk
+  `445a4e24fc607dcd2e7d75eccd1b59e76053f617cff048c69ad9a866767dfb5f`, lab
+  `b85bb0cd07f03450521361ed9137b5fd52b552a1cb9f7787cc5b2a5c1686a806`, garden
+  `0c2ed40ac5a00d0a3bc964a431356fea09685e587e7b704aee98fabef1847eb0` (`...\anchors\round-2\`). Records unchanged.
+- Experimental treatment reference: `visual-reference-authority-similarstoic-p11-experimental-treatment-v1`
+  (role `composition_depth`, parent the global illustration authority, created 9 October 2026), members the P9 home
+  and shop anchors (`treatment_exemplar`), guidance "Treatment only: thick dark hand-drawn outlines, mostly white
+  unfilled walls and floor, flat warm fills on objects only, sparse floor dash marks, faint soft shadow. Copy no
+  object, fixture, room layout or composition." It is explicitly not canonical and not a generation default; it is
+  used only through explicit `visual_authority_ids` on the round-3 anchor specs. Finding: the desk run copied P9
+  home's calendar and window despite that guidance.
+- Round-3 plates (`production-11-{desk,lab,garden}-anchor-spec-r3`, global style plus the experimental reference,
+  one call each), **founder-approved** (founder-attested): desk
+  `2031eb51909c321690059a35c96ef0d7a28d3ce46a4aff3bd76a341dff6f32e7` approved 9 October 2026 13:00, with the
+  recorded exception that its calendar and window resemble P9 home's but are accepted as P11 study elements of the
+  same kind (calendar stays blank, window stays a window), locked within P11 only, linking no P11 and P9 rooms,
+  geometry or fixtures; lab `9a8ceee8b88f03201937f6f6d64600df4c157274d27d80f8c5bdfb7542a29231` and garden
+  `8f5e5f929aedadf493e81fdb560e073c4003b7daf77d597ad023f90d7534bc89` approved 9 October 2026 13:11 ("Yep this is
+  fine, happy to proceed"). Review copies and contact sheets in `...\anchors\round-3\` (desk sheet
+  `review-gate-contact-sheet.png`, lab/garden sheet `review-gate-contact-sheet-lab-garden.png`). These approvals
+  are recorded in the runtime only after migration 30 is applied under separate founder authorization (see the
+  visual reference approval gate below); until then they exist in this document and the conversation record.
 - Backups before each write: `D:\ConveyorBackups\pre-p11-editorial-chain-20261008-171739\`,
-  `pre-p11-editorial-gate-20261008-172325\` and `pre-p11-batch1-plates-20261008-175017\` (each
-  `conveyor.db`, integrity_check ok).
-- Batch 2 (environment authorities, beat AssetSpecs, the production request) is paused until founder plate
-  approval.
+  `pre-p11-editorial-gate-20261008-172325\`, `pre-p11-batch1-plates-20261008-175017\`,
+  `pre-p11-round2-plates-20261009-123329\`, `pre-p11-round3-desk-20261009-125655\` and
+  `pre-p11-round3-lab-garden-20261009-130801\` (each `conveyor.db`, integrity_check ok).
+- Batch 2 (environment authorities, beat AssetSpecs, the production request) is paused until migration 30 is
+  applied and the round-3 approvals are recorded through the gate.
 
 ## Approved visual evidence
 
@@ -742,13 +767,32 @@ its only API-route package is the never-release private audit-evidence package b
   <consent-state.json> --db D:\ConveyorOS\runtime\ConveyorRuntime\conveyor.db maintain --client-config
   <client-config.json>` (both JSON paths outside the repository).
 
+## Visual reference approval gate (migration 30)
+
+`src/project_atlas/visual_reference_approvals.py` adds the append-only table `visual_plate_approvals`: per image,
+sequential founder-attested decisions (`approved`, `rejected`, `withdrawn`) bound to the exact asset ID and
+SHA-256 (database triggers), each citing a traceable founder authorization (`decision_reference`), with an
+`approved` decision also bound to its review contact-sheet asset and SHA-256 and a per-criterion PASS/FAIL record,
+plus any recorded exceptions. Decisions are founder-attested records, not cryptographically authenticated; agent
+review findings are evidence, never the decision. The latest decision governs; rows are never updated or deleted.
+Read them with `AtlasRepository.list_plate_approvals()`.
+
+- Authority creation of every role refuses any member image without an eligible approval.
+- At new-production authorization, before any provider call, every visual reference authority the run will use
+  (global, environment pins, `visual_authority_ids`, `use_composition_depth`, `special_break_frame`) must have only
+  eligible member images, checked by exact asset ID and SHA-256; an image withdrawn after its authority was created
+  is refused. Runs frozen before the gate keep their established behaviour.
+- `HISTORICAL_ALLOWLIST` names the 11 reference images in use before the gate (the seven canonical repository
+  references, the P8 office and store-room crops and the P9 home and shop anchors) by exact ID and SHA-256. It is a
+  fallback only for images with no decision record; once any decision exists, the latest decision governs.
+
 ## Schema authority
 
-Application schema authority is the `schema_migrations` table with contiguous versions **1 through 29**, in the
-repository and in the protected production runtime. Migration 29 was applied to the protected runtime on
-7 October 2026 under founder authorization, after a verified backup, together with the P8/P9 recording. Migration 28
-adds only
-append-only production-run events, cross-stage evidence, QA-review outcomes and founder-review decisions; existing
+Application schema authority is the `schema_migrations` table. The repository defines contiguous versions
+**1 through 30**; the protected production runtime is at **29** until migration 30 is applied under separate
+founder authorization (the publishing series migration becomes 31). Migration 29 was applied to the protected
+runtime on 7 October 2026 under founder authorization, after a verified backup, together with the P8/P9 recording.
+Migration 28 adds only append-only production-run events, cross-stage evidence, QA-review outcomes and founder-review decisions; existing
 generation, persistent-scene, narration and media tables remain authoritative for their artifacts.
 
 Migration 29 (founder-attested retrospective publications) rebuilds two publishing tables under the existing

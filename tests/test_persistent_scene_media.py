@@ -19,6 +19,7 @@ from project_atlas.scene_model import (
     bind_world_definition,
     build_fixture_world,
 )
+from tests.reference_approvals import approve_reference_images
 from tests.test_media import _ready_visual_plan, _runtime_or_skip
 from tests.test_scene_persistence import (
     AUTHORITY,
@@ -90,6 +91,7 @@ def _persistent_world(tmp_path):
             "INSERT INTO character_reference_set_members VALUES (?, ?, ?, ?)",
             (REFERENCE, "asset-actor-a", 1, "2026-09-29T00:00:00+00:00"),
         )
+    approve_reference_images(repository, "asset-wall")
     repository.create_visual_reference_authority(
         AUTHORITY,
         "persistent-media-proof",
