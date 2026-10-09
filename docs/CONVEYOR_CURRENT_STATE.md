@@ -332,15 +332,29 @@ methods and gates; no production run, narration, beat AssetSpec or visual author
   geometry or fixtures; lab `9a8ceee8b88f03201937f6f6d64600df4c157274d27d80f8c5bdfb7542a29231` and garden
   `8f5e5f929aedadf493e81fdb560e073c4003b7daf77d597ad023f90d7534bc89` approved 9 October 2026 13:11 ("Yep this is
   fine, happy to proceed"). Review copies and contact sheets in `...\anchors\round-3\` (desk sheet
-  `review-gate-contact-sheet.png`, lab/garden sheet `review-gate-contact-sheet-lab-garden.png`). These approvals
-  are recorded in the runtime only after migration 30 is applied under separate founder authorization (see the
-  visual reference approval gate below); until then they exist in this document and the conversation record.
+  `review-gate-contact-sheet.png`, lab/garden sheet `review-gate-contact-sheet-lab-garden.png`).
+- Runtime approval records (migration 30 applied 9 October 2026, see the gate section below): founder-attested
+  decisions `production-11-desk-r3-plate-approval`, `production-11-lab-r3-plate-approval` and
+  `production-11-garden-r3-plate-approval` (each `approved`, sequence 1, citing the founder's chat message). The
+  review sheets are imported as `asset-production-11-desk-r3-review-sheet` (`6b54e5a8…c7a5`) and
+  `asset-production-11-lab-garden-r3-review-sheet` (`a836a825…4d07`, shared by lab and garden) under the
+  founder-accepted holder AssetSpec `production-11-plate-review-sheets` (scene 1, review evidence, never generated).
+- Room authorities (`environment_family`, parent the global illustration authority, each with its approved round-3
+  plate as the only member, role `viewpoint:front`):
+  - `visual-reference-authority-similarstoic-production11-desk-v1` (family `production-11-desk`), fixtures `desk`,
+    `stool`, `window`, `calendar` (stays blank), `bookshelf` (books, box, potted plant on top), `desk_lamp` (on the
+    bookshelf), `pencil_cup` and `book` (both on the desk).
+  - `visual-reference-authority-similarstoic-production11-lab-v1` (family `production-11-lab`), fixtures
+    `lab_table`, `stool` (in front of the bench), `pendant_lamp`, `filing_cabinet`, `pinboard`, `coat_peg` (with the
+    lab coat), `test_tube_rack`, `flask` and `lidded_box` (all three on the bench).
+  - `visual-reference-authority-similarstoic-production11-garden-v1` (family `production-11-garden`), fixtures
+    `raised_bed` (left foreground), `fence`, `garden_shed`, `watering_can` and `stepping_stones`.
 - Backups before each write: `D:\ConveyorBackups\pre-p11-editorial-chain-20261008-171739\`,
   `pre-p11-editorial-gate-20261008-172325\`, `pre-p11-batch1-plates-20261008-175017\`,
-  `pre-p11-round2-plates-20261009-123329\`, `pre-p11-round3-desk-20261009-125655\` and
-  `pre-p11-round3-lab-garden-20261009-130801\` (each `conveyor.db`, integrity_check ok).
-- Batch 2 (environment authorities, beat AssetSpecs, the production request) is paused until migration 30 is
-  applied and the round-3 approvals are recorded through the gate.
+  `pre-p11-round2-plates-20261009-123329\`, `pre-p11-round3-desk-20261009-125655\`,
+  `pre-p11-round3-lab-garden-20261009-130801\` and `pre-migration-30-p11-approvals-20261009-185703\` (each
+  `conveyor.db`, integrity_check ok).
+- Next: Batch 2 (nine beat AssetSpecs pinned to these room authorities and the `production-11` request).
 
 ## Approved visual evidence
 
@@ -789,8 +803,9 @@ Read them with `AtlasRepository.list_plate_approvals()`.
 ## Schema authority
 
 Application schema authority is the `schema_migrations` table. The repository defines contiguous versions
-**1 through 30**; the protected production runtime is at **29** until migration 30 is applied under separate
-founder authorization (the publishing series migration becomes 31). Migration 29 was applied to the protected
+**1 through 30**, and the protected production runtime is at **30**: migration 30 was applied on 9 October 2026
+under founder authorization, after a verified backup and with the maintenance task paused, changing no existing row
+(the publishing series migration becomes 31). Migration 29 was applied to the protected
 runtime on 7 October 2026 under founder authorization, after a verified backup, together with the P8/P9 recording.
 Migration 28 adds only append-only production-run events, cross-stage evidence, QA-review outcomes and founder-review decisions; existing
 generation, persistent-scene, narration and media tables remain authoritative for their artifacts.
