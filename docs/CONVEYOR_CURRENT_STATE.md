@@ -268,9 +268,11 @@ has yet exercised it):
   Approve over such findings requires a comment.
 - New SimilarStoic runs default to the v2 narrator, the prefer-mode sentence-delivery policy and N = 3 (see
   Canonical v2 fidelity and safeguards).
-- The same environment plus the same viewpoint locks room geometry, furniture scale and persistent fixture identity:
-  new runs freeze their exact environment authority and viewpoint per AssetSpec, generation sends only that
-  viewpoint's approved plate, and a v2 pass must name the frozen same-family, same-viewpoint comparison set.
+- Same-room consistency is **guided and checked, not enforced**: new runs freeze their exact environment authority
+  and viewpoint per AssetSpec, generation sends only that viewpoint's approved plate (guided), and a v2 pass must name
+  the frozen same-family, same-viewpoint comparison set (checked). Neither prevents drift: P11 Batch 2 and
+  production-11b both drifted in room geometry, furniture scale and hamster scale (see Production 11). The approved
+  creative standard (consistent worlds and character) is unchanged; no mechanism yet enforces it.
 - Anchor fixtures are structured authority data rendered into one deterministic prompt clause, and a v2 pass must
   attest every pinned fixture as `unchanged` or `not_in_frame` (the HOME post box reused as an energy meter would be
   a failed review).
@@ -290,7 +292,8 @@ Before P11:
 ## Production 11 (in progress)
 
 Topic "Why Investing Feels Pointless at First". Every record below was written through the existing repository
-methods and gates; no production run, narration, beat AssetSpec or visual authority exists yet.
+methods and gates. Two production runs exist, both paused at `acquisition_review_pending` with no acquisition
+review recorded (see "Production runs" at the end of this section); no narration exists.
 
 - Editorial chain (8 October 2026): `production-11-opportunity`, Idea Gate snapshot
   `production-11-idea-gate-review-snapshot` and founder Proceed `production-11-idea-gate-decision`;
@@ -354,7 +357,30 @@ methods and gates; no production run, narration, beat AssetSpec or visual author
   `pre-p11-round2-plates-20261009-123329\`, `pre-p11-round3-desk-20261009-125655\`,
   `pre-p11-round3-lab-garden-20261009-130801\` and `pre-migration-30-p11-approvals-20261009-185703\` (each
   `conveyor.db`, integrity_check ok).
-- Next: Batch 2 (nine beat AssetSpecs pinned to these room authorities and the `production-11` request).
+- Production runs (verified read-only from the runtime, 9 October 2026); neither has any review:
+  - `production-11` (Batch 2): request digest `ae32cc61f7e93ac6c9fc08fed4add88df27862de825f0527e53c2cbfc9b32c35`,
+    frozen image-call ceiling 15, 9 calls used, beat AssetSpecs `production-11-beat-1` to `-9` pinned to the three
+    room authorities, status `acquisition_review_pending`. Founder look (not recorded): beats 4 and 6 fine, beat 8
+    mostly fine (enlarged head), the rest drifted (room, desk and wall depth, mascot scale and face, a physically
+    wrong balance, coins drawn as a roll).
+  - `production-11b` (Route B follow-on on the same approved VisualPlan, revised texts): request digest
+    `8a3895907f57f9a4de1ccc659e969442a6eeaa45d571956731a40fe61152d792`, frozen ceiling 18, 10 calls used (one
+    `credit_balance_exhausted` failure, then nine successes on resume), AssetSpecs `production-11b-beat-1` to `-9`,
+    status `acquisition_review_pending`. `production-11b-beat-5` was corrected in place before any generation of it
+    (two-versus-one coins replaced by one identical coin per pan with a tilted beam); its metadata records the
+    previous prompt's SHA-256 `fae9594b38f2d3d897bc21b7a0b818065470efe6fb91c14350fd4042a2125c08` and the reason.
+  - Read-only review material: `D:\ConveyorOS\channels\SimilarStoic\production-11b\review\`
+    (`p11-candidates-by-beat.png`, phone-size version, and `p11-candidates.md` with blank founder columns).
+- Plate-anchor trial (`84084b8`, calibration specs `production-11-anchor-trial-beat-1` and `-3`, 2 calls):
+  FAILED; see "P11 result" in
+  [`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md). Experimental and opt-in; not to be
+  used without a new founder decision.
+- Lifecycle facts for finishing P11: adoption takes one source run whose every variant passed review, so a
+  successor cannot mix production-11 and production-11b assets without a code change; reacquisition regenerates from
+  the same AssetSpecs and never reads review reasons.
+- Backups before the P11 runtime writes after migration 30: `pre-p11-batch2-20261009-194204\`,
+  `pre-p11-anchor-trial-20261009-203343\`, `pre-p11b-batch-20261009-210538\` and
+  `pre-p11b-resume-20261009-211302\` (each `conveyor.db`, integrity_check ok).
 
 ## Approved visual evidence
 
@@ -438,7 +464,10 @@ The repository has mechanically established:
 - deterministic accepted production state.
 
 These mechanisms are foundations, not proof of creative quality or end-to-end autonomous readiness. Mechanical
-persistence does not guarantee a compelling, semantically active, publication-ready product.
+persistence does not guarantee a compelling, semantically active, publication-ready product. The Persistent Scene
+Model applies after acquisition: it holds an admitted image exactly, so it preserves defects already in that image
+and does not prevent drift or defects inside a generated full-frame beat. Generated-image properties are guided by
+prompts and references and checked by review; none is guaranteed unless a code invariant enforces it.
 
 ## Known pipeline boundaries
 

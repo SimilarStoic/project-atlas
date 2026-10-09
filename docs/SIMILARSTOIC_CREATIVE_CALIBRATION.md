@@ -55,28 +55,60 @@ of this approved method.
 
 #### A.1 Founder-validated findings (Productions 8–10)
 
-Each finding is recorded once, with the single executable place that now enforces it. Topic-specific P9 content
-(the BNPL shop and kitchen, exact beat wording) stays in section C.
+Each finding is recorded once, with the single executable place that acts on it and how strongly it acts.
+Topic-specific P9 content (the BNPL shop and kitchen, exact beat wording) stays in section C.
 
-| Finding (founder review) | Generalized rule | Enforcement point | Evidence |
-| --- | --- | --- | --- |
-| Beat images drifted between locations | A recurring location is generated from one approved environment anchor | `environment_family` `VisualReferenceAuthority` per location, resolved by `GenerationService` | P8 Attempt 2; P9 shop/home anchors |
-| Off-aspect source images reached review | Full-frame sources are 9:16 before founder review; technical failures are reacquired automatically | Acquisition admission (`full_frame_aspect_error`) in `production.py` | P8 Phase 1B |
-| Doubled or toothed mouths, contradictory expressions | One readable expression and one simple toothless mouth; the beat's expression line is authoritative | core-v4 character rules `expression`, `mouth` plus the per-beat expression line | P9 Attempt 1 beats 3, 4, 7, 8; Attempt 2 accepted |
-| Doubled toes, malformed fingers | Clean paws with separate digits, clean toes | core-v4 `paws_and_feet` | P9 Attempt 1 beats 5, 8 |
-| Strap stopping at the neck or missing | One continuous strap from shoulder to bag | core-v4 `strap` | P9 Attempt 1 beat 7; Attempt 2 round 1 beat 7 |
-| Torso or legs stretched to reach furniture | Compact proportions; furniture and props sized to the hamster | core-v4 `proportions` | P9 Attempt 2 round 1 beats 2, 8 |
-| Duplicated objects or features | No duplicated limbs, facial features or objects | core-v4 `duplication` | P9 Attempt 1 |
-| One identity image under-constrained poses | Identity plus approved multi-pose reference | Latest `CharacterReferenceSet` (v2) | P9 Attempt 2 |
-| Props invited readable digits, dates or lettering | No embedded text of any kind in generated source art; props stay allowed with blank or non-legible surfaces | core-v4 global avoid (unconditional text ban) and global `detail`; authoring asks for blank props | P9 handset, post box, calendar |
-| Narration needed approval after images, but runs were frozen without it | A recorded founder action may authorize narration post-acquisition. Legacy requests take one call; delivery-policy requests freeze N = 1–3 automatic takes. New SimilarStoic runs default to `similarstoic-daniel-v2`, `similarstoic-sentence-delivery-v1` prefer, N = 3 | `authorize_narration`; new-run narration default in `start()` (`production.py`) | P9 Attempt 2; narration-tests 2026-10-07-sentence-delivery |
-| Captions ran ahead of speech and across scene changes | Pause-aligned phrase captions from the exact narration | `speech_timing.py` via `create_persistent_scene_snapshot` | P9 render v3 |
-| Estimated beat timing did not follow the narration | Scene boundaries at the pause ending each scene's narration excerpt (matched pause midpoint, else estimated word gap), applied to the first candidate for `scene_timing: narration-aligned-v1` runs (the default for new runs); later retimes remain founder-approved | `_ensure_snapshot` + `recommend_retime`/`retime` | P8 v2, P9 v2; P10 v1; P10-R2 artifact-2 |
-| A provider network failure interrupted acquisition | A technical provider failure stops the run; resume needs explicit founder authorization | Lifecycle `failed` state and `resume` | P9 Attempt 2 beat 8 |
-| A sourced figure was stated with a different category than its source ("default tariffs: around 20 million") | A Script figure's stated qualifier must match the frozen source quote; mismatches are flagged for editorial judgement before synthesis | Editorial Readiness evaluator v2 (`SCRIPT_NUMBER_QUALIFIER_MISMATCH`, `script_preflight.py`); Approve over findings needs a comment | P10 Script C5 |
-| Full-frame review missed duplicated spouts and a malformed arm | New-run acquisition review inspects props, and limbs and strap for character beats, zoomed in and bound to the asset SHA-256 | v2 acquisition review contract in `review_acquisition` (`production.py`) | P10 acquisition review |
-| The HOME post box was reused as an energy meter | Anchor fixtures keep their identity; any new object is drawn separately | Structured `fixtures` on the pinned `environment_family` authority, one deterministic prompt clause, and per-fixture attestation in the v2 review | P10 HOME beats |
-| Same-room beats drifted in geometry and furniture scale | The same environment plus viewpoint locks room geometry, furniture scale and fixture placement | Frozen `environment_pins` with `viewpoint:<key>` plates in generation and the v2 `geometry_compared_with` set | P10 HOME beats |
+- **Guided**: a prompt rule, reference image or pin asks the model for the property. Generative output can still
+  violate it.
+- **Checked**: a review or evaluator detects violations (a human founder review, or a recorded attestation the
+  lifecycle requires before a pass). It does not prevent them; a violation costs a rejection and a reacquisition.
+- **Enforced**: a code invariant makes the violation impossible in admitted or accepted state (for example an
+  off-aspect image is never admitted to review).
+
+No generated-image property is called guaranteed unless it is Enforced. Generative visual quality (identity,
+proportions, room geometry, props) is validated by measured production results, never declared fixed by a rule.
+P11 measured the Guided rows: see "P11 result" below the table.
+
+| Finding (founder review) | Generalized rule | Mechanism (code location) | Level | Evidence |
+| --- | --- | --- | --- | --- |
+| Beat images drifted between locations | A recurring location is generated from one approved environment anchor | `environment_family` `VisualReferenceAuthority` per location, resolved by `GenerationService` | Guided | P8 Attempt 2; P9 shop/home anchors |
+| Off-aspect source images reached review | Full-frame sources are 9:16 before founder review; technical failures are reacquired automatically | Acquisition admission (`full_frame_aspect_error`) in `production.py` | Enforced | P8 Phase 1B |
+| Doubled or toothed mouths, contradictory expressions | One readable expression and one simple toothless mouth; the beat's expression line is authoritative | core-v4 character rules `expression`, `mouth` plus the per-beat expression line | Guided | P9 Attempt 1 beats 3, 4, 7, 8; Attempt 2 accepted |
+| Doubled toes, malformed fingers | Clean paws with separate digits, clean toes | core-v4 `paws_and_feet` | Guided | P9 Attempt 1 beats 5, 8 |
+| Strap stopping at the neck or missing | One continuous strap from shoulder to bag | core-v4 `strap` | Guided; checked (v2 zoom) | P9 Attempt 1 beat 7; Attempt 2 round 1 beat 7 |
+| Torso or legs stretched to reach furniture | Compact proportions; furniture and props sized to the hamster | core-v4 `proportions` | Guided | P9 Attempt 2 round 1 beats 2, 8 |
+| Duplicated objects or features | No duplicated limbs, facial features or objects | core-v4 `duplication` | Guided; checked (v2 zoom) | P9 Attempt 1 |
+| One identity image under-constrained poses | Identity plus approved multi-pose reference | Latest `CharacterReferenceSet` (v2) | Guided | P9 Attempt 2 |
+| Props invited readable digits, dates or lettering | No embedded text of any kind in generated source art; props stay allowed with blank or non-legible surfaces | core-v4 global avoid (unconditional text ban) and global `detail`; authoring asks for blank props | Guided | P9 handset, post box, calendar |
+| Narration needed approval after images, but runs were frozen without it | A recorded founder action may authorize narration post-acquisition. Legacy requests take one call; delivery-policy requests freeze N = 1–3 automatic takes. New SimilarStoic runs default to `similarstoic-daniel-v2`, `similarstoic-sentence-delivery-v1` prefer, N = 3 | `authorize_narration`; new-run narration default in `start()` (`production.py`) | Enforced | P9 Attempt 2; narration-tests 2026-10-07-sentence-delivery |
+| Captions ran ahead of speech and across scene changes | Pause-aligned phrase captions from the exact narration | `speech_timing.py` via `create_persistent_scene_snapshot` | Enforced | P9 render v3 |
+| Estimated beat timing did not follow the narration | Scene boundaries at the pause ending each scene's narration excerpt (matched pause midpoint, else estimated word gap), applied to the first candidate for `scene_timing: narration-aligned-v1` runs (the default for new runs); later retimes remain founder-approved | `_ensure_snapshot` + `recommend_retime`/`retime` | Enforced | P8 v2, P9 v2; P10 v1; P10-R2 artifact-2 |
+| A provider network failure interrupted acquisition | A technical provider failure stops the run; resume needs explicit founder authorization | Lifecycle `failed` state and `resume` | Enforced | P9 Attempt 2 beat 8 |
+| A sourced figure was stated with a different category than its source ("default tariffs: around 20 million") | A Script figure's stated qualifier must match the frozen source quote; mismatches are flagged for editorial judgement before synthesis | Editorial Readiness evaluator v2 (`SCRIPT_NUMBER_QUALIFIER_MISMATCH`, `script_preflight.py`); Approve over findings needs a comment | Checked (advisory) | P10 Script C5 |
+| Full-frame review missed duplicated spouts and a malformed arm | New-run acquisition review inspects props, and limbs and strap for character beats, zoomed in and bound to the asset SHA-256 | v2 acquisition review contract in `review_acquisition` (`production.py`) | Checked (evidence required) | P10 acquisition review |
+| The HOME post box was reused as an energy meter | Anchor fixtures keep their identity; any new object is drawn separately | Structured `fixtures` on the pinned `environment_family` authority, one deterministic prompt clause, and per-fixture attestation in the v2 review | Guided; checked (attestation) | P10 HOME beats |
+| Same-room beats drifted in geometry and furniture scale | Same-room beats are generated from the same approved environment plate and viewpoint, and reviewed against each other; this guides and checks room geometry, furniture scale and fixture placement but does not lock them (P11 Batch 2 and 11b drifted) | Frozen `environment_pins` with `viewpoint:<key>` plates in generation and the v2 `geometry_compared_with` set | Guided; checked (comparison) | P10 HOME beats |
+
+**P11 result (9 October 2026, measured).** Room plates and frozen pins guided generation and the v2 review would
+have checked the drift, but neither prevented it. In production-11 Batch 2 the founder found room, desk and wall
+depth drift, an enlarged or off-model hamster, a physically wrong balance and coins drawn as a roll in six of nine
+beats (founder look, not recorded as reviews). In production-11b, with revised beat texts naming each defect, the
+agent's comparison showed the desk still enlarged in beat 3, the hamster on the lab bench in beat 6, the raised bed
+moved in beats 8 and 9 and the hamster's scale varying between beats; the founder judged the approach not working.
+Better prompts improve consistency at best; they enforce nothing. The approved creative standard (consistent worlds
+and a consistent character) is unchanged; only the claim about how it is achieved is corrected.
+
+**Experimental plate anchor: FAILED (commit `84084b8`).** An opt-in `plate_anchor` AssetSpec option sends the
+approved plate first with a mask opening one action region and composites the provider output so every pixel
+outside the region is the plate's original pixel. In the two-call trial (beats 1 and 3 on the desk plate,
+calibration specs `production-11-anchor-trial-beat-1` and `-3`) the pixels outside the region held exactly (zero
+changed, independently verified), but the model redrew 92–98% of the masked region, with visible seams, wrong and
+misaligned furniture (the desk redrawn, the stool's legs erased) and an off-model, clipped hamster. It is
+experimental, opt-in, used by no production, and must not be used again without a new founder decision.
+
+**The Persistent Scene Model acts after acquisition.** It holds an admitted image exactly across a scene's states
+and into render, so it preserves defects already present in the acquired image; it does not prevent drift or
+defects inside a generated full-frame beat, because each beat is its own world.
 
 Open finding (not yet a rule): with Daniel, a fixed term such as "Buy now, pay later" was voiced as separate
 utterances (a pitch reset and an unpunctuated pause). The P10 Script contained no comma-bearing fixed term, so it was
