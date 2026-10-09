@@ -9,12 +9,13 @@ import os
 import tempfile
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from project_atlas import plate_anchor as anchoring
 from project_atlas.persistence import (
     Asset,
     AssetSpec,
@@ -66,6 +67,8 @@ class GenerationInput:
     character_references: dict[str, Any] | None = None
     visual_authority_recipe: dict[str, Any] | None = None
     reference_images: tuple[ReferenceImage, ...] = ()
+    plate_anchor: dict[str, Any] | None = None
+    mask: bytes | None = field(default=None, repr=False)
 
     def payload(self) -> dict[str, Any]:
         payload = {
@@ -91,7 +94,31 @@ class GenerationInput:
             payload["character_references"] = self.character_references
         if self.visual_authority_recipe is not None:
             payload["visual_authority_recipe"] = self.visual_authority_recipe
+        if self.plate_anchor is not None:
+            payload["plate_anchor"] = self.plate_anchor
         return payload
+
+
+PLATE_ANCHOR_GUIDANCE = (
+    "Plate anchor: the first image is the approved room plate and the exact output canvas, and "
+    "only its transparent mask region may change. Draw the character and this beat's props "
+    "inside that region as part of the same illustration, standing on, sitting on or "
+    "overlapping the plate's furniture with believable contact and occlusion. Keep the "
+    "plate's camera, scale, linework and every fixture exactly as they are, and draw the "
+    "character at the scale the furniture implies."
+)
+
+
+@dataclass(frozen=True)
+class ResolvedPlateAnchor:
+    """A verified, currently approved plate and the region a provider may redraw."""
+
+    plate_image: ReferenceImage
+    plate: anchoring.Raster
+    region: anchoring.ActionRegion
+    feather: int
+    mask: bytes
+    provenance: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -239,6 +266,8 @@ class PromptComposer:
         reference_images: tuple[ReferenceImage, ...] = (),
         visual_authority_recipe: dict[str, Any] | None = None,
         parameters: dict[str, Any] | None = None,
+        plate_anchor: dict[str, Any] | None = None,
+        mask: bytes | None = None,
     ) -> GenerationInput:
         """Return one v3 input with resolved style and optional character identity provenance."""
 
@@ -262,6 +291,8 @@ class PromptComposer:
             for authority in visual_authority_recipe["authorities"]:
                 if authority.get("fixtures"):
                     prompt_parts.append(self.fixture_clause(authority["fixtures"]))
+        if plate_anchor is not None:
+            prompt_parts.append(PLATE_ANCHOR_GUIDANCE)
         prompt_parts.append(f"AssetSpec requirement: {asset_spec.generation_prompt}")
         prompt = "\n\n".join(prompt_parts)
         return GenerationInput(
@@ -296,6 +327,8 @@ class PromptComposer:
             character_references=character_references,
             visual_authority_recipe=visual_authority_recipe,
             reference_images=reference_images,
+            plate_anchor=plate_anchor,
+            mask=mask,
         )
 
     @staticmethod
@@ -578,6 +611,20 @@ class OpenAIImageGenerator:
                     b"\r\n",
                 )
             )
+        if generation_input.mask is not None:
+            # OpenAI applies the mask to the first image, which must be the anchored plate.
+            anchor = generation_input.plate_anchor or {}
+            if generation_input.reference_images[0].asset_id != anchor.get("plate_asset_id"):
+                raise ValueError("A masked edit requires the anchored plate as the first image.")
+            chunks.extend(
+                (
+                    f"--{boundary}\r\n".encode(),
+                    b'Content-Disposition: form-data; name="mask"; filename="mask.png"\r\n',
+                    b"Content-Type: image/png\r\n\r\n",
+                    generation_input.mask,
+                    b"\r\n",
+                )
+            )
         chunks.append(f"--{boundary}--\r\n".encode())
         return b"".join(chunks), f"multipart/form-data; boundary={boundary}"
 
@@ -664,10 +711,20 @@ class GenerationService:
                 character_profile
             )
             reference_set_id = reference_set.id
+        anchor = self._plate_anchor_for(asset_spec, pinned, environment_pin)
+        if anchor is not None:
+            # The anchored plate's authority is selected exactly, as a frozen pin would be.
+            pinned = True
+            environment_pin = {
+                "authority_id": anchor.provenance["authority_id"],
+                "viewpoint": anchor.provenance["viewpoint"],
+            }
         visual_authority_recipe, visual_reference_images = self._visual_authority_references_for(
             asset_spec, len(reference_images), pinned, environment_pin
         )
         reference_images += visual_reference_images
+        if anchor is not None:
+            reference_images = self._plate_first(anchor, reference_images)
         self._validate_reference_capacity(reference_images)
         self._validate_provider_configuration()
         snapshot = asset_spec_snapshot(asset_spec)
@@ -679,6 +736,8 @@ class GenerationService:
             reference_images,
             visual_authority_recipe,
             self._generation_parameters(reference_images, visual_authority_recipe),
+            anchor.provenance if anchor is not None else None,
+            anchor.mask if anchor is not None else None,
         )
         generation_input = generation_input_object.payload()
         return self._execute_generation(
@@ -689,6 +748,144 @@ class GenerationService:
             snapshot,
             generation_input_object,
             generation_input,
+            anchor,
+        )
+
+    def _plate_anchor_for(
+        self,
+        asset_spec: AssetSpec,
+        pinned: bool,
+        environment_pin: dict[str, Any] | None,
+    ) -> ResolvedPlateAnchor | None:
+        """Verify an opted-in plate anchor before any provider call; None when not anchored.
+
+        The authority, its exact viewpoint member, the plate's bytes against its digest and
+        the plate's current founder approval are each checked here, for production and
+        standalone generation alike, so a withdrawn approval fails closed.
+        """
+
+        if "plate_anchor" not in asset_spec.metadata:
+            return None
+        spec = anchoring.validate_anchor_spec(asset_spec.metadata["plate_anchor"])
+        authority = self.repository.get_visual_reference_authority(spec["authority_id"])
+        viewpoint = spec["viewpoint"]
+        if authority.role != "environment_family":
+            raise ValueError("plate_anchor requires an environment_family authority.")
+        family = asset_spec.metadata.get("environment_family")
+        if family is not None and authority.metadata.get("environment_family") != family:
+            raise ValueError("plate_anchor authority contradicts the AssetSpec environment family.")
+        declared = asset_spec.metadata.get("environment_viewpoint")
+        if declared is not None and declared != viewpoint:
+            raise ValueError("plate_anchor viewpoint contradicts the AssetSpec viewpoint.")
+        if pinned and (
+            environment_pin is None
+            or environment_pin.get("authority_id") != authority.id
+            or environment_pin.get("viewpoint") != viewpoint
+        ):
+            raise ValueError("plate_anchor contradicts the frozen environment pin.")
+        members = [
+            member
+            for member in self.repository.list_visual_reference_authority_members(authority.id)
+            if member.member_role == f"viewpoint:{viewpoint}"
+        ]
+        if len(members) != 1:
+            raise ValueError("plate_anchor viewpoint must name exactly one authority plate.")
+        asset, content = self.repository.load_verified_visual_reference_asset(members[0].asset_id)
+        if asset.media_type != "image/png" or asset.content_digest != (
+            hashlib.sha256(content).hexdigest()
+        ):
+            raise ValueError("The anchored plate must be a digest-verified PNG.")
+        self.repository.require_eligible_reference_images([asset.id], "Plate-anchored generation")
+        eligibility = self.repository.reference_image_eligibility(asset.id)
+        plate = anchoring.decode_png(content)
+        region = anchoring.action_region(spec["action_region"], plate.width, plate.height)
+        feather = spec.get("feather_px", anchoring.DEFAULT_FEATHER_PX)
+        mask = anchoring.mask_png(plate.width, plate.height, region)
+        return ResolvedPlateAnchor(
+            ReferenceImage(asset.id, asset.media_type, content, 1, authority.role, authority.id),
+            plate,
+            region,
+            feather,
+            mask,
+            {
+                "method": anchoring.METHOD,
+                "authority_id": authority.id,
+                "authority_version": authority.version,
+                "viewpoint": viewpoint,
+                "plate_asset_id": asset.id,
+                "plate_sha256": asset.content_digest,
+                "plate_size": [plate.width, plate.height],
+                "plate_approval": {
+                    "basis": eligibility["basis"],
+                    "decision_id": eligibility["decision_id"],
+                },
+                "action_region": region.payload(),
+                "feather_px": feather,
+                "mask_sha256": hashlib.sha256(mask).hexdigest(),
+                "mask_applies_to": "first_image",
+            },
+        )
+
+    @staticmethod
+    def _plate_first(
+        anchor: ResolvedPlateAnchor, reference_images: tuple[ReferenceImage, ...]
+    ) -> tuple[ReferenceImage, ...]:
+        """Send the plate once and first (the mask applies to it), then every other reference."""
+
+        others = [
+            image for image in reference_images if image.asset_id != anchor.plate_image.asset_id
+        ]
+        return tuple(
+            replace(image, position=position)
+            for position, image in enumerate([anchor.plate_image, *others], start=1)
+        )
+
+    @staticmethod
+    def _anchored_artifact(
+        artifact: GeneratedArtifact, anchor: ResolvedPlateAnchor
+    ) -> GeneratedArtifact:
+        """Composite provider pixels into the plate inside the action region only."""
+
+        def failure(message: str) -> GenerationFailure:
+            return GenerationFailure(
+                f"Plate-anchored composite failed: {message}",
+                error_code="plate_anchor_composite_failed",
+                provider_key=artifact.provider_key,
+                model_key=artifact.model_key,
+                provider_request_id=artifact.provider_request_id,
+                response_metadata=artifact.response_metadata,
+            )
+
+        try:
+            generated = anchoring.decode_png(artifact.content)
+            provider_size = [generated.width, generated.height]
+            generated = anchoring.resize_bilinear(
+                anchoring.with_channels(generated, anchor.plate.channels),
+                anchor.plate.width,
+                anchor.plate.height,
+            )
+            result = anchoring.composite(anchor.plate, generated, anchor.region, anchor.feather)
+            changed = anchoring.changed_pixels_outside(anchor.plate, result, anchor.region)
+        except ValueError as error:
+            raise failure(str(error)) from error
+        if changed:
+            raise failure("pixels outside the action region changed.")
+        return replace(
+            artifact,
+            content=anchoring.encode_png(result),
+            media_type="image/png",
+            response_metadata=(artifact.response_metadata or {})
+            | {
+                "plate_anchor_composite": {
+                    "method": anchoring.METHOD,
+                    "plate_sha256": anchor.provenance["plate_sha256"],
+                    "action_region": anchor.region.payload(),
+                    "provider_output_sha256": hashlib.sha256(artifact.content).hexdigest(),
+                    "provider_output_size": provider_size,
+                    "resized_to_plate": provider_size != [anchor.plate.width, anchor.plate.height],
+                    "changed_pixels_outside_region": changed,
+                }
+            },
         )
 
     def bootstrap_character_reference_asset(self, asset_spec_id: str) -> GenerationResult:
@@ -742,12 +939,15 @@ class GenerationService:
         snapshot: dict[str, Any],
         generation_input_object: GenerationInput,
         generation_input: dict[str, Any],
+        anchor: ResolvedPlateAnchor | None = None,
     ) -> GenerationResult:
         """Persist one provider attempt after its exact Atlas input is frozen."""
 
         try:
             artifact = self.generator.generate(generation_input_object)
             self._validate_artifact(artifact)
+            if anchor is not None:
+                artifact = self._anchored_artifact(artifact, anchor)
         except GenerationFailure as error:
             return GenerationResult(
                 self.repository.create_failed_generation_execution(
