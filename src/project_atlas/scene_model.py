@@ -17,6 +17,11 @@ from typing import Any
 
 SCHEMA_VERSION = 1
 RENDER_POLICY = "scene-proof-rgba-nearest-v1"
+# Opt-in for new worlds only, persisted in the world's identity: premultiplied 8-bit alpha "over"
+# compositing with layers placed 1:1 at integer pixels (any resampling happens once, at admission)
+# and optional contact shadows. Worlds without it keep RENDER_POLICY and its exact bytes.
+RENDER_POLICY_ALPHA = "scene-rgba-premultiplied-over-v1"
+RENDER_POLICIES = frozenset({RENDER_POLICY, RENDER_POLICY_ALPHA})
 PRECISION = 6
 
 
@@ -204,6 +209,38 @@ class RenderSlice:
 
 
 @dataclass(frozen=True)
+class ContactShadow:
+    """A deterministic soft floor ellipse under a free-standing entity (alpha policy only).
+
+    It is centred on one of the variant's anchors, never drawn while the entity is attached to a
+    parent (held or carried objects follow their parent without a floor shadow), and is drawn
+    immediately below the entity's own layers.
+    """
+
+    anchor_key: str
+    radius_x: float
+    radius_y: float
+    softness: float
+    rgb: tuple[int, int, int]
+    opacity: int
+
+    def __post_init__(self) -> None:
+        for name in ("radius_x", "radius_y", "softness"):
+            value = _q(getattr(self, name))
+            if value <= 0:
+                raise SceneModelError(f"contact shadow {name} must be positive")
+            object.__setattr__(self, name, value)
+        if (
+            not isinstance(self.rgb, tuple)
+            or len(self.rgb) != 3
+            or any(type(channel) is not int or not 0 <= channel <= 255 for channel in self.rgb)
+        ):
+            raise SceneModelError("contact shadow rgb must be three 0-255 integers")
+        if type(self.opacity) is not int or not 0 < self.opacity <= 255:
+            raise SceneModelError("contact shadow opacity must be 1-255")
+
+
+@dataclass(frozen=True)
 class EntityVariant:
     variant_id: str
     entity_key: str
@@ -214,6 +251,7 @@ class EntityVariant:
     contact_policy_id: str | None = None
     character_authority_id: str | None = None
     partition_complete_source: bool = False
+    contact_shadow: ContactShadow | None = None
 
 
 @dataclass(frozen=True)
@@ -270,6 +308,7 @@ class PersistentWorld:
     lighting_policy_id: str
     bindings: DomainBindings
     definition_digest: str
+    render_policy: str = RENDER_POLICY
 
     def entity(self, key: str) -> EntityDefinition:
         try:
@@ -384,7 +423,11 @@ def _state_content(state: ResolvedState) -> dict[str, Any]:
 
 
 def _variant_content_payload(world: PersistentWorld, variant: EntityVariant) -> dict[str, Any]:
-    """Exact selected pixels and mappings, independent of registry membership."""
+    """Exact selected pixels and mappings, independent of registry membership.
+
+    A contact shadow is part of a variant's content only when declared, so variants without
+    one keep their historical payload and digests.
+    """
 
     layers = []
     for layer in variant.layers:
@@ -432,7 +475,7 @@ def _variant_content_payload(world: PersistentWorld, variant: EntityVariant) -> 
             "lighting_policy_id": world.lighting_policy_id,
         },
         "layers": layers,
-    }
+    } | ({"contact_shadow": variant.contact_shadow} if variant.contact_shadow else {})
 
 
 def variant_content_digest(world: PersistentWorld, variant: EntityVariant) -> str:
@@ -515,7 +558,7 @@ def world_definition_payload(world: PersistentWorld) -> dict[str, Any]:
             ),
             "camera": world.geometry.camera,
         },
-        "render_policy": RENDER_POLICY,
+        "render_policy": world.render_policy,
         "style_profile_id": world.style_profile_id,
         "palette_id": world.palette_id,
         "wall_treatment_id": world.wall_treatment_id,
@@ -552,7 +595,7 @@ def _resolved_entity_content(world: PersistentWorld, state: EntityState) -> dict
         "selected_variant": _variant_content_payload(world, world.variant(state.variant_id)),
         "plane": world.geometry.plane(state.plane_key),
         "camera": world.geometry.camera,
-        "render_policy": RENDER_POLICY,
+        "render_policy": world.render_policy,
         "style_profile_id": world.style_profile_id,
         "palette_id": world.palette_id,
         "wall_treatment_id": world.wall_treatment_id,
@@ -570,6 +613,15 @@ def _entity_content_digests(
 
 
 def validate_world(world: PersistentWorld) -> None:
+    if world.render_policy not in RENDER_POLICIES:
+        raise SceneModelError(f"unknown render policy: {world.render_policy}")
+    for variant in world.variants:
+        if variant.contact_shadow is None:
+            continue
+        if world.render_policy != RENDER_POLICY_ALPHA:
+            raise SceneModelError("contact shadows require the alpha render policy")
+        if variant.contact_shadow.anchor_key not in dict(variant.anchors):
+            raise SceneModelError(f"contact shadow anchor missing: {variant.variant_id}")
     entity_keys = [entity.entity_key for entity in world.entities]
     if len(entity_keys) != len(set(entity_keys)):
         raise SceneModelError("duplicate entity key")
@@ -1005,6 +1057,9 @@ def render(world: PersistentWorld, state: ResolvedState) -> RenderResult:
     validate_world(world)
     _validate_resolved_state_binding(world, state)
     _validate_state_sources(world, state)
+    # Dispatch from the persisted policy; the legacy renderer below is unchanged.
+    if world.render_policy == RENDER_POLICY_ALPHA:
+        return _render_alpha(world, state)
     active_variants = tuple(
         world.variant(entity.variant_id) for entity in state.entities if entity.visible
     )
@@ -1062,12 +1117,146 @@ def _layer_signature(world: PersistentWorld, state: EntityState, layer: RenderSl
             "depth": definition.depth,
             "mask_id": layer.mask_id,
             "mask_digest": world.mask(layer.mask_id).expected_digest if layer.mask_id else None,
-            "render_policy": RENDER_POLICY,
+            "render_policy": world.render_policy,
             "style_profile_id": world.style_profile_id,
             "palette_id": world.palette_id,
             "wall_treatment_id": world.wall_treatment_id,
             "lighting_policy_id": world.lighting_policy_id,
         }
+    )
+
+
+def _pixel_offset(
+    world: PersistentWorld, state: EntityState, layer: RenderSlice
+) -> tuple[int, int]:
+    """The alpha policy places every layer 1:1 at an integer pixel offset."""
+
+    transform = (
+        world.geometry.camera.world_to_pixel.compose(
+            world.geometry.plane(state.plane_key).world_to_stage
+        )
+        .compose(state.effective_transform)
+        .compose(layer.local_mapping)
+    )
+    if (transform.a, transform.b, transform.c, transform.d) != (1, 0, 0, 1) or not (
+        float(transform.e).is_integer() and float(transform.f).is_integer()
+    ):
+        raise SceneModelError(
+            "alpha render policy places layers 1:1 at integer pixels; resample at admission"
+        )
+    return int(transform.e), int(transform.f)
+
+
+def _over(canvas: bytearray, offset: int, rgb: tuple[int, int, int] | bytes, alpha: int) -> None:
+    """Premultiplied 8-bit 'over' of one straight-colour source pixel onto the canvas."""
+
+    inverse = 255 - alpha
+    for channel in range(3):
+        premultiplied = (rgb[channel] * alpha + 127) // 255
+        canvas[offset + channel] = premultiplied + (canvas[offset + channel] * inverse + 127) // 255
+    canvas[offset + 3] = alpha + (canvas[offset + 3] * inverse + 127) // 255
+
+
+def contact_shadow_alpha(shadow: ContactShadow, dx: float, dy: float) -> int:
+    """Deterministic shadow opacity at a pixel-centre offset from the anchor."""
+
+    distance = math.hypot(dx / shadow.radius_x, dy / shadow.radius_y)
+    band = shadow.softness / min(shadow.radius_x, shadow.radius_y)
+    t = min(1.0, max(0.0, (1.0 - distance) / band))
+    return int(shadow.opacity * t * t * (3.0 - 2.0 * t) + 0.5)
+
+
+def _render_alpha(world: PersistentWorld, state: ResolvedState) -> RenderResult:
+    """Premultiplied 'over' compositing of 1:1 layers, with optional contact shadows."""
+
+    active_variants = tuple(
+        world.variant(entity.variant_id) for entity in state.entities if entity.visible
+    )
+    order = _compile_order(world, active_variants)
+    layer_to_state: dict[str, tuple[RenderSlice, EntityState]] = {}
+    for entity in state.entities:
+        if not entity.visible:
+            continue
+        for layer in world.variant(entity.variant_id).layers:
+            layer_to_state[layer.node_key] = (layer, entity)
+    camera = world.geometry.camera
+    width, height = camera.width, camera.height
+    canvas = bytearray(width * height * 4)
+    owners: list[str | None] = [None] * (width * height)
+    layer_hashes: list[tuple[str, str]] = []
+    signatures: list[tuple[str, str]] = []
+    shadowed: set[str] = set()
+    for node_key in order:
+        layer, entity = layer_to_state[node_key]
+        variant = world.variant(entity.variant_id)
+        shadow = variant.contact_shadow
+        if shadow is not None and entity.parent_key is None and entity.entity_key not in shadowed:
+            shadowed.add(entity.entity_key)
+            anchor = dict(variant.anchors)[shadow.anchor_key]
+            centre_x, centre_y = (
+                camera.world_to_pixel.compose(world.geometry.plane(entity.plane_key).world_to_stage)
+                .compose(entity.effective_transform)
+                .apply(*anchor)
+            )
+            for y in range(
+                max(0, math.floor(centre_y - shadow.radius_y)),
+                min(height, math.ceil(centre_y + shadow.radius_y) + 1),
+            ):
+                for x in range(
+                    max(0, math.floor(centre_x - shadow.radius_x)),
+                    min(width, math.ceil(centre_x + shadow.radius_x) + 1),
+                ):
+                    alpha = contact_shadow_alpha(shadow, x + 0.5 - centre_x, y + 0.5 - centre_y)
+                    if alpha:
+                        _over(canvas, (y * width + x) * 4, shadow.rgb, alpha)
+                        owners[y * width + x] = f"{entity.entity_key}.shadow"
+        asset = world.asset(layer.asset_id)
+        asset.validate()
+        assert asset.rgba is not None
+        mask = world.mask(layer.mask_id) if layer.mask_id else None
+        if mask:
+            mask.validate()
+            assert mask.alpha is not None
+        left, top = _pixel_offset(world, entity, layer)
+        for sy in range(asset.height):
+            y = top + sy
+            if not 0 <= y < height:
+                continue
+            for sx in range(asset.width):
+                x = left + sx
+                if not 0 <= x < width:
+                    continue
+                source = (sy * asset.width + sx) * 4
+                alpha = asset.rgba[source + 3]
+                if mask:
+                    alpha = (alpha * mask.alpha[sy * asset.width + sx] + 127) // 255
+                if alpha == 0:
+                    continue
+                target = (y * width + x) * 4
+                if alpha == 255:
+                    canvas[target : target + 3] = asset.rgba[source : source + 3]
+                    canvas[target + 3] = 255
+                else:
+                    _over(canvas, target, asset.rgba[source : source + 3], alpha)
+                owners[y * width + x] = entity.entity_key
+        placement = {"offset": [left, top], "asset": asset.expected_digest}
+        placement["mask"] = mask.expected_digest if mask else None
+        layer_hashes.append((node_key, digest(placement)))
+        signatures.append((node_key, _layer_signature(world, entity, layer)))
+    for offset in range(0, len(canvas), 4):
+        alpha = canvas[offset + 3]
+        if 0 < alpha < 255:
+            for channel in range(3):
+                canvas[offset + channel] = min(
+                    255, (canvas[offset + channel] * 255 + alpha // 2) // alpha
+                )
+    result = bytes(canvas)
+    return RenderResult(
+        result,
+        hashlib.sha256(result).hexdigest(),
+        tuple(layer_hashes),
+        tuple(signatures),
+        tuple(owners),
     )
 
 
@@ -1172,7 +1361,7 @@ def snapshot_payload(world: PersistentWorld, state: ResolvedState) -> dict[str, 
             "lighting_policy_id": world.lighting_policy_id,
         },
         "lineage": _canonical(state.diff) if state.diff else None,
-        "render_policy": RENDER_POLICY,
+        "render_policy": world.render_policy,
         "complete_state_digest": state.state_digest,
     }
 

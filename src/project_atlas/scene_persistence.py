@@ -10,9 +10,12 @@ from hashlib import sha256
 from typing import Any
 
 from project_atlas.scene_model import (
+    RENDER_POLICIES,
+    RENDER_POLICY,
     SCHEMA_VERSION,
     Affine,
     Camera,
+    ContactShadow,
     DomainBindings,
     EntityDefinition,
     EntityState,
@@ -230,6 +233,10 @@ class PersistentSceneRepositoryMixin:
                 ),
             )
         evidence_json = canonical_json(acceptance_evidence)
+        contact_contract: dict[str, Any] = {"contact_policy_id": variant.contact_policy_id}
+        if variant.contact_shadow is not None:
+            # Recorded only when declared, so historical variant rows are unchanged.
+            contact_contract["contact_shadow"] = variant.contact_shadow
         compatibility = {
             "character_profile_id": variant.character_authority_id,
             "visual_reference_authority_id": world.bindings.visual_reference_authority_id,
@@ -253,7 +260,7 @@ class PersistentSceneRepositoryMixin:
                 canonical_json(variant.intrinsic_size_wu),
                 variant.neutral_scale_id,
                 canonical_json(variant.anchors),
-                canonical_json({"contact_policy_id": variant.contact_policy_id}),
+                canonical_json(contact_contract),
                 int(variant.partition_complete_source),
                 variant.character_authority_id,
                 (
@@ -538,6 +545,9 @@ class PersistentSceneRepositoryMixin:
                 "lighting_policy_id": world.lighting_policy_id,
                 "bindings": world.bindings,
             }
+            if world.render_policy != RENDER_POLICY:
+                # Only an opted-in policy is recorded; legacy worlds keep their exact document.
+                treatment["render_policy"] = world.render_policy
             membership = {
                 "entities": sorted(
                     (entity.entity_key, digest(self._entity_payload(entity)))
@@ -774,8 +784,21 @@ class PersistentSceneRepositoryMixin:
             raise ValueError("Persisted variant layer count mismatch.")
         anchors = _load_document(row["anchors_json"])
         contact = _load_document(row["contact_contract_json"])
-        if set(contact) != {"contact_policy_id"}:
+        if set(contact) not in ({"contact_policy_id"}, {"contact_policy_id", "contact_shadow"}):
             raise ValueError("Invalid persisted contact contract.")
+        shadow_data = contact.get("contact_shadow")
+        shadow = (
+            ContactShadow(
+                shadow_data["anchor_key"],
+                shadow_data["radius_x"],
+                shadow_data["radius_y"],
+                shadow_data["softness"],
+                tuple(shadow_data["rgb"]),
+                shadow_data["opacity"],
+            )
+            if shadow_data is not None
+            else None
+        )
         variant = EntityVariant(
             row["id"],
             row["entity_key"],
@@ -786,6 +809,7 @@ class PersistentSceneRepositoryMixin:
             contact["contact_policy_id"],
             row["character_profile_id"],
             bool(row["partition_complete_source"]),
+            shadow,
         )
         evidence = _load_document(row["acceptance_evidence_json"])
         if digest(evidence) != row["acceptance_evidence_digest"]:
@@ -801,14 +825,18 @@ class PersistentSceneRepositoryMixin:
         if row is None:
             raise KeyError(world_id)
         treatment = _load_document(row["treatment_json"])
-        if set(treatment) != {
+        treatment_keys = {
             "bindings",
             "lighting_policy_id",
             "palette_id",
             "style_profile_id",
             "wall_treatment_id",
-        }:
+        }
+        if set(treatment) not in (treatment_keys, treatment_keys | {"render_policy"}):
             raise ValueError("Invalid persisted world treatment document.")
+        render_policy = treatment.get("render_policy", RENDER_POLICY)
+        if render_policy not in RENDER_POLICIES or treatment.get("render_policy") == RENDER_POLICY:
+            raise ValueError("Invalid persisted world render policy.")
         binding_data = treatment["bindings"]
         bindings = DomainBindings(
             binding_data["visual_plan_id"],
@@ -925,6 +953,7 @@ class PersistentSceneRepositoryMixin:
             treatment["lighting_policy_id"],
             bindings,
             row["world_definition_digest"],
+            render_policy,
         )
         validate_world(world)
         if world_definition_digest(world) != row["world_definition_digest"]:

@@ -29,7 +29,16 @@ def now() -> str:
 
 
 # Historical v1 derived rasters stay resolvable; v2 adds exact full-frame resampling.
-DERIVED_SCENE_ADAPTERS = frozenset({"managed-image-to-rgba-v1", "managed-image-to-rgba-v2"})
+DERIVED_SCENE_ADAPTERS = frozenset(
+    {"managed-image-to-rgba-v1", "managed-image-to-rgba-v2", "premultiplied-area-downscale-v1"}
+)
+# Explicitly typed raw 8-bit alpha masks for persistent-scene layers (one byte per pixel).
+SCENE_ALPHA_MASK_MEDIA_TYPE = "application/x-alpha8"
+SCENE_ALPHA_MASK_ADAPTERS = frozenset({"plate-occluder-mask-v1"})
+DERIVED_SCENE_MEDIA = {
+    "application/x-rgba": (DERIVED_SCENE_ADAPTERS, 4),
+    SCENE_ALPHA_MASK_MEDIA_TYPE: (SCENE_ALPHA_MASK_ADAPTERS, 1),
+}
 
 
 def default_database_path() -> Path:
@@ -4453,17 +4462,18 @@ class AtlasRepository(
         return candidate
 
     def managed_scene_asset_path(self, asset_id: str) -> Path:
-        """Resolve a normal managed image or a provenance-linked RGBA scene derivative."""
+        """Resolve a managed image or a provenance-linked raw RGBA or alpha-mask derivative."""
 
         asset = self.get_asset(asset_id)
         if asset.source_kind != "derived":
             return self.managed_asset_path(asset_id)
-        if asset.media_type != "application/x-rgba":
+        if asset.media_type not in DERIVED_SCENE_MEDIA:
             raise ValueError("Derived scene Asset must use the canonical RGBA media type.")
+        adapters, channels = DERIVED_SCENE_MEDIA[asset.media_type]
         source_id = asset.metadata.get("source_asset_id")
         source_digest = asset.metadata.get("source_content_digest")
         adapter = asset.metadata.get("adapter")
-        if not isinstance(source_id, str) or adapter not in DERIVED_SCENE_ADAPTERS:
+        if not isinstance(source_id, str) or adapter not in adapters:
             raise ValueError("Derived scene Asset provenance is incomplete.")
         source = self.get_asset(source_id)
         if source.content_digest != source_digest:
@@ -4474,7 +4484,72 @@ class AtlasRepository(
         candidate = (self.asset_storage_root / asset.storage_path).resolve()
         if self.asset_storage_root not in candidate.parents or not candidate.is_file():
             raise ValueError("Derived scene Asset escaped managed storage or is missing.")
+        if asset.media_type == SCENE_ALPHA_MASK_MEDIA_TYPE:
+            width, height = asset.metadata.get("width"), asset.metadata.get("height")
+            if (
+                type(width) is not int
+                or type(height) is not int
+                or candidate.stat().st_size != width * height * channels
+            ):
+                raise ValueError("Alpha mask Asset bytes do not match its declared dimensions.")
         return candidate
+
+    def create_derived_scene_asset(
+        self,
+        asset_id: str,
+        source_asset_id: str,
+        media_type: str,
+        content: bytes,
+        width: int,
+        height: int,
+        adapter: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> Asset:
+        """Store one raw RGBA or alpha-mask scene derivative of a managed image, immutably."""
+
+        if media_type not in DERIVED_SCENE_MEDIA:
+            raise ValueError("Derived scene Assets are raw RGBA or raw 8-bit alpha masks.")
+        adapters, channels = DERIVED_SCENE_MEDIA[media_type]
+        if adapter not in adapters:
+            raise ValueError("Derived scene Asset adapter is not registered for its media type.")
+        if type(width) is not int or type(height) is not int or width <= 0 or height <= 0:
+            raise ValueError("Derived scene Asset dimensions must be positive integers.")
+        if not isinstance(content, bytes) or len(content) != width * height * channels:
+            raise ValueError("Derived scene Asset bytes do not match its dimensions.")
+        source = self.get_asset(source_asset_id)
+        self.managed_asset_path(source.id)
+        relative = Path("persistent-derived") / "scene" / f"{sha256(asset_id.encode()).hexdigest()}"
+        target = (self.asset_storage_root / relative).resolve()
+        if self.asset_storage_root not in target.parents:
+            raise ValueError("Derived scene asset path escaped managed storage.")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("xb") as stream:
+            stream.write(content)
+        try:
+            version = self.connection.execute(
+                "SELECT COALESCE(MAX(version), 0) + 1 FROM assets WHERE asset_spec_id=?",
+                (source.asset_spec_id,),
+            ).fetchone()[0]
+            return self.create_asset(
+                asset_id,
+                source.asset_spec_id,
+                version,
+                relative.as_posix(),
+                media_type,
+                "derived",
+                (metadata or {})
+                | {
+                    "adapter": adapter,
+                    "source_asset_id": source.id,
+                    "source_content_digest": source.content_digest,
+                    "width": width,
+                    "height": height,
+                },
+                sha256(content).hexdigest(),
+            )
+        except Exception:
+            target.unlink(missing_ok=True)
+            raise
 
     def create_character_reference_set(
         self,

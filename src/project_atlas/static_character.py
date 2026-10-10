@@ -412,3 +412,291 @@ def _paeth(left: int, above: int, upper_left: int) -> int:
     if distances[1] <= distances[2]:
         return above
     return upper_left
+
+
+@dataclass(frozen=True)
+class SoftMatteExtraction:
+    """One anti-aliased, colour-decontaminated character matte and its technical facts."""
+
+    content: bytes
+    source_digest: str
+    output_digest: str
+    width: int
+    height: int
+    paper_rgb: tuple[int, int, int]
+    ink_luminance: int
+    retained_pixels: int
+    partial_alpha_pixels: int
+    dropped_components: int
+    dropped_pixels: int
+    isolated_edge_pixels: int
+    background_min_channel: int
+    background_max_channel_spread: int
+    band_radius: int
+    alpha_floor: int
+
+    def provenance(self) -> dict[str, object]:
+        """Return the exact, serializable derivation record for a managed Asset."""
+
+        return {
+            "derivation": "deterministic-soft-matte-extraction",
+            "method_version": "v3",
+            "source_sha256": self.source_digest,
+            "output_sha256": self.output_digest,
+            "dimensions": {"width": self.width, "height": self.height},
+            "background_rule": {
+                "connected_to_image_boundary": True,
+                "minimum_rgb_channel": self.background_min_channel,
+                "maximum_rgb_channel_spread": self.background_max_channel_spread,
+            },
+            "matte": {
+                "paper_rgb": list(self.paper_rgb),
+                "ink_luminance": self.ink_luminance,
+                "band_radius": self.band_radius,
+                "alpha_floor": self.alpha_floor,
+                "partial_alpha_pixels": self.partial_alpha_pixels,
+            },
+            "residue": {
+                "kept": "largest four-connected component only",
+                "dropped_components": self.dropped_components,
+                "dropped_pixels": self.dropped_pixels,
+                "isolated_edge_pixels": self.isolated_edge_pixels,
+            },
+            "alpha": "8-bit straight alpha; interior pixels preserve source RGBA exactly; edge "
+            "colours are unblended from the measured paper colour",
+        }
+
+
+def _luminance(red: int, green: int, blue: int) -> int:
+    return (299 * red + 587 * green + 114 * blue) // 1000
+
+
+def extract_soft_matte_character(
+    source_png: bytes,
+    *,
+    background_min_channel: int = 240,
+    background_max_channel_spread: int = 20,
+    band_radius: int = 2,
+    alpha_floor: int = 8,
+) -> SoftMatteExtraction:
+    """Cut one character from light paper with the drawing's own anti-aliased outline.
+
+    Exterior paper is found exactly as in v2 (boundary-connected bright neutral pixels). Only the
+    largest connected drawing component is kept, so stray specks never survive. Neutral pixels in
+    a thin band across the outline get alpha from their luminance between the measured paper and
+    ink, and their colour is unblended from the paper so no light fringe remains. Every pixel
+    deeper inside the drawing keeps its exact source RGBA.
+    """
+
+    if not 0 <= background_min_channel <= 255 or not 0 <= background_max_channel_spread <= 255:
+        raise ValueError("Background thresholds must be between 0 and 255.")
+    if not isinstance(band_radius, int) or not 1 <= band_radius <= 4:
+        raise ValueError("band_radius must be an integer between 1 and 4.")
+    if not isinstance(alpha_floor, int) or not 0 <= alpha_floor <= 64:
+        raise ValueError("alpha_floor must be an integer between 0 and 64.")
+    width, height, pixels = _decode_rgba_png(source_png)
+    size = width * height
+    exterior = _boundary_connected_background(
+        pixels, width, height, background_min_channel, background_max_channel_spread
+    )
+    if not any(exterior) or all(exterior):
+        raise ValueError("Extraction must find both exterior paper and a drawing.")
+
+    def neighbours(index: int):
+        x = index % width
+        if x:
+            yield index - 1
+        if x + 1 < width:
+            yield index + 1
+        if index >= width:
+            yield index - width
+        if index + width < size:
+            yield index + width
+
+    component = [0] * size
+    sizes = [0]
+    for start in range(size):
+        if exterior[start] or component[start]:
+            continue
+        sizes.append(0)
+        label = len(sizes) - 1
+        component[start] = label
+        queue = deque([start])
+        while queue:
+            index = queue.popleft()
+            sizes[label] += 1
+            for neighbour in neighbours(index):
+                if not exterior[neighbour] and not component[neighbour]:
+                    component[neighbour] = label
+                    queue.append(neighbour)
+    keep = max(range(1, len(sizes)), key=lambda label: (sizes[label], -label))
+    paper = [0, 0, 0]
+    paper_count = 0
+    for index in range(size):
+        if exterior[index]:
+            offset = index * 4
+            paper[0] += pixels[offset]
+            paper[1] += pixels[offset + 1]
+            paper[2] += pixels[offset + 2]
+            paper_count += 1
+    paper_rgb = (paper[0] // paper_count, paper[1] // paper_count, paper[2] // paper_count)
+    paper_luminance = _luminance(*paper_rgb)
+    dropped_pixels = 0
+    for index in range(size):
+        if component[index] not in (0, keep):
+            exterior[index] = 1
+            dropped_pixels += 1
+
+    edge = [
+        index
+        for index in range(size)
+        if not exterior[index] and any(exterior[n] for n in neighbours(index))
+    ]
+    # Ink is the darkest linework of the kept drawing (its darkest 1% of neutral pixels).
+    drawing_luminance = sorted(
+        _luminance(*pixels[i * 4 : i * 4 + 3])
+        for i in range(size)
+        if component[i] == keep
+        and max(pixels[i * 4 : i * 4 + 3]) - min(pixels[i * 4 : i * 4 + 3]) <= 40
+    )
+    ink_luminance = drawing_luminance[len(drawing_luminance) // 100]
+    if paper_luminance - ink_luminance < 32:
+        raise ValueError("Outline is not distinguishable from the paper colour.")
+
+    distance = [0] * size
+    queue = deque()
+    for index in edge:
+        for neighbour in neighbours(index):
+            if exterior[neighbour] and not distance[neighbour]:
+                distance[neighbour] = 1
+                queue.append(neighbour)
+    while queue:
+        index = queue.popleft()
+        if distance[index] >= band_radius:
+            continue
+        for neighbour in neighbours(index):
+            if exterior[neighbour] and not distance[neighbour]:
+                distance[neighbour] = distance[index] + 1
+                queue.append(neighbour)
+
+    output = bytearray(size * 4)
+    span = paper_luminance - ink_luminance
+    partial = retained = 0
+    edge_set = set(edge)
+    for index in range(size):
+        offset = index * 4
+        red, green, blue, _alpha = pixels[offset : offset + 4]
+        neutral = max(red, green, blue) - min(red, green, blue) <= 40
+        on_edge = index in edge_set
+        if not exterior[index] and not (on_edge and neutral):
+            output[offset : offset + 4] = pixels[offset : offset + 4]
+            retained += 1
+            continue
+        if not neutral or not (on_edge or distance[index]):
+            continue
+        matte = ((paper_luminance - _luminance(red, green, blue)) * 255 + span // 2) // span
+        matte = max(0, min(255, matte))
+        if matte < alpha_floor:
+            continue
+        if matte == 255:
+            output[offset : offset + 4] = bytes((red, green, blue, 255))
+        else:
+            for channel, value in enumerate((red, green, blue)):
+                unblended = (value * 255 - (255 - matte) * paper_rgb[channel] + matte // 2) // matte
+                output[offset + channel] = max(0, min(255, unblended))
+            output[offset + 3] = matte
+            partial += 1
+        retained += 1
+    # Edge-band pixels count only where they connect to the kept drawing; isolated faint pixels
+    # (beyond an invisible band pixel or beside a dropped speck) are residue.
+    connected = bytearray(size)
+    queue = deque(
+        index for index in range(size) if component[index] == keep and output[index * 4 + 3]
+    )
+    for index in queue:
+        connected[index] = 1
+    while queue:
+        index = queue.popleft()
+        for neighbour in neighbours(index):
+            if output[neighbour * 4 + 3] and not connected[neighbour]:
+                connected[neighbour] = 1
+                queue.append(neighbour)
+    isolated = 0
+    for index in range(size):
+        if output[index * 4 + 3] and not connected[index]:
+            partial -= output[index * 4 + 3] < 255
+            output[index * 4 : index * 4 + 4] = bytes(4)
+            isolated += 1
+            retained -= 1
+    _validate_soft_matte(pixels, bytes(output), component, keep, width, height)
+    content = _encode_rgba_png(width, height, bytes(output))
+    return SoftMatteExtraction(
+        content=content,
+        source_digest=sha256(source_png).hexdigest(),
+        output_digest=sha256(content).hexdigest(),
+        width=width,
+        height=height,
+        paper_rgb=paper_rgb,
+        ink_luminance=ink_luminance,
+        retained_pixels=retained,
+        partial_alpha_pixels=partial,
+        dropped_components=len(sizes) - 2,
+        dropped_pixels=dropped_pixels,
+        isolated_edge_pixels=isolated,
+        background_min_channel=background_min_channel,
+        background_max_channel_spread=background_max_channel_spread,
+        band_radius=band_radius,
+        alpha_floor=alpha_floor,
+    )
+
+
+def _validate_soft_matte(
+    source: bytes,
+    output: bytes,
+    component: list[int],
+    keep: int,
+    width: int,
+    height: int,
+) -> None:
+    """Enforce intact dark linework, no colour residue and no pixel outside one drawing."""
+
+    size = width * height
+    for index in range(size):
+        offset = index * 4
+        alpha = output[offset + 3]
+        if alpha == 0 and output[offset : offset + 3] != b"\x00\x00\x00":
+            raise ValueError("A transparent pixel kept colour residue.")
+        if component[index] == keep and min(source[offset : offset + 3]) <= 80 and alpha < 128:
+            raise ValueError("A dark line/detail pixel was removed during extraction.")
+    start = next(i for i in range(size) if component[i] == keep)
+    seen = bytearray(size)
+    seen[start] = 1
+    queue = deque([start])
+    while queue:
+        index = queue.popleft()
+        x = index % width
+        for neighbour in (
+            index - 1 if x else None,
+            index + 1 if x + 1 < width else None,
+            index - width if index >= width else None,
+            index + width if index + width < size else None,
+        ):
+            if neighbour is not None and output[neighbour * 4 + 3] and not seen[neighbour]:
+                seen[neighbour] = 1
+                queue.append(neighbour)
+    if any(output[index * 4 + 3] and not seen[index] for index in range(size)):
+        raise ValueError("Extraction left a stray pixel outside the drawing.")
+
+
+def verify_soft_matte_extraction(source_png: bytes, extraction: SoftMatteExtraction) -> None:
+    """Recompute a stored soft-matte extraction and require an exact match."""
+
+    repeated = extract_soft_matte_character(
+        source_png,
+        background_min_channel=extraction.background_min_channel,
+        background_max_channel_spread=extraction.background_max_channel_spread,
+        band_radius=extraction.band_radius,
+        alpha_floor=extraction.alpha_floor,
+    )
+    if repeated != extraction:
+        raise ValueError("Soft-matte extraction does not reproduce exactly.")
