@@ -6361,6 +6361,38 @@ def test_openai_reference_edits_send_the_configured_image_size() -> None:
     assert b'name="size"\r\n\r\n1152x2048\r\n' in body
 
 
+@pytest.mark.parametrize("failure", ["open", "read"])
+def test_openai_ssl_and_socket_failures_are_recorded_network_errors(failure) -> None:
+    """A failure while calling or reading the response still counts as one failed call."""
+
+    import ssl
+
+    class Response:
+        headers = {"x-request-id": "ssl"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        @staticmethod
+        def read() -> bytes:
+            raise ssl.SSLError("sslv3 alert bad record mac")
+
+    def opener(request, timeout):
+        if failure == "open":
+            raise ConnectionResetError("connection reset by peer")
+        return Response()
+
+    with pytest.raises(GenerationFailure) as raised:
+        OpenAIImageGenerator(api_key="test-key", opener=opener).generate(
+            GenerationInput("environment", "Draw the beat.", None, {})
+        )
+    assert raised.value.error_code == "network_error"
+    assert raised.value.provider_key == "openai"
+
+
 def test_openai_reference_edits_stay_unsized_without_configuration() -> None:
     assert b'name="size"' not in _edit_request_fields(None)
 

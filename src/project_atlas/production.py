@@ -55,13 +55,18 @@ from project_atlas.scene_model import (
     base_state,
     bind_world_definition,
 )
+from project_atlas.scene_raster import downscale_premultiplied_area
 from project_atlas.static_character import (
     _decode_rgba_png,
     _encode_rgba_png,
-    extract_soft_matte_character,
+    extract_soft_matte_object,
 )
 
 _SAFE_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+
+
+def _object_scale(value: Any) -> bool:
+    return type(value) in (int, float) and 0 < value <= 1
 
 
 def _frame_point(value: Any) -> bool:
@@ -932,11 +937,14 @@ class ProductionLifecycleService:
             if variant.get("object_center") == OBJECT_CENTER_AT_REVIEW
         }
         for key, review in supplied.items():
-            # A centre is recorded only with a passing review of a placed-at-review object.
-            if "object_center" in review["evidence"] and (
+            # A centre (and optional scale) is recorded only with a passing review of a
+            # placed-at-review object; a scale never comes without its centre.
+            evidence = review["evidence"]
+            if ("object_center" in evidence or "object_scale" in evidence) and (
                 key not in at_review
                 or review["outcome"] != "passed"
-                or not _frame_point(review["evidence"]["object_center"])
+                or not _frame_point(evidence.get("object_center"))
+                or not _object_scale(evidence.get("object_scale", 1.0))
             ):
                 raise ProductionRequestError(
                     f"Acquisition review of {'/'.join(key)}: object_center is accepted only on "
@@ -2173,11 +2181,11 @@ class ProductionLifecycleService:
                 variant_id = self._variant_id(run.id, world_index, entity["key"], variant["key"])
                 variant_ids.append(variant_id)
                 if "object_center" in variant:
-                    center = variant["object_center"]
+                    center, scale = variant["object_center"], 1.0
                     if center == OBJECT_CENTER_AT_REVIEW:
-                        center = self._review_object_center(run, key, source_id)
+                        center, scale = self._review_object_placement(run, key, source_id)
                     raster, mapping, record = self._admit_object(
-                        source_id, raster, f"{derived_id}:object", center
+                        source_id, raster, f"{derived_id}:object", center, scale
                     )
                     record["variant"] = "/".join(key)
                     object_admissions.append(record)
@@ -2283,33 +2291,42 @@ class ProductionLifecycleService:
         self._object_admissions[world_input["key"]] = object_admissions
         return bind_world_definition(world)
 
-    def _review_object_center(
+    def _review_object_placement(
         self, run: Any, key: tuple[str, str, str], asset_id: str
-    ) -> list[int]:
-        """The centre the founder approved with this exact asset's passing review."""
+    ) -> tuple[list[int], float]:
+        """The centre (and optional scale) approved with this exact asset's passing review."""
 
-        centers = [
-            review.evidence["object_center"]
+        placements = [
+            (review.evidence["object_center"], review.evidence.get("object_scale", 1.0))
             for review in self.repository.list_production_qa_reviews(run.id)
             if review.scope == "acquisition"
             and review.outcome == "passed"
             and review.evidence.get("asset_id") == asset_id
             and "object_center" in review.evidence
         ]
-        if len(centers) != 1 or not _frame_point(centers[0]):
+        if (
+            len(placements) != 1
+            or not _frame_point(placements[0][0])
+            or not _object_scale(placements[0][1])
+        ):
             raise ProductionRequestError(
                 f"Object {'/'.join(key)} has no founder-approved centre from its acquisition "
                 "review; world building refuses to guess one."
             )
-        return list(centers[0])
+        return list(placements[0][0]), float(placements[0][1])
 
     def _admit_object(
-        self, source_id: str, frame: RasterAsset, derived_id: str, center: list[int]
+        self,
+        source_id: str,
+        frame: RasterAsset,
+        derived_id: str,
+        center: list[int],
+        scale: float = 1.0,
     ) -> tuple[RasterAsset, Affine, dict[str, Any]]:
-        """Cut one object from its frame-resampled canvas and place it 1:1 at its centre."""
+        """Cut one object from its frame-resampled canvas, scale it once, place it 1:1."""
 
         assert frame.rgba is not None
-        extraction = extract_soft_matte_character(
+        extraction = extract_soft_matte_object(
             _encode_rgba_png(frame.width, frame.height, frame.rgba)
         )
         width, height, pixels = _decode_rgba_png(extraction.content)
@@ -2327,6 +2344,17 @@ class ProductionLifecycleService:
             "crop_box": [x0, y0, x1, y1],
             "object_center": list(center),
         }
+        if scale != 1.0:
+            # One premultiplied area-average downscale at admission; placement stays 1:1.
+            target = (max(1, round(crop_width * scale)), max(1, round(crop_height * scale)))
+            crop = downscale_premultiplied_area(crop, crop_width, crop_height, *target)
+            record["object_scale"] = {
+                "scale": scale,
+                "method": "exact area average of premultiplied 8-bit RGBA",
+                "from_px": [crop_width, crop_height],
+                "to_px": list(target),
+            }
+            crop_width, crop_height = target
         try:
             existing = self.repository.get_asset(derived_id)
         except KeyError:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import http.client
 import json
 import os
 import tempfile
@@ -546,6 +547,15 @@ class OpenAIImageGenerator:
         except URLError as error:
             raise GenerationFailure(
                 f"OpenAI image generation request failed: {error.reason}",
+                error_code="network_error",
+                provider_key="openai",
+                model_key=self.model,
+            ) from error
+        except (OSError, http.client.HTTPException) as error:
+            # SSL, socket and protocol failures during the call or while reading the response
+            # are recorded like any network failure, so every provider call is counted.
+            raise GenerationFailure(
+                f"OpenAI image generation request failed: {type(error).__name__}: {error}",
                 error_code="network_error",
                 provider_key="openai",
                 model_key=self.model,

@@ -700,3 +700,249 @@ def verify_soft_matte_extraction(source_png: bytes, extraction: SoftMatteExtract
     )
     if repeated != extraction:
         raise ValueError("Soft-matte extraction does not reproduce exactly.")
+
+
+OBJECT_NOISE_THRESHOLD_PX = 50
+
+
+@dataclass(frozen=True)
+class ObjectMatteExtraction:
+    """A soft-matte cut of one object drawing that may have several intended parts."""
+
+    content: bytes
+    source_digest: str
+    output_digest: str
+    width: int
+    height: int
+    paper_rgb: tuple[int, int, int]
+    ink_luminance: int
+    retained_pixels: int
+    partial_alpha_pixels: int
+    kept_component_sizes: tuple[int, ...]
+    dropped_before_matte: tuple[int, ...]
+    dropped_after_matte: tuple[int, ...]
+    noise_threshold: int
+    background_min_channel: int
+    background_max_channel_spread: int
+    band_radius: int
+    alpha_floor: int
+
+    def provenance(self) -> dict[str, object]:
+        """Return the exact, serializable derivation record for a managed Asset."""
+
+        return {
+            "derivation": "deterministic-soft-matte-object-extraction",
+            "method_version": "object-v1",
+            "source_sha256": self.source_digest,
+            "output_sha256": self.output_digest,
+            "dimensions": {"width": self.width, "height": self.height},
+            "background_rule": {
+                "connected_to_image_boundary": True,
+                "minimum_rgb_channel": self.background_min_channel,
+                "maximum_rgb_channel_spread": self.background_max_channel_spread,
+            },
+            "matte": {
+                "paper_rgb": list(self.paper_rgb),
+                "ink_luminance": self.ink_luminance,
+                "band_radius": self.band_radius,
+                "alpha_floor": self.alpha_floor,
+                "partial_alpha_pixels": self.partial_alpha_pixels,
+            },
+            "components": {
+                "noise_threshold_px": self.noise_threshold,
+                "kept_sizes": list(self.kept_component_sizes),
+                "dropped_before_matte": list(self.dropped_before_matte),
+                "dropped_after_matte": list(self.dropped_after_matte),
+            },
+            "alpha": "8-bit straight alpha; interior pixels preserve source RGBA exactly; edge "
+            "colours are unblended from the measured paper colour",
+        }
+
+
+def _components(mask: bytearray | list[int], width: int, height: int) -> list[list[int]]:
+    """Four-connected components of the truthy pixels of one mask."""
+
+    size = width * height
+    seen = bytearray(size)
+    result = []
+    for start in range(size):
+        if not mask[start] or seen[start]:
+            continue
+        seen[start] = 1
+        queue, members = deque([start]), []
+        while queue:
+            index = queue.popleft()
+            members.append(index)
+            x = index % width
+            for neighbour in (
+                index - 1 if x else None,
+                index + 1 if x + 1 < width else None,
+                index - width if index >= width else None,
+                index + width if index + width < size else None,
+            ):
+                if neighbour is not None and mask[neighbour] and not seen[neighbour]:
+                    seen[neighbour] = 1
+                    queue.append(neighbour)
+        result.append(members)
+    return result
+
+
+def extract_soft_matte_object(
+    source_png: bytes,
+    *,
+    background_min_channel: int = 240,
+    background_max_channel_spread: int = 20,
+    band_radius: int = 2,
+    alpha_floor: int = 8,
+    noise_threshold: int = OBJECT_NOISE_THRESHOLD_PX,
+) -> ObjectMatteExtraction:
+    """Cut an object drawing whose intended parts may be separate (arrows, loose coins).
+
+    The matte is the character extraction's: boundary-connected paper, a luminance matte across
+    the outline band, colour unblended from the paper. Instead of keeping only the largest
+    component, every component of at least ``noise_threshold`` pixels is kept, before and after
+    the matte; smaller ones are noise and are dropped and listed in the provenance.
+    """
+
+    if not 0 <= background_min_channel <= 255 or not 0 <= background_max_channel_spread <= 255:
+        raise ValueError("Background thresholds must be between 0 and 255.")
+    if not isinstance(band_radius, int) or not 1 <= band_radius <= 4:
+        raise ValueError("band_radius must be an integer between 1 and 4.")
+    if not isinstance(alpha_floor, int) or not 0 <= alpha_floor <= 64:
+        raise ValueError("alpha_floor must be an integer between 0 and 64.")
+    if not isinstance(noise_threshold, int) or not 1 <= noise_threshold <= 1000:
+        raise ValueError("noise_threshold must be an integer between 1 and 1000.")
+    width, height, pixels = _decode_rgba_png(source_png)
+    size = width * height
+    exterior = _boundary_connected_background(
+        pixels, width, height, background_min_channel, background_max_channel_spread
+    )
+    if not any(exterior) or all(exterior):
+        raise ValueError("Extraction must find both exterior paper and a drawing.")
+    paper = [0, 0, 0]
+    paper_count = 0
+    for index in range(size):
+        if exterior[index]:
+            offset = index * 4
+            paper[0] += pixels[offset]
+            paper[1] += pixels[offset + 1]
+            paper[2] += pixels[offset + 2]
+            paper_count += 1
+    paper_rgb = (paper[0] // paper_count, paper[1] // paper_count, paper[2] // paper_count)
+    paper_luminance = _luminance(*paper_rgb)
+    kept = bytearray(size)
+    kept_sizes, dropped_before = [], []
+    for members in _components(bytearray(0 if value else 1 for value in exterior), width, height):
+        if len(members) >= noise_threshold:
+            kept_sizes.append(len(members))
+            for index in members:
+                kept[index] = 1
+        else:
+            dropped_before.append(len(members))
+            for index in members:
+                exterior[index] = 1
+    if not kept_sizes:
+        raise ValueError("Extraction found no drawing component above the noise threshold.")
+
+    def neighbours(index: int):
+        x = index % width
+        if x:
+            yield index - 1
+        if x + 1 < width:
+            yield index + 1
+        if index >= width:
+            yield index - width
+        if index + width < size:
+            yield index + width
+
+    edge = [
+        index
+        for index in range(size)
+        if not exterior[index] and any(exterior[n] for n in neighbours(index))
+    ]
+    drawing_luminance = sorted(
+        _luminance(*pixels[i * 4 : i * 4 + 3])
+        for i in range(size)
+        if kept[i] and max(pixels[i * 4 : i * 4 + 3]) - min(pixels[i * 4 : i * 4 + 3]) <= 40
+    )
+    if not drawing_luminance:
+        raise ValueError("Object drawing has no neutral linework to measure ink from.")
+    ink_luminance = drawing_luminance[len(drawing_luminance) // 100]
+    if paper_luminance - ink_luminance < 32:
+        raise ValueError("Outline is not distinguishable from the paper colour.")
+    distance = [0] * size
+    queue = deque()
+    for index in edge:
+        for neighbour in neighbours(index):
+            if exterior[neighbour] and not distance[neighbour]:
+                distance[neighbour] = 1
+                queue.append(neighbour)
+    while queue:
+        index = queue.popleft()
+        if distance[index] >= band_radius:
+            continue
+        for neighbour in neighbours(index):
+            if exterior[neighbour] and not distance[neighbour]:
+                distance[neighbour] = distance[index] + 1
+                queue.append(neighbour)
+    output = bytearray(size * 4)
+    span = paper_luminance - ink_luminance
+    edge_set = set(edge)
+    for index in range(size):
+        offset = index * 4
+        red, green, blue, _alpha = pixels[offset : offset + 4]
+        neutral = max(red, green, blue) - min(red, green, blue) <= 40
+        on_edge = index in edge_set
+        if not exterior[index] and not (on_edge and neutral):
+            output[offset : offset + 4] = pixels[offset : offset + 4]
+            continue
+        if not neutral or not (on_edge or distance[index]):
+            continue
+        matte = ((paper_luminance - _luminance(red, green, blue)) * 255 + span // 2) // span
+        matte = max(0, min(255, matte))
+        if matte < alpha_floor:
+            continue
+        if matte == 255:
+            output[offset : offset + 4] = bytes((red, green, blue, 255))
+        else:
+            for channel, value in enumerate((red, green, blue)):
+                unblended = (value * 255 - (255 - matte) * paper_rgb[channel] + matte // 2) // matte
+                output[offset + channel] = max(0, min(255, unblended))
+            output[offset + 3] = matte
+    dropped_after = []
+    for members in _components(
+        bytearray(1 if output[i * 4 + 3] else 0 for i in range(size)), width, height
+    ):
+        if len(members) < noise_threshold:
+            dropped_after.append(len(members))
+            for index in members:
+                output[index * 4 : index * 4 + 4] = bytes(4)
+    visible = bytearray(1 if output[i * 4 + 3] else 0 for i in range(size))
+    if any(len(members) < noise_threshold for members in _components(visible, width, height)):
+        raise ValueError("Object extraction left a component below the noise threshold.")
+    for index in range(size):
+        offset = index * 4
+        if not output[offset + 3] and output[offset : offset + 3] != b"\x00\x00\x00":
+            raise ValueError("A transparent pixel kept colour residue.")
+    retained = sum(visible)
+    partial = sum(1 for i in range(size) if 0 < output[i * 4 + 3] < 255)
+    content = _encode_rgba_png(width, height, bytes(output))
+    return ObjectMatteExtraction(
+        content=content,
+        source_digest=sha256(source_png).hexdigest(),
+        output_digest=sha256(content).hexdigest(),
+        width=width,
+        height=height,
+        paper_rgb=paper_rgb,
+        ink_luminance=ink_luminance,
+        retained_pixels=retained,
+        partial_alpha_pixels=partial,
+        kept_component_sizes=tuple(sorted(kept_sizes, reverse=True)),
+        dropped_before_matte=tuple(sorted(dropped_before, reverse=True)),
+        dropped_after_matte=tuple(sorted(dropped_after, reverse=True)),
+        noise_threshold=noise_threshold,
+        background_min_channel=background_min_channel,
+        background_max_channel_spread=background_max_channel_spread,
+        band_radius=band_radius,
+        alpha_floor=alpha_floor,
+    )

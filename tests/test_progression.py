@@ -363,3 +363,43 @@ def test_review_centres_are_refused_where_they_do_not_belong(tmp_path, monkeypat
         assert server.repository.list_production_qa_reviews("misplaced") == []
     finally:
         server.server_close()
+
+
+def test_object_scale_set_at_review_is_applied_once_at_admission(tmp_path, monkeypatch) -> None:
+    server, _generator, _request, keys = _at_review_run(tmp_path, monkeypatch, "scaled")
+    try:
+        reviews = _reviews_with_center(server, keys, "scaled", [520, 1500])
+        for review in reviews["reviews"]:
+            if review["entity_key"] == "coin":
+                review["evidence"]["object_scale"] = 0.5
+        reviewed, status = post_json(
+            server, "/api/v2/productions/scaled/acquisition-review", reviews
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending", reviewed
+        [admission] = server.repository.list_production_evidence("scaled", "world")[0].payload[
+            "object_admissions"
+        ]
+        scaled = admission["object_scale"]
+        assert scaled["scale"] == 0.5
+        assert scaled["to_px"] == [round(scaled["from_px"][0] / 2), round(scaled["from_px"][1] / 2)]
+        assert admission["size_px"] == scaled["to_px"]
+        width, height = admission["size_px"]
+        assert admission["placed_at"] == [520 - width // 2, 1500 - height // 2]
+    finally:
+        server.server_close()
+
+
+def test_object_scale_needs_its_centre_and_a_value_in_range(tmp_path, monkeypatch) -> None:
+    server, _generator, _request, keys = _at_review_run(tmp_path, monkeypatch, "bad-scale")
+    service = server.production_service
+    try:
+        for center, scale in ((None, 0.5), ([520, 1500], 1.5), ([520, 1500], 0)):
+            reviews = _reviews_with_center(server, keys, "bad-scale", center)
+            for review in reviews["reviews"]:
+                if review["entity_key"] == "coin":
+                    review["evidence"]["object_scale"] = scale
+            with pytest.raises(ProductionRequestError, match="object_center is accepted only"):
+                service.review_acquisition("bad-scale", reviews["reviews"])
+        assert server.repository.list_production_qa_reviews("bad-scale") == []
+    finally:
+        server.server_close()
