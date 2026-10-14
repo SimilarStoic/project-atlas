@@ -21,7 +21,10 @@ RENDER_POLICY = "scene-proof-rgba-nearest-v1"
 # compositing with layers placed 1:1 at integer pixels (any resampling happens once, at admission)
 # and optional contact shadows. Worlds without it keep RENDER_POLICY and its exact bytes.
 RENDER_POLICY_ALPHA = "scene-rgba-premultiplied-over-v1"
-RENDER_POLICIES = frozenset({RENDER_POLICY, RENDER_POLICY_ALPHA})
+# Opt-in for new worlds only: the alpha compositing above plus a frozen floor-depth rule,
+# depth-scaled admitted derivatives, support-aware placement and position-dependent occlusion.
+RENDER_POLICY_DEPTH = "scene-rgba-premultiplied-depth-v1"
+RENDER_POLICIES = frozenset({RENDER_POLICY, RENDER_POLICY_ALPHA, RENDER_POLICY_DEPTH})
 PRECISION = 6
 
 
@@ -241,6 +244,136 @@ class ContactShadow:
 
 
 @dataclass(frozen=True)
+class DepthKnot:
+    """One point of a floor-depth rule and how it was obtained."""
+
+    floor_y: float
+    scale: float
+    basis: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "floor_y", _q(self.floor_y))
+        object.__setattr__(self, "scale", _q(self.scale))
+        if self.scale <= 0:
+            raise SceneModelError("depth scale must be positive")
+        if not isinstance(self.basis, str) or not self.basis.strip():
+            raise SceneModelError("every depth knot records its basis")
+
+
+@dataclass(frozen=True)
+class FloorDepthRule:
+    """A frozen, bounded map from floor-contact y (frame pixels) to apparent scale.
+
+    It is a room-specific lookup calibrated from features of an approved plate, not a camera
+    model. Placements outside the first and last knots are refused.
+    """
+
+    knots: tuple[DepthKnot, ...]
+    decimals: int = 4
+
+    def __post_init__(self) -> None:
+        if len(self.knots) < 2 or any(
+            later.floor_y <= earlier.floor_y
+            for earlier, later in zip(self.knots, self.knots[1:], strict=False)
+        ):
+            raise SceneModelError("a depth rule needs two or more knots with increasing floor_y")
+        if type(self.decimals) is not int or not 2 <= self.decimals <= PRECISION:
+            raise SceneModelError("depth rule decimals out of range")
+
+    def scale_at(self, floor_y: float) -> float:
+        first, last = self.knots[0], self.knots[-1]
+        if not first.floor_y <= floor_y <= last.floor_y:
+            raise SceneModelError(
+                f"placement floor_y {floor_y} is outside the accepted depth range "
+                f"{first.floor_y}-{last.floor_y}"
+            )
+        for earlier, later in zip(self.knots, self.knots[1:], strict=False):
+            if floor_y <= later.floor_y:
+                t = (floor_y - earlier.floor_y) / (later.floor_y - earlier.floor_y)
+                return round(earlier.scale + (later.scale - earlier.scale) * t, self.decimals)
+        raise SceneModelError("unreachable depth interpolation")
+
+
+@dataclass(frozen=True)
+class DepthDerivative:
+    """A variant resampled once, at admission, from one admitted source to one apparent scale."""
+
+    source_asset_id: str
+    source_sha256: str
+    apparent_scale: float
+    contact_anchor: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "apparent_scale", _q(self.apparent_scale))
+        if self.apparent_scale <= 0 or len(self.source_sha256) != 64:
+            raise SceneModelError("depth derivative needs a positive scale and a source SHA-256")
+
+
+@dataclass(frozen=True)
+class SupportSurface:
+    """Furniture an entity can stand on; a supported entity takes its scale from floor_y."""
+
+    group: str
+    floor_y: float
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "floor_y", _q(self.floor_y))
+
+
+@dataclass(frozen=True)
+class OccluderDepth:
+    """One furniture piece cut from the plate, with the floor line of its nearest edge.
+
+    The piece is drawn over a placed entity only where that line is nearer (larger y) than the
+    entity's floor contact at the entity's x, and never over an entity it supports.
+    """
+
+    group: str
+    front_floor_line: tuple[tuple[float, float], tuple[float, float]]
+
+    def __post_init__(self) -> None:
+        (x0, y0), (x1, y1) = self.front_floor_line
+        line = ((_q(x0), _q(y0)), (_q(x1), _q(y1)))
+        if line[0][0] > line[1][0]:
+            raise SceneModelError("occluder floor line must run left to right")
+        object.__setattr__(self, "front_floor_line", line)
+
+    def depth_at(self, x: float) -> float:
+        (x0, y0), (x1, y1) = self.front_floor_line
+        if x1 == x0:
+            return y0
+        t = min(1.0, max(0.0, (x - x0) / (x1 - x0)))
+        return y0 + (y1 - y0) * t
+
+
+@dataclass(frozen=True)
+class DirectionalContactShadow:
+    """A soft floor ellipse offset from the contact anchor (depth policy only).
+
+    Sizes and the offset are in intrinsic world units and scale with apparent size.
+    """
+
+    anchor_key: str
+    radius_x: float
+    radius_y: float
+    softness: float
+    offset_x: float
+    offset_y: float
+    rgb: tuple[int, int, int]
+    opacity: int
+    kind: str = "directional-v1"
+
+    def __post_init__(self) -> None:
+        ContactShadow(
+            self.anchor_key, self.radius_x, self.radius_y, self.softness, self.rgb, self.opacity
+        )
+        for name in ("radius_x", "radius_y", "softness", "offset_x", "offset_y"):
+            object.__setattr__(self, name, _q(getattr(self, name)))
+        if self.kind != "directional-v1":
+            raise SceneModelError("unknown contact shadow kind")
+
+
+@dataclass(frozen=True)
 class EntityVariant:
     variant_id: str
     entity_key: str
@@ -251,7 +384,10 @@ class EntityVariant:
     contact_policy_id: str | None = None
     character_authority_id: str | None = None
     partition_complete_source: bool = False
-    contact_shadow: ContactShadow | None = None
+    contact_shadow: ContactShadow | DirectionalContactShadow | None = None
+    depth_derivative: DepthDerivative | None = None
+    support: SupportSurface | None = None
+    occluder: OccluderDepth | None = None
 
 
 @dataclass(frozen=True)
@@ -309,6 +445,7 @@ class PersistentWorld:
     bindings: DomainBindings
     definition_digest: str
     render_policy: str = RENDER_POLICY
+    depth_rule: FloorDepthRule | None = None
 
     def entity(self, key: str) -> EntityDefinition:
         try:
@@ -475,7 +612,12 @@ def _variant_content_payload(world: PersistentWorld, variant: EntityVariant) -> 
             "lighting_policy_id": world.lighting_policy_id,
         },
         "layers": layers,
-    } | ({"contact_shadow": variant.contact_shadow} if variant.contact_shadow else {})
+    } | {
+        # Declared only when present, so earlier variants keep their exact payload.
+        name: getattr(variant, name)
+        for name in ("contact_shadow", "depth_derivative", "support", "occluder")
+        if getattr(variant, name) is not None
+    }
 
 
 def variant_content_digest(world: PersistentWorld, variant: EntityVariant) -> str:
@@ -563,6 +705,7 @@ def world_definition_payload(world: PersistentWorld) -> dict[str, Any]:
         "palette_id": world.palette_id,
         "wall_treatment_id": world.wall_treatment_id,
         "lighting_policy_id": world.lighting_policy_id,
+        **({"depth_rule": world.depth_rule} if world.depth_rule is not None else {}),
         "authority_contract": {
             "visual_plan_id": world.bindings.visual_plan_id,
             "character_profile_id": world.bindings.character_profile_id,
@@ -615,13 +758,43 @@ def _entity_content_digests(
 def validate_world(world: PersistentWorld) -> None:
     if world.render_policy not in RENDER_POLICIES:
         raise SceneModelError(f"unknown render policy: {world.render_policy}")
+    depth = world.render_policy == RENDER_POLICY_DEPTH
+    if depth != (world.depth_rule is not None):
+        raise SceneModelError("a floor-depth rule belongs to, and is required by, the depth policy")
+    if depth and (
+        world.geometry.camera.world_to_pixel != Affine()
+        or any(plane.world_to_stage != Affine() for plane in world.geometry.planes)
+    ):
+        raise SceneModelError("the depth policy requires identity camera and plane mappings")
     for variant in world.variants:
-        if variant.contact_shadow is None:
-            continue
-        if world.render_policy != RENDER_POLICY_ALPHA:
-            raise SceneModelError("contact shadows require the alpha render policy")
-        if variant.contact_shadow.anchor_key not in dict(variant.anchors):
-            raise SceneModelError(f"contact shadow anchor missing: {variant.variant_id}")
+        if not depth and (variant.depth_derivative or variant.support or variant.occluder):
+            raise SceneModelError("depth placement fields require the depth render policy")
+        shadow = variant.contact_shadow
+        if shadow is not None:
+            expected = DirectionalContactShadow if depth else ContactShadow
+            if world.render_policy == RENDER_POLICY or not isinstance(shadow, expected):
+                raise SceneModelError(
+                    "contact shadows require the alpha render policy"
+                    if world.render_policy == RENDER_POLICY
+                    else "contact shadow kind does not match the render policy"
+                )
+            if shadow.anchor_key not in dict(variant.anchors):
+                raise SceneModelError(f"contact shadow anchor missing: {variant.variant_id}")
+        derivative = variant.depth_derivative
+        if derivative is not None:
+            if derivative.contact_anchor not in dict(variant.anchors):
+                raise SceneModelError(f"depth contact anchor missing: {variant.variant_id}")
+            if len(variant.layers) != 1 or variant.layers[0].local_mapping != Affine():
+                raise SceneModelError("a depth derivative is one layer placed 1:1")
+            raster = world.asset(variant.layers[0].asset_id)
+            expected_size = tuple(
+                round(size * derivative.apparent_scale) for size in variant.intrinsic_size_wu
+            )
+            if (raster.width, raster.height) != expected_size:
+                raise SceneModelError(
+                    f"depth derivative raster is not its intrinsic size at its scale: "
+                    f"{variant.variant_id}"
+                )
     entity_keys = [entity.entity_key for entity in world.entities]
     if len(entity_keys) != len(set(entity_keys)):
         raise SceneModelError("duplicate entity key")
@@ -1015,6 +1188,8 @@ def _validate_state_sources(world: PersistentWorld, state: ResolvedState) -> Non
 def _validate_resolved_state_binding(world: PersistentWorld, state: ResolvedState) -> None:
     if state.world_key != world.world_key or state.world_revision != world.revision:
         raise SceneModelError("world mismatch")
+    if world.render_policy == RENDER_POLICY_DEPTH:
+        depth_placements(world, state)
     if state.world_definition_digest != world.definition_digest:
         raise SceneModelError("world definition mismatch")
     if state.variant_admission_digest != variant_admission_digest(state.admitted_variants):
@@ -1060,6 +1235,8 @@ def render(world: PersistentWorld, state: ResolvedState) -> RenderResult:
     # Dispatch from the persisted policy; the legacy renderer below is unchanged.
     if world.render_policy == RENDER_POLICY_ALPHA:
         return _render_alpha(world, state)
+    if world.render_policy == RENDER_POLICY_DEPTH:
+        return _render_depth(world, state)
     active_variants = tuple(
         world.variant(entity.variant_id) for entity in state.entities if entity.visible
     )
@@ -1258,6 +1435,278 @@ def _render_alpha(world: PersistentWorld, state: ResolvedState) -> RenderResult:
         tuple(signatures),
         tuple(owners),
     )
+
+
+@dataclass(frozen=True)
+class DepthPlacement:
+    """Where and how large one placed entity is drawn, derived only from the frozen rule."""
+
+    entity_key: str
+    contact: tuple[float, float]
+    floor_y: float
+    scale: float
+    support: str
+    offset: tuple[int, int]
+    generation: int
+
+
+def depth_placements(world: PersistentWorld, state: ResolvedState) -> dict[str, DepthPlacement]:
+    """Resolve every visible depth-derivative entity; refuse anything the rule does not allow.
+
+    A free entity stands on the floor at its contact point. An entity attached to furniture with
+    a support surface stands on it and takes its scale from that furniture's floor contact. An
+    entity attached to a placed entity is held: it follows the parent's contact and scale.
+    """
+
+    assert world.depth_rule is not None
+    entities = {entity.entity_key: entity for entity in state.entities}
+    placements: dict[str, DepthPlacement] = {}
+
+    def place(key: str) -> DepthPlacement:
+        if key in placements:
+            return placements[key]
+        entity = entities[key]
+        variant = world.variant(entity.variant_id)
+        derivative = variant.depth_derivative
+        assert derivative is not None
+        local = entity.local_transform
+        if local.scale != (1.0, 1.0) or (local.a, local.b, local.c, local.d) != (1, 0, 0, 1):
+            raise SceneModelError("depth placement transforms are pure translations")
+        parent = entities.get(entity.parent_key) if entity.parent_key else None
+        parent_variant = world.variant(parent.variant_id) if parent else None
+        if parent is None:
+            contact = (entity.effective_transform.e, entity.effective_transform.f)
+            floor_y, support, generation = contact[1], "floor", 0
+            scale = world.depth_rule.scale_at(floor_y)
+        elif parent_variant.depth_derivative is not None:
+            held = place(parent.entity_key)
+            contact = (
+                held.contact[0] + held.scale * local.e,
+                held.contact[1] + held.scale * local.f,
+            )
+            floor_y, support, generation = (
+                held.floor_y,
+                f"held:{parent.entity_key}",
+                held.generation + 1,
+            )
+            scale = held.scale
+        elif parent_variant.support is not None:
+            contact = (entity.effective_transform.e, entity.effective_transform.f)
+            floor_y = parent_variant.support.floor_y
+            support, generation = f"support:{parent_variant.support.group}", 0
+            scale = world.depth_rule.scale_at(floor_y)
+        else:
+            raise SceneModelError(f"{key} must stand on the floor, a support or a placed parent")
+        if derivative.apparent_scale != scale:
+            raise SceneModelError(
+                f"{key} uses apparent scale {derivative.apparent_scale}; the frozen rule "
+                f"requires {scale} at floor_y {floor_y}"
+            )
+        anchor_x, anchor_y = dict(variant.anchors)[derivative.contact_anchor]
+        placement = DepthPlacement(
+            key,
+            (_q(contact[0]), _q(contact[1])),
+            _q(floor_y),
+            scale,
+            support,
+            (round(contact[0] - anchor_x * scale), round(contact[1] - anchor_y * scale)),
+            generation,
+        )
+        placements[key] = placement
+        return placement
+
+    for entity in state.entities:
+        if entity.visible and world.variant(entity.variant_id).depth_derivative is not None:
+            place(entity.entity_key)
+    return placements
+
+
+def _composite_raster(
+    canvas: bytearray,
+    owners: list[str | None],
+    width: int,
+    height: int,
+    asset: RasterAsset,
+    mask: RasterMask | None,
+    left: int,
+    top: int,
+    owner: str,
+) -> None:
+    assert asset.rgba is not None
+    for sy in range(asset.height):
+        y = top + sy
+        if not 0 <= y < height:
+            continue
+        for sx in range(asset.width):
+            x = left + sx
+            if not 0 <= x < width:
+                continue
+            source = (sy * asset.width + sx) * 4
+            alpha = asset.rgba[source + 3]
+            if mask:
+                assert mask.alpha is not None
+                alpha = (alpha * mask.alpha[sy * asset.width + sx] + 127) // 255
+            if alpha == 0:
+                continue
+            target = (y * width + x) * 4
+            if alpha == 255:
+                canvas[target : target + 3] = asset.rgba[source : source + 3]
+                canvas[target + 3] = 255
+            else:
+                _over(canvas, target, asset.rgba[source : source + 3], alpha)
+            owners[y * width + x] = owner
+
+
+def _render_depth(world: PersistentWorld, state: ResolvedState) -> RenderResult:
+    """Backdrop first, then placed entities far to near with occluder pieces interleaved."""
+
+    camera = world.geometry.camera
+    width, height = camera.width, camera.height
+    canvas = bytearray(width * height * 4)
+    owners: list[str | None] = [None] * (width * height)
+    layer_hashes: list[tuple[str, str]] = []
+    signatures: list[tuple[str, str]] = []
+    placements = depth_placements(world, state)
+    visible = [entity for entity in state.entities if entity.visible]
+    backdrop = [
+        entity
+        for entity in visible
+        if entity.entity_key not in placements and world.variant(entity.variant_id).occluder is None
+    ]
+    occluders = [entity for entity in visible if world.variant(entity.variant_id).occluder]
+    ordered = sorted(
+        placements.values(),
+        key=lambda item: (
+            placements[_root_key(state, item.entity_key, placements)].floor_y,
+            _root_key(state, item.entity_key, placements),
+            item.generation,
+            item.entity_key,
+        ),
+    )
+
+    def draw_fixed(entity: EntityState) -> None:
+        for layer in world.variant(entity.variant_id).layers:
+            asset = world.asset(layer.asset_id)
+            asset.validate()
+            mask = world.mask(layer.mask_id) if layer.mask_id else None
+            if mask:
+                mask.validate()
+            left, top = _pixel_offset(world, entity, layer)
+            _composite_raster(
+                canvas, owners, width, height, asset, mask, left, top, entity.entity_key
+            )
+            placement = {"offset": [left, top], "asset": asset.expected_digest}
+            placement["mask"] = mask.expected_digest if mask else None
+            layer_hashes.append((layer.node_key, digest(placement)))
+            signatures.append((layer.node_key, _layer_signature(world, entity, layer)))
+
+    for node_key in _compile_order(world, tuple(world.variant(e.variant_id) for e in backdrop)):
+        entity = next(
+            e
+            for e in backdrop
+            if node_key in {layer.node_key for layer in world.variant(e.variant_id).layers}
+        )
+        if node_key == world.variant(entity.variant_id).layers[0].node_key:
+            draw_fixed(entity)
+    # Each occluder piece goes after the nearest placed entity it is in front of.
+    insert_after: dict[str, list[EntityState]] = {}
+    unanchored: list[EntityState] = []
+    for occluder in sorted(occluders, key=lambda item: item.entity_key):
+        piece = world.variant(occluder.variant_id).occluder
+        assert piece is not None
+        in_front = [
+            item.entity_key
+            for item in ordered
+            if placements[_root_key(state, item.entity_key, placements)].support
+            != f"support:{piece.group}"
+            and piece.depth_at(placements[_root_key(state, item.entity_key, placements)].contact[0])
+            > placements[_root_key(state, item.entity_key, placements)].floor_y
+        ]
+        if in_front:
+            insert_after.setdefault(in_front[-1], []).append(occluder)
+        else:
+            unanchored.append(occluder)
+    for occluder in unanchored:
+        draw_fixed(occluder)
+    for item in ordered:
+        entity = entities_by_key(state)[item.entity_key]
+        variant = world.variant(entity.variant_id)
+        shadow = variant.contact_shadow
+        if isinstance(shadow, DirectionalContactShadow) and item.support == "floor":
+            anchor_x, anchor_y = dict(variant.anchors)[shadow.anchor_key]
+            centre_x = item.offset[0] + anchor_x * item.scale + shadow.offset_x * item.scale
+            centre_y = item.offset[1] + anchor_y * item.scale + shadow.offset_y * item.scale
+            scaled = ContactShadow(
+                shadow.anchor_key,
+                shadow.radius_x * item.scale,
+                shadow.radius_y * item.scale,
+                shadow.softness * item.scale,
+                shadow.rgb,
+                shadow.opacity,
+            )
+            for y in range(
+                max(0, math.floor(centre_y - scaled.radius_y)),
+                min(height, math.ceil(centre_y + scaled.radius_y) + 1),
+            ):
+                for x in range(
+                    max(0, math.floor(centre_x - scaled.radius_x)),
+                    min(width, math.ceil(centre_x + scaled.radius_x) + 1),
+                ):
+                    alpha = contact_shadow_alpha(scaled, x + 0.5 - centre_x, y + 0.5 - centre_y)
+                    if alpha:
+                        _over(canvas, (y * width + x) * 4, shadow.rgb, alpha)
+                        owners[y * width + x] = f"{item.entity_key}.shadow"
+        layer = variant.layers[0]
+        asset = world.asset(layer.asset_id)
+        asset.validate()
+        _composite_raster(
+            canvas,
+            owners,
+            width,
+            height,
+            asset,
+            None,
+            item.offset[0],
+            item.offset[1],
+            item.entity_key,
+        )
+        layer_hashes.append(
+            (
+                layer.node_key,
+                digest({"offset": list(item.offset), "asset": asset.expected_digest, "mask": None}),
+            )
+        )
+        signatures.append((layer.node_key, _layer_signature(world, entity, layer)))
+        for occluder in insert_after.get(item.entity_key, []):
+            draw_fixed(occluder)
+    for offset in range(0, len(canvas), 4):
+        alpha = canvas[offset + 3]
+        if 0 < alpha < 255:
+            for channel in range(3):
+                canvas[offset + channel] = min(
+                    255, (canvas[offset + channel] * 255 + alpha // 2) // alpha
+                )
+    result = bytes(canvas)
+    return RenderResult(
+        result,
+        hashlib.sha256(result).hexdigest(),
+        tuple(layer_hashes),
+        tuple(signatures),
+        tuple(owners),
+    )
+
+
+def entities_by_key(state: ResolvedState) -> dict[str, EntityState]:
+    return {entity.entity_key: entity for entity in state.entities}
+
+
+def _root_key(state: ResolvedState, key: str, placements: dict[str, DepthPlacement]) -> str:
+    """The floor- or support-standing entity a held chain hangs from."""
+
+    entities = entities_by_key(state)
+    while entities[key].parent_key in placements:
+        key = entities[key].parent_key
+    return key
 
 
 def _raster_layer(world: PersistentWorld, state: EntityState, layer: RenderSlice) -> bytes:

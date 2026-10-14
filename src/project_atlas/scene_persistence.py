@@ -16,11 +16,16 @@ from project_atlas.scene_model import (
     Affine,
     Camera,
     ContactShadow,
+    DepthDerivative,
+    DepthKnot,
+    DirectionalContactShadow,
     DomainBindings,
     EntityDefinition,
     EntityState,
     EntityVariant,
+    FloorDepthRule,
     GeometryContract,
+    OccluderDepth,
     PersistenceClass,
     PersistentWorld,
     Plane,
@@ -29,6 +34,7 @@ from project_atlas.scene_model import (
     RenderSlice,
     ResolvedState,
     StateDiff,
+    SupportSurface,
     TransitionIntent,
     VariantBinding,
     canonical_json,
@@ -234,9 +240,10 @@ class PersistentSceneRepositoryMixin:
             )
         evidence_json = canonical_json(acceptance_evidence)
         contact_contract: dict[str, Any] = {"contact_policy_id": variant.contact_policy_id}
-        if variant.contact_shadow is not None:
+        for name in ("contact_shadow", "depth_derivative", "support", "occluder"):
             # Recorded only when declared, so historical variant rows are unchanged.
-            contact_contract["contact_shadow"] = variant.contact_shadow
+            if getattr(variant, name) is not None:
+                contact_contract[name] = getattr(variant, name)
         compatibility = {
             "character_profile_id": variant.character_authority_id,
             "visual_reference_authority_id": world.bindings.visual_reference_authority_id,
@@ -548,6 +555,8 @@ class PersistentSceneRepositoryMixin:
             if world.render_policy != RENDER_POLICY:
                 # Only an opted-in policy is recorded; legacy worlds keep their exact document.
                 treatment["render_policy"] = world.render_policy
+            if world.depth_rule is not None:
+                treatment["depth_rule"] = world.depth_rule
             membership = {
                 "entities": sorted(
                     (entity.entity_key, digest(self._entity_payload(entity)))
@@ -784,11 +793,30 @@ class PersistentSceneRepositoryMixin:
             raise ValueError("Persisted variant layer count mismatch.")
         anchors = _load_document(row["anchors_json"])
         contact = _load_document(row["contact_contract_json"])
-        if set(contact) not in ({"contact_policy_id"}, {"contact_policy_id", "contact_shadow"}):
+        if "contact_policy_id" not in contact or not set(contact) <= {
+            "contact_policy_id",
+            "contact_shadow",
+            "depth_derivative",
+            "support",
+            "occluder",
+        }:
             raise ValueError("Invalid persisted contact contract.")
         shadow_data = contact.get("contact_shadow")
-        shadow = (
-            ContactShadow(
+        shadow: ContactShadow | DirectionalContactShadow | None = None
+        if shadow_data is not None and "kind" in shadow_data:
+            shadow = DirectionalContactShadow(
+                shadow_data["anchor_key"],
+                shadow_data["radius_x"],
+                shadow_data["radius_y"],
+                shadow_data["softness"],
+                shadow_data["offset_x"],
+                shadow_data["offset_y"],
+                tuple(shadow_data["rgb"]),
+                shadow_data["opacity"],
+                shadow_data["kind"],
+            )
+        elif shadow_data is not None:
+            shadow = ContactShadow(
                 shadow_data["anchor_key"],
                 shadow_data["radius_x"],
                 shadow_data["radius_y"],
@@ -796,9 +824,9 @@ class PersistentSceneRepositoryMixin:
                 tuple(shadow_data["rgb"]),
                 shadow_data["opacity"],
             )
-            if shadow_data is not None
-            else None
-        )
+        derivative = contact.get("depth_derivative")
+        support = contact.get("support")
+        occluder = contact.get("occluder")
         variant = EntityVariant(
             row["id"],
             row["entity_key"],
@@ -810,6 +838,16 @@ class PersistentSceneRepositoryMixin:
             row["character_profile_id"],
             bool(row["partition_complete_source"]),
             shadow,
+            DepthDerivative(**derivative) if derivative is not None else None,
+            SupportSurface(**support) if support is not None else None,
+            (
+                OccluderDepth(
+                    occluder["group"],
+                    tuple(tuple(point) for point in occluder["front_floor_line"]),
+                )
+                if occluder is not None
+                else None
+            ),
         )
         evidence = _load_document(row["acceptance_evidence_json"])
         if digest(evidence) != row["acceptance_evidence_digest"]:
@@ -832,8 +870,20 @@ class PersistentSceneRepositoryMixin:
             "style_profile_id",
             "wall_treatment_id",
         }
-        if set(treatment) not in (treatment_keys, treatment_keys | {"render_policy"}):
+        if set(treatment) not in (
+            treatment_keys,
+            treatment_keys | {"render_policy"},
+            treatment_keys | {"render_policy", "depth_rule"},
+        ):
             raise ValueError("Invalid persisted world treatment document.")
+        rule_data = treatment.get("depth_rule")
+        depth_rule = (
+            FloorDepthRule(
+                tuple(DepthKnot(**knot) for knot in rule_data["knots"]), rule_data["decimals"]
+            )
+            if rule_data is not None
+            else None
+        )
         render_policy = treatment.get("render_policy", RENDER_POLICY)
         if render_policy not in RENDER_POLICIES or treatment.get("render_policy") == RENDER_POLICY:
             raise ValueError("Invalid persisted world render policy.")
@@ -954,6 +1004,7 @@ class PersistentSceneRepositoryMixin:
             bindings,
             row["world_definition_digest"],
             render_policy,
+            depth_rule,
         )
         validate_world(world)
         if world_definition_digest(world) != row["world_definition_digest"]:
