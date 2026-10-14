@@ -30,7 +30,12 @@ def now() -> str:
 
 # Historical v1 derived rasters stay resolvable; v2 adds exact full-frame resampling.
 DERIVED_SCENE_ADAPTERS = frozenset(
-    {"managed-image-to-rgba-v1", "managed-image-to-rgba-v2", "premultiplied-area-downscale-v1"}
+    {
+        "managed-image-to-rgba-v1",
+        "managed-image-to-rgba-v2",
+        "premultiplied-area-downscale-v1",
+        "production-object-admission-v1",
+    }
 )
 # Explicitly typed raw 8-bit alpha masks for persistent-scene layers (one byte per pixel).
 SCENE_ALPHA_MASK_MEDIA_TYPE = "application/x-alpha8"

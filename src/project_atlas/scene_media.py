@@ -114,10 +114,12 @@ def unwritten_alpha_pixels(rgba: bytes) -> int:
     return rgba[3::4].count(0)
 
 
-def compositor_contract() -> dict[str, Any]:
+def compositor_contract(render_policy: str = RENDER_POLICY) -> dict[str, Any]:
+    """The compositor a frame was made with; legacy worlds keep their historical record."""
+
     return {
         "identity": COMPOSITOR_IDENTITY,
-        "render_policy": RENDER_POLICY,
+        "render_policy": render_policy,
         "frame_encoding": FRAME_ENCODING,
         "schema_version": 1,
     }

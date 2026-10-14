@@ -37,6 +37,8 @@ from project_atlas.persistence import (
 )
 from project_atlas.scene_media import load_persistent_scene_frame, unwritten_alpha_pixels
 from project_atlas.scene_model import (
+    RENDER_POLICY,
+    RENDER_POLICY_ALPHA,
     Affine,
     Camera,
     DomainBindings,
@@ -53,9 +55,18 @@ from project_atlas.scene_model import (
     base_state,
     bind_world_definition,
 )
+from project_atlas.static_character import (
+    _decode_rgba_png,
+    _encode_rgba_png,
+    extract_soft_matte_character,
+)
 
 _SAFE_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 FRAME_SIZE = (1080, 1920)
+# Extracted progression objects: the full-frame object canvas is resampled with the base's
+# adapter, cut with the v3 soft matte, cropped exactly and placed 1:1 at a declared centre.
+OBJECT_ADMISSION_ADAPTER = "production-object-admission-v1"
+OBJECT_CROP_MARGIN = 2
 SCENE_ADAPTER_VERSION = "managed-image-to-rgba-v2"
 # Derived raster identities carry the adapter generation so a resume can never reuse a
 # raster produced by an earlier adapter.
@@ -283,6 +294,7 @@ class ProductionLifecycleService:
         transcriber: Any | None = None,
     ) -> None:
         self.repository = repository
+        self._object_admissions: dict[str, list[dict[str, Any]]] = {}
         self.generation_service = generation_service
         self.media_service = media_service
         # Independent recognizer for the narration completeness gate (never the TTS provider).
@@ -1594,11 +1606,19 @@ class ProductionLifecycleService:
                     authorization_reference=f"production-run:{run.id}:transition:{transition_index}",
                 )
                 state_ids[scene_id] = predecessor.state_id
+            payload: dict[str, Any] = {
+                "world_key": world.world_key,
+                "scene_ids": world_input["scene_ids"],
+            }
+            if self._object_admissions.get(world_input["key"]):
+                # Recorded only for worlds with extracted objects: admission provenance and the
+                # advisory outline-width comparison against the world's base.
+                payload["object_admissions"] = self._object_admissions[world_input["key"]]
             self.repository.create_production_evidence(
                 f"{run.id}:world:{world_index}:evidence",
                 run.id,
                 "world",
-                {"world_key": world.world_key, "scene_ids": world_input["scene_ids"]},
+                payload,
                 world_revision_id=world_id,
             )
         existing_scene_ids = {item.payload["scene_id"] for item in existing}
@@ -1953,6 +1973,7 @@ class ProductionLifecycleService:
             narration.id,
             inputs,
             run.request.get("citations"),
+            on_screen_text=run.request.get("on_screen_text_overlay") is True,
         )
         self.repository.create_production_evidence(
             f"{run.id}:snapshot:evidence:{version}",
@@ -2099,6 +2120,8 @@ class ProductionLifecycleService:
         variants: list[EntityVariant] = []
         entities: list[EntityDefinition] = []
         spec_ids: list[str] = []
+        object_admissions: list[dict[str, Any]] = []
+        base_raster: RasterAsset | None = None
         for entity_index, entity in enumerate(world_input["entities"], 1):
             variant_ids = []
             for variant_index, variant in enumerate(entity["variants"], 1):
@@ -2113,11 +2136,22 @@ class ProductionLifecycleService:
                 raster = self.adapter.adapt(
                     run.id, source_id, derived_id, FRAME_SIZE if full_frame else None
                 )
-                assets.append(raster)
                 spec_ids.append(variant["asset_spec_id"])
                 variant_id = self._variant_id(run.id, world_index, entity["key"], variant["key"])
                 variant_ids.append(variant_id)
-                mapping = Affine(a=size[0] / raster.width, d=size[1] / raster.height)
+                if "object_center" in variant:
+                    raster, mapping, record = self._admit_object(
+                        source_id, raster, f"{derived_id}:object", variant["object_center"]
+                    )
+                    record["variant"] = "/".join(key)
+                    object_admissions.append(record)
+                    size = (raster.width, raster.height)
+                    full_frame = False
+                else:
+                    mapping = Affine(a=size[0] / raster.width, d=size[1] / raster.height)
+                    if full_frame and base_raster is None:
+                        base_raster = raster
+                assets.append(raster)
                 self._guard_layer_mapping(
                     self._affine(entity["initial_transform"]).compose(mapping), full_frame
                 )
@@ -2127,7 +2161,27 @@ class ProductionLifecycleService:
                         entity["key"],
                         size,
                         entity["neutral_scale_id"],
-                        (RenderSlice(f"{entity['key']}.main", raster.asset_id, None, mapping),),
+                        (
+                            RenderSlice(
+                                f"{entity['key']}.main",
+                                raster.asset_id,
+                                None,
+                                mapping,
+                                # Opt-in worlds draw lower declared depths first; legacy worlds
+                                # keep their historical (unordered) layer contract.
+                                (
+                                    tuple(
+                                        sorted(
+                                            f"{other['key']}.main"
+                                            for other in world_input["entities"]
+                                            if other.get("depth", 0) < entity.get("depth", 0)
+                                        )
+                                    )
+                                    if run.request.get("render_policy") == RENDER_POLICY_ALPHA
+                                    else ()
+                                ),
+                            ),
+                        ),
                         character_authority_id=(
                             run.request["authority"]["character_profile_id"]
                             if self.repository.get_asset_spec(variant["asset_spec_id"]).asset_type
@@ -2184,8 +2238,93 @@ class ProductionLifecycleService:
                 authority["visual_style_profile_id"],
             ),
             "",
+            run.request.get("render_policy", RENDER_POLICY),
         )
+        for record in object_admissions:
+            record["base_outline_px"] = (
+                self._outline_width(base_raster) if base_raster is not None else None
+            )
+        self._object_admissions[world_input["key"]] = object_admissions
         return bind_world_definition(world)
+
+    def _admit_object(
+        self, source_id: str, frame: RasterAsset, derived_id: str, center: list[int]
+    ) -> tuple[RasterAsset, Affine, dict[str, Any]]:
+        """Cut one object from its frame-resampled canvas and place it 1:1 at its centre."""
+
+        assert frame.rgba is not None
+        extraction = extract_soft_matte_character(
+            _encode_rgba_png(frame.width, frame.height, frame.rgba)
+        )
+        width, height, pixels = _decode_rgba_png(extraction.content)
+        visible = [index for index in range(width * height) if pixels[index * 4 + 3]]
+        x0 = max(0, min(index % width for index in visible) - OBJECT_CROP_MARGIN)
+        y0 = max(0, min(index // width for index in visible) - OBJECT_CROP_MARGIN)
+        x1 = min(width, max(index % width for index in visible) + OBJECT_CROP_MARGIN + 1)
+        y1 = min(height, max(index // width for index in visible) + OBJECT_CROP_MARGIN + 1)
+        crop = b"".join(pixels[(y * width + x0) * 4 : (y * width + x1) * 4] for y in range(y0, y1))
+        crop_width, crop_height = x1 - x0, y1 - y0
+        record = {
+            "source_asset_id": source_id,
+            "frame_raster_id": frame.asset_id,
+            "extraction": extraction.provenance(),
+            "crop_box": [x0, y0, x1, y1],
+            "object_center": list(center),
+        }
+        try:
+            existing = self.repository.get_asset(derived_id)
+        except KeyError:
+            existing = None
+        if existing is not None:
+            if existing.metadata.get("admission") != record:
+                raise ValueError("Admitted object identity is already bound to other content.")
+            content = self.repository.managed_scene_asset_path(existing.id).read_bytes()
+            if content != crop:
+                raise ValueError("Admitted object bytes differ from a fresh admission.")
+            asset = existing
+        else:
+            asset = self.repository.create_derived_scene_asset(
+                derived_id,
+                source_id,
+                "application/x-rgba",
+                crop,
+                crop_width,
+                crop_height,
+                OBJECT_ADMISSION_ADAPTER,
+                {"admission": record},
+            )
+        left = center[0] - crop_width // 2
+        top = center[1] - crop_height // 2
+        raster = RasterAsset(asset.id, crop_width, crop_height, crop, asset.content_digest or "")
+        record = record | {
+            "object_asset_id": asset.id,
+            "object_sha256": asset.content_digest,
+            "size_px": [crop_width, crop_height],
+            "placed_at": [left, top],
+            "outline_px": self._outline_width(raster),
+        }
+        return raster, Affine.translate(left, top), record
+
+    @staticmethod
+    def _outline_width(raster: RasterAsset) -> float | None:
+        """Advisory: median alpha-weighted width of dark horizontal runs (outline weight)."""
+
+        assert raster.rgba is not None
+        lengths: list[float] = []
+        for y in range(0, raster.height, 3):
+            run = 0.0
+            for x in range(raster.width):
+                offset = (y * raster.width + x) * 4
+                red, green, blue, alpha = raster.rgba[offset : offset + 4]
+                if alpha and (299 * red + 587 * green + 114 * blue) // 1000 < 100:
+                    run += alpha / 255
+                elif run:
+                    lengths.append(run)
+                    run = 0.0
+        if not lengths:
+            return None
+        lengths.sort()
+        return round(lengths[len(lengths) // 2], 3)
 
     @staticmethod
     def _guard_layer_mapping(mapping: Affine, full_frame: bool) -> None:
@@ -2266,6 +2405,8 @@ class ProductionLifecycleService:
             "scene_timing",
             "acquisition_review_profile",
             "environment_pins",
+            "render_policy",
+            "on_screen_text_overlay",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -2273,6 +2414,21 @@ class ProductionLifecycleService:
             if not isinstance(request.get(field), str) or not _SAFE_KEY.fullmatch(request[field]):
                 raise ProductionRequestError(f"Production {field} must be a safe stable key.")
         self.repository._require_gate_authorized_visual_plan(request["visual_plan_id"])
+        # Opt-in fields are recorded only when chosen, so earlier requests keep their digests.
+        if "render_policy" in request and request["render_policy"] != RENDER_POLICY_ALPHA:
+            raise ProductionRequestError(
+                f"Production render_policy may only opt in to {RENDER_POLICY_ALPHA}."
+            )
+        if "on_screen_text_overlay" in request and (
+            request["on_screen_text_overlay"] is not True
+            or not any(
+                scene.on_screen_text
+                for scene in self.repository.list_scenes_for_visual_plan(request["visual_plan_id"])
+            )
+        ):
+            raise ProductionRequestError(
+                "on_screen_text_overlay must be true and the VisualPlan must have on_screen_text."
+            )
         if not isinstance(request.get("narration_authorized"), bool):
             raise ProductionRequestError("Production narration_authorized must be a boolean.")
         forecast = request.get("forecast")
@@ -2359,7 +2515,12 @@ class ProductionLifecycleService:
         world_scenes: list[str] = []
         variant_keys: set[tuple[str, str, str]] = set()
         for world in worlds:
-            self._validate_world_input(request["visual_plan_id"], world, variant_keys)
+            self._validate_world_input(
+                request["visual_plan_id"],
+                world,
+                variant_keys,
+                request.get("render_policy") == RENDER_POLICY_ALPHA,
+            )
             world_scenes.extend(world["scene_ids"])
         if world_scenes != plan_scenes:
             raise ProductionRequestError("World scene order must cover the exact VisualPlan.")
@@ -2412,6 +2573,7 @@ class ProductionLifecycleService:
         plan_id: str,
         world: Any,
         variant_keys: set[tuple[str, str, str]],
+        objects_allowed: bool = False,
     ) -> None:
         if not isinstance(world, dict) or not _SAFE_KEY.fullmatch(str(world.get("key", ""))):
             raise ProductionRequestError("World requires a safe semantic key.")
@@ -2469,13 +2631,32 @@ class ProductionLifecycleService:
             if not isinstance(variants, list) or not variants:
                 raise ProductionRequestError("Entity requires at least one variant.")
             keys = []
+            if "initial_visible" in entity and not isinstance(entity["initial_visible"], bool):
+                raise ProductionRequestError("Entity initial_visible must be a boolean.")
             for variant in variants:
-                if not isinstance(variant, dict) or set(variant) != {
-                    "key",
-                    "asset_spec_id",
-                    "intrinsic_size_wu",
-                }:
+                contract = {"key", "asset_spec_id", "intrinsic_size_wu"}
+                if not isinstance(variant, dict) or set(variant) not in (
+                    contract,
+                    contract | {"object_center"},
+                ):
                     raise ProductionRequestError("Entity variant contract is incomplete.")
+                if "object_center" in variant:
+                    center = variant["object_center"]
+                    if not objects_allowed:
+                        raise ProductionRequestError(
+                            "Extracted objects require render_policy " f"{RENDER_POLICY_ALPHA}."
+                        )
+                    if (
+                        tuple(variant["intrinsic_size_wu"]) != FRAME_SIZE
+                        or not isinstance(center, list)
+                        or len(center) != 2
+                        or any(type(value) is not int for value in center)
+                        or not (0 <= center[0] < FRAME_SIZE[0] and 0 <= center[1] < FRAME_SIZE[1])
+                    ):
+                        raise ProductionRequestError(
+                            "An extracted object is generated on a full-frame canvas and needs an "
+                            "integer object_center inside the frame."
+                        )
                 key = (world["key"], entity["key"], variant["key"])
                 if not _SAFE_KEY.fullmatch(str(variant["key"])) or key in variant_keys:
                     raise ProductionRequestError("Variant key is invalid or duplicated.")
@@ -3045,6 +3226,13 @@ class ProductionLifecycleService:
                     # SimilarStoic production method; move this requirement into the channel
                     # recipe when that recipe is codified.
                     if tuple(variant["intrinsic_size_wu"]) == FRAME_SIZE:
+                        # A full-frame image may omit the character only by explicit declaration.
+                        if spec.metadata.get("character_free") is True:
+                            if spec.character_profile_id is not None:
+                                raise ProductionRequestError(
+                                    "A character_free AssetSpec cannot name a character profile."
+                                )
+                            continue
                         if spec.character_profile_id != authority["character_profile_id"]:
                             raise ProductionRequestError(
                                 "Full-frame AssetSpec character profile differs from the "

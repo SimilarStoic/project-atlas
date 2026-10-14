@@ -688,6 +688,23 @@ class MediaService:
         "outline": 8,
         "shadow": 0,
     }
+    # Opt-in large on-screen text (a hook line) in the top safe zone, shown only while its
+    # Scene is on screen; captions are kept out of the top zone while it is visible.
+    ON_SCREEN_TEXT_MAX_CHARS = 60
+    ON_SCREEN_TEXT_STYLE = {
+        "style": "conveyor-on-screen-text-top-v1",
+        "font_name": "Arial",
+        "font_size": 80,
+        "bold": True,
+        "alignment": 8,
+        "margin_horizontal": 90,
+        "margin_top": 190,
+        "primary_colour": "&H001D1E1F",
+        "background_colour": "&H08FFFDF8",
+        "border_style": 3,
+        "outline": 14,
+        "shadow": 0,
+    }
     MOTIONS = frozenset({"static", "slow_zoom_in", "slow_zoom_out"})
     TRANSITIONS = frozenset({"cut", "crossfade"})
     # FFmpeg/libass converts SRT input to an internal 384x288 ASS script.  Pixel
@@ -955,8 +972,13 @@ class MediaService:
         narration_id: str,
         scene_inputs: list[dict[str, Any]],
         citations: list[dict[str, Any]] | None = None,
+        on_screen_text: bool = False,
     ) -> FinalMediaInputSnapshot:
-        """Freeze exact persisted scene states as first-class v2 render inputs."""
+        """Freeze exact persisted scene states as first-class v2 render inputs.
+
+        ``on_screen_text`` opts in to drawing each Scene's frozen on_screen_text in the
+        versioned top-zone style; without it the Scenes' text stays unrendered, as before.
+        """
 
         plan = self.repository._require_gate_authorized_visual_plan(visual_plan_id)
         narration = self.repository.get_narration_asset(narration_id)
@@ -965,7 +987,7 @@ class MediaService:
         scenes = self.repository.list_scenes_for_visual_plan(plan.id)
         if len(scene_inputs) != len(scenes):
             raise ValueError("Every current VisualPlan Scene must appear exactly once.")
-        contract = compositor_contract()
+        policies: set[str] = set()
         frozen = []
         seen_states: set[str] = set()
         for index, (scene, supplied) in enumerate(zip(scenes, scene_inputs, strict=True)):
@@ -992,6 +1014,8 @@ class MediaService:
                 raise ValueError("Persistent state belongs to another editorial Scene.")
             frame = load_persistent_scene_frame(self.repository, state_id)
             payload = frame.scene_model_snapshot
+            policies.add(context.world.render_policy)
+            contract = compositor_contract(context.world.render_policy)
             frozen.append(
                 {
                     "scene_id": scene.id,
@@ -1028,11 +1052,18 @@ class MediaService:
             raise ValueError("Scene durations must equal the exact NarrationAsset duration.")
         script = self.repository.get_script(plan.script_id)
         settings = dict(self.PERSISTENT_RENDER_SETTINGS)
-        settings["persistent_scene_compositor"] = contract
+        if len(policies) > 1:
+            raise ValueError("A snapshot's persistent worlds must share one render policy.")
+        settings["persistent_scene_compositor"] = compositor_contract(*policies)
         if citations:
             settings["citation_overlay"] = {
                 "style": dict(self.CITATION_STYLE),
                 "citations": self.citation_overlays(frozen, citations),
+            }
+        if on_screen_text:
+            settings["on_screen_text_overlay"] = {
+                "style": dict(self.ON_SCREEN_TEXT_STYLE),
+                "texts": self.on_screen_text_overlays(frozen),
             }
         timing = self.narration_speech_timing(narration, script.narration_text)
         boundaries, elapsed = [], 0
@@ -1154,6 +1185,92 @@ class MediaService:
         return sorted(timed, key=lambda item: item["start_ms"])
 
     @classmethod
+    def on_screen_text_overlays(cls, scene_inputs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Time each Scene's frozen on_screen_text to exactly that Scene's interval."""
+
+        timed, elapsed = [], 0
+        for item in scene_inputs:
+            start, elapsed = elapsed, elapsed + item["duration_ms"]
+            text = item.get("on_screen_text")
+            if text is None:
+                continue
+            if (
+                not isinstance(text, str)
+                or not text.strip()
+                or len(text.strip()) > cls.ON_SCREEN_TEXT_MAX_CHARS
+                or any(character in text for character in "{}\\\r\n")
+            ):
+                raise ValueError("On-screen text must be 1-60 plain characters.")
+            timed.append(
+                {
+                    "scene_id": item["scene_id"],
+                    "text": text.strip(),
+                    "start_ms": start,
+                    "end_ms": elapsed,
+                }
+            )
+        if not timed:
+            raise ValueError("On-screen text overlay requires a Scene with on_screen_text.")
+        return timed
+
+    @classmethod
+    def _on_screen_text_filter(
+        cls,
+        render_settings: dict[str, Any],
+        scene_inputs: list[dict[str, Any]],
+        caption_cues: list[dict[str, Any]],
+        temporary_root: Path,
+        input_label: str,
+    ) -> str | None:
+        """Return the frozen on-screen text filter, or None when the snapshot has none."""
+
+        overlay = render_settings.get("on_screen_text_overlay")
+        if overlay is None:
+            return None
+        if not isinstance(overlay, dict) or overlay.get("style") != cls.ON_SCREEN_TEXT_STYLE:
+            raise MediaRuntimeError("Snapshot has an unsupported on-screen text style.")
+        try:
+            expected = cls.on_screen_text_overlays(scene_inputs)
+        except (KeyError, ValueError) as error:
+            raise MediaRuntimeError("Snapshot on-screen text overlay is invalid.") from error
+        if overlay.get("texts") != expected:
+            raise MediaRuntimeError("Snapshot on-screen text differs from its Scenes.")
+        for cue in caption_cues:
+            for text in expected:
+                if (
+                    cue.get("zone") == "upper_center_safe"
+                    and cue["start_ms"] < text["end_ms"]
+                    and text["start_ms"] < cue["end_ms"]
+                ):
+                    raise MediaRuntimeError("Captions must stay out of the on-screen text zone.")
+        position = rf"{{\an{cls.ON_SCREEN_TEXT_STYLE['alignment']}}}"
+        (temporary_root / "on_screen_text.srt").write_text(
+            cls._srt([{**item, "text": position + item["text"]} for item in expected]),
+            encoding="utf-8",
+        )
+        style = cls.ON_SCREEN_TEXT_STYLE
+        width, height = cls.SRT_ASS_PLAY_RESOLUTION
+
+        def ass(value: int, play: int, frame: int) -> str:
+            return f"{value * play / frame:.6f}".rstrip("0").rstrip(".")
+
+        force_style = (
+            f"FontName={style['font_name']},"
+            f"FontSize={ass(style['font_size'], height, render_settings['height'])},"
+            f"Bold={-1 if style['bold'] else 0},"
+            f"MarginL={ass(style['margin_horizontal'], width, render_settings['width'])},"
+            f"MarginR={ass(style['margin_horizontal'], width, render_settings['width'])},"
+            f"MarginV={ass(style['margin_top'], height, render_settings['height'])},"
+            f"PrimaryColour={style['primary_colour']},"
+            f"OutlineColour={style['background_colour']},"
+            f"BackColour={style['background_colour']},"
+            f"BorderStyle={style['border_style']},"
+            f"Outline={ass(style['outline'], height, render_settings['height'])},"
+            f"Shadow={style['shadow']}"
+        )
+        return f"{input_label}subtitles=on_screen_text.srt:force_style='{force_style}'[texted]"
+
+    @classmethod
     def _citation_filter(
         cls,
         render_settings: dict[str, Any],
@@ -1250,7 +1367,7 @@ class MediaService:
             "variant_admission_digest": context.state.variant_admission_digest,
             "transition_intent_id": frame.transition_intent_id,
             "scene_model_snapshot_digest": frame.scene_model_snapshot_digest,
-            "compositor_digest": digest(compositor_contract()),
+            "compositor_digest": digest(compositor_contract(context.world.render_policy)),
             "frame_width": frame.width,
             "frame_height": frame.height,
             "composited_frame_digest": frame.rgba_digest,
@@ -1266,7 +1383,7 @@ class MediaService:
             raise MediaRuntimeError("Persistent scene-model snapshot payload differs.")
         if item["source_assets"] != frame.scene_model_snapshot["assets"]:
             raise MediaRuntimeError("Persistent snapshot source Asset set differs.")
-        if item["compositor"] != compositor_contract():
+        if item["compositor"] != compositor_contract(context.world.render_policy):
             raise MediaRuntimeError("Persistent snapshot compositor contract differs.")
         if require_full_coverage and unwritten_alpha_pixels(frame.rgba):
             raise MediaRuntimeError("Persistent scene frame has unwritten compositor pixels.")
@@ -1583,10 +1700,15 @@ class MediaService:
             subtitle.write_text(self._srt(caption_cues), encoding="utf-8")
             if snapshot.snapshot_schema_version not in {"v1", SNAPSHOT_SCHEMA_VERSION}:
                 raise MediaRuntimeError("Final-media snapshot schema version is unsupported.")
-            if snapshot.snapshot_schema_version == SNAPSHOT_SCHEMA_VERSION and (
-                render_settings.get("persistent_scene_compositor") != compositor_contract()
-            ):
-                raise MediaRuntimeError("Snapshot has an unsupported persistent compositor.")
+            if snapshot.snapshot_schema_version == SNAPSHOT_SCHEMA_VERSION:
+                policies = {
+                    (item.get("compositor") or {}).get("render_policy")
+                    for item in snapshot.scene_inputs
+                }
+                if len(policies) != 1 or render_settings.get(
+                    "persistent_scene_compositor"
+                ) != compositor_contract(*policies):
+                    raise MediaRuntimeError("Snapshot has an unsupported persistent compositor.")
             encode_arguments, require_full_coverage = self._encode_arguments(render_settings)
             arguments = [self.runtime.ffmpeg_path, "-y"]
             for index, item in enumerate(snapshot.scene_inputs):
@@ -1628,13 +1750,20 @@ class MediaService:
             )
             if citation_filter is not None:
                 filters.append(citation_filter)
+            label = "[cited]" if citation_filter is not None else "[captioned]"
+            text_filter = self._on_screen_text_filter(
+                render_settings, snapshot.scene_inputs, caption_cues, temporary_root, label
+            )
+            if text_filter is not None:
+                filters.append(text_filter)
+                label = "[texted]"
             output = temporary_root / "output.mp4"
             arguments.extend(
                 [
                     "-filter_complex",
                     ";".join(filters),
                     "-map",
-                    "[cited]" if citation_filter is not None else "[captioned]",
+                    label,
                     "-map",
                     f"{len(snapshot.scene_inputs)}:a",
                     "-t",
