@@ -593,6 +593,9 @@ class OpenAIImageGenerator:
         add_text("prompt", generation_input.prompt)
         add_text("n", "1")
         add_text("output_format", "png")
+        if self.image_size:
+            # The same opt-in size the generations transport sends; unset keeps provider default.
+            add_text("size", self.image_size)
         for reference in generation_input.reference_images:
             extension = LocalAssetStorage._EXTENSIONS.get(reference.media_type)
             if extension is None:

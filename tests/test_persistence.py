@@ -6325,6 +6325,46 @@ def test_openai_generator_can_request_an_explicit_configured_image_size() -> Non
     assert json.loads(captured["request"].data)["size"] == "1024x1536"
 
 
+def _edit_request_fields(image_size):
+    """Send one reference edit through the adapter offline and return its form field names."""
+
+    captured = {}
+
+    class Response:
+        headers = {"x-request-id": "edit-request"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        @staticmethod
+        def read() -> bytes:
+            return b'{"created": 1, "data": [{"b64_json": "b3V0cHV0"}]}'
+
+    def opener(request, timeout):
+        captured["request"] = request
+        return Response()
+
+    reference = ReferenceImage("asset-reference", "image/png", b"reference png bytes", 1)
+    OpenAIImageGenerator(api_key="test-key", image_size=image_size, opener=opener).generate(
+        GenerationInput("character", "Draw the beat.", None, {}, reference_images=(reference,))
+    )
+    request = captured["request"]
+    assert request.full_url == "https://api.openai.com/v1/images/edits"
+    return request.data
+
+
+def test_openai_reference_edits_send_the_configured_image_size() -> None:
+    body = _edit_request_fields("1152x2048")
+    assert b'name="size"\r\n\r\n1152x2048\r\n' in body
+
+
+def test_openai_reference_edits_stay_unsized_without_configuration() -> None:
+    assert b'name="size"' not in _edit_request_fields(None)
+
+
 def test_character_reference_bootstrap_rejects_ineligible_specs_and_existing_sets(tmp_path) -> None:
     """Bootstrap is pre-provider-only for an unreferenced Scene-owned character AssetSpec."""
 
