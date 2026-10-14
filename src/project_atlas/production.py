@@ -1311,6 +1311,8 @@ class ProductionLifecycleService:
                 narration.id,
                 inputs,
                 run.request.get("citations"),
+                # Same overlays as the first candidate: a retime changes durations only.
+                on_screen_text=run.request.get("on_screen_text_overlay") is True,
             )
             self.repository.create_production_evidence(
                 f"{run.id}:snapshot:evidence:{version}",

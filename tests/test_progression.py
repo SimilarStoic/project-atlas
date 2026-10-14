@@ -244,6 +244,69 @@ def test_progression_admits_an_object_onto_a_frozen_base_and_renders_the_hook(
         server.server_close()
 
 
+def test_retime_keeps_the_hook_overlay_and_changes_only_timing(tmp_path, monkeypatch) -> None:
+    """Regression: retime() once rebuilt its snapshot without on_screen_text, dropping the hook."""
+
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(
+        sequence=[realistic_source_png(runtime, tmp_path), _object_canvas()]
+    )
+    server = _server(tmp_path, generator, runtime)
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path))
+    prefix = "progression-retime"
+    request, keys = _progression_request(server, tmp_path, prefix, base_character=False)
+    try:
+        created, status = post_json(server, "/api/v2/productions", request)
+        assert status == 201, created
+        reviewed, status = post_json(
+            server,
+            f"/api/v2/productions/{prefix}/acquisition-review",
+            _passing_reviews(keys, server, prefix),
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending", reviewed
+        repository = server.repository
+
+        def snapshot(version):
+            evidence = repository.list_production_evidence(prefix, "snapshot")[version]
+            return repository.get_final_media_input_snapshot(evidence.final_media_input_snapshot_id)
+
+        first = snapshot(0)
+        durations = [item["duration_ms"] for item in first.scene_inputs]
+        shifted = [durations[0] + 200, durations[1] - 200, *durations[2:]]
+        retimed, status = post_json(
+            server,
+            f"/api/v2/productions/{prefix}/retime",
+            {"durations_ms": shifted, "actor": "test", "reason": "regression"},
+        )
+        assert status == 200, retimed
+        second = snapshot(1)
+        assert [item["duration_ms"] for item in second.scene_inputs] == shifted
+        [hook] = second.render_settings["on_screen_text_overlay"]["texts"]
+        assert hook["text"] == HOOK and hook["start_ms"] == 0 and hook["end_ms"] == shifted[0]
+
+        def without_timing(settings):
+            settings = dict(settings)
+            overlay = dict(settings.pop("on_screen_text_overlay"))
+            overlay["texts"] = [
+                {k: v for k, v in text.items() if k not in {"start_ms", "end_ms"}}
+                for text in overlay["texts"]
+            ]
+            citations = settings.pop("citation_overlay", None)
+            if citations:
+                citations = dict(citations)
+                citations["citations"] = [
+                    {k: v for k, v in item.items() if k not in {"start_ms", "end_ms"}}
+                    for item in citations["citations"]
+                ]
+            settings.pop("caption_timing", None)
+            return settings | {"overlay": overlay, "citations": citations}
+
+        # Everything but timing is identical: no overlay is dropped or added by a retime.
+        assert without_timing(second.render_settings) == without_timing(first.render_settings)
+    finally:
+        server.server_close()
+
+
 def test_opt_in_fields_are_validated_before_any_provider_call(tmp_path) -> None:
     runtime = media_runtime_or_skip()
     generator = ValidFakeImageGenerator(content=realistic_source_png(runtime, tmp_path))
