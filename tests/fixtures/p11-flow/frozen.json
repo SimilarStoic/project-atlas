@@ -1,0 +1,1185 @@
+{
+ "provenance": {
+  "source": "Conveyor runtime database (opened read-only, mode=ro)",
+  "database_sha256_at_export": "13ba51a0449e34f06b9bbb038f2b7fcb80036581dc8c858fed779d5a6edc0579",
+  "exported_at": "2026-10-14T20:38:53+00:00",
+  "run_id": "production-11-flow",
+  "request_digest": "138a193984f4c702563337ce22f8bd43d5ea6dd19f06a2615a473fa09cd68ec8",
+  "request_digest_verified": true,
+  "run_status": [
+   "founder_accepted",
+   "founder_review"
+  ],
+  "founder_review": {
+   "id": "production-11-flow:founder-review:1",
+   "outcome": "accepted"
+  },
+  "accepted_artifact": {
+   "id": "production-11-flow-artifact-1",
+   "sha256": "6018887a53da9d9a62061353e5acab87ecbe4674102fce9434e7b2d7f36bbc85"
+  }
+ },
+ "request": {
+  "acquisition_review_profile": "similarstoic-raw-world-acquisition-v2",
+  "authority": {
+   "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+   "character_reference_set_id": "character-reference-set-similarstoic-hamster-core-v2",
+   "visual_reference_authority_id": "visual-reference-authority-similarstoic-global-illustration-v1",
+   "visual_style_profile_id": "visual-style-profile-similarstoic-core-v4"
+  },
+  "citations": [
+   {
+    "label": "Benartzi & Thaler, 1995",
+    "scene_id": "production-11-flow-visual-plan-scene-4",
+    "source_ids": [
+     "production-11-source-s1"
+    ]
+   },
+   {
+    "label": "Tversky & Kahneman, 1992",
+    "scene_id": "production-11-flow-visual-plan-scene-5",
+    "source_ids": [
+     "production-11-source-s2"
+    ]
+   },
+   {
+    "label": "Gneezy & Potters, 1997",
+    "scene_id": "production-11-flow-visual-plan-scene-6",
+    "source_ids": [
+     "production-11-source-s3"
+    ]
+   },
+   {
+    "label": "Gneezy & Potters, 1997",
+    "scene_id": "production-11-flow-visual-plan-scene-7",
+    "source_ids": [
+     "production-11-source-s3"
+    ]
+   },
+   {
+    "label": "Gneezy & Potters, 1997",
+    "scene_id": "production-11-flow-visual-plan-scene-8",
+    "source_ids": [
+     "production-11-source-s3"
+    ]
+   },
+   {
+    "label": "Gneezy & Potters, 1997",
+    "scene_id": "production-11-flow-visual-plan-scene-9",
+    "source_ids": [
+     "production-11-source-s3"
+    ]
+   },
+   {
+    "label": "Gneezy & Potters, 1997",
+    "scene_id": "production-11-flow-visual-plan-scene-10",
+    "source_ids": [
+     "production-11-source-s3"
+    ]
+   },
+   {
+    "label": "Gneezy & Potters, 1997",
+    "scene_id": "production-11-flow-visual-plan-scene-11",
+    "source_ids": [
+     "production-11-source-s3"
+    ]
+   }
+  ],
+  "delivery_policy": {
+   "mode": "prefer",
+   "policy_id": "similarstoic-sentence-delivery-v1"
+  },
+  "environment_pins": {
+   "production-11-flow-w1-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-desk-v1",
+    "environment_family": "production-11-desk",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w2-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-desk-v1",
+    "environment_family": "production-11-desk",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w3-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-desk-v1",
+    "environment_family": "production-11-desk",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w4-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-desk-v1",
+    "environment_family": "production-11-desk",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w5-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-desk-v1",
+    "environment_family": "production-11-desk",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w6-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-lab-v1",
+    "environment_family": "production-11-lab",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w7-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-garden-v1",
+    "environment_family": "production-11-garden",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w8-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-garden-v1",
+    "environment_family": "production-11-garden",
+    "viewpoint": "front"
+   },
+   "production-11-flow-w9-base": {
+    "authority_id": "visual-reference-authority-similarstoic-production11-garden-v1",
+    "environment_family": "production-11-garden",
+    "viewpoint": "front"
+   }
+  },
+  "forecast": {
+   "image_calls": 20,
+   "narration_calls": 3,
+   "verification_calls": 3
+  },
+  "id": "production-11-flow",
+  "narration_authorized": false,
+  "narrator": {
+   "profile_id": "similarstoic-daniel-v2",
+   "profile_sha256": "8e06b555cc23e8b653dae76cf95b04f74e43e0ac2282f7be900775f286d27c24"
+  },
+  "on_screen_text_overlay": true,
+  "render_policy": "scene-rgba-premultiplied-over-v1",
+  "scene_timing": "narration-aligned-v1",
+  "timeline": [
+   {
+    "duration_weight": 6,
+    "scene_id": "production-11-flow-visual-plan-scene-1",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 13,
+    "scene_id": "production-11-flow-visual-plan-scene-2",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 9,
+    "scene_id": "production-11-flow-visual-plan-scene-3",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 13,
+    "scene_id": "production-11-flow-visual-plan-scene-4",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 8,
+    "scene_id": "production-11-flow-visual-plan-scene-5",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 10,
+    "scene_id": "production-11-flow-visual-plan-scene-6",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 7,
+    "scene_id": "production-11-flow-visual-plan-scene-7",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 15,
+    "scene_id": "production-11-flow-visual-plan-scene-8",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 8,
+    "scene_id": "production-11-flow-visual-plan-scene-9",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 12,
+    "scene_id": "production-11-flow-visual-plan-scene-10",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 6,
+    "scene_id": "production-11-flow-visual-plan-scene-11",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 10,
+    "scene_id": "production-11-flow-visual-plan-scene-12",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 14,
+    "scene_id": "production-11-flow-visual-plan-scene-13",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 7,
+    "scene_id": "production-11-flow-visual-plan-scene-14",
+    "transition_to_next": "crossfade"
+   },
+   {
+    "duration_weight": 15,
+    "scene_id": "production-11-flow-visual-plan-scene-15",
+    "transition_to_next": null
+   }
+  ],
+  "visual_plan_id": "production-11-flow-visual-plan",
+  "worlds": [
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w1-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     }
+    ],
+    "key": "w1",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-1"
+    ],
+    "transitions": [],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w2-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     }
+    ],
+    "key": "w2",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-2"
+    ],
+    "transitions": [],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w3-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     }
+    ],
+    "key": "w3",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-3"
+    ],
+    "transitions": [],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w4-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     }
+    ],
+    "key": "w4",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-4"
+    ],
+    "transitions": [],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w5-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     },
+     {
+      "depth": 1,
+      "initial_transform": {},
+      "initial_variant_key": "phone_arrows",
+      "initial_visible": false,
+      "key": "phone_arrows",
+      "neutral_scale_id": "object-v1",
+      "persistence_class": "MOVABLE_PROP",
+      "purpose": "Added on its state and kept for the rest of the run.",
+      "semantic_role": "added-object",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-object-phone_arrows",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "phone_arrows",
+        "object_center": "at_review"
+       }
+      ]
+     }
+    ],
+    "key": "w5",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-5",
+     "production-11-flow-visual-plan-scene-6"
+    ],
+    "transitions": [
+     {
+      "operations": [
+       {
+        "action": "set_visible",
+        "entity_key": "phone_arrows",
+        "value": true
+       }
+      ],
+      "reason": "State 6: add its object.",
+      "scene_id": "production-11-flow-visual-plan-scene-6"
+     }
+    ],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w6-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     },
+     {
+      "depth": 1,
+      "initial_transform": {},
+      "initial_variant_key": "cards_left",
+      "initial_visible": false,
+      "key": "cards_left",
+      "neutral_scale_id": "object-v1",
+      "persistence_class": "MOVABLE_PROP",
+      "purpose": "Added on its state and kept for the rest of the run.",
+      "semantic_role": "added-object",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-object-cards_left",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "cards_left",
+        "object_center": "at_review"
+       }
+      ]
+     },
+     {
+      "depth": 1,
+      "initial_transform": {},
+      "initial_variant_key": "bet_half",
+      "initial_visible": false,
+      "key": "bet_half",
+      "neutral_scale_id": "object-v1",
+      "persistence_class": "MOVABLE_PROP",
+      "purpose": "Added on its state and kept for the rest of the run.",
+      "semantic_role": "added-object",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-object-bet_half",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "bet_half",
+        "object_center": "at_review"
+       }
+      ]
+     },
+     {
+      "depth": 1,
+      "initial_transform": {},
+      "initial_variant_key": "card_right",
+      "initial_visible": false,
+      "key": "card_right",
+      "neutral_scale_id": "object-v1",
+      "persistence_class": "MOVABLE_PROP",
+      "purpose": "Added on its state and kept for the rest of the run.",
+      "semantic_role": "added-object",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-object-card_right",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "card_right",
+        "object_center": "at_review"
+       }
+      ]
+     },
+     {
+      "depth": 1,
+      "initial_transform": {},
+      "initial_variant_key": "bet_two_thirds",
+      "initial_visible": false,
+      "key": "bet_two_thirds",
+      "neutral_scale_id": "object-v1",
+      "persistence_class": "MOVABLE_PROP",
+      "purpose": "Added on its state and kept for the rest of the run.",
+      "semantic_role": "added-object",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-object-bet_two_thirds",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "bet_two_thirds",
+        "object_center": "at_review"
+       }
+      ]
+     }
+    ],
+    "key": "w6",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-7",
+     "production-11-flow-visual-plan-scene-8",
+     "production-11-flow-visual-plan-scene-9",
+     "production-11-flow-visual-plan-scene-10",
+     "production-11-flow-visual-plan-scene-11"
+    ],
+    "transitions": [
+     {
+      "operations": [
+       {
+        "action": "set_visible",
+        "entity_key": "cards_left",
+        "value": true
+       }
+      ],
+      "reason": "State 8: add its object.",
+      "scene_id": "production-11-flow-visual-plan-scene-8"
+     },
+     {
+      "operations": [
+       {
+        "action": "set_visible",
+        "entity_key": "bet_half",
+        "value": true
+       }
+      ],
+      "reason": "State 9: add its object.",
+      "scene_id": "production-11-flow-visual-plan-scene-9"
+     },
+     {
+      "operations": [
+       {
+        "action": "set_visible",
+        "entity_key": "card_right",
+        "value": true
+       }
+      ],
+      "reason": "State 10: add its object.",
+      "scene_id": "production-11-flow-visual-plan-scene-10"
+     },
+     {
+      "operations": [
+       {
+        "action": "set_visible",
+        "entity_key": "bet_two_thirds",
+        "value": true
+       }
+      ],
+      "reason": "State 11: add its object.",
+      "scene_id": "production-11-flow-visual-plan-scene-11"
+     }
+    ],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w7-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     }
+    ],
+    "key": "w7",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-12"
+    ],
+    "transitions": [],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w8-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     }
+    ],
+    "key": "w8",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-13"
+    ],
+    "transitions": [],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   },
+   {
+    "entities": [
+     {
+      "depth": 0,
+      "initial_transform": {},
+      "initial_variant_key": "base",
+      "key": "base",
+      "neutral_scale_id": "full-frame-v1",
+      "persistence_class": "LOCKED_STATIC",
+      "purpose": "Frozen base for this run.",
+      "semantic_role": "full-scene-illustration",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-w9-base",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "base"
+       }
+      ]
+     },
+     {
+      "depth": 1,
+      "initial_transform": {},
+      "initial_variant_key": "shoot",
+      "initial_visible": false,
+      "key": "shoot",
+      "neutral_scale_id": "object-v1",
+      "persistence_class": "MOVABLE_PROP",
+      "purpose": "Added on its state and kept for the rest of the run.",
+      "semantic_role": "added-object",
+      "variants": [
+       {
+        "asset_spec_id": "production-11-flow-object-shoot",
+        "intrinsic_size_wu": [
+         1080,
+         1920
+        ],
+        "key": "shoot",
+        "object_center": "at_review"
+       }
+      ]
+     }
+    ],
+    "key": "w9",
+    "scene_ids": [
+     "production-11-flow-visual-plan-scene-14",
+     "production-11-flow-visual-plan-scene-15"
+    ],
+    "transitions": [
+     {
+      "operations": [
+       {
+        "action": "set_visible",
+        "entity_key": "shoot",
+        "value": true
+       }
+      ],
+      "reason": "State 15: add its object.",
+      "scene_id": "production-11-flow-visual-plan-scene-15"
+     }
+    ],
+    "visual_treatment": {
+     "lighting_policy_id": "flat-soft-light-v1",
+     "palette_id": "similarstoic-core-v3",
+     "style_profile_id": "visual-style-profile-similarstoic-core-v4",
+     "wall_treatment_id": "off-white-negative-space-v1"
+    }
+   }
+  ]
+ },
+ "plan": {
+  "id": "production-11-flow-visual-plan",
+  "visual_direction": "Narration-led fluid visual plan: 15 states following the caption phrases.",
+  "metadata": {
+   "plan": "narration-led-fluid-v1",
+   "states": 15
+  }
+ },
+ "scenes": [
+  {
+   "id": "production-11-flow-visual-plan-scene-1",
+   "sequence": 1,
+   "narration_excerpt": "Imagine you invest.",
+   "visual_intent": "Hamster drops one coin into a plain jar at the desk; the hook text sits in the top zone.",
+   "hamster_action": "hamster on screen",
+   "on_screen_text": "WHY INVESTING FEELS POINTLESS AT FIRST",
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "new",
+    "world": "w1"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-2",
+   "sequence": 2,
+   "narration_excerpt": "A year later, your balance has barely moved.",
+   "visual_intent": "Close view of the jar on the desk holding one lone coin; a blank calendar behind.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "character-free",
+    "world": "w2"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-3",
+   "sequence": 3,
+   "narration_excerpt": "Suddenly, selling feels sensible.",
+   "visual_intent": "Tight close-up of the hamster's paws tipping the jar so the coin slides out.",
+   "hamster_action": "hamster on screen",
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "new",
+    "world": "w3"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-4",
+   "sequence": 4,
+   "narration_excerpt": "Part of that impulse may be myopic loss aversion.",
+   "visual_intent": "Hamster squints at a blank phone held at its nose.",
+   "hamster_action": "hamster on screen",
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "new",
+    "world": "w4"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-5",
+   "sequence": 5,
+   "narration_excerpt": "Losses hurt more than gains feel good,",
+   "visual_intent": "Two-pan balance, one identical coin per pan, beam tilted down to the left.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "character-free",
+    "world": "w5"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-6",
+   "sequence": 6,
+   "narration_excerpt": "and checking often means seeing more losses.",
+   "visual_intent": "Same frame plus a blank phone with three small red down-arrows.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "progression",
+    "world": "w5"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-7",
+   "sequence": 7,
+   "narration_excerpt": "In a lab experiment,",
+   "visual_intent": "Close view of the lab bench with two equal coin piles side by side.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "character-free",
+    "world": "w6"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-8",
+   "sequence": 8,
+   "narration_excerpt": "people who saw results and could change their bets every round",
+   "visual_intent": "Same frame plus a stack of blank cards by the left pile.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "progression",
+    "world": "w6"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-9",
+   "sequence": 9,
+   "narration_excerpt": "risked about half their money.",
+   "visual_intent": "Same frame plus a half-size coin pile pushed forward from the left pile.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "progression",
+    "world": "w6"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-10",
+   "sequence": 10,
+   "narration_excerpt": "Those who saw results and chose every third round",
+   "visual_intent": "Same frame plus a single blank card by the right pile.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "progression",
+    "world": "w6"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-11",
+   "sequence": 11,
+   "narration_excerpt": "risked about two thirds.",
+   "visual_intent": "Same frame plus a clearly larger two-thirds coin pile pushed forward from the right pile.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "progression",
+    "world": "w6"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-12",
+   "sequence": 12,
+   "narration_excerpt": "Sometimes selling is the right call.",
+   "visual_intent": "A withered plant pulled out, lying beside the raised bed.",
+   "hamster_action": null,
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "character-free",
+    "world": "w7"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-13",
+   "sequence": 13,
+   "narration_excerpt": "But digging up a seed every week won't help it grow.",
+   "visual_intent": "Tight close-up of the hamster's paws holding a dug-up seed above a hole in the soil.",
+   "hamster_action": "hamster on screen",
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "new",
+    "world": "w8"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-14",
+   "sequence": 14,
+   "narration_excerpt": "Before selling, ask yourself:",
+   "visual_intent": "Hamster sits by the raised bed, paw at chin.",
+   "hamster_action": "hamster on screen",
+   "on_screen_text": null,
+   "transition_note": "crossfade",
+   "metadata": {
+    "state_type": "new",
+    "world": "w9"
+   }
+  },
+  {
+   "id": "production-11-flow-visual-plan-scene-15",
+   "sequence": 15,
+   "narration_excerpt": "has your reason for investing changed, or just your patience?",
+   "visual_intent": "Same frame plus a tiny green shoot in the soil.",
+   "hamster_action": "hamster on screen",
+   "on_screen_text": null,
+   "transition_note": null,
+   "metadata": {
+    "state_type": "progression",
+    "world": "w9"
+   }
+  }
+ ],
+ "asset_specs": [
+  {
+   "id": "production-11-flow-object-bet_half",
+   "scene_id": "production-11-flow-visual-plan-scene-9",
+   "asset_type": "prop",
+   "purpose": "An object added on this state of a progression run.",
+   "description": "P11 flow object bet_half",
+   "generation_prompt": "A small pile of plain coins, about five coins: half of a full pile. Draw it alone, centred, on a plain flat off-white background with nothing else in the image, with a complete closed black outline around the whole object, at its real on-screen size: about one seventh of the image width, leaving the rest of the image empty. The drawing must be one connected shape. No text, numbers or markings.",
+   "continuity_key": null,
+   "character_profile_id": null,
+   "metadata": {
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-object-bet_two_thirds",
+   "scene_id": "production-11-flow-visual-plan-scene-11",
+   "asset_type": "prop",
+   "purpose": "An object added on this state of a progression run.",
+   "description": "P11 flow object bet_two_thirds",
+   "generation_prompt": "Plain light-grey coins matching the coin piles on the lab bench, about seven coins in a low, loose, spread pile, clearly larger than a five-coin pile; drawn with extra-heavy thick black outlines (it will be shrunk). Draw it alone, centred, on a plain flat off-white background with nothing else in the image, with a complete closed black outline around the whole object, at its real on-screen size: about one fifth of the image width, leaving the rest of the image empty. The drawing must be one connected shape. No text, numbers or markings.",
+   "continuity_key": null,
+   "character_profile_id": null,
+   "metadata": {
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-object-card_right",
+   "scene_id": "production-11-flow-visual-plan-scene-10",
+   "asset_type": "prop",
+   "purpose": "An object added on this state of a progression run.",
+   "description": "P11 flow object card_right",
+   "generation_prompt": "One single plain blank card lying face-up, a faint warm cream tint, not white. Draw it alone, centred, on a plain flat off-white background with nothing else in the image, with a complete closed black outline around the whole object, at its real on-screen size: about one ninth of the image width, leaving the rest of the image empty. The drawing must be one connected shape. No text, numbers or markings.",
+   "continuity_key": null,
+   "character_profile_id": null,
+   "metadata": {
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-object-cards_left",
+   "scene_id": "production-11-flow-visual-plan-scene-8",
+   "asset_type": "prop",
+   "purpose": "An object added on this state of a progression run.",
+   "description": "P11 flow object cards_left",
+   "generation_prompt": "A small neat stack of plain blank cards, the top card face-up and blank, each card a faint warm cream tint, not white. Draw it alone, centred, on a plain flat off-white background with nothing else in the image, with a complete closed black outline around the whole object, at its real on-screen size: about one seventh of the image width, leaving the rest of the image empty. The drawing must be one connected shape. No text, numbers or markings.",
+   "continuity_key": null,
+   "character_profile_id": null,
+   "metadata": {
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-object-phone_arrows",
+   "scene_id": "production-11-flow-visual-plan-scene-6",
+   "asset_type": "prop",
+   "purpose": "An object added on this state of a progression run.",
+   "description": "P11 flow object phone_arrows",
+   "generation_prompt": "One plain blank phone lying face-up with a dark screen and no icons, with three small red downward arrows standing on and overlapping its top edge, each arrow with a black outline. Draw it alone, centred, on a plain flat off-white background with nothing else in the image, with a complete closed black outline around the whole object, at its real on-screen size: about one quarter of the image width, leaving the rest of the image empty. The drawing must be one connected shape. No text, numbers or markings.",
+   "continuity_key": null,
+   "character_profile_id": null,
+   "metadata": {
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-object-shoot",
+   "scene_id": "production-11-flow-visual-plan-scene-15",
+   "asset_type": "prop",
+   "purpose": "An object added on this state of a progression run.",
+   "description": "P11 flow object shoot",
+   "generation_prompt": "One tiny compact green shoot with two small rounded leaves on a short thick stem, with a thick outline. No soil. Draw it alone, centred, on a plain flat off-white background with nothing else in the image, with a complete closed black outline around the whole object, at its real on-screen size: about one tenth of the image width, leaving the rest of the image empty. The drawing must be one connected shape. No text, numbers or markings. Drawn with extra-heavy thick black outlines (it will be shrunk).",
+   "continuity_key": null,
+   "character_profile_id": null,
+   "metadata": {
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-w1-base",
+   "scene_id": "production-11-flow-visual-plan-scene-1",
+   "asset_type": "character",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w1",
+   "generation_prompt": "In the study room as in the room plate (the desk left of centre below the window, the small round stool in front of the desk, the bookshelf in the right corner), the hamster stands on the stool and lets go of one plain coin with no markings so it drops into a plain, empty, unlabelled glass jar standing on the desk between the pencil cup and the green book. Keep the top fifth of the image as plain wall with nothing in it. Expression: hopeful. Brows raised slightly, mouth: small closed upturned line. Head and body proportions exactly as in the character reference images; the head no larger relative to the body than in those images.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+   "metadata": {
+    "environment_family": "production-11-desk",
+    "environment_viewpoint": "front"
+   }
+  },
+  {
+   "id": "production-11-flow-w2-base",
+   "scene_id": "production-11-flow-visual-plan-scene-2",
+   "asset_type": "environment",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w2",
+   "generation_prompt": "A close view of the desk top in the study room: the same plain, unlabelled glass jar stands on the desk with one single plain coin with no markings lying on its bottom; the blank tear-off wall calendar shows on the wall behind. The pencil cup and green book may show at the edge of the desk. No character, and nothing else on the desk.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": null,
+   "metadata": {
+    "environment_family": "production-11-desk",
+    "environment_viewpoint": "front",
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-w3-base",
+   "scene_id": "production-11-flow-visual-plan-scene-3",
+   "asset_type": "character",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w3",
+   "generation_prompt": "A tight close-up on the desk top: the hamster's two paws tip the same plain glass jar on its side so the single plain coin slides out toward the rim. Only the paws, the lower forearms and a little of the round white belly and the pouch are in frame; very little of the room shows. Expression is not visible. Paws exactly as in the character reference images: short rounded orange-pink paws with clean black outlines and no extra fingers.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+   "metadata": {
+    "environment_family": "production-11-desk",
+    "environment_viewpoint": "front"
+   }
+  },
+  {
+   "id": "production-11-flow-w4-base",
+   "scene_id": "production-11-flow-visual-plan-scene-4",
+   "asset_type": "character",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w4",
+   "generation_prompt": "A medium shot in the study room: the hamster sits on the floor and fills most of the image, holding a plain blank phone, with a dark screen and no icons or text, a few centimetres from its nose; only part of the desk and the stool show behind it. Expression: squinting. Brows drawn together and down, mouth: small closed tight line. Head and body proportions exactly as in the character reference images; the head no larger relative to the body than in those images.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+   "metadata": {
+    "environment_family": "production-11-desk",
+    "environment_viewpoint": "front"
+   }
+  },
+  {
+   "id": "production-11-flow-w5-base",
+   "scene_id": "production-11-flow-visual-plan-scene-5",
+   "asset_type": "environment",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w5",
+   "generation_prompt": "A closer view of the desk top in the study room: a simple two-pan balance stands on the left half of the desk. Each pan holds one identical plain coin with no markings. The beam tilts clearly down toward the left pan; the left pan hangs lower and the right pan rides higher, consistently with the tilted beam. Leave the right half of the desk top clear and empty. No character.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": null,
+   "metadata": {
+    "environment_family": "production-11-desk",
+    "environment_viewpoint": "front",
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-w6-base",
+   "scene_id": "production-11-flow-visual-plan-scene-7",
+   "asset_type": "environment",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w6",
+   "generation_prompt": "A closer view of the workbench in the experiment room as in the room plate (navy bench top, cream drawer base), the bench top filling the lower middle of the image: two identical small piles of plain coins with no markings sit on the bench top, one on the left half and one on the right half, with clear empty bench space beside and in front of each pile. The test-tube rack, flask and lidded box may show at the back. No character.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": null,
+   "metadata": {
+    "environment_family": "production-11-lab",
+    "environment_viewpoint": "front",
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-w7-base",
+   "scene_id": "production-11-flow-visual-plan-scene-12",
+   "asset_type": "environment",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w7",
+   "generation_prompt": "In the back garden as in the room plate (raised bed left of centre in the foreground, picket fence behind, shed back right, watering can, stepping stones), a small withered brown plant lies pulled out on the ground beside the raised bed, its dry roots showing. No character.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": null,
+   "metadata": {
+    "environment_family": "production-11-garden",
+    "environment_viewpoint": "front",
+    "character_free": true
+   }
+  },
+  {
+   "id": "production-11-flow-w8-base",
+   "scene_id": "production-11-flow-visual-plan-scene-13",
+   "asset_type": "character",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w8",
+   "generation_prompt": "A tight close-up at the edge of the raised bed: the hamster's two paws hold a small dug-up seed with a thin pale root above a small hole in the brown soil. Only the paws, the lower forearms and a little of the white belly are in frame; very little of the garden shows. Expression is not visible. Paws exactly as in the character reference images: short rounded orange-pink paws with clean black outlines and no extra fingers.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+   "metadata": {
+    "environment_family": "production-11-garden",
+    "environment_viewpoint": "front"
+   }
+  },
+  {
+   "id": "production-11-flow-w9-base",
+   "scene_id": "production-11-flow-visual-plan-scene-14",
+   "asset_type": "character",
+   "purpose": "Full-frame base illustration for this state.",
+   "description": "P11 flow base w9",
+   "generation_prompt": "In the back garden as in the room plate, the raised bed fills the lower middle of the image and the hamster sits beside it on the right with one paw at its chin, looking at the soil. The soil in the bed is flat and bare, with clear empty soil at its front middle. Expression: thoughtful. Brows level and slightly lowered, mouth: small closed neutral line. Head and body proportions exactly as in the character reference images; the head no larger relative to the body than in those images.",
+   "continuity_key": "production-11-flow-v1",
+   "character_profile_id": "character-profile-similarstoic-hamster-core-v1",
+   "metadata": {
+    "environment_family": "production-11-garden",
+    "environment_viewpoint": "front"
+   }
+  }
+ ],
+ "spec_revisions": [
+  {
+   "evidence_id": "production-11-flow:spec_revision_note:1",
+   "asset_spec_id": "production-11-flow-object-shoot",
+   "old_prompt_sha256": "e2a510cf126cdf56d6fcbb2177bd88bf6801d994cf26b2115a6929aee9cc3476",
+   "new_prompt_sha256": "290a19defb6ef4385d678c23a9721a29428102a525757b010c51fe7548dc068a"
+  },
+  {
+   "evidence_id": "production-11-flow:spec_revision_note:2",
+   "asset_spec_id": "production-11-flow-object-bet_two_thirds",
+   "old_prompt_sha256": "cbae87a0d9d9b9605a51ea0b16e08efaf2995a9c6208cce82b4460187de7c96d",
+   "new_prompt_sha256": "339107ffb71a7ec5c986b1170785ad9eab4daf8b8d840c48f66130d8eb0c5398"
+  }
+ ]
+}

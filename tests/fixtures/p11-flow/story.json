@@ -1,0 +1,267 @@
+{
+ "recipe": "similarstoic-flow-v1",
+ "run_id": "production-11-flow",
+ "visual_plan_id": "production-11-flow-visual-plan",
+ "editorial_gate_decision_id": "production-11-editorial-gate-decision",
+ "plan_summary": "Narration-led fluid visual plan: 15 states following the caption phrases.",
+ "hook": "WHY INVESTING FEELS POINTLESS AT FIRST",
+ "continuity_key": "production-11-flow-v1",
+ "image_call_ceiling": 20,
+ "rooms": {
+  "desk": {
+   "environment_family": "production-11-desk",
+   "viewpoint": "front"
+  },
+  "lab": {
+   "environment_family": "production-11-lab",
+   "viewpoint": "front"
+  },
+  "garden": {
+   "environment_family": "production-11-garden",
+   "viewpoint": "front"
+  }
+ },
+ "states": [
+  {
+   "excerpt": "Imagine you invest.",
+   "type": "new",
+   "world": "w1",
+   "hamster": true,
+   "intent": "Hamster drops one coin into a plain jar at the desk; the hook text sits in the top zone."
+  },
+  {
+   "excerpt": "A year later, your balance has barely moved.",
+   "type": "character-free",
+   "world": "w2",
+   "hamster": false,
+   "intent": "Close view of the jar on the desk holding one lone coin; a blank calendar behind."
+  },
+  {
+   "excerpt": "Suddenly, selling feels sensible.",
+   "type": "new",
+   "world": "w3",
+   "hamster": true,
+   "intent": "Tight close-up of the hamster's paws tipping the jar so the coin slides out."
+  },
+  {
+   "excerpt": "Part of that impulse may be myopic loss aversion.",
+   "type": "new",
+   "world": "w4",
+   "hamster": true,
+   "intent": "Hamster squints at a blank phone held at its nose."
+  },
+  {
+   "excerpt": "Losses hurt more than gains feel good,",
+   "type": "character-free",
+   "world": "w5",
+   "hamster": false,
+   "intent": "Two-pan balance, one identical coin per pan, beam tilted down to the left."
+  },
+  {
+   "excerpt": "and checking often means seeing more losses.",
+   "type": "progression",
+   "world": "w5",
+   "hamster": false,
+   "intent": "Same frame plus a blank phone with three small red down-arrows."
+  },
+  {
+   "excerpt": "In a lab experiment,",
+   "type": "character-free",
+   "world": "w6",
+   "hamster": false,
+   "intent": "Close view of the lab bench with two equal coin piles side by side."
+  },
+  {
+   "excerpt": "people who saw results and could change their bets every round",
+   "type": "progression",
+   "world": "w6",
+   "hamster": false,
+   "intent": "Same frame plus a stack of blank cards by the left pile."
+  },
+  {
+   "excerpt": "risked about half their money.",
+   "type": "progression",
+   "world": "w6",
+   "hamster": false,
+   "intent": "Same frame plus a half-size coin pile pushed forward from the left pile."
+  },
+  {
+   "excerpt": "Those who saw results and chose every third round",
+   "type": "progression",
+   "world": "w6",
+   "hamster": false,
+   "intent": "Same frame plus a single blank card by the right pile."
+  },
+  {
+   "excerpt": "risked about two thirds.",
+   "type": "progression",
+   "world": "w6",
+   "hamster": false,
+   "intent": "Same frame plus a clearly larger two-thirds coin pile pushed forward from the right pile."
+  },
+  {
+   "excerpt": "Sometimes selling is the right call.",
+   "type": "character-free",
+   "world": "w7",
+   "hamster": false,
+   "intent": "A withered plant pulled out, lying beside the raised bed."
+  },
+  {
+   "excerpt": "But digging up a seed every week won't help it grow.",
+   "type": "new",
+   "world": "w8",
+   "hamster": true,
+   "intent": "Tight close-up of the hamster's paws holding a dug-up seed above a hole in the soil."
+  },
+  {
+   "excerpt": "Before selling, ask yourself:",
+   "type": "new",
+   "world": "w9",
+   "hamster": true,
+   "intent": "Hamster sits by the raised bed, paw at chin."
+  },
+  {
+   "excerpt": "has your reason for investing changed, or just your patience?",
+   "type": "progression",
+   "world": "w9",
+   "hamster": true,
+   "intent": "Same frame plus a tiny green shoot in the soil."
+  }
+ ],
+ "worlds": {
+  "w1": {
+   "room": "desk",
+   "kind": "character",
+   "character_clause": "proportions",
+   "text": "In the study room as in the room plate (the desk left of centre below the window, the small round stool in front of the desk, the bookshelf in the right corner), the hamster stands on the stool and lets go of one plain coin with no markings so it drops into a plain, empty, unlabelled glass jar standing on the desk between the pencil cup and the green book. Keep the top fifth of the image as plain wall with nothing in it. Expression: hopeful. Brows raised slightly, mouth: small closed upturned line."
+  },
+  "w2": {
+   "room": "desk",
+   "kind": "character-free",
+   "character_clause": null,
+   "text": "A close view of the desk top in the study room: the same plain, unlabelled glass jar stands on the desk with one single plain coin with no markings lying on its bottom; the blank tear-off wall calendar shows on the wall behind. The pencil cup and green book may show at the edge of the desk. No character, and nothing else on the desk."
+  },
+  "w3": {
+   "room": "desk",
+   "kind": "character",
+   "character_clause": "paws",
+   "text": "A tight close-up on the desk top: the hamster's two paws tip the same plain glass jar on its side so the single plain coin slides out toward the rim. Only the paws, the lower forearms and a little of the round white belly and the pouch are in frame; very little of the room shows. Expression is not visible."
+  },
+  "w4": {
+   "room": "desk",
+   "kind": "character",
+   "character_clause": "proportions",
+   "text": "A medium shot in the study room: the hamster sits on the floor and fills most of the image, holding a plain blank phone, with a dark screen and no icons or text, a few centimetres from its nose; only part of the desk and the stool show behind it. Expression: squinting. Brows drawn together and down, mouth: small closed tight line."
+  },
+  "w5": {
+   "room": "desk",
+   "kind": "character-free",
+   "character_clause": null,
+   "text": "A closer view of the desk top in the study room: a simple two-pan balance stands on the left half of the desk. Each pan holds one identical plain coin with no markings. The beam tilts clearly down toward the left pan; the left pan hangs lower and the right pan rides higher, consistently with the tilted beam. Leave the right half of the desk top clear and empty. No character."
+  },
+  "w6": {
+   "room": "lab",
+   "kind": "character-free",
+   "character_clause": null,
+   "text": "A closer view of the workbench in the experiment room as in the room plate (navy bench top, cream drawer base), the bench top filling the lower middle of the image: two identical small piles of plain coins with no markings sit on the bench top, one on the left half and one on the right half, with clear empty bench space beside and in front of each pile. The test-tube rack, flask and lidded box may show at the back. No character."
+  },
+  "w7": {
+   "room": "garden",
+   "kind": "character-free",
+   "character_clause": null,
+   "text": "In the back garden as in the room plate (raised bed left of centre in the foreground, picket fence behind, shed back right, watering can, stepping stones), a small withered brown plant lies pulled out on the ground beside the raised bed, its dry roots showing. No character."
+  },
+  "w8": {
+   "room": "garden",
+   "kind": "character",
+   "character_clause": "paws",
+   "text": "A tight close-up at the edge of the raised bed: the hamster's two paws hold a small dug-up seed with a thin pale root above a small hole in the brown soil. Only the paws, the lower forearms and a little of the white belly are in frame; very little of the garden shows. Expression is not visible."
+  },
+  "w9": {
+   "room": "garden",
+   "kind": "character",
+   "character_clause": "proportions",
+   "text": "In the back garden as in the room plate, the raised bed fills the lower middle of the image and the hamster sits beside it on the right with one paw at its chin, looking at the soil. The soil in the bed is flat and bare, with clear empty soil at its front middle. Expression: thoughtful. Brows level and slightly lowered, mouth: small closed neutral line."
+  }
+ },
+ "objects": {
+  "phone_arrows": {
+   "world": "w5",
+   "state": 6,
+   "size": "about one quarter",
+   "text": "One plain blank phone lying face-up with a dark screen and no icons, with three small red downward arrows standing on and overlapping its top edge, each arrow with a black outline."
+  },
+  "cards_left": {
+   "world": "w6",
+   "state": 8,
+   "size": "about one seventh",
+   "text": "A small neat stack of plain blank cards, the top card face-up and blank, each card a faint warm cream tint, not white."
+  },
+  "bet_half": {
+   "world": "w6",
+   "state": 9,
+   "size": "about one seventh",
+   "text": "A small pile of plain coins, about five coins: half of a full pile."
+  },
+  "card_right": {
+   "world": "w6",
+   "state": 10,
+   "size": "about one ninth",
+   "text": "One single plain blank card lying face-up, a faint warm cream tint, not white."
+  },
+  "bet_two_thirds": {
+   "world": "w6",
+   "state": 11,
+   "size": "about one fifth",
+   "text": "A pile of plain coins, about seven coins: two thirds of a full pile, clearly taller and wider than a five-coin pile."
+  },
+  "shoot": {
+   "world": "w9",
+   "state": 15,
+   "size": "about one tenth",
+   "text": "One tiny compact green shoot with two small rounded leaves on a short thick stem, with a thick outline. No soil."
+  }
+ },
+ "citations": [
+  {
+   "state": 4,
+   "label": "Benartzi & Thaler, 1995",
+   "source_id": "production-11-source-s1"
+  },
+  {
+   "state": 5,
+   "label": "Tversky & Kahneman, 1992",
+   "source_id": "production-11-source-s2"
+  },
+  {
+   "state": 6,
+   "label": "Gneezy & Potters, 1997",
+   "source_id": "production-11-source-s3"
+  },
+  {
+   "state": 7,
+   "label": "Gneezy & Potters, 1997",
+   "source_id": "production-11-source-s3"
+  },
+  {
+   "state": 8,
+   "label": "Gneezy & Potters, 1997",
+   "source_id": "production-11-source-s3"
+  },
+  {
+   "state": 9,
+   "label": "Gneezy & Potters, 1997",
+   "source_id": "production-11-source-s3"
+  },
+  {
+   "state": 10,
+   "label": "Gneezy & Potters, 1997",
+   "source_id": "production-11-source-s3"
+  },
+  {
+   "state": 11,
+   "label": "Gneezy & Potters, 1997",
+   "source_id": "production-11-source-s3"
+  }
+ ]
+}
