@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import os
 import socket
+from types import SimpleNamespace
 
 import pytest
 
@@ -70,3 +71,35 @@ def provider_isolation(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", guarded_getaddrinfo)
     monkeypatch.setattr(socket.socket, "connect", guarded_connect)
     monkeypatch.setattr(socket.socket, "connect_ex", guarded_connect_ex)
+
+
+STANDING_TEST_SPEND_AUTHORIZATION = "test-standing-spend-authorization"
+
+
+@pytest.fixture(autouse=True)
+def standing_test_spend_authorization(request, monkeypatch):
+    """Tests of other behaviour acquire under a standing test-only spend authorization.
+
+    Production code fails closed without a recorded founder authorization; this fixture only
+    stands in for one when none is recorded, so acquisition tests keep their established flows.
+    Tests marked ``spend_gate`` see the real gate.
+    """
+
+    if request.node.get_closest_marker("spend_gate"):
+        return
+    from project_atlas.production import ProductionLifecycleService
+
+    real = ProductionLifecycleService._step_authorization
+
+    def step_authorization(self, run):
+        recorded = real(self, run)
+        if recorded is not None or self.repository.list_production_evidence(
+            run.id, "spend_authorization"
+        ):
+            return recorded
+        return SimpleNamespace(
+            id=STANDING_TEST_SPEND_AUTHORIZATION,
+            payload={"max_image_calls": 100, "stop_on_technical_rejection": False},
+        )
+
+    monkeypatch.setattr(ProductionLifecycleService, "_step_authorization", step_authorization)

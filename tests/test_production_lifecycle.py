@@ -525,6 +525,11 @@ def test_canonical_v2_http_lifecycle_is_resumable_and_founder_distinct(
         assert status == 200
         assert rejected["production"]["status"] == "founder_rejected"
         assert rejected["production"]["founder_review"]["outcome"] == "rejected"
+        assert rejected["production"]["founder_review"]["artifact"]["artifact_id"] == next(
+            item["references"]["final_media_artifact_id"]
+            for item in rejected["production"]["evidence"]
+            if item["type"] == "render"
+        )
         assert server.repository.connection.execute("PRAGMA foreign_key_check").fetchall() == []
         assert (
             server.repository.connection.execute(
@@ -1672,6 +1677,12 @@ def test_retime_rerenders_approved_inputs_and_rebinds_human_review(tmp_path, mon
                 "notes": "",
             },
         )
+        # The decision is bound to the exact current render: the retimed artifact-3.
+        artifact = repository.get_final_media_artifact(f"{run_id}-artifact-3")
+        assert service.status(run_id)["founder_review"]["artifact"] == {
+            "artifact_id": artifact.id,
+            "sha256": artifact.content_digest,
+        }
         with pytest.raises(ProductionRequestError, match="awaiting or failing"):
             service.retime(run_id, durations, "founder", "After acceptance.")
 
@@ -4481,6 +4492,7 @@ def test_v1_status_has_no_review_requirements_field(tmp_path) -> None:
             "current_render",
             "narration_selection",
             "created_at",
+            "spend",
         }
     finally:
         server.server_close()

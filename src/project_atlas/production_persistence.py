@@ -387,6 +387,7 @@ class ProductionRepositoryMixin:
         founder_actor: str,
         decision_reference: str,
         notes: str,
+        artifact: dict[str, Any] | None = None,
     ) -> ProductionFounderReview:
         latest = self.latest_production_run_event(run_id)
         if latest is None or latest.status != "private_founder_review_ready":
@@ -400,7 +401,7 @@ class ProductionRepositoryMixin:
             run_id,
             f"founder_{outcome}",
             "founder_review",
-            {"founder_review_id": review_id},
+            {"founder_review_id": review_id} | ({"artifact": artifact} if artifact else {}),
         )
         return self.get_production_founder_review(review_id)
 

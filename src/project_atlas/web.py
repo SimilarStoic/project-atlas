@@ -841,6 +841,8 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
             "/founder-review": "founder_review",
             "/retime": "retime",
             "/narration-authorization": "narration_authorization",
+            "/spend-authorization": "spend_authorization",
+            "/spec-revision": "spec_revision",
             "/narration-verification-authorization": "narration_verification_authorization",
             "/narration-retake-authorization": "narration_retake_authorization",
             "/narration-retake": "narration_retake",
@@ -874,6 +876,22 @@ class AtlasRequestHandler(BaseHTTPRequestHandler):
                             payload, {"outcome", "evidence"}, "Whole-video QA command"
                         )
                         production = self.server.production_service.record_qa(run_id, payload)
+                    elif command == "spec_revision":
+                        payload = self._read_json_object("Spec revision command")
+                        self._reject_unsupported_fields(
+                            payload, {"evidence"}, "Spec revision command"
+                        )
+                        production = self.server.production_service.revise_asset_spec(
+                            run_id, payload.get("evidence")
+                        )
+                    elif command == "spend_authorization":
+                        payload = self._read_json_object("Spend authorization command")
+                        self._reject_unsupported_fields(
+                            payload, {"evidence"}, "Spend authorization command"
+                        )
+                        production = self.server.production_service.authorize_spend(
+                            run_id, payload.get("evidence")
+                        )
                     elif command == "narration_authorization":
                         payload = self._read_json_object("Narration authorization command")
                         self._reject_unsupported_fields(

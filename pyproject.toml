@@ -59,3 +59,6 @@ addopts = [
   "--strict-config",
   "--strict-markers",
 ]
+markers = [
+  "spend_gate: run without the standing test spend authorization (the real fail-closed gate)",
+]

@@ -6,7 +6,7 @@ import json
 import re
 import shutil
 import tempfile
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
@@ -108,7 +108,10 @@ SCENE_TIMING_ALIGNED = "narration-aligned-v1"
 # all derived from the run's frozen environment pins and recorded generation authority.
 ACQUISITION_REVIEW_V1 = "similarstoic-raw-world-acquisition-v1"
 ACQUISITION_REVIEW_V2 = "similarstoic-raw-world-acquisition-v2"
-FIXTURE_REVIEW_STATES = ("unchanged", "not_in_frame")
+FIXTURE_REVIEW_STATES = ("unchanged", "not_in_frame", "intentionally_absent")
+# A fixture the frame shows the place of but deliberately leaves out (for example a desk kept
+# clear for the beat's props) is attested as intentionally_absent, always with a note.
+FIXTURE_INTENTIONALLY_ABSENT = "intentionally_absent"
 # Channel defaults frozen into NEW runs only. Existing runs never consult this constant: an
 # omitted field on resubmission is reconstructed from the run's own frozen request.
 NEW_RUN_DEFAULTS = {
@@ -121,6 +124,16 @@ NEW_RUN_DEFAULTS = {
     }
 }
 _NARRATION_FORECAST_FIELDS = ("narration_calls", "verification_calls")
+# Founder spend control (append-only production evidence, no migration): every billable image
+# dispatch is recorded before its provider call and needs an unused step authorization.
+SPEND_AUTHORIZATION = "spend_authorization"
+ACQUISITION_DISPATCH = "acquisition_dispatch"
+SPEC_REVISION = "spec_revision"
+# Versioned production recipes (see production_recipe.py). A request compiled from a story file
+# freezes {id, story_sha256}; requests without it (every run before recipes) are unchanged.
+RECIPE_FLOW_V1 = "similarstoic-flow-v1"
+RECIPES = (RECIPE_FLOW_V1,)
+MAX_STEP_IMAGE_CALLS = 100
 
 
 class ProductionLifecycleError(RuntimeError):
@@ -323,6 +336,11 @@ class ProductionLifecycleService:
     def start(self, request: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(request, dict):
             raise ProductionRequestError("Production request must be an object.")
+        # The founder's spend authorization for the first acquisition step travels beside the
+        # request but is never part of it: it is recorded as evidence, not frozen in the digest.
+        request = dict(request)
+        spend = request.pop("spend_authorization", None)
+        spend_terms = self._spend_terms(spend) if spend is not None else None
         run_id = request.get("id")
         if not isinstance(run_id, str) or not _SAFE_KEY.fullmatch(run_id):
             raise ProductionRequestError("Production id must be a safe stable key.")
@@ -352,6 +370,8 @@ class ProductionLifecycleService:
         run = self.repository.create_production_run(
             run_id, normalized["visual_plan_id"], normalized
         )
+        if spend_terms is not None:
+            self._record_spend_authorization(run_id, spend_terms)
         self._acquire(run)
         return self.status(run_id)
 
@@ -422,6 +442,168 @@ class ProductionLifecycleService:
         result.setdefault("scene_timing", defaults["scene_timing"])
         result.setdefault("acquisition_review_profile", defaults["acquisition_review_profile"])
         return result
+
+    def authorize_spend(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
+        """Record a founder spend authorization for the run's next acquisition step.
+
+        It caps the billable image dispatches of exactly one acquisition step (the next start
+        or resume that acquires), may stop that step at its first technical rejection, and never
+        raises the frozen image-call ceiling. A newer authorization supersedes an unused one.
+        """
+
+        self.repository.get_production_run(run_id)
+        self._record_spend_authorization(run_id, self._spend_terms(evidence))
+        return self.status(run_id)
+
+    @staticmethod
+    def _spend_terms(evidence: Any) -> dict[str, Any]:
+        if not isinstance(evidence, dict):
+            raise ProductionRequestError("Spend authorization requires an evidence object.")
+        unknown = set(evidence) - {
+            "authorized_by",
+            "max_image_calls",
+            "stop_on_technical_rejection",
+            "reason",
+        }
+        if unknown:
+            raise ProductionRequestError(
+                f"Spend authorization has unsupported fields: {sorted(unknown)}."
+            )
+        actor, reason = evidence.get("authorized_by"), evidence.get("reason")
+        if not isinstance(actor, str) or not actor.strip():
+            raise ProductionRequestError("Spend authorization requires authorized_by.")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ProductionRequestError("Spend authorization requires a reason.")
+        calls = evidence.get("max_image_calls")
+        if type(calls) is not int or not 1 <= calls <= MAX_STEP_IMAGE_CALLS:
+            raise ProductionRequestError(
+                "Spend authorization max_image_calls must be an integer from 1 to "
+                f"{MAX_STEP_IMAGE_CALLS}."
+            )
+        stop = evidence.get("stop_on_technical_rejection")
+        if not isinstance(stop, bool):
+            raise ProductionRequestError(
+                "Spend authorization requires stop_on_technical_rejection (true or false)."
+            )
+        return {
+            "authorized_by": actor.strip(),
+            "max_image_calls": calls,
+            "stop_on_technical_rejection": stop,
+            "reason": reason.strip(),
+        }
+
+    def _record_spend_authorization(self, run_id: str, terms: dict[str, Any]) -> Any:
+        existing = self.repository.list_production_evidence(run_id, SPEND_AUTHORIZATION)
+        return self.repository.create_production_evidence(
+            f"{run_id}:spend-authorization:{len(existing) + 1}", run_id, SPEND_AUTHORIZATION, terms
+        )
+
+    def _step_authorization(self, run: Any) -> Any | None:
+        """The latest spend authorization, unless an earlier acquisition step already used it."""
+
+        authorizations = self.repository.list_production_evidence(run.id, SPEND_AUTHORIZATION)
+        if not authorizations:
+            return None
+        latest = max(authorizations, key=self._evidence_version)
+        used = {
+            event.evidence.get("spend_authorization_id")
+            for event in self.repository.list_production_run_events(run.id)
+            if event.status == "acquiring"
+        }
+        return None if latest.id in used else latest
+
+    def _spend_status(self, run: Any) -> dict[str, Any]:
+        unused = self._step_authorization(run)
+        return {
+            "image_calls": self._image_calls(run.id),
+            "image_call_ceiling": run.request["forecast"]["image_calls"],
+            "next_step_authorization": (
+                {"id": unused.id, **unused.payload} if unused is not None else None
+            ),
+        }
+
+    def _image_calls(self, run_id: str) -> int:
+        """Billable image dispatches of a run, counted against the frozen ceiling.
+
+        Every dispatch is recorded before its provider call, so a call that raises anywhere
+        afterwards still counts. Runs acquired before dispatch records existed count their
+        recorded generation executions exactly as before.
+        """
+
+        dispatches = self.repository.list_production_evidence(run_id, ACQUISITION_DISPATCH)
+        legacy = sum(
+            item.generation_execution_id is not None and "dispatch_id" not in item.payload
+            for item in self.repository.list_production_evidence(run_id, "acquisition")
+        )
+        return len(dispatches) + legacy
+
+    def revise_asset_spec(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
+        """Revise one variant AssetSpec's generation prompt before it is (re)generated.
+
+        Allowed only while the variant has no active asset or its active asset was rejected, and
+        only for a spec no other run uses. Only the prompt changes; the previous prompt, both
+        SHA-256 digests, the founder and the reason are recorded as append-only evidence.
+        """
+
+        run = self.repository.get_production_run(run_id)
+        if not isinstance(evidence, dict) or set(evidence) - {
+            "asset_spec_id",
+            "generation_prompt",
+            "authorized_by",
+            "reason",
+        }:
+            raise ProductionRequestError(
+                "Spec revision requires exactly asset_spec_id, generation_prompt, authorized_by "
+                "and reason."
+            )
+        fields = {
+            name: evidence.get(name)
+            for name in ("asset_spec_id", "generation_prompt", "authorized_by", "reason")
+        }
+        if any(not isinstance(value, str) or not value.strip() for value in fields.values()):
+            raise ProductionRequestError(
+                "Spec revision requires non-empty asset_spec_id, generation_prompt, authorized_by "
+                "and reason."
+            )
+        spec_id = fields["asset_spec_id"]
+        keys = [key for *key, spec in self._variant_specs(run.request) if spec == spec_id]
+        if not keys:
+            raise ProductionRequestError(f"AssetSpec {spec_id} is not a variant of this run.")
+        states = self._variant_review_states(run)
+        settled = [tuple(key) for key in keys if states.get(tuple(key)) in {"passed", "pending"}]
+        if settled:
+            raise ProductionRequestError(
+                f"AssetSpec {spec_id} already has an active asset that is passed or awaiting "
+                "review; only a missing or rejected variant's spec may be revised."
+            )
+        for other in self.repository.connection.execute(
+            "SELECT id, request_json FROM production_runs WHERE id != ?", (run_id,)
+        ):
+            if json.dumps(spec_id) in other["request_json"]:
+                raise ProductionRequestError(
+                    f"AssetSpec {spec_id} is also used by run {other['id']}; it is not revised."
+                )
+        spec = self.repository.get_asset_spec(spec_id)
+        old_prompt, new_prompt = spec.generation_prompt, fields["generation_prompt"]
+        if new_prompt == old_prompt:
+            raise ProductionRequestError("Spec revision does not change the prompt.")
+        self.repository.update_asset_spec(replace(spec, generation_prompt=new_prompt))
+        revisions = self.repository.list_production_evidence(run_id, SPEC_REVISION)
+        self.repository.create_production_evidence(
+            f"{run_id}:spec-revision:{len(revisions) + 1}",
+            run_id,
+            SPEC_REVISION,
+            {
+                "asset_spec_id": spec_id,
+                "variants": ["/".join(key) for key in keys],
+                "previous_prompt": old_prompt,
+                "previous_prompt_sha256": sha256(old_prompt.encode("utf-8")).hexdigest(),
+                "prompt_sha256": sha256(new_prompt.encode("utf-8")).hexdigest(),
+                "authorized_by": fields["authorized_by"].strip(),
+                "reason": fields["reason"].strip(),
+            },
+        )
+        return self.status(run_id)
 
     def authorize_narration(self, run_id: str, evidence: dict[str, Any]) -> dict[str, Any]:
         """Record a durable founder narration authorization without touching the frozen request.
@@ -1069,6 +1251,18 @@ class ProductionLifecycleService:
             raise ProductionRequestError(
                 f"{label}: a pass allows only fixture states {list(FIXTURE_REVIEW_STATES)}."
             )
+        absent = sorted(
+            key for key, value in fixtures.items() if value == FIXTURE_INTENTIONALLY_ABSENT
+        )
+        notes = evidence.get("fixture_notes", {})
+        if absent and (
+            not isinstance(notes, dict)
+            or any(not isinstance(notes.get(key), str) or not notes[key].strip() for key in absent)
+        ):
+            raise ProductionRequestError(
+                f"{label}: fixtures {absent} are intentionally_absent and each needs a "
+                "fixture_notes entry saying why."
+            )
         compared = evidence.get("geometry_compared_with", [])
         if not isinstance(compared, list) or sorted(compared) != required["geometry_compared_with"]:
             raise ProductionRequestError(
@@ -1149,6 +1343,12 @@ class ProductionLifecycleService:
                 field != "notes" and not payload[field].strip()
             ):
                 raise ProductionRequestError(f"Founder review {field} is required text.")
+        # The decision binds to the exact artifact under review: the current render, by ID and
+        # by the SHA-256 of its stored bytes (recorded in the founder-review event).
+        if not self.repository.list_production_evidence(run_id, "render"):
+            raise ValueError("Founder review requires a private-founder-review-ready production.")
+        render = self._current_evidence(run_id, "render")
+        artifact = self.repository.get_final_media_artifact(render.final_media_artifact_id)
         self.repository.create_production_founder_review(
             f"{run_id}:founder-review:1",
             run_id,
@@ -1156,6 +1356,7 @@ class ProductionLifecycleService:
             payload["founder_actor"],
             payload["decision_reference"],
             payload["notes"],
+            {"artifact_id": artifact.id, "sha256": artifact.content_digest},
         )
         return self.status(run_id)
 
@@ -1415,6 +1616,7 @@ class ProductionLifecycleService:
             "qa_reviews": [asdict(item) for item in reviews],
             "founder_review": self._founder_review_payload(run_id),
             "narration_authorized": self._narration_authorized(run),
+            "spend": self._spend_status(run),
             "current_narration": (
                 {
                     "version": self._evidence_version(narration),
@@ -1470,7 +1672,17 @@ class ProductionLifecycleService:
         return payload
 
     def _acquire(self, run: Any) -> None:
-        self.repository.append_production_run_event(run.id, "acquiring", "acquisition", {})
+        # One acquisition step consumes at most one founder spend authorization; the event
+        # binds it, so a later step can never reuse what this step was granted.
+        authorization = (
+            None if run.request.get("adopt_acquisitions_from") else self._step_authorization(run)
+        )
+        self.repository.append_production_run_event(
+            run.id,
+            "acquiring",
+            "acquisition",
+            {"spend_authorization_id": authorization.id} if authorization else {},
+        )
         states = self._variant_review_states(run)
         if run.request.get("adopt_acquisitions_from"):
             # An adoption successor never reaches the generation service.
@@ -1496,6 +1708,7 @@ class ProductionLifecycleService:
         attempt = len(self.repository.list_production_evidence(run.id, "acquisition"))
         ceiling = run.request["forecast"]["image_calls"]
         full_frame = self._full_frame_variant_keys(run.request)
+        step_dispatches = 0
         try:
             self._assert_generation_authority(run.request)
             for world_key, entity_key, variant_key, asset_spec_id in self._variant_specs(
@@ -1505,15 +1718,43 @@ class ProductionLifecycleService:
                 # Technically inadmissible results are retried for this variant only, within
                 # the frozen ceiling; only admissible assets ever reach founder review.
                 while key not in existing:
-                    prior_calls = sum(
-                        item.generation_execution_id is not None
-                        for item in self.repository.list_production_evidence(run.id, "acquisition")
-                    )
+                    prior_calls = self._image_calls(run.id)
                     if prior_calls + 1 > ceiling:
                         raise ProductionRequestError(
                             f"Image-call ceiling of {ceiling} would be exceeded by another "
                             f"provider call; {prior_calls} calls already recorded for this run."
                         )
+                    if authorization is None:
+                        raise ProductionRequestError(
+                            "Image acquisition needs a founder spend authorization for this "
+                            "step; no provider call made."
+                        )
+                    terms = authorization.payload
+                    if step_dispatches + 1 > terms["max_image_calls"]:
+                        raise ProductionRequestError(
+                            f"Spend authorization {authorization.id} allows "
+                            f"{terms['max_image_calls']} image call(s) in this step and all are "
+                            "used; no further provider call made."
+                        )
+                    # Recorded before the provider call: whatever happens next, it counts.
+                    step_dispatches += 1
+                    dispatch_number = (
+                        len(self.repository.list_production_evidence(run.id, ACQUISITION_DISPATCH))
+                        + 1
+                    )
+                    dispatch = self.repository.create_production_evidence(
+                        f"{run.id}:acquisition-dispatch:{dispatch_number}",
+                        run.id,
+                        ACQUISITION_DISPATCH,
+                        {
+                            "world_key": world_key,
+                            "entity_key": entity_key,
+                            "variant_key": variant_key,
+                            "asset_spec_id": asset_spec_id,
+                            "spend_authorization_id": authorization.id,
+                            "step_dispatch": step_dispatches,
+                        },
+                    )
                     if "environment_pins" in run.request:
                         # Generation consumes the frozen pin; it never resolves the latest.
                         result = self.generation_service.generate_asset_spec(
@@ -1541,6 +1782,7 @@ class ProductionLifecycleService:
                         "variant_key": variant_key,
                         "asset_spec_id": asset_spec_id,
                         "outcome": result.execution.outcome,
+                        "dispatch_id": dispatch.id,
                     }
                     if mismatch is not None:
                         payload["authority_mismatch"] = mismatch
@@ -1560,6 +1802,12 @@ class ProductionLifecycleService:
                         raise RuntimeError("Required managed-asset acquisition failed.")
                     if admitted is not None:
                         existing[key] = payload | {"asset_id": admitted.id}
+                    elif terms["stop_on_technical_rejection"]:
+                        raise ProductionRequestError(
+                            f"Technical rejection of {'/'.join(key)} ({technical}); this step's "
+                            "spend authorization stops at the first rejection, so no automatic "
+                            "retry is made."
+                        )
             self.repository.append_production_run_event(
                 run.id,
                 "acquisition_review_pending",
@@ -2493,6 +2741,7 @@ class ProductionLifecycleService:
             "environment_pins",
             "render_policy",
             "on_screen_text_overlay",
+            "recipe",
         }
         if set(request) - allowed:
             raise ProductionRequestError("Production request contains unsupported fields.")
@@ -2501,6 +2750,19 @@ class ProductionLifecycleService:
                 raise ProductionRequestError(f"Production {field} must be a safe stable key.")
         self.repository._require_gate_authorized_visual_plan(request["visual_plan_id"])
         # Opt-in fields are recorded only when chosen, so earlier requests keep their digests.
+        if "recipe" in request:
+            recipe = request["recipe"]
+            if (
+                not isinstance(recipe, dict)
+                or set(recipe) != {"id", "story_sha256"}
+                or recipe["id"] not in RECIPES
+                or not isinstance(recipe["story_sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", recipe["story_sha256"])
+            ):
+                raise ProductionRequestError(
+                    f"Production recipe must be exactly {{id, story_sha256}} with id one of "
+                    f"{list(RECIPES)} and a lowercase SHA-256."
+                )
         if "render_policy" in request and request["render_policy"] != RENDER_POLICY_ALPHA:
             raise ProductionRequestError(
                 f"Production render_policy may only opt in to {RENDER_POLICY_ALPHA}."
@@ -3481,7 +3743,16 @@ class ProductionLifecycleService:
         row = self.repository.connection.execute(
             "SELECT id FROM production_founder_reviews WHERE production_run_id=?", (run_id,)
         ).fetchone()
-        return asdict(self.repository.get_production_founder_review(row["id"])) if row else None
+        if not row:
+            return None
+        payload = asdict(self.repository.get_production_founder_review(row["id"]))
+        bound = [
+            event.evidence["artifact"]
+            for event in self.repository.list_production_run_events(run_id)
+            if event.stage == "founder_review" and "artifact" in event.evidence
+        ]
+        # Reviews recorded before the binding existed carry no artifact (None).
+        return payload | {"artifact": bound[-1] if bound else None}
 
     @staticmethod
     def _evidence_payload(item: Any) -> dict[str, Any]:
