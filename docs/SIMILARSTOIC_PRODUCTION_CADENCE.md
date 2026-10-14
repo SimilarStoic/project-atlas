@@ -1,5 +1,10 @@
 # SimilarStoic — Minimum Repeatable Production Cadence
 
+> **Historical record — not current authority.** This document preserves a dated design or method as provenance.
+> Current operation resolves through [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md); the current SimilarStoic
+> production method is [`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md) (recipe
+> `similarstoic-flow-v1`). Where this file conflicts with them, they govern.
+
 ## Purpose and authority
 
 This document turns the accepted Production #2 method into a bounded operating cadence. It defines how one short moves

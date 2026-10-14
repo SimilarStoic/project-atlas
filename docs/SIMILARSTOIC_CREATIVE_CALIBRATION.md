@@ -88,6 +88,11 @@ P11 measured the Guided rows: see "P11 result" below the table.
 | Full-frame review missed duplicated spouts and a malformed arm | New-run acquisition review inspects props, and limbs and strap for character beats, zoomed in and bound to the asset SHA-256 | v2 acquisition review contract in `review_acquisition` (`production.py`) | Checked (evidence required) | P10 acquisition review |
 | The HOME post box was reused as an energy meter | Anchor fixtures keep their identity; any new object is drawn separately | Structured `fixtures` on the pinned `environment_family` authority, one deterministic prompt clause, and per-fixture attestation in the v2 review | Guided; checked (attestation) | P10 HOME beats |
 | Same-room beats drifted in geometry and furniture scale | Same-room beats are generated from the same approved environment plate and viewpoint, and reviewed against each other; this guides and checks room geometry, furniture scale and fixture placement but does not lock them (P11 Batch 2 and 11b drifted) | Frozen `environment_pins` with `viewpoint:<key>` plates in generation and the v2 `geometry_compared_with` set | Guided; checked (comparison) | P10 HOME beats |
+| Each beat as its own generated world drifted (P11 Batch 2, 11b) | Fewer generated worlds: hold one frozen base across several narration phrases and add objects to it, so drift can only occur between worlds | Frozen-scene progressions with extracted objects (`similarstoic-flow-v1`) | Enforced within a world (the base is held exactly); guided between worlds | P11 flow, 15 states on 9 worlds |
+| Generated objects came back 3-4 times larger than asked, with outlines too thin once shrunk | Objects are drawn large with extra-heavy outlines and scaled once by the founder at review | `object_scale` at acquisition review; `check-story` flags object texts without heavy outlines | Checked (founder placement); guided (wording) | P11 phone, cards, piles, shoot |
+| Object placement needed measuring by hand | Proposed centres and scales are previewed on a temporary copy before the founder decides | `production_cli preview`, `review-template` | Guided | P11 placement previews |
+| A gold pile clashed with grey bench coins; a tall stack hid a fixture | Added objects match the colours of what is already in the frame and do not cover existing fixtures | Founder acquisition review (fail and revised prompt) | Checked | P11 two-thirds pile |
+| States under ~1.5 s left the hook on screen for 1.40 s | Each state carries a full narration phrase; short phrases and a short first sentence are flagged before approval | `check-story` drafting findings | Checked (advisory) | P11 states 1 and 11 |
 
 **P11 result (9 October 2026, measured).** Room plates and frozen pins guided generation and the v2 review would
 have checked the drift, but neither prevented it. In production-11 Batch 2 the founder found room, desk and wall
@@ -164,11 +169,53 @@ from an approved script claim set into publishing-package source/credit metadata
 for Claude, not authority to introduce a new provenance subsystem or reopen the visual architecture.
 
 The existing generation service already defaults to the approved visual-style and global-authority IDs and resolves
-the latest exact-profile character reference set. The production-shape recipe above is not yet a first-class lifecycle
-selector: a canonical v2 caller must still supply the narration-led `VisualPlan`, per-beat `AssetSpec` instructions,
-and semantic timing explicitly. Claude's bounded operational integration point is to expose this recipe through the
-existing production/lifecycle configuration while retaining these existing authority records and provenance models;
-it is not a new canon, style-memory, or mascot subsystem.
+the latest exact-profile character reference set. The production method is now a first-class, versioned recipe:
+`similarstoic-flow-v1` (`src/project_atlas/production_recipe.py`) compiles a story file into the VisualPlan, Scenes,
+AssetSpecs and start request, retaining these authority records and provenance models (it is not a new canon,
+style-memory or mascot subsystem). How to run it is operational and lives in
+[`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md#running-a-similarstoic-production).
+
+### D. Founder-accepted flow method (P11)
+
+P11 (`production-11-flow`, founder-accepted 14 October 2026) is the reference for the narration-led flow method:
+every caption phrase gets its own visual state, and states share a few frozen worlds instead of each being a new
+generated image. It keeps every invariant in section A. Its four state patterns:
+
+- **New scene**: a new full-frame world with the hamster acting (a character base image).
+- **Character-free state**: a new full-frame world with no hamster, for a setting, a result or an object study
+  (`character_free: true`).
+- **Frozen-scene progression with an added object**: the previous state's world held exactly, plus one new extracted
+  object (phone, cards, coins, a shoot), placed at the centre and scale the founder approves at acquisition review;
+  earlier objects stay.
+- **Hook overlay**: the hook text in the top zone on state 1, and claim-timed citations on the states that speak them.
+
+Cuts follow Daniel's narration (narration-aligned first candidate).
+
+#### Drafting a story file
+
+Claude drafts the story file; the founder approves it at the Editorial step, before `plan`. Draft it like this:
+
+1. **One visual change per narration phrase.** Split the approved Script into its caption-length phrases, in order;
+   the excerpts must concatenate exactly to the Script. Each phrase becomes one state, and each state changes the
+   picture once: a new scene, a new character-free frame, or one added object.
+2. **Choosing the state type.**
+   - Use a **new scene** when the hamster does something new or the place changes. Use a tight close-up (paws only,
+     `character_clause: "paws"`) for hand actions; otherwise use `"proportions"`.
+   - Use a **character-free state** for a setting, a result or a comparison the hamster would only block.
+   - Use a **progression** when the argument builds on the same picture (a count, a result, a consequence). Add
+     exactly one object per state where possible, and draft the base with clear empty space where the objects will go.
+3. **Minimum on-screen time.** Aim for at least about 1.5 s per state at Daniel's pace. `check-story` flags states
+   estimated under that (calibrated on one Daniel take, about ±0.3 s); merge or lengthen flagged phrases unless the
+   beat is meant to be quick.
+4. **The first sentence carries the hook.** The hook shows only while state 1 is on screen, so the first phrase must be
+   long enough to read the hook (`check-story` flags it). P11's 1.40 s was accepted, not recommended.
+5. **Citations are bound to their scenes.** Cite on the state(s) that speak the sourced claim, with labels of at most
+   24 characters and source IDs from the Script's frozen claim set.
+6. **Objects.** Describe one plain object alone, with `"drawn with extra-heavy thick black outlines (it will be
+   shrunk)"`, in the colours of what is already in the frame (P11's gold pile failed against grey coins), and never
+   covering an existing fixture.
+7. **Bases.** Each base names its room (pinned to its approved plate), one explicit expression line for a character
+   base, and plain or blank props. Leave the top of state 1's frame clear for the hook.
 
 ## Entry-gate reconciliation — 23 September 2026
 

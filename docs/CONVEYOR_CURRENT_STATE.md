@@ -103,6 +103,9 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
   (migration 30), the verified local full suite is **604 passed, 0 skipped, 0 failed**. Post-acquisition founder
   narration authorization is a recorded action; the frozen request is unchanged and each narration take is a
   separately authorized single provider call.
+- After the P11 consolidation (provider isolation for every test, founder spend control with dispatch records, retime
+  overlay fix, review controls, the `similarstoic-flow-v1` recipe with its P11 equivalence test and the operator CLI),
+  the verified local full suite is **680 passed, 0 skipped, 0 failed**, with every provider key removed.
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -255,8 +258,8 @@ completion, P11 or later work must check this list and must not silently treat a
   profile `similarstoic-daniel-v2`). How a punctuated fixed term such as "Buy now, pay later" should be voiced is
   still undecided; no speech-form change exists.
 
-**Implemented, awaiting first production validation on P11** (each is code and offline tests only; no production
-has yet exercised it):
+**Implemented and first exercised by P11** (`production-11-flow`, founder-accepted 14 October 2026; see Production
+11). Same-room consistency below remains guided and checked, not enforced:
 
 - Narration-aligned retiming now happens by default before founder whole-video review: new SimilarStoic runs
   freeze `scene_timing: narration-aligned-v1`, so the first candidate's scene boundaries are aligned to the selected
@@ -282,18 +285,43 @@ has yet exercised it):
 Completed: the runtime now records the P8 and P9 manual public releases (founder-attested receipts above), so
 that lesson is closed.
 
-Before P11:
+Before the next publishing package:
 
 - The controlled pilot series `similarstoic-youtube-controlled-pilot-v1` is full (slots 1-3 are used), so an ongoing
   publishing series is needed before the next package.
 - The manual publishing steps (reserve upload, complete manual private upload, observe, reserve release, reconcile
   receipt) have no CLI yet; the P10 runbook drives them from a Python session.
 
-## Production 11 (in progress)
+## Production 11 (founder-accepted)
 
-Topic "Why Investing Feels Pointless at First". Every record below was written through the existing repository
-methods and gates. Two production runs exist, both paused at `acquisition_review_pending` with no acquisition
-review recorded (see "Production runs" at the end of this section); no narration exists.
+Topic "Why Investing Feels Pointless at First". **`production-11-flow` is founder-accepted** (14 October 2026) and is
+the first production made with the narration-led flow method, now codified as the recipe `similarstoic-flow-v1` (see
+"Running a SimilarStoic production"). It is not packaged, uploaded or published; publication is a separate decision.
+
+- Run `production-11-flow` (request digest `138a193984f4c702563337ce22f8bd43d5ea6dd19f06a2615a473fa09cd68ec8`),
+  VisualPlan `production-11-flow-visual-plan`: 15 states over 9 frozen worlds (new scenes, character-free states and
+  frozen-scene progressions adding 6 extracted objects), hook text "WHY INVESTING FEELS POINTLESS AT FIRST" on state
+  1, citations S1-S3 bound to states 4-11, `render_policy` `scene-rgba-premultiplied-over-v1`.
+- Images: **19 of the frozen 20 provider calls used** (18 recorded plus one SSL failure that raised before evidence
+  was written, recorded in `production-11-flow:call_ledger_note:1`; that gap is now closed by dispatch records). One
+  call stays unused. Two never-accepted prompts were revised before regeneration
+  (`production-11-flow:spec_revision_note:1` shoot, `:2` two-thirds pile, each with the old prompt SHA-256).
+- Founder acquisition review: round 1 (`production-11-flow:qa:acquisition:round-1:1` to `:15`, 14 passes with
+  placements, the gold two-thirds pile failed) and round 2 (`:round-2:1`, the grey replacement). Accepted defects are
+  recorded in the review notes. State 5 clarification `production-11-flow:fixture_review_clarification:1`: the pencil
+  cup, green book and lamp are intentionally absent although the desk is visible; the `not_in_frame` labels of
+  `round-1:5` are not literally accurate (the `intentionally_absent` review state now exists for such cases).
+- Narration: founder authorization `production-11-flow:narration-authorization:1`; Daniel v2 take 1 passed
+  completeness (103/103, `whisper-1`) and delivery (471 ms against the 358 ms target) and was selected (`target_met`);
+  1 of 3 narration and 1 of 3 verification calls used.
+- Accepted render `production-11-flow-artifact-1` (SHA-256
+  `6018887a53da9d9a62061353e5acab87ecbe4674102fce9434e7b2d7f36bbc85`, 36.400 s, narration-aligned, not retimed):
+  whole-video QA `production-11-flow:qa:whole-video:1` passed and founder review
+  `production-11-flow:founder-review:1` accepted. The founder accepted state 1 (and the hook) at 1.40 s and state 11
+  at 1.46 s as rendered.
+- Backups before each P11 flow write: `D:\ConveyorBackups\pre-p11-flow-*` (each `conveyor.db`, integrity ok).
+
+History of the earlier P11 attempts (records unchanged):
 
 - Editorial chain (8 October 2026): `production-11-opportunity`, Idea Gate snapshot
   `production-11-idea-gate-review-snapshot` and founder Proceed `production-11-idea-gate-decision`;
@@ -357,7 +385,7 @@ review recorded (see "Production runs" at the end of this section); no narration
   `pre-p11-round2-plates-20261009-123329\`, `pre-p11-round3-desk-20261009-125655\`,
   `pre-p11-round3-lab-garden-20261009-130801\` and `pre-migration-30-p11-approvals-20261009-185703\` (each
   `conveyor.db`, integrity_check ok).
-- Production runs (verified read-only from the runtime, 9 October 2026); neither has any review:
+- Superseded runs (verified read-only from the runtime, 9 October 2026; still at `acquisition_review_pending`, never reviewed and not to be resumed; superseded by `production-11-flow`):
   - `production-11` (Batch 2): request digest `ae32cc61f7e93ac6c9fc08fed4add88df27862de825f0527e53c2cbfc9b32c35`,
     frozen image-call ceiling 15, 9 calls used, beat AssetSpecs `production-11-beat-1` to `-9` pinned to the three
     room authorities, status `acquisition_review_pending`. Founder look (not recorded): beats 4 and 6 fine, beat 8
@@ -381,6 +409,45 @@ review recorded (see "Production runs" at the end of this section); no narration
 - Backups before the P11 runtime writes after migration 30: `pre-p11-batch2-20261009-194204\`,
   `pre-p11-anchor-trial-20261009-203343\`, `pre-p11b-batch-20261009-210538\` and
   `pre-p11b-resume-20261009-211302\` (each `conveyor.db`, integrity_check ok).
+
+## Running a SimilarStoic production
+
+The approved method is the recipe `similarstoic-flow-v1` (`src/project_atlas/production_recipe.py`) driven by the
+operator CLI `python -m project_atlas.production_cli` (`src/project_atlas/production_cli.py`). How to draft the story
+file is creative method in
+[`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md#drafting-a-story-file). Story files for
+real productions live outside the repository under `D:\ConveyorOS\channels\SimilarStoic\<production>\`.
+
+Every live command needs `--expect-db-sha256 <current>` and `--backup-root D:\ConveyorBackups`, rehearses on a
+temporary copy first (provider-free: preconditions, authorization and wiring only), then takes a verified backup
+(`project_atlas.production_backup`) and runs with only that step's provider keys; `--dry-run` stops after the
+rehearsal. `status`, `check-story`, `review-template` and `preview` never write the runtime.
+
+| Step | Command | Founder gate (unchanged) |
+| --- | --- | --- |
+| 1 | Editorial chain and Editorial Gate (existing records) | Idea Gate, research, Script and the Editorial Gate decision; the founder approves the story file here |
+| 2 | `check-story <story.json>` | Reads the drafting findings (short states, hook state, outline wording) |
+| 3 | Room plates for any new room (existing migration-30 gate) | Plate approval |
+| 4 | `plan <story.json>` | None beyond step 1 (writes the plan, scenes and specs under the Editorial Gate) |
+| 5 | `start <story.json> --max-image-calls N --stop-on-technical-rejection yes` | Image spend for the first step |
+| 6 | `preview <run> --placements <file> --out <dir>`, `review-template <run>` | Proposals only, nothing recorded |
+| 7 | `review <run> <reviews.json>` | Acquisition review of every variant, including each object's centre and scale |
+| 8 | `revise-spec`, `authorize-spend`, `resume --step image --expect-targets ...` | Prompt revision and spend for any reacquisition |
+| 9 | `authorize-narration`, `resume --step narration` | Narration authorization (up to the frozen N takes and checks) |
+| 10 | `qa <run> --outcome ...`, `founder-review <run> --outcome ...` | Whole-video QA and founder acceptance of the exact artifact |
+
+Publication remains manual and separate. Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
+
+### Current founder boundaries
+
+- **P12 and any new story are not authorized** until the founder says so.
+- **Publishing, packaging and YouTube changes are deferred.**
+- **Human acquisition review is retained**: tools propose (previews, templates, placements), the founder decides.
+- **Every provider step needs its own explicit founder authorization** (image spend per acquisition step, narration),
+  and live runtime writes need authorization and a verified backup first.
+- **Tests, rehearsals and dry runs run with all provider keys removed** (enforced for tests by `tests/conftest.py`,
+  for rehearsals by the CLI). Only the live step that needs a provider sees that provider's key.
+- **A cross-production pose library is deferred to after P12.**
 
 ## Approved visual evidence
 
@@ -632,6 +699,8 @@ Canonical post-narration retiming (`retime`, also `POST /api/v2/productions/{run
 - Retime is refused after a founder decision, or once any render of the run has been packaged.
 - Retime (and the read-only retime recommendation) is refused unless the current narration take passed its
   completeness verification, so timing is always computed from the current verified take.
+- A retime keeps every overlay of the first candidate (hook text and citations); only durations and overlay timing
+  change (regression-tested since the P11 consolidation, when `retime()` had dropped the hook).
 - A failed retime has no recovery path yet.
 
 Narration completeness gate (`src/project_atlas/narration_verification.py`, enforced in
@@ -810,6 +879,47 @@ its only API-route package is the never-release private audit-evidence package b
   <consent-state.json> --db D:\ConveyorOS\runtime\ConveyorRuntime\conveyor.db maintain --client-config
   <client-config.json>` (both JSON paths outside the repository).
 
+Founder spend control (P11 consolidation; append-only production evidence and run events, no migration):
+
+- **Enforced.** Every billable image dispatch is recorded as `acquisition_dispatch` evidence *before* its provider
+  call and counted against the frozen `forecast.image_calls` ceiling, so a call that raises at any point afterwards
+  still counts. Runs acquired before dispatch records count their recorded executions exactly as before.
+- **Enforced.** Every dispatch needs an unused founder `spend_authorization` (`authorized_by`, `max_image_calls`,
+  `stop_on_technical_rejection`, `reason`) for that acquisition step, given with `start` (`spend_authorization`
+  beside the request, never frozen in its digest) or `POST /api/v2/productions/{run}/spend-authorization`. One step
+  (start or resume) consumes one authorization; without one nothing is dispatched; with
+  `stop_on_technical_rejection` the step stops at the first technical rejection instead of retrying automatically.
+  The state lives in the database, so every per-request HTTP service instance enforces it.
+- Status shows `spend`: calls counted, the ceiling and the next step's authorization.
+
+Progressions, character-free states, extracted objects and the hook (opt-in request fields, first used by P11):
+
+- `render_policy: scene-rgba-premultiplied-over-v1` (alpha compositing, required for extracted objects); entity
+  `initial_visible` and `depth`; transitions with `set_visible` add objects to a frozen base state by state.
+- AssetSpec metadata `character_free: true` lets a full-frame image omit the character (it may not name a character
+  profile); base images are pinned to their room like any other.
+- Object variants (`object_center`: a frame point, or `at_review`): the generated object is cut out with the
+  object-mode soft matte (every intended part kept, specks under 50 px dropped), cropped, optionally scaled once by the
+  founder's `object_scale` (0-1, premultiplied area average) and placed 1:1 at the founder-approved centre recorded
+  with its passing acquisition review. World evidence records each admission and an advisory outline width.
+- `on_screen_text_overlay: true` renders the VisualPlan's on-screen text (the hook on state 1) in the top zone while
+  its scene is on screen.
+
+Review and decision controls (P11 consolidation, no migration):
+
+- A v2 pass may attest a fixture `intentionally_absent` (a visible place deliberately left without it), only with a
+  `fixture_notes` entry saying why (**checked**).
+- `revise_asset_spec` (`POST .../spec-revision`) changes only the prompt of a variant that is missing or whose active
+  asset was rejected, never a spec another run uses, and records the previous prompt and both SHA-256 digests as
+  `spec_revision` evidence (**enforced**).
+- A founder review records the exact current artifact ID and SHA-256 in its event; status shows it (**enforced**).
+
+Production recipe `similarstoic-flow-v1` (`production_recipe.py`): a story file compiles into the VisualPlan, Scenes,
+AssetSpecs and start request; the request freezes `recipe: {id, story_sha256}`. The recipe holds only reusable
+patterns, and the P11 equivalence test proves that compiling P11's story reproduces its frozen request exactly
+(apart from the recipe provenance P11 predates). Drafting findings (states that may be under ~1.5 s, a hook state too
+short to read, objects without heavy outlines) are advisory evidence for the founder's Editorial step.
+
 ## Visual reference approval gate (migration 30)
 
 `src/project_atlas/visual_reference_approvals.py` adds the append-only table `visual_plate_approvals`: per image,
@@ -834,7 +944,9 @@ Read them with `AtlasRepository.list_plate_approvals()`.
 Application schema authority is the `schema_migrations` table. The repository defines contiguous versions
 **1 through 30**, and the protected production runtime is at **30**: migration 30 was applied on 9 October 2026
 under founder authorization, after a verified backup and with the maintenance task paused, changing no existing row
-(the publishing series migration becomes 31). Migration 29 was applied to the protected
+(the publishing series migration becomes 31). The P11 consolidation (spend authorizations, dispatch records, spec
+revisions, fixture clarifications and the founder-review artifact binding) uses existing append-only production
+evidence and run events and adds no migration. Migration 29 was applied to the protected
 runtime on 7 October 2026 under founder authorization, after a verified backup, together with the P8/P9 recording.
 Migration 28 adds only append-only production-run events, cross-stage evidence, QA-review outcomes and founder-review decisions; existing
 generation, persistent-scene, narration and media tables remain authoritative for their artifacts.
@@ -903,11 +1015,16 @@ historical record of non-canonical experiments, not active production tooling.
    `scripts/set_conveyor_environment.ps1` and inspect the five resolved values.
 5. Fail closed if the structure or required runtime paths differ; do not recreate legacy roots or accept relative
    production fallbacks.
-6. Do not open the production database through application code merely to inspect it.
+6. Do not open the production database through application code merely to inspect it
+   (`python -m project_atlas.production_cli status <run>` reads it with `mode=ro`).
 7. Before any consequential action, identify the exact authorization boundary: code, migration, provider, spend,
    production, publication, evidence movement, and Git operations are separate decisions.
 8. Use `ROADMAP.md` for future direction, bounded design documents for their subjects, and historical snapshots only
    for provenance.
+
+9. To continue a production, run `python -m project_atlas.production_cli status <run>` (read-only) and find the next
+   founder gate in "Running a SimilarStoic production"; the run's frozen `recipe` names the story file version it was
+   compiled from. Nothing is resumed without that gate's authorization.
 
 Reading or dot-sourcing the environment script does not itself authorize starting Conveyor.
 
@@ -940,11 +1057,11 @@ gaps are:
 - source-credit projection;
 - character continuity;
 - scene density;
-- ceiling counting of generation calls that raise before acquisition evidence is persisted. This covers both a paid
-  provider call that raises before evidence is recorded, and a provider call that returns an asset but whose
-  post-provider technical inspection or probe raises before evidence is recorded;
-- image size on reference-conditioned calls: a configured image size may be recorded in provenance but is not sent
-  on reference-conditioned image-edit calls, so those calls use the provider's default size;
+- the hook overlay lasts only as long as state 1 (1.40 s on P11); whether it should have a minimum on-screen time is
+  a founder decision;
+- a failed retime has no recovery path;
+- same-room consistency is guided and checked, not enforced;
+- a cross-production pose library (deferred to after P12);
 - runs frozen without `scene_timing` (every run up to and including `production-10-r2`) keep narration-weighted
   first candidates and may require a post-narration retime;
 - provider word timestamps are requested but not persisted; captions use pause-aligned estimates between pauses;

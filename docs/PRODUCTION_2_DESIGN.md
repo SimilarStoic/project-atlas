@@ -1,5 +1,10 @@
 # SimilarStoic Production #2 — Bounded Design
 
+> **Historical record — not current authority.** This document preserves a dated design or method as provenance.
+> Current operation resolves through [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md); the current SimilarStoic
+> production method is [`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md) (recipe
+> `similarstoic-flow-v1`). Where this file conflicts with them, they govern.
+
 ## Authority and boundary
 
 Founder + ChatGPT authorized this design on 9 September 2026. It is the complete execution brief for Production #2

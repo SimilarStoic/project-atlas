@@ -1,5 +1,10 @@
 # Production #1 quality-cycle continuity — 2 September 2026
 
+> **Historical record — not current authority.** This document preserves a dated design or method as provenance.
+> Current operation resolves through [`CONVEYOR_CURRENT_STATE.md`](CONVEYOR_CURRENT_STATE.md); the current SimilarStoic
+> production method is [`SIMILARSTOIC_CREATIVE_CALIBRATION.md`](SIMILARSTOIC_CREATIVE_CALIBRATION.md) (recipe
+> `similarstoic-flow-v1`). Where this file conflicts with them, they govern.
+
 ## Authority and checkpoint
 
 Recorded 8 September 2026 and updated after founder + ChatGPT accepted the isolated-character result, Candidate 4
