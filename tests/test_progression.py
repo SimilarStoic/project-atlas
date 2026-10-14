@@ -5,7 +5,11 @@ from __future__ import annotations
 import pytest
 
 from project_atlas.media import MediaService
-from project_atlas.production import FRAME_SIZE, ProductionRequestError
+from project_atlas.production import (
+    FRAME_SIZE,
+    ProductionLifecycleError,
+    ProductionRequestError,
+)
 from project_atlas.scene_media import encode_rgba_png, load_persistent_scene_frame
 from project_atlas.scene_model import RENDER_POLICY, RENDER_POLICY_ALPHA
 from tests.test_production_lifecycle import (
@@ -271,3 +275,91 @@ def test_on_screen_text_is_timed_to_its_scene_and_requires_one() -> None:
         MediaService.on_screen_text_overlays([inputs[1]])
     with pytest.raises(ValueError, match="1-60 plain characters"):
         MediaService.on_screen_text_overlays([{**inputs[0], "on_screen_text": "x" * 61}])
+
+
+def _at_review_run(tmp_path, monkeypatch, prefix: str):
+    runtime = media_runtime_or_skip()
+    generator = ValidFakeImageGenerator(
+        sequence=[realistic_source_png(runtime, tmp_path), _object_canvas()]
+    )
+    server = _server(tmp_path, generator, runtime)
+    _fake_narration(monkeypatch, _sine_wav(runtime, tmp_path))
+    request, keys = _progression_request(server, tmp_path, prefix)
+    coin = request["worlds"][0]["entities"][1]["variants"][0]
+    coin["object_center"] = "at_review"
+    created, status = post_json(server, "/api/v2/productions", request)
+    assert status == 201, created
+    return server, generator, request, keys
+
+
+def _reviews_with_center(server, keys, prefix, center=None, on=("run", "coin", "coin")):
+    reviews = _passing_reviews(keys, server, prefix)
+    for review in reviews["reviews"]:
+        if center is not None and (
+            review["world_key"],
+            review["entity_key"],
+            review["variant_key"],
+        ) == tuple(on):
+            review["evidence"]["object_center"] = center
+    return reviews
+
+
+def test_object_centre_set_at_review_is_recorded_and_used(tmp_path, monkeypatch) -> None:
+    server, generator, request, keys = _at_review_run(tmp_path, monkeypatch, "at-review")
+    try:
+        reviewed, status = post_json(
+            server,
+            "/api/v2/productions/at-review/acquisition-review",
+            _reviews_with_center(server, keys, "at-review", [520, 1500]),
+        )
+        assert status == 200 and reviewed["production"]["status"] == "qa_review_pending", reviewed
+        [admission] = server.repository.list_production_evidence("at-review", "world")[0].payload[
+            "object_admissions"
+        ]
+        assert admission["object_center"] == [520, 1500]
+        width, height = admission["size_px"]
+        assert admission["placed_at"] == [520 - width // 2, 1500 - height // 2]
+        recorded = [
+            review.evidence.get("object_center")
+            for review in server.repository.list_production_qa_reviews("at-review")
+        ]
+        assert [520, 1500] in recorded
+        assert len(generator.inputs) == 2
+    finally:
+        server.server_close()
+
+
+def test_world_building_refuses_an_object_without_a_review_centre(tmp_path, monkeypatch) -> None:
+    server, _generator, _request, keys = _at_review_run(tmp_path, monkeypatch, "no-centre")
+    try:
+        service = server.production_service
+        with pytest.raises(ProductionLifecycleError, match="no founder-approved centre"):
+            service.review_acquisition(
+                "no-centre", _passing_reviews(keys, server, "no-centre")["reviews"]
+            )
+        status = service.status("no-centre")
+        assert status["status"] == "failed"
+        assert "no founder-approved centre" in status["error"]["message"]
+        assert server.repository.list_production_evidence("no-centre", "world") == []
+    finally:
+        server.server_close()
+
+
+def test_review_centres_are_refused_where_they_do_not_belong(tmp_path, monkeypatch) -> None:
+    server, _generator, _request, keys = _at_review_run(tmp_path, monkeypatch, "misplaced")
+    service = server.production_service
+    try:
+        for reviews in (
+            _reviews_with_center(server, keys, "misplaced", [10, 10], on=("run", "base", "base")),
+            _reviews_with_center(server, keys, "misplaced", [5000, 10]),
+        ):
+            with pytest.raises(ProductionRequestError, match="object_center is accepted only"):
+                service.review_acquisition("misplaced", reviews["reviews"])
+        failing = _reviews_with_center(server, keys, "misplaced", [100, 100])
+        for review in failing["reviews"]:
+            review["outcome"] = "failed"
+        with pytest.raises(ProductionRequestError, match="object_center is accepted only"):
+            service.review_acquisition("misplaced", failing["reviews"])
+        assert server.repository.list_production_qa_reviews("misplaced") == []
+    finally:
+        server.server_close()

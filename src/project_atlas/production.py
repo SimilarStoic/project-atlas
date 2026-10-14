@@ -62,11 +62,25 @@ from project_atlas.static_character import (
 )
 
 _SAFE_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+
+
+def _frame_point(value: Any) -> bool:
+    return (
+        isinstance(value, list)
+        and len(value) == 2
+        and all(type(item) is int for item in value)
+        and 0 <= value[0] < FRAME_SIZE[0]
+        and 0 <= value[1] < FRAME_SIZE[1]
+    )
+
+
 FRAME_SIZE = (1080, 1920)
 # Extracted progression objects: the full-frame object canvas is resampled with the base's
 # adapter, cut with the v3 soft matte, cropped exactly and placed 1:1 at a declared centre.
 OBJECT_ADMISSION_ADAPTER = "production-object-admission-v1"
 OBJECT_CROP_MARGIN = 2
+# An object whose centre is set by the founder at acquisition review, once its base exists.
+OBJECT_CENTER_AT_REVIEW = "at_review"
 SCENE_ADAPTER_VERSION = "managed-image-to-rgba-v2"
 # Derived raster identities carry the adapter generation so a resume can never reuse a
 # raster produced by an earlier adapter.
@@ -910,6 +924,25 @@ class ProductionLifecycleService:
                 review.get("evidence"), dict
             ):
                 raise ProductionRequestError("Acquisition review requires outcome and evidence.")
+        at_review = {
+            (world["key"], entity["key"], variant["key"])
+            for world in run.request["worlds"]
+            for entity in world["entities"]
+            for variant in entity["variants"]
+            if variant.get("object_center") == OBJECT_CENTER_AT_REVIEW
+        }
+        for key, review in supplied.items():
+            # A centre is recorded only with a passing review of a placed-at-review object.
+            if "object_center" in review["evidence"] and (
+                key not in at_review
+                or review["outcome"] != "passed"
+                or not _frame_point(review["evidence"]["object_center"])
+            ):
+                raise ProductionRequestError(
+                    f"Acquisition review of {'/'.join(key)}: object_center is accepted only on "
+                    "a passing review of an object placed at review, as an integer point "
+                    "inside the frame."
+                )
         profile = run.request.get("acquisition_review_profile", ACQUISITION_REVIEW_V1)
         if profile == ACQUISITION_REVIEW_V2:
             # Every supplied review is checked before any review is recorded.
@@ -2140,8 +2173,11 @@ class ProductionLifecycleService:
                 variant_id = self._variant_id(run.id, world_index, entity["key"], variant["key"])
                 variant_ids.append(variant_id)
                 if "object_center" in variant:
+                    center = variant["object_center"]
+                    if center == OBJECT_CENTER_AT_REVIEW:
+                        center = self._review_object_center(run, key, source_id)
                     raster, mapping, record = self._admit_object(
-                        source_id, raster, f"{derived_id}:object", variant["object_center"]
+                        source_id, raster, f"{derived_id}:object", center
                     )
                     record["variant"] = "/".join(key)
                     object_admissions.append(record)
@@ -2246,6 +2282,26 @@ class ProductionLifecycleService:
             )
         self._object_admissions[world_input["key"]] = object_admissions
         return bind_world_definition(world)
+
+    def _review_object_center(
+        self, run: Any, key: tuple[str, str, str], asset_id: str
+    ) -> list[int]:
+        """The centre the founder approved with this exact asset's passing review."""
+
+        centers = [
+            review.evidence["object_center"]
+            for review in self.repository.list_production_qa_reviews(run.id)
+            if review.scope == "acquisition"
+            and review.outcome == "passed"
+            and review.evidence.get("asset_id") == asset_id
+            and "object_center" in review.evidence
+        ]
+        if len(centers) != 1 or not _frame_point(centers[0]):
+            raise ProductionRequestError(
+                f"Object {'/'.join(key)} has no founder-approved centre from its acquisition "
+                "review; world building refuses to guess one."
+            )
+        return list(centers[0])
 
     def _admit_object(
         self, source_id: str, frame: RasterAsset, derived_id: str, center: list[int]
@@ -2646,16 +2702,13 @@ class ProductionLifecycleService:
                         raise ProductionRequestError(
                             "Extracted objects require render_policy " f"{RENDER_POLICY_ALPHA}."
                         )
-                    if (
-                        tuple(variant["intrinsic_size_wu"]) != FRAME_SIZE
-                        or not isinstance(center, list)
-                        or len(center) != 2
-                        or any(type(value) is not int for value in center)
-                        or not (0 <= center[0] < FRAME_SIZE[0] and 0 <= center[1] < FRAME_SIZE[1])
+                    if tuple(variant["intrinsic_size_wu"]) != FRAME_SIZE or (
+                        center != OBJECT_CENTER_AT_REVIEW and not _frame_point(center)
                     ):
                         raise ProductionRequestError(
                             "An extracted object is generated on a full-frame canvas and needs an "
-                            "integer object_center inside the frame."
+                            "integer object_center inside the frame, or "
+                            f"{OBJECT_CENTER_AT_REVIEW!r}."
                         )
                 key = (world["key"], entity["key"], variant["key"])
                 if not _SAFE_KEY.fullmatch(str(variant["key"])) or key in variant_keys:
