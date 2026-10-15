@@ -443,7 +443,8 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
 
 ### Current founder boundaries
 
-- **P12 and any new story are not authorized** until the founder says so.
+- **P12 and any new story are not authorized** until the founder explicitly returns to P12. When authorized, P12
+  runs from the recipe `similarstoic-flow-v1` and the runbook above, unchanged.
 - **Publishing, packaging and YouTube changes are deferred.**
 - **Human acquisition review is retained**: tools propose (previews, templates, placements), the founder decides.
 - **Every provider step needs its own explicit founder authorization** (image spend per acquisition step, narration),
@@ -451,10 +452,12 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
 - **Tests, rehearsals and dry runs run with all provider keys removed** (enforced for tests by `tests/conftest.py`,
   for rehearsals by the CLI). Only the live step that needs a provider sees that provider's key.
 - **A cross-production pose library is deferred to after P12.**
-- **YouTube analytics may be planned before P12** (planning only; implementation needs its own authorization).
+- **Before P12, finish the started workstreams** (founder, 15 October 2026, evening). The earlier "after P12"
+  sequencing for on-demand publishing, YouTube analytics and the tooling evaluations is superseded: their order is
+  open and decided one item at a time. Each build still needs its own authorization.
 - **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026), but they stay until
-  on-demand publishing is built after P12, together with a successor publishing series (the pilot series is full)
-  and migration 31. Real public publishing through the API is still unproven.
+  on-demand publishing is built, together with a successor publishing series (the pilot series is full) and
+  migration 31. Real public publishing through the API is still unproven.
 
 ### Recording decisions (permanent working rule)
 
@@ -463,14 +466,46 @@ findings must be recorded in the appropriate repository authority document befor
 short documentation commit in the same working session. Exploratory discussion is not approval. Avoid unnecessary
 duplication and report the verified live main SHA after pushing.
 
-### Open items (as of 15 October 2026)
+### Current pre-P12 work (as of 15 October 2026, evening)
+
+In order:
+
+1. **P9 retention-alignment experiment (method validation): done; adopted as a repeatable step.**
+   - Data source: the founder's manual YouTube Studio export of P9's audience retention (`Dd76ERbxg_w`; organic
+     absolute retention and "Compared to other videos" by video position, 1% steps). It is not API data.
+   - Timing source: the frozen snapshot of the accepted artifact `production-9-attempt-2-artifact-3` (34.400 s):
+     exact scene cuts (250 ms crossfades) and phrase-level caption cues whose timing is a pause-anchored estimate.
+     No word-level timing exists for P9. Each retention position is one 0.344 s bucket (about ±0.35 s).
+   - Result: the observed drops (about 0.7-1.4 s in the hook line, about 8.3-8.6 s late in the long, dense scene 2,
+     about 28.6-29.6 s as the "aren't covered" sentence completes before the final scene) and the stable 75% stretch
+     (about 20-28.5 s, scenes 5-7) align cleanly with P9's own records. These are hypotheses only, not causal
+     findings. The 6.25-point increments are consistent with a small denominator but do not establish a sample size.
+     "Compared to other videos" is YouTube's own measure, reported as returned. The 39% stayed-to-watch figure is the
+     founder's separately reported Studio figure.
+   - **Founder decision: adopted as a repeatable, founder-supplied, offline step (no code yet).** Procedure:
+     1. The founder exports the video's audience-retention CSV from YouTube Studio.
+     2. Store the export as founder evidence under the channel folder
+        (`D:\ConveyorOS\channels\SimilarStoic\<production>\retention\`), never in the repository.
+     3. Read-only, offline, zero spend: verify the published video against the accepted artifact (ID, SHA-256,
+        duration); take the cuts and caption phrases from that artifact's frozen snapshot (for P11 onwards also the
+        frozen `scene_timing` evidence and the story file); convert positions to seconds and align them.
+     4. Write one page: the aligned table, each timing source and its precision, and hypotheses only. No derived
+        numbers (no differences, ratios, rankings or scores); YouTube's values are quoted as exported.
+2. **Google compliance gap:** the exact 6 October submission wording (the founder is locating it) and the confirmed
+   notification route; drafts in
+   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md).
+3. **Then choose the smallest justified next build**: YouTube analytics, on-demand publishing (successor series and
+   migration 31) or another item. No order is assumed.
+
+### Open items (as of 15 October 2026, evening)
 
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
-- P12: not authorized.
-- After P12: on-demand publishing (successor publishing series, migration 31) and the first real public API publish.
-- YouTube Analytics build and activation: approved design, not implemented; needs the two compliance drafts finalized
-  ([`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
-- Tooling and capability evaluations: see `ROADMAP.md` ("External capabilities — research decisions").
+- P12: not authorized until the founder explicitly returns to it.
+- Order open (see "Current pre-P12 work"):
+  - on-demand publishing (successor publishing series, migration 31) and the first real public API publish;
+  - YouTube Analytics build and activation: approved design, not implemented; needs the two compliance drafts
+    finalized;
+  - tooling and capability evaluations: see `ROADMAP.md` ("External capabilities — research decisions").
 - P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished.
 
 ## Approved visual evidence
