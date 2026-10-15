@@ -99,13 +99,26 @@ analytics API use.
 > - **Privacy policy:** updated at https://conveyoros.co.uk/privacy/ (version [new version]) before any analytics
 >   request is made.
 
-## 3. Open evidence gaps
+## 3. Evidence status
 
-- **Exact 6 October submission wording.** The evidence folder
-  (`D:\ConveyorOS\evidence\youtube-audit\2026-10-06\`) holds the attachments and screenshots but not the submitted
-  form answers. The founder should locate the exact attestation text (form copy or Google's confirmation email) so
-  the notice quotes it precisely.
-- **Notification route not confirmed.** Developer Policies III.D.3 directs use-case changes through a resubmitted API
-  Compliance Audit (the audit and quota-extension form used on 6 October). Whether that form, or a reply to Google's
-  8 October closure email, is the right route for this notice is not confirmed.
+### Resolved
+
+- **Google correspondence reviewed (15 October 2026):** acknowledgement on 6 October, review update on 7 October,
+  closure on 8 October 2026.
+- **Original submission wording:** searched for in the available email thread and the evidence folder
+  (`D:\ConveyorOS\evidence\youtube-audit\2026-10-06\`, which holds attachments and screenshots, not the form
+  answers) and not found. The recorded commitment stands as the basis for the notice: update the privacy policy and
+  notify YouTube in writing before any new API use.
+
+### Unconfirmed
+
+- **Notification route.** The founder intends to reply to the existing Google correspondence. Developer Policies
+  III.D.3 directs use-case changes through a resubmitted API Compliance Audit; whether the reply is formally
+  sufficient is not confirmed and must be resolved before analytics is activated.
 - **Published policy contact address.** Obfuscated in the page source; confirm it on the live page before publishing.
+
+### Future activation obligations (Phase 4, not authorized)
+
+- Send the written notice (section 2) through the confirmed route.
+- Publish the policy addition (section 1) with a new version, and ship the matching `POLICY_VERSION`.
+- Renew acceptance, grant the analytics consent, then make the first authorized collection.

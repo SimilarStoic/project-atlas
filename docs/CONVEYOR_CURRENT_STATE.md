@@ -452,9 +452,8 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
 - **Tests, rehearsals and dry runs run with all provider keys removed** (enforced for tests by `tests/conftest.py`,
   for rehearsals by the CLI). Only the live step that needs a provider sees that provider's key.
 - **A cross-production pose library is deferred to after P12.**
-- **Before P12, finish the started workstreams** (founder, 15 October 2026, evening). The earlier "after P12"
-  sequencing for on-demand publishing, YouTube analytics and the tooling evaluations is superseded: their order is
-  open and decided one item at a time. Each build still needs its own authorization.
+- **Before P12, follow the pre-P12 sequence** below (founder, 15 October 2026). No phase is authorized
+  automatically; each build, migration, runtime change and publication still needs its own authorization.
 - **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026), but they stay until
   on-demand publishing is built, together with a successor publishing series (the pilot series is full) and
   migration 31. Real public publishing through the API is still unproven.
@@ -466,46 +465,91 @@ findings must be recorded in the appropriate repository authority document befor
 short documentation commit in the same working session. Exploratory discussion is not approval. Avoid unnecessary
 duplication and report the verified live main SHA after pushing.
 
-### Current pre-P12 work (as of 15 October 2026, evening)
+### Pre-P12 sequence (founder, 15 October 2026)
 
-In order:
+**Permanent working rule:** complete the phases below in order. After each phase, record its verified outcome,
+decisions, remaining obligations and evidence here before moving to the next phase. Every new session must consult
+this section. No subsequent phase is authorized automatically.
 
-1. **P9 retention-alignment experiment (method validation): done; adopted as a repeatable step.**
-   - Data source: the founder's manual YouTube Studio export of P9's audience retention (`Dd76ERbxg_w`; organic
-     absolute retention and "Compared to other videos" by video position, 1% steps). It is not API data.
-   - Timing source: the frozen snapshot of the accepted artifact `production-9-attempt-2-artifact-3` (34.400 s):
-     exact scene cuts (250 ms crossfades) and phrase-level caption cues whose timing is a pause-anchored estimate.
-     No word-level timing exists for P9. Each retention position is one 0.344 s bucket (about ±0.35 s).
-   - Result: the observed drops (about 0.7-1.4 s in the hook line, about 8.3-8.6 s late in the long, dense scene 2,
-     about 28.6-29.6 s as the "aren't covered" sentence completes before the final scene) and the stable 75% stretch
-     (about 20-28.5 s, scenes 5-7) align cleanly with P9's own records. These are hypotheses only, not causal
-     findings. The 6.25-point increments are consistent with a small denominator but do not establish a sample size.
-     "Compared to other videos" is YouTube's own measure, reported as returned. The 39% stayed-to-watch figure is the
-     founder's separately reported Studio figure.
-   - **Founder decision: adopted as a repeatable, founder-supplied, offline step (no code yet).** Procedure:
-     1. The founder exports the video's audience-retention CSV from YouTube Studio.
-     2. Store the export as founder evidence under the channel folder
-        (`D:\ConveyorOS\channels\SimilarStoic\<production>\retention\`), never in the repository.
-     3. Read-only, offline, zero spend: verify the published video against the accepted artifact (ID, SHA-256,
-        duration); take the cuts and caption phrases from that artifact's frozen snapshot (for P11 onwards also the
-        frozen `scene_timing` evidence and the story file); convert positions to seconds and align them.
-     4. Write one page: the aligned table, each timing source and its precision, and hypotheses only. No derived
-        numbers (no differences, ratios, rankings or scores); YouTube's values are quoted as exported.
-2. **Google compliance gap:** the exact 6 October submission wording (the founder is locating it) and the confirmed
-   notification route; drafts in
-   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md).
-3. **Then choose the smallest justified next build**: YouTube analytics, on-demand publishing (successor series and
-   migration 31) or another item. No order is assumed.
+**Phase 1 — Skills and external capabilities: assessment COMPLETE.**
 
-### Open items (as of 15 October 2026, evening)
+- Adopted: the user-invoked `/zero-spend-verify` skill (`.claude/skills/zero-spend-verify/`), which runs the
+  regression tests with every provider key removed.
+- Adopted: the repeatable P9 retention-alignment procedure (below).
+- Adopted: the Task Observer principle: a correction is closed only when a mechanism (a test or a check) prevents it,
+  through the existing decision records, lessons and tests.
+- The other research decisions and optional evaluations stay as recorded in `ROADMAP.md` ("External capabilities —
+  research decisions"). The image-provider blind bake-off is deferred until after P12, so it cannot confound P12's
+  repeatability test. The optional security-reviewer subagent is to be evaluated when Phase 3 is planned.
 
+**P9 retention-alignment experiment (method validation, done; adopted as a repeatable step):**
+
+- Data source: the founder's manual YouTube Studio export of P9's audience retention (`Dd76ERbxg_w`; organic
+  absolute retention and "Compared to other videos" by video position, 1% steps). It is not API data.
+- Timing source: the frozen snapshot of the accepted artifact `production-9-attempt-2-artifact-3` (34.400 s): exact
+  scene cuts (250 ms crossfades) and phrase-level caption cues whose timing is a pause-anchored estimate. No
+  word-level timing exists for P9. Each retention position is one 0.344 s bucket (about ±0.35 s).
+- Result: the observed drops (about 0.7-1.4 s in the hook line, about 8.3-8.6 s late in the long, dense scene 2,
+  about 28.6-29.6 s as the "aren't covered" sentence completes before the final scene) and the stable 75% stretch
+  (about 20-28.5 s, scenes 5-7) align cleanly with P9's own records. These are hypotheses only, not causal findings.
+  "Compared to other videos" is YouTube's own measure, reported as returned.
+- Studio summary (founder's screenshot, 15 October 2026): 46 total views, 39% stayed to watch, 0:28 average view
+  duration. The retention curve's denominator and rounding method are not documented; do not infer them from the
+  6.25-point increments.
+- **Founder decision: repeatable, founder-supplied, offline step (no code yet).** Procedure:
+  1. The founder exports the video's audience-retention CSV from YouTube Studio.
+  2. Store the export as founder evidence under the channel folder
+     (`D:\ConveyorOS\channels\SimilarStoic\<production>\retention\`), never in the repository.
+  3. Read-only, offline, zero spend: verify the published video against the accepted artifact (ID, SHA-256,
+     duration); take the cuts and caption phrases from that artifact's frozen snapshot (for P11 onwards also the
+     frozen `scene_timing` evidence and the story file); convert positions to seconds and align them.
+  4. Write one page: the aligned table, each timing source and its precision, and hypotheses only. No derived numbers
+     (no differences, ratios, rankings or scores); YouTube's values are quoted as exported.
+
+**Phase 2 — Existing Google compliance evidence: REVIEWED.**
+
+- Google acknowledged the YouTube API Services submission on 6 October 2026, sent a review update on 7 October and
+  closed it on 8 October (founder's email thread).
+- The exact original submission wording has not been located in the available email thread or the evidence folder.
+  The recorded commitment stands: before any new YouTube API use (such as Analytics), update the privacy policy and
+  notify YouTube in writing.
+- The founder's intended notification route is a reply to the existing Google correspondence; whether that is
+  formally sufficient is not confirmed and must be resolved before analytics is activated.
+- The OAuth app and both authorizations remain as recorded (YouTube block below). The durability check is due on or
+  after 23 October 2026 and still needs explicit founder authorization.
+- Future analytics compliance obligations stay open (Phase 4;
+  [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
+
+**Phase 3 — On-demand publishing: NEXT.**
+
+- Founder-selected next build. Intended outcome: controlled YouTube publication of accepted videos on founder
+  command, without publication windows or the channel-week restriction.
+- It starts with a read-only implementation plan, followed by a separate founder approval decision. The plan must
+  cover the successor publishing series, migration 31, founder authorization of each exact publication, and a
+  controlled first real public API publication proof using P10 or P11.
+- Migration, implementation, runtime changes and publication remain separately authorized.
+
+**Phase 4 — YouTube Analytics: AFTER Phase 3.**
+
+- The approved Option B design (YouTube block below) and its activation sequence stand: switched-off implementation
+  → written YouTube notice → privacy-policy update with the matching `POLICY_VERSION` → renewed acceptance and
+  analytics consent → first authorized collection.
+- No analytics activation or additional scopes are authorized now.
+
+**Phase 5 — P12: AFTER the preceding phases, subject to explicit founder authorization.**
+
+- P12 tests whether the P11-approved production method is repeatable on new content, using the unchanged recipe
+  `similarstoic-flow-v1` and the existing production runbook.
+- This sequencing decision authorizes no change to the production recipe, the production CLI, providers or spend
+  gates.
+
+### Open items (as of 15 October 2026)
+
+- Phase 3 (on-demand publishing): next; read-only implementation plan first, then a founder approval decision.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
-- P12: not authorized until the founder explicitly returns to it.
-- Order open (see "Current pre-P12 work"):
-  - on-demand publishing (successor publishing series, migration 31) and the first real public API publish;
-  - YouTube Analytics build and activation: approved design, not implemented; needs the two compliance drafts
-    finalized;
-  - tooling and capability evaluations: see `ROADMAP.md` ("External capabilities — research decisions").
+- Analytics notification route: reply to the existing Google correspondence intended; formal sufficiency
+  unconfirmed (before Phase 4 activation).
+- Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
 - P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished.
 
 ## Approved visual evidence
@@ -928,7 +972,8 @@ its only API-route package is the never-release private audit-evidence package b
   Declared endpoints `channels.list`, `videos.list`, `videos.insert`; scopes `youtube.readonly` and
   `youtube.upload`; use case Video Uploading & Account Management; policy version `2026-10-06`. Evidence is kept
   outside the repository at `D:\ConveyorOS\evidence\youtube-audit\2026-10-06\submission\` and must not be
-  committed. **Closed by Google on 8 October 2026** (the founder's email is the evidence). The live `videos.insert`
+  committed. Google acknowledged it on 6 October, sent a review update on 7 October and **closed it on 8 October
+  2026** (the founder's email thread is the evidence). The live `videos.insert`
   documentation now says uploads from unverified API projects are not restricted to private viewing, but the
   YouTube Data API revision history still shows only the 2020 restriction; treat unrestricted API publishing as
   unconfirmed until a real API publish shows it. The closure is not an approval of the OAuth app or of any analytics

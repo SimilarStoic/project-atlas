@@ -334,7 +334,7 @@ not authorization; anything run, installed or spent still needs its own founder 
 - **Task Observer:** the principle is adopted: a correction is closed only when a mechanism (a test or a check)
   prevents it from recurring, implemented through the existing decision records, lessons and tests. The plugin is
   not installed, and there is no new mandatory log.
-- **Order open (founder, 15 Oct 2026, evening):** an image-provider blind bake-off (Gemini and FLUX against the current provider) with a fixed small
+- **After P12 (deferred so it cannot confound P12's repeatability test):** an image-provider blind bake-off (Gemini and FLUX against the current provider) with a fixed small
   budget, judged unlabeled by the founder.
 - **Keep:** Inworld Daniel as the narrator.
 - **Usable now as research aids:** Semantic Scholar and OpenAlex.
