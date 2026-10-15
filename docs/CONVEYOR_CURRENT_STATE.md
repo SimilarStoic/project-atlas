@@ -448,6 +448,8 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
 - **Tests, rehearsals and dry runs run with all provider keys removed** (enforced for tests by `tests/conftest.py`,
   for rehearsals by the CLI). Only the live step that needs a provider sees that provider's key.
 - **A cross-production pose library is deferred to after P12.**
+- **YouTube analytics may be planned before P12** (planning only; implementation needs its own authorization).
+- **On-demand publishing (removing publication windows and the channel-week rule, migration 31) stays deferred.**
 
 ## Approved visual evidence
 
@@ -861,16 +863,26 @@ its only API-route package is the never-release private audit-evidence package b
   order-independent but exact (same strings, case, whitespace and count). The Task Scheduler task "Conveyor YouTube
   maintenance" is enabled (daily 03:00); its first run found the expired read-only authorization revoked, deleted
   it and purged all stored YouTube API data (including this evidence's remote id and observations), as accepted.
-  While the OAuth app is in Testing mode, tokens for both authorizations expire after ~7 days, so such purges are
-  expected until OAuth verification.
+  While the OAuth app's publishing status is Testing, Google issues refresh tokens that expire after 7 days (a
+  property of the Testing publishing status, not of verification), so such purges are expected until the app's
+  publishing status is In production.
 - YouTube API Services audit: submitted 2026-10-06 15:40 Europe/London; Google's confirmation received. Purpose:
   lift the private-only upload restriction on unaudited project 1031021502761; no quota increase requested.
   Declared endpoints `channels.list`, `videos.list`, `videos.insert`; scopes `youtube.readonly` and
   `youtube.upload`; use case Video Uploading & Account Management; policy version `2026-10-06`. Evidence is kept
   outside the repository at `D:\ConveyorOS\evidence\youtube-audit\2026-10-06\submission\` and must not be
-  committed. Status: awaiting Google's response; the OAuth app is still in Testing mode. Attestation made: any new
-  YouTube API use (e.g. YouTube Analytics) first requires a privacy policy update and written notification to
-  YouTube.
+  committed. **Closed by Google on 8 October 2026** (the founder's email is the evidence). The live `videos.insert`
+  documentation now says uploads from unverified API projects are not restricted to private viewing, but the
+  YouTube Data API revision history still shows only the 2020 restriction; treat unrestricted API publishing as
+  unconfirmed until a real API publish shows it. The closure is not an approval of the OAuth app or of any analytics
+  use. Google Cloud Console state is to be checked by the founder (it is not recorded here as changed); In
+  production under the personal-use exemption is the intended route if the Console supports it; full verification
+  is not planned. Attestation made: any new YouTube API use (e.g. YouTube Analytics) first requires a privacy policy
+  update and written notification to YouTube.
+- Analytics design note (nothing implemented): per Developer Policies III.E.4(b), authorized YouTube Analytics data
+  and statistics may be stored as long as necessary, with authorization re-checked every 30 days; the III.E.4(h)
+  restriction on creating new or derived metrics from API data still applies. The existing 30-day purge of stored
+  YouTube API data is unchanged for now.
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
   as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
 - Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker
