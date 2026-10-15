@@ -242,7 +242,10 @@ transfer and manual release, publication window 2026-10-12T00:00 to 2026-10-19T0
 clear). **v2 is founder-approved** for that manual W42 release: gate decision
 `publication-gate-similarstoic-youtube-pilot-1-slot-3-v2-founder-approval` (7 October 2026, after a verified backup;
 routes manual/manual, timing = the package window). v1 has no decision. P10 is **not uploaded and not published**;
-there are no publication operations. The publish-day runbook and SHA-manifested copy-paste metadata are kept outside
+there are no publication operations. The founder does not intend to use this window (2026-10-12T00:00 to
+2026-10-19T00:00 Europe/London, end exclusive) and will let it expire (15 October 2026); the video, package and
+approval remain. Any future P10 publication needs fresh verification of its packaging, approval and
+publishing-series requirements; do not assume re-approval is trivial. The publish-day runbook and SHA-manifested copy-paste metadata are kept outside
 the repository in `D:\ConveyorOS\channels\SimilarStoic\production-10\publish\`; the manual route needs only the
 `youtube.readonly` authorization.
 
@@ -449,7 +452,26 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
   for rehearsals by the CLI). Only the live step that needs a provider sees that provider's key.
 - **A cross-production pose library is deferred to after P12.**
 - **YouTube analytics may be planned before P12** (planning only; implementation needs its own authorization).
-- **On-demand publishing (removing publication windows and the channel-week rule, migration 31) stays deferred.**
+- **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026), but they stay until
+  on-demand publishing is built after P12, together with a successor publishing series (the pilot series is full)
+  and migration 31. Real public publishing through the API is still unproven.
+
+### Recording decisions (permanent working rule)
+
+Consequential founder decisions, completed milestones, changes to operating boundaries and material verified
+findings must be recorded in the appropriate repository authority document before moving to unrelated work. Use a
+short documentation commit in the same working session. Exploratory discussion is not approval. Avoid unnecessary
+duplication and report the verified live main SHA after pushing.
+
+### Open items (as of 15 October 2026)
+
+- OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
+- P12: not authorized.
+- After P12: on-demand publishing (successor publishing series, migration 31) and the first real public API publish.
+- YouTube Analytics build and activation: approved design, not implemented; needs the two compliance drafts finalized
+  ([`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
+- Tooling and capability evaluations: see `ROADMAP.md` ("External capabilities — research decisions").
+- P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished.
 
 ## Approved visual evidence
 
@@ -863,9 +885,9 @@ its only API-route package is the never-release private audit-evidence package b
   order-independent but exact (same strings, case, whitespace and count). The Task Scheduler task "Conveyor YouTube
   maintenance" is enabled (daily 03:00); its first run found the expired read-only authorization revoked, deleted
   it and purged all stored YouTube API data (including this evidence's remote id and observations), as accepted.
-  While the OAuth app's publishing status is Testing, Google issues refresh tokens that expire after 7 days (a
-  property of the Testing publishing status, not of verification), so such purges are expected until the app's
-  publishing status is In production.
+  While the OAuth app's publishing status was Testing, Google issued refresh tokens that expired after 7 days (a
+  property of the Testing publishing status, not of verification); that caused those purges. The app has been In
+  production since 15 October 2026 (below).
 - YouTube API Services audit: submitted 2026-10-06 15:40 Europe/London; Google's confirmation received. Purpose:
   lift the private-only upload restriction on unaudited project 1031021502761; no quota increase requested.
   Declared endpoints `channels.list`, `videos.list`, `videos.insert`; scopes `youtube.readonly` and
@@ -875,14 +897,39 @@ its only API-route package is the never-release private audit-evidence package b
   documentation now says uploads from unverified API projects are not restricted to private viewing, but the
   YouTube Data API revision history still shows only the 2020 restriction; treat unrestricted API publishing as
   unconfirmed until a real API publish shows it. The closure is not an approval of the OAuth app or of any analytics
-  use. Google Cloud Console state is to be checked by the founder (it is not recorded here as changed); In
-  production under the personal-use exemption is the intended route if the Console supports it; full verification
-  is not planned. Attestation made: any new YouTube API use (e.g. YouTube Analytics) first requires a privacy policy
-  update and written notification to YouTube.
-- Analytics design note (nothing implemented): per Developer Policies III.E.4(b), authorized YouTube Analytics data
-  and statistics may be stored as long as necessary, with authorization re-checked every 30 days; the III.E.4(h)
-  restriction on creating new or derived metrics from API data still applies. The existing 30-day purge of stored
-  YouTube API data is unchanged for now.
+  use. Attestation made: any new YouTube API use (e.g. YouTube Analytics) first requires a privacy policy update and
+  written notification to YouTube.
+- OAuth app status: on 15 October 2026 the founder moved the OAuth app (project 1031021502761) from Testing to In
+  production under the personal-use exemption (no verification submitted, no scope changes) and re-authorized both
+  the upload and the read-only authorizations with fresh consent, each with an exact PASS. Full verification is not
+  planned. A durability check (`youtube_consent reconfirm`, expected to show both authorizations `reconfirmed` beyond
+  the former 7-day Testing limit) is scheduled for on or after 23 October 2026; it is pending and needs founder
+  authorization (it makes API calls).
+- **YouTube Analytics design: approved (Option B as revised, 15 October 2026), NOT implemented.** Nothing below
+  exists in code; today the existing 30-day purge of all stored YouTube API data still applies.
+  - Data: YouTube Analytics `reports.query` for the channel's own videos, non-monetary metrics and audience retention,
+    under a separate analytics authorization (`yt-analytics.readonly` + `youtube.readonly`) in the same Cloud
+    project; collected at the existing 24h/72h/7d/28d checkpoints into the existing `performance_snapshots` (YouTube
+    computes the totals for each date range). No migration. First candidates: P8 and P9 (founder-attested receipts).
+  - Retention (Developer Policies III.E.4(b)): analytics data is kept while needed for editorial learning, provided
+    the analytics authorization is re-verified within every 30 days. Proactive re-checks start about day 23;
+    transient failures are retried until day 30; if not confirmed by day 30, the data is no longer used and is
+    deleted. All other stored YouTube API data keeps the 30-day refresh-or-delete rule.
+  - Three local credentials (read-only, upload, analytics), but a Google-level revocation may affect all of them:
+    any definitive loss triggers an immediate re-check of every stored authorization, and each that also fails is
+    deleted with its data. Conveyor's revoke covers all three. Videos are checked for existence at least every 30
+    days; a deleted video's analytics are deleted. Transient failures fail closed without deleting.
+  - Activation gate: default off, explicit, requiring current privacy-policy acceptance; while off, upload,
+    observation, maintenance, revocation and deletion behave exactly as today.
+  - Learning records (III.E.4(h), conservative): a note may reference snapshot IDs, quote YouTube's values exactly as
+    returned, describe the returned data qualitatively and use Conveyor's own production facts; it must not contain
+    any number, comparison, ranking or score derived from API data. Labelling alone does not make derived data
+    acceptable.
+  - Activation order: build switched off with `POLICY_VERSION` unchanged; send the written notice to YouTube; on a
+    day with no planned upload, publish the new policy and ship the matching `POLICY_VERSION`, re-accept at once,
+    then authorize analytics and collect. Drafts of the policy addition and the notice:
+    [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md) (not
+    authority).
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required
   as `--consent-state` or `ATLAS_YOUTUBE_CONSENT_STATE`; losing it forces re-acceptance and reconfirmation.
 - Daily maintenance (Windows Task Scheduler, under the same Windows account that owns Conveyor's Credential Locker

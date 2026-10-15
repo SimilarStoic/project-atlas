@@ -319,6 +319,24 @@ Automation must respect quality floors, provenance, spend limits, approval gates
 Only after the operating system is proven, consider expanding output, channels, topics, brands, products, revenue, and
 automation.
 
+## External capabilities — research decisions (15 Oct 2026)
+
+Rule: external tools supply capabilities; Conveyor keeps state, policy, evidence and decisions. These are direction,
+not authorization; anything run, installed or spent still needs its own founder authorization.
+
+- **Adopted:** the `/zero-spend-verify` skill (`.claude/skills/zero-spend-verify/`), which runs the regression tests
+  with every provider key removed.
+- **Optional:** a format-on-save hook (ruff and black after edits).
+- **Study after P12 (study, not install):** the analytic methods of the YouTube Agent Skill and the Task Observer
+  methodology.
+- **After P12:** an image-provider blind bake-off (Gemini and FLUX against the current provider) with a fixed small
+  budget, judged unlabeled by the founder.
+- **Keep:** Inworld Daniel as the narrator.
+- **Usable now as research aids:** Semantic Scholar and OpenAlex.
+- **Later:** Instagram tools.
+- **Skip:** Caveman.
+- **Rejected for core work:** Claude-Mem, Headroom and OmniRoute.
+
 ## Financial and commercial direction
 
 Cost tracking remains a first-class future architectural requirement. The existing conceptual boundary is:
