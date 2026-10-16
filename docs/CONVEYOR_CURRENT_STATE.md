@@ -439,7 +439,9 @@ rehearsal. `status`, `check-story`, `review-template` and `preview` never write 
 | 9 | `authorize-narration`, `resume --step narration` | Narration authorization (up to the frozen N takes and checks) |
 | 10 | `qa <run> --outcome ...`, `founder-review <run> --outcome ...` | Whole-video QA and founder acceptance of the exact artifact |
 
-Publication remains manual and separate. Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
+Publication stays separate from this runbook and separately authorized: on-demand scheduled API publishing (Phase
+3 below: `publishing_cli` prepare/approve, the founder-confirmed loopback upload screen, `reconcile-scheduled`).
+Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 
 ### Current founder boundaries
 
@@ -456,8 +458,8 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
   automatically; each build, migration, runtime change and publication still needs its own authorization.
 - **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026). Since migration 31
   (applied 16 October 2026) they apply only to the legacy pilot series; the successor series
-  `similarstoic-youtube-on-demand-v1` has neither. Real public publishing through the API is still unproven (the P11
-  scheduled-publish proof).
+  `similarstoic-youtube-on-demand-v1` has neither. P11 was uploaded through the API with a YouTube-accepted schedule
+  (16 October 2026); the public transition and its independent observation (the receipt) are not yet proven.
 
 ### Recording decisions (permanent working rule)
 
@@ -538,8 +540,14 @@ this section. No subsequent phase is authorized automatically.
 - Future analytics compliance obligations stay open (Phase 4;
   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
 
-**Phase 3 — On-demand publishing: BUILT, MERGED AND MIGRATION 31 APPLIED (16 October 2026); the P11
-scheduled-publish proof is pending.**
+**Phase 3 — On-demand publishing: NOT YET COMPLETE. Built, merged, migration 31 applied, and P11 uploaded with a
+YouTube-accepted schedule (16 October 2026). Phase 3 completes only when the public-state reconciliation succeeds.**
+
+- Completed: accepted artifact, approved package, founder-confirmed API upload and YouTube-acknowledged schedule
+  (P11 upload record below).
+- Pending: YouTube actually making P11 public at `publishAt`, Conveyor independently observing that exact video
+  public, and the publication receipt (`reconcile-scheduled`; dry run, verified backup, then live; separately
+  authorized).
 
 Applied and merged (founder-authorized, one sitting, 16 October 2026; every check passed):
 
@@ -589,6 +597,44 @@ P11 on-demand package prepared and approved (founder-authorized, 16 October 2026
   verified backup and `youtube_consent reconfirm` with both authorizations `reconfirmed`. Then the founder personally
   reviews and confirms the scheduled upload (title, description, private, `publishAt`) on the loopback upload screen;
   after `publishAt`, `reconcile-scheduled`. Each step is separately authorized.
+
+P11 scheduled upload — Conveyor's first successful real scheduled YouTube API upload (16 October 2026):
+
+- Preconditions:
+  - verified backup `D:\ConveyorBackups\pre-oauth-reconfirm-p11-publication-20261016-155740\conveyor.db` (SHA-256
+    `b2dfc715dbaa75470d9a2e87a9fae43c845a09dc3f046a9d2263780eb5afb7cf`);
+  - `youtube_consent reconfirm` returned `readonly: reconfirmed` and `upload: reconfirmed` (14:57 UTC); no
+    credential was deleted and no data was purged.
+- First attempt: refused before anything reached YouTube ("The confirmed description must keep the source credits
+  exactly"). Browsers submit a textarea's line breaks as CRLF, while the frozen source credits use LF.
+  - Fix: PR #2 (branch `fix-upload-form-newlines`, `df6d151`), merge commit
+    `83ba00cfd3cdb2992a4dec857fec598974b3dd52`. The upload screen now normalizes CRLF/CR to LF in the submitted
+    description before validation and before the confirmed intent is recorded.
+  - Tests: CI passed, and the full `/zero-spend-verify` suite passed (750, exit 0).
+  - Source-credit tampering still fails closed: edited, removed, reordered or dropped sources are refused before
+    dispatch, through the real form path. The service-layer exact-credit check is unchanged.
+- Retry on the corrected main: the founder reviewed and confirmed the scheduled upload on the loopback screen. One
+  `videos.insert` (private, with `status.publishAt`).
+- Stored journal, read-only and reconciled with the founder's result-page report (consistent):
+  - **YouTube video ID `62mEQWPWVpE`** on channel `UC1cX-OTF9-LZeNo5TaFgrgQ`.
+  - Upload operation `publication-operation-2a975ee56f0b5558f46fc781a302211db54d21f57b667f37cd303a81e212124a`
+    (schema `scheduled-upload-v1`, attempt 1).
+    - Events: reserved 16:25:06Z → dispatch_started 16:25:07Z → remote_identity_observed 16:25:16Z → succeeded
+      16:25:16Z.
+    - Requested at 16:25:08Z, completed at 16:25:15Z. Requested and returned privacy `private`, upload status
+      `uploaded`.
+    - Requested and returned `publishAt` `2026-10-16T17:45:00Z` (18:45 BST).
+  - Founder confirmation: actor `founder`, confirmed 16:25:06Z, expiry 16:40:06Z, used once. The confirmed title and
+    description are byte-identical to the frozen package (no CR); source-credits digest `301f5de9…cb42` matches.
+  - Publication `platform-publication-2a975ee56f0b5558f46fc781a302211db54d21f57b667f37cd303a81e212124a`
+    (identified 16:25:16Z, identity source `api`).
+  - Scheduled transition (release) operation
+    `publication-operation-c9e6e085df76725a506a7767472af5aa122e2613f7c13cb201c7dabb6717e3bf` (schema
+    `scheduled-public-transition-v1`): reserved, then `progress` by actor YouTube, `scheduled-commitment-accepted`,
+    `conveyor_dispatch: false`. Outcome pending.
+  - No status snapshot and no receipt yet.
+- Not yet proven: that YouTube makes the video public at `publishAt` and that the unaudited project's private-only
+  lock no longer applies. The receipt comes only from `reconcile-scheduled` after `publishAt`.
 
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
@@ -710,17 +756,20 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 
 ### Open items (as of 15 October 2026)
 
-- Phase 3 (on-demand publishing): built, merged (`c5a9729`) and migration 31 applied to the runtime (16 October
-  2026). The P11 on-demand package is prepared and approved (16 October 2026). Next, separately authorized: the P11
-  scheduled upload (as soon as practical, founder decision 16 October 2026) and its reconciliation.
+- Phase 3 (on-demand publishing): NOT YET COMPLETE. Built, merged (`c5a9729`, upload-form fix `83ba00c`),
+  migration 31 applied, and P11 uploaded as YouTube video `62mEQWPWVpE` with an accepted schedule `publishAt`
+  `2026-10-16T17:45:00Z` (16 October 2026). Next, separately authorized: once `publishAt` has passed, independently
+  verify P11 is public and run `reconcile-scheduled` (dry run, verified backup, then live) to record the receipt and
+  the final Phase 3 outcome.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
   obligation and no longer gates the P11 proof.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
   (before Phase 4 activation).
 - Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
-- P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished; P11 has an approved
-  on-demand package (not uploaded).
+- P10 (`production-10-r2`) is founder-accepted, not uploaded and not published. P11 (`production-11-flow`) is
+  founder-accepted and uploaded privately (`62mEQWPWVpE`) with a YouTube-accepted schedule (`2026-10-16T17:45:00Z`);
+  it is not yet observed public and has no receipt.
 
 ## Approved visual evidence
 
