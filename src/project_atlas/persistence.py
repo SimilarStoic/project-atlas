@@ -6,6 +6,7 @@ import json
 import os
 import re
 import sqlite3
+from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
@@ -1626,6 +1627,15 @@ MIGRATIONS: tuple[Migration, ...] = (
 
 
 MIGRATIONS_REQUIRING_FOREIGN_KEY_REBUILD = frozenset({22, 23, 26, 29, 31})
+# Rebuild migrations from this version on may not add a foreign-key violation (verified before
+# commit); earlier rebuilds are applied history and stay as they were.
+FOREIGN_KEY_VERIFIED_FROM = 31
+
+
+def _foreign_key_violations(connection: sqlite3.Connection) -> Counter:
+    """Foreign-key violations counted per (child table, parent table)."""
+
+    return Counter((row[0], row[2]) for row in connection.execute("PRAGMA foreign_key_check"))
 
 
 class AtlasRepository(
@@ -1682,15 +1692,22 @@ class AtlasRepository(
                     ).fetchone()[0]
                     self.connection.execute("PRAGMA foreign_keys = OFF")
                     self.connection.execute("PRAGMA legacy_alter_table = ON")
+                verify_references = (
+                    rebuilds_foreign_key_target and version >= FOREIGN_KEY_VERIFIED_FROM
+                )
+                violations_before = (
+                    _foreign_key_violations(self.connection) if verify_references else Counter()
+                )
                 try:
                     self.connection.execute("BEGIN")
                     for statement in statements:
                         self.connection.execute(statement)
                     if (
-                        rebuilds_foreign_key_target
-                        and self.connection.execute("PRAGMA foreign_key_check").fetchall()
+                        verify_references
+                        and _foreign_key_violations(self.connection) - violations_before
                     ):
-                        # References are not enforced during a rebuild: verify before commit.
+                        # References are not enforced during a rebuild: a rebuild may not add a
+                        # violation (pre-existing ones are left as they were).
                         raise sqlite3.IntegrityError(
                             f"Migration {version} would leave foreign-key violations."
                         )
