@@ -1165,3 +1165,120 @@ def test_receipt_failure_after_success_recovers_without_youtube_or_duplicates(
         service.reconcile_scheduled_publication("r-2", "s-3", publication.id)
     assert _count(repo, "publication_receipts") == 1
     assert not {"observe", "begin", "resume", "release"} & set(fake.calls)
+
+
+# --- Browser form submission: textarea line breaks arrive as CRLF ------------------------------
+
+
+def _browser_round_trip(screen, tmp_path, edit=None):
+    """GET the screen and POST its textarea exactly as a browser serializes it (CRLF breaks)."""
+
+    import html as html_module
+    import threading
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode
+    from urllib.request import Request, urlopen
+
+    from project_atlas.web import create_server
+
+    _repo, _client, _service, package, controller, _clock = screen
+    server = create_server(
+        port=0, database_path=tmp_path / "web.db", youtube_upload=lambda _r: controller
+    )
+
+    def serve(request):
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        try:
+            with urlopen(request) as response:
+                return response.status, response.read().decode()
+        except HTTPError as error:
+            return error.code, error.read().decode()
+        finally:
+            thread.join(timeout=5)
+
+    try:
+        base = f"http://127.0.0.1:{server.server_address[1]}"
+        status, page = serve(f"{base}/youtube/upload?package={package.id}")
+        assert status == 200
+        textarea = re.search(
+            r"<textarea id='description' name='description'>(.*?)</textarea>", page, re.S
+        ).group(1)
+        value = html_module.unescape(textarea)
+        assert value == package.manifest["description"]  # The screen shows the frozen text.
+        if edit is not None:
+            value = edit(value)
+        fields = {
+            "nonce": re.search(r"name='nonce' value='([^']+)'", page).group(1),
+            "package_id": package.id,
+            "package_digest": package.package_digest,
+            "title": html_module.unescape(
+                re.search(r"id='title' name='title' maxlength='\d+' value='([^']*)'", page).group(1)
+            ),
+            "description": value.replace("\r\n", "\n").replace("\n", "\r\n"),
+            "privacy": "private",
+            "publish_at": PUBLISH_AT,
+            "founder_confirmation": "confirmed",
+        }
+        request = Request(
+            f"{base}/youtube/upload",
+            data=urlencode(fields).encode(),
+            headers={"Content-Type": "application/x-www-form-urlencoded", "Origin": base},
+            method="POST",
+        )
+        return serve(request)
+    finally:
+        server.server_close()
+
+
+def test_browser_crlf_submission_of_the_unchanged_description_is_accepted(screen, tmp_path):
+    repo, client, _service, package, _controller, _clock = screen
+    status, page = _browser_round_trip(screen, tmp_path)
+    assert status == 200 and "YouTube accepted the scheduled upload" in page
+    [sent] = client.inserts
+    # Exactly the frozen description (LF), sources intact and in order, sent once.
+    assert sent["body"]["snippet"]["description"] == package.manifest["description"]
+    assert "\r" not in sent["body"]["snippet"]["description"]
+    assert sent["body"]["status"]["privacyStatus"] == "private"
+    assert sent["body"]["status"]["publishAt"] == PUBLISH_AT_WIRE
+    [row] = repo.connection.execute(
+        "SELECT id FROM publication_operations WHERE action_kind = 'upload'"
+    )
+    intent = repo.get_publication_operation(row["id"]).intent
+    assert intent["description"] == package.manifest["description"]
+    assert intent["package_digest"] == package.package_digest
+
+
+def _sources_lines(text):
+    head, sources = text.split("Sources:\n", 1)
+    return head, sources.split("\n")
+
+
+def _edit_source_title(text):
+    return text.replace('"Meditations"', '"Meditations (abridged)"')
+
+
+def _remove_sources(text):
+    return _sources_lines(text)[0].rstrip()
+
+
+def _reorder_sources(text):
+    head, lines = _sources_lines(text)
+    return head + "Sources:\n" + "\n".join(reversed(lines))
+
+
+def _drop_one_source(text):
+    head, lines = _sources_lines(text)
+    return head + "Sources:\n" + lines[0]
+
+
+@pytest.mark.parametrize(
+    "edit", [_edit_source_title, _remove_sources, _reorder_sources, _drop_one_source]
+)
+def test_browser_submission_with_changed_sources_is_still_refused(screen, tmp_path, edit):
+    repo, client, _service, _package, _controller, _clock = screen
+    status, page = _browser_round_trip(screen, tmp_path, edit)
+    assert status == 409 and "refused before anything was sent" in page
+    assert "keep the source credits exactly" in page
+    assert client.inserts == []
+    assert _count(repo, "publication_operations") == 0

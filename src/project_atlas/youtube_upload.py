@@ -293,6 +293,14 @@ class YouTubeUploadAdapter(YouTubeReadOnlyObservationAdapter):
         )
 
 
+def _form_text(value: str | None) -> str | None:
+    """A textarea value as the founder saw it: browsers submit its line breaks as CRLF."""
+
+    if not isinstance(value, str):
+        return value
+    return value.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _page(title: str, body: str) -> str:
     return (
         "<!doctype html><html lang='en'><head><meta charset='utf-8'>"
@@ -674,7 +682,7 @@ class YouTubeUploadController:
             )
         title, description, privacy = (
             form.get("title"),
-            form.get("description"),
+            _form_text(form.get("description")),
             form.get("privacy"),
         )
         errors = validate_upload_values(title, description, privacy)
