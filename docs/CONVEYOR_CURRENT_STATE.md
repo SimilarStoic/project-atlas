@@ -560,6 +560,33 @@ Applied and merged (founder-authorized, one sitting, 16 October 2026; every chec
 - PR #1 merged with merge commit `c5a97292039d9b1084242afd677fb891b424c17c` (parents `3222150`, `2921ed9`); CI on
   `main` run 38912834217 passed. The main checkout was pulled to `c5a9729`.
 
+P11 on-demand package prepared and approved (founder-authorized, 16 October 2026; no YouTube call, no upload, no
+`publishAt` chosen):
+
+- Package `publishing-package-similarstoic-youtube-on-demand-v1-slot-1-v1` (series
+  `similarstoic-youtube-on-demand-v1`, slot 1, week `on-demand`). Artifact `production-11-flow-artifact-1`, SHA-256
+  `6018887a53da9d9a62061353e5acab87ecbe4674102fce9434e7b2d7f36bbc85`.
+- Package digest `7d0249f7715174f93b3f66c0bb6c5fdd9484319b84a16e3e22842b5f1d707fff`, identical to the reviewed dry
+  run. Source-credits digest `301f5de9f1328e30b09454aa3862a2c92ed049617b396e9ac1d00e507809cb42` (claim set
+  `production-11-claim-set`; three peer-reviewed sources).
+- Metadata: `D:\ConveyorOS\channels\SimilarStoic\production-11\publish\p11-on-demand-metadata.json`. Title "Your
+  investments barely moved in a year. Should you sell?". Founder decisions:
+  - the original source URLs are kept (the founder confirmed the Tversky & Kahneman EHESS PDF);
+  - Sources follow `#Shorts`;
+  - `altered_or_synthetic_media.declare_to_youtube` is false (non-realistic animation; AI narration voice disclosed
+    in the description).
+- Founder approval `publication-gate-similarstoic-youtube-on-demand-v1-slot-1-v1-founder-approval`.
+- Backups:
+  - before prepare:
+    `D:\ConveyorBackups\pre-publishing-prepare-publishing-package-similarstoic-youtube-on-demand-v1-slot-1-v1-20261016-153426\conveyor.db`
+    (SHA-256 `57963d33904fd8e508a7ea05480a6e758887dec8cdd8f20c0bbdae1234f3879b`);
+  - before approve:
+    `D:\ConveyorBackups\pre-publishing-approve-publishing-package-similarstoic-youtube-on-demand-v1-slot-1-v1-20261016-153440\conveyor.db`
+    (SHA-256 `c69baac0140f09c1e55ce59cf6cdecc3984808b4a6632e1ee82ab82ea794119e`).
+- Runtime database SHA-256: `5f1c982e…0a81` → `4e821bde…5981` (prepare) → `3e2148eb71f4f02deaee41fc0576f089a63aa6bbac38da8df4ebc2554c041040` (approve).
+- Next, separately authorized: after the 23 October OAuth durability check, the founder confirms the scheduled upload
+  (title, description, private, `publishAt`) on the loopback upload screen; after `publishAt`, `reconcile-scheduled`.
+
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
 - Successor series `similarstoic-youtube-on-demand-v1` with timing mode `on_demand` and an unbounded slot number.
@@ -681,13 +708,15 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 ### Open items (as of 15 October 2026)
 
 - Phase 3 (on-demand publishing): built, merged (`c5a9729`) and migration 31 applied to the runtime (16 October
-  2026). Next, separately authorized: the P11 scheduled-publish proof after the 23 October OAuth durability check.
+  2026). The P11 on-demand package is prepared and approved (16 October 2026). Next, separately authorized: the P11
+  scheduled upload and its reconciliation, after the 23 October OAuth durability check.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
   (before Phase 4 activation).
 - Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
-- P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished.
+- P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished; P11 has an approved
+  on-demand package (not uploaded).
 
 ## Approved visual evidence
 
