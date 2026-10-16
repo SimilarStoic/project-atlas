@@ -515,6 +515,11 @@ this section. No subsequent phase is authorized automatically.
   notify YouTube in writing.
 - The founder's intended notification route is a reply to the existing Google correspondence; whether that is
   formally sufficient is not confirmed and must be resolved before analytics is activated.
+- Prospective inquiry (founder, 16 October 2026): the founder will send an inquiry on the existing 6-8 October thread
+  explaining the planned Analytics use (not active: no Analytics API calls, no new scopes, and the privacy-policy
+  update will precede activation) and asking whether that thread is the correct notification route or a new audit
+  submission is required. The formal notice remains a separate obligation until its route is confirmed. Send date:
+  not yet confirmed by the founder (record it only on the founder's confirmation).
 - The OAuth app and both authorizations remain as recorded (YouTube block below). The durability check is due on or
   after 23 October 2026 and still needs explicit founder authorization.
 - Future analytics compliance obligations stay open (Phase 4;
@@ -527,6 +532,11 @@ this section. No subsequent phase is authorized automatically.
 - It starts with a read-only implementation plan, followed by a separate founder approval decision. The plan must
   cover the successor publishing series, migration 31, founder authorization of each exact publication, and a
   controlled first real public API publication proof using P10 or P11.
+- Source credits (scope addition): on-demand packages populate the publication description's source credits from
+  the production's existing approved script claims and source evidence (`ScriptClaimSet`, `Claim`, `Source`,
+  `ClaimEvidence`); the resulting attribution is shown on the founder confirmation and frozen with the approval, and
+  packaging fails closed where a sourced claim's required attribution is missing. No parallel credit system. This
+  closes the "source-credit projection" gap for on-demand packages once implemented.
 - Migration, implementation, runtime changes and publication remain separately authorized.
 
 **Phase 4 — YouTube Analytics: AFTER Phase 3.**
@@ -535,6 +545,13 @@ this section. No subsequent phase is authorized automatically.
   → written YouTube notice → privacy-policy update with the matching `POLICY_VERSION` → renewed acceptance and
   analytics consent → first authorized collection.
 - No analytics activation or additional scopes are authorized now.
+- Completion criteria: authorized Analytics collection, storage, refresh and revocation verified working, **and** at
+  least one compliant production-linked learning review that interprets YouTube's reported values without creating
+  prohibited derived metrics. Prefer P11; P8 or P9 are allowed if P11 data is not available.
+- Applying the Studio-export alignment procedure to API data needs its own compliance check; the Studio-export
+  procedure stays independently available.
+- Revocation and deletion are verified on isolated fixtures and rehearsals first. Live Google credentials and
+  production data are never revoked or deleted without separate founder authorization.
 
 **Phase 5 — P12: AFTER the preceding phases, subject to explicit founder authorization.**
 
@@ -547,8 +564,8 @@ this section. No subsequent phase is authorized automatically.
 
 - Phase 3 (on-demand publishing): next; read-only implementation plan first, then a founder approval decision.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
-- Analytics notification route: reply to the existing Google correspondence intended; formal sufficiency
-  unconfirmed (before Phase 4 activation).
+- Analytics notification route: prospective inquiry on the existing 6-8 October thread planned by the founder (send
+  date to be recorded on confirmation); formal sufficiency unconfirmed (before Phase 4 activation).
 - Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
 - P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished.
 
@@ -1193,7 +1210,7 @@ Phase 1 (canonical v2 fidelity) and Phase 1B (acquisition retry rounds and aspec
 gaps are:
 
 - recipe binding, including moving the full-frame character requirement into the channel recipe;
-- source-credit projection;
+- source-credit projection (on-demand packages: Phase 3 scope, closed once implemented);
 - character continuity;
 - scene density;
 - the hook overlay lasts only as long as state 1 (1.40 s on P11); whether it should have a minimum on-screen time is
