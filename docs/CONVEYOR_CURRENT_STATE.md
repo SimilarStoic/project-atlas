@@ -584,8 +584,11 @@ P11 on-demand package prepared and approved (founder-authorized, 16 October 2026
     `D:\ConveyorBackups\pre-publishing-approve-publishing-package-similarstoic-youtube-on-demand-v1-slot-1-v1-20261016-153440\conveyor.db`
     (SHA-256 `c69baac0140f09c1e55ce59cf6cdecc3984808b4a6632e1ee82ab82ea794119e`).
 - Runtime database SHA-256: `5f1c982e…0a81` → `4e821bde…5981` (prepare) → `3e2148eb71f4f02deaee41fc0576f089a63aa6bbac38da8df4ebc2554c041040` (approve).
-- Next, separately authorized: after the 23 October OAuth durability check, the founder confirms the scheduled upload
-  (title, description, private, `publishAt`) on the loopback upload screen; after `publishAt`, `reconcile-scheduled`.
+- **Founder decision (16 October 2026): publish P11 as soon as practical, not after 23 October.** The P11 proof no
+  longer depends on the 23 October OAuth durability check, which stays a separate obligation. Before the upload: a
+  verified backup and `youtube_consent reconfirm` with both authorizations `reconfirmed`. Then the founder personally
+  reviews and confirms the scheduled upload (title, description, private, `publishAt`) on the loopback upload screen;
+  after `publishAt`, `reconcile-scheduled`. Each step is separately authorized.
 
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
@@ -605,7 +608,7 @@ P11 on-demand package prepared and approved (founder-authorized, 16 October 2026
   journal distinguishes the scheduled commitment from the actual public outcome; success (and the receipt) only
   after independent observation that the exact video became public. Conveyor cannot cancel a scheduled release with
   `youtube.upload`; stopping it requires manual YouTube Studio intervention, and the confirmation screen says so.
-  Proof video: P11, after the 23 October 2026 OAuth durability check.
+  Proof video: P11, as soon as practical (founder decision, 16 October 2026; see the P11 package record above).
 - Route A (a direct public `videos.insert`) is a separately authorized fallback and is not built now. `videos.update`
   and any new scope are not proposed.
 - Migration 31 (applied 16 October 2026, above): rebuilds `publishing_packages` (slot CHECK ≥ 1; the pilot series keep their 1-3 limit in
@@ -709,8 +712,9 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 
 - Phase 3 (on-demand publishing): built, merged (`c5a9729`) and migration 31 applied to the runtime (16 October
   2026). The P11 on-demand package is prepared and approved (16 October 2026). Next, separately authorized: the P11
-  scheduled upload and its reconciliation, after the 23 October OAuth durability check.
-- OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
+  scheduled upload (as soon as practical, founder decision 16 October 2026) and its reconciliation.
+- OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
+  obligation and no longer gates the P11 proof.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
   (before Phase 4 activation).
