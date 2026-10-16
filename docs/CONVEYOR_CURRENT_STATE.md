@@ -528,19 +528,39 @@ this section. No subsequent phase is authorized automatically.
 - Future analytics compliance obligations stay open (Phase 4;
   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
 
-**Phase 3 — On-demand publishing: NEXT.**
+**Phase 3 — On-demand publishing: plan approved (16 October 2026); build on a branch, not merged.**
 
-- Founder-selected next build. Intended outcome: controlled YouTube publication of accepted videos on founder
-  command, without publication windows or the channel-week restriction.
-- It starts with a read-only implementation plan, followed by a separate founder approval decision. The plan must
-  cover the successor publishing series, migration 31, founder authorization of each exact publication, and a
-  controlled first real public API publication proof using P10 or P11.
-- Source credits (scope addition): on-demand packages populate the publication description's source credits from
-  the production's existing approved script claims and source evidence (`ScriptClaimSet`, `Claim`, `Source`,
-  `ClaimEvidence`); the resulting attribution is shown on the founder confirmation and frozen with the approval, and
-  packaging fails closed where a sourced claim's required attribution is missing. No parallel credit system. This
-  closes the "source-credit projection" gap for on-demand packages once implemented.
-- Migration, implementation, runtime changes and publication remain separately authorized.
+- Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
+  windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
+- Successor series `similarstoic-youtube-on-demand-v1` with timing mode `on_demand` and an unbounded slot number.
+  Packaging requires the run's founder-accepted current render (ID and SHA-256).
+- Source credits: on-demand packages populate the publication description's source credits from the production's
+  existing approved script claims and source evidence (`ScriptClaimSet`, `Claim`, `Source`, `ClaimEvidence`); the
+  attribution is shown on the founder confirmation and frozen with the approval, and packaging fails closed where a
+  sourced claim's required attribution is missing. No parallel credit system. This closes the "source-credit
+  projection" gap for on-demand packages once implemented.
+- Per-publication founder authorization: a single-use, expiring founder confirmation bound to the package digest,
+  the artifact SHA-256, the exact metadata (title, description including source credits), the privacy and the
+  scheduled `publishAt`. That confirmation, given before dispatch, **is** the publication authorization; any preview
+  of the private YouTube copy is optional, not a second gate.
+- Proof route = **scheduled publish**: one founder-authorized private `videos.insert` carrying `status.publishAt`
+  under the existing `youtube.upload` scope; YouTube performs the public transition at `publishAt`. The publishing
+  journal distinguishes the scheduled commitment from the actual public outcome; success (and the receipt) only
+  after independent observation that the exact video became public. Conveyor cannot cancel a scheduled release with
+  `youtube.upload`; stopping it requires manual YouTube Studio intervention, and the confirmation screen says so.
+  Proof video: P11, after the 23 October 2026 OAuth durability check.
+- Route A (a direct public `videos.insert`) is a separately authorized fallback and is not built now. `videos.update`
+  and any new scope are not proposed.
+- Migration 31 (unapplied): rebuilds `publishing_packages` (slot CHECK ≥ 1) and `publication_receipts` (without the
+  channel-week UNIQUE and the weekly-limit trigger), copying every legacy row verbatim with fingerprint, integrity
+  and foreign-key verification; legacy series keep their windows and week rule. It is built on a branch and applied
+  only as a founder-authorized step: maintenance task paused, verified backup, apply and verify, merge, task
+  resumed. Neither `main` nor the live checkout may contain migration 31 before that step, because the 03:00
+  maintenance task and live commands construct `AtlasRepository`, which applies pending migrations.
+- The build report must assess whether scheduled publishing fits the existing declared YouTube use and the
+  published privacy policy (version 2026-10-06), not assume it from unchanged scopes.
+- Merging, applying migration 31, pausing the maintenance task, packaging or publishing P11 and any YouTube API call
+  remain separately authorized.
 
 **Phase 4 — YouTube Analytics: AFTER Phase 3.**
 
@@ -565,7 +585,9 @@ this section. No subsequent phase is authorized automatically.
 
 ### Open items (as of 15 October 2026)
 
-- Phase 3 (on-demand publishing): next; read-only implementation plan first, then a founder approval decision.
+- Phase 3 (on-demand publishing): plan approved 16 October 2026; build on a branch (not merged, migration 31 not
+  applied); the P11 scheduled-publish proof follows the 23 October OAuth durability check, each step separately
+  authorized.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed

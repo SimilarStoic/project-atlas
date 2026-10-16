@@ -327,10 +327,10 @@ not authorization; anything run, installed or spent still needs its own founder 
 - **Adopted:** the `/zero-spend-verify` skill (`.claude/skills/zero-spend-verify/`), which runs the regression tests
   with every provider key removed.
 - **Optional:** a format-on-save hook (ruff and black after edits).
-- **YouTube Agent Skill:** its retention method (Studio export, then hook, cliff and slide reading, aligned to
-  Conveyor's own production timings) is under evaluation through the P9 retention experiment. Rejected for Conveyor:
-  Blotato publishing, the `youtube-transcript-api` scraper, API-based competitor ranking (a Developer Policies
-  III.E.4(h) derived-metrics risk) and regex hook scoring.
+- **YouTube Agent Skill:** its retention method (Studio export, aligned to Conveyor's own production timings) is
+  adopted as the repeatable P9 retention-alignment procedure (see `docs/CONVEYOR_CURRENT_STATE.md`, "Pre-P12
+  sequence"). Rejected for Conveyor: Blotato publishing, the `youtube-transcript-api` scraper, API-based competitor
+  ranking (a Developer Policies III.E.4(h) derived-metrics risk) and regex hook scoring.
 - **Task Observer:** the principle is adopted: a correction is closed only when a mechanism (a test or a check)
   prevents it from recurring, implemented through the existing decision records, lessons and tests. The plugin is
   not installed, and there is no new mandatory log.
