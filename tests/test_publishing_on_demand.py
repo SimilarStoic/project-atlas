@@ -1128,3 +1128,40 @@ def test_cli_refuses_live_commands_below_the_code_schema_head(tmp_path, monkeypa
     )
     assert code == 2 and "migration 30" in report["refused"]
     assert database_sha256(db) == before and not (tmp_path / "backups").exists()
+
+
+def test_receipt_failure_after_success_recovers_without_youtube_or_duplicates(
+    world, monkeypatch
+) -> None:
+    repo, _storage, fake, service, clock, _artifact_id = world
+    package, _upload, publication = _scheduled(world)
+    clock.now = T0 + timedelta(hours=6)
+    public_at = (T0 + timedelta(hours=5, minutes=30)).isoformat()
+    fake.remote = replace(
+        fake.remote, privacy="public", public_at=public_at, observed_at=clock.now.isoformat()
+    )
+    create = repo.create_publication_receipt
+
+    def fail(*_args, **_kwargs):
+        raise sqlite3.OperationalError("disk I/O error")  # Injected at receipt creation.
+
+    monkeypatch.setattr(repo, "create_publication_receipt", fail)
+    with pytest.raises(sqlite3.OperationalError):
+        service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
+    transition = _transition(repo, package.id)
+    assert transition.outcome == "succeeded" and _count(repo, "publication_receipts") == 0
+    statuses, events = _count(repo, "publication_status_snapshots"), _events(repo, transition.id)
+    monkeypatch.setattr(repo, "create_publication_receipt", create)
+    fake.calls.clear()
+    fake.remote = replace(fake.remote, privacy="private")  # A retry must not re-observe.
+    receipt = service.reconcile_scheduled_publication("r-1", "s-2", publication.id)
+    # Only the existing read-only channel check; no observation, upload or transition request.
+    assert fake.calls == ["channel"]
+    assert (receipt.release_operation_id, receipt.public_status_id) == (transition.id, "s-1")
+    assert receipt.public_at == public_at and receipt.pilot_week == ON_DEMAND_WEEK
+    assert _count(repo, "publication_status_snapshots") == statuses
+    assert _events(repo, transition.id) == events
+    with pytest.raises(ValueError, match="already has receipt r-1"):
+        service.reconcile_scheduled_publication("r-2", "s-3", publication.id)
+    assert _count(repo, "publication_receipts") == 1
+    assert not {"observe", "begin", "resume", "release"} & set(fake.calls)

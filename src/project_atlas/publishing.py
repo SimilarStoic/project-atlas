@@ -542,6 +542,12 @@ class PublishingService:
             # or an identity reconciled later). Recording it is idempotent and dispatches nothing.
             transition = self._record_scheduled_commitment(upload.id, publication)
         if (
+            upload.intent.get("schema") == SCHEDULED_UPLOAD_SCHEMA
+            and transition is not None
+            and transition.outcome == "succeeded"
+        ):
+            return self._complete_scheduled_receipt(receipt_id, publication_id, transition)
+        if (
             upload.intent.get("schema") != SCHEDULED_UPLOAD_SCHEMA
             or upload.outcome != "succeeded"
             or transition is None
@@ -593,14 +599,49 @@ class PublishingService:
             transition.id,
             "succeeded",
             "Conveyor",
-            {"method": "independent-public-observation", "public_status_id": status.id},
+            {
+                "method": "independent-public-observation",
+                "public_status_id": status.id,
+                "public_at": observation.public_at,
+            },
         )
+        return self._complete_scheduled_receipt(
+            receipt_id, publication_id, self.repository.get_publication_operation(transition.id)
+        )
+
+    def _complete_scheduled_receipt(
+        self, receipt_id: str, publication_id: str, transition: PublicationOperation
+    ) -> PublicationReceipt:
+        """Create the receipt from the transition's recorded public observation.
+
+        The status, the transition's success and the receipt are separate commits. A retry after
+        a failure between them finishes from what the success event recorded: no new YouTube
+        observation, status or event. A publication that already has its receipt is refused.
+        """
+
+        row = self.repository.connection.execute(
+            "SELECT id FROM publication_receipts WHERE release_operation_id = ?",
+            (transition.id,),
+        ).fetchone()
+        if row is not None:
+            raise ValueError(
+                f"This scheduled publication already has receipt {row['id']}; nothing recorded."
+            )
+        succeeded = self.repository.get_publication_operation_events(transition.id)[-1]
+        observed = succeeded.evidence
+        if (
+            succeeded.kind != "succeeded"
+            or observed.get("method") != "independent-public-observation"
+            or not observed.get("public_status_id")
+            or not observed.get("public_at")
+        ):
+            raise ValueError("The succeeded transition lacks its recorded public observation.")
         return self.repository.create_publication_receipt(
             receipt_id,
             publication_id,
             transition.id,
-            status.id,
-            observation.public_at,
+            observed["public_status_id"],
+            observed["public_at"],
             "provider-public-state",
             "second",
         )
