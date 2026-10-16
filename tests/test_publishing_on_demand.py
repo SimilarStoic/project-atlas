@@ -507,15 +507,18 @@ def test_accepted_schedule_is_a_pending_commitment_not_a_publication(world) -> N
         _scheduled_result(privacy="public"),
     ],
 )
-def test_unconfirmed_schedule_closes_the_transition_as_failed(world, result) -> None:
+def test_unconfirmed_schedule_stays_unknown_until_observed(world, result) -> None:
+    """A schedule YouTube did not echo is an unknown outcome, never a refusal."""
+
     repo, _storage, fake, service, clock, _artifact_id = world
     fake.transfer = result
     package, _upload, publication = _scheduled(world)
     transition = _transition(repo, package.id)
-    assert transition.outcome == "failed"
-    assert repo.get_publication_operation_events(transition.id)[-1].evidence == {
-        "reason": "schedule-not-confirmed-by-youtube"
-    }
+    assert transition.outcome == "pending"
+    assert _events(repo, transition.id) == ["reserved"]  # No accepted-commitment claim.
+    # It still blocks another scheduled upload of the same artifact.
+    with pytest.raises(ValueError):
+        service.reserve_upload(package.id, attempt=2, upload=_confirmed(package))
     clock.now = T0 + timedelta(hours=6)
     fake.remote = replace(
         fake.remote,
@@ -523,9 +526,9 @@ def test_unconfirmed_schedule_closes_the_transition_as_failed(world, result) -> 
         public_at=clock.now.isoformat(),
         observed_at=clock.now.isoformat(),
     )
-    with pytest.raises(ValueError, match="No accepted, pending scheduled transition"):
-        service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
-    assert _count(repo, "publication_receipts") == 0
+    receipt = service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
+    assert receipt.release_operation_id == transition.id
+    assert _events(repo, transition.id) == ["reserved", "succeeded"]
 
 
 def test_uncertain_upload_outcome_records_no_commitment(world) -> None:
@@ -665,7 +668,7 @@ def _schema(connection) -> dict[tuple[str, str], str]:
     }
 
 
-def test_fresh_schema_has_unbounded_slots_and_no_receipt_week_rule(tmp_path) -> None:
+def test_fresh_schema_has_unbounded_slots_and_a_week_rule_scoped_to_legacy(tmp_path) -> None:
     repo = AtlasRepository(tmp_path / "fresh.sqlite")
     try:
         connection = repo.connection
@@ -675,8 +678,14 @@ def test_fresh_schema_has_unbounded_slots_and_no_receipt_week_rule(tmp_path) -> 
         assert "BETWEEN 1 AND 3" not in sql["publishing_packages"]
         assert "UNIQUE(channel_id, pilot_week)" not in sql["publication_receipts"]
         names = {name for _kind, name in _schema(connection)}
-        assert "publication_receipt_weekly_limit" not in names
         assert "idx_publishing_packages_artifact" in names
+        scoped = {
+            name: text
+            for (_kind, name), text in _schema(connection).items()
+            if name in {"publication_receipt_weekly_limit", "idx_publication_receipts_channel_week"}
+        }
+        assert len(scoped) == 2
+        assert all("pilot_week <> 'on-demand'" in text for text in scoped.values())
         assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         assert not [name for name in sql if re.search(r"_v\d+$", name)]
@@ -716,15 +725,20 @@ def test_upgrade_30_to_31_preserves_every_row_trigger_and_reference(tmp_path, mo
         assert connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
         after_schema = _schema(connection)
-        removed = set(before_schema) - set(after_schema)
-        assert removed == {("trigger", "publication_receipt_weekly_limit")}
+        assert set(before_schema) - set(after_schema) == set()
         changed = {
             key
             for key in before_schema.keys() & after_schema.keys()
             if before_schema[key] != after_schema[key]
         }
-        assert changed == {("table", "publishing_packages"), ("table", "publication_receipts")}
-        assert set(after_schema) - set(before_schema) == set()
+        assert changed == {
+            ("table", "publishing_packages"),
+            ("table", "publication_receipts"),
+            ("trigger", "publication_receipt_weekly_limit"),
+        }
+        assert set(after_schema) - set(before_schema) == {
+            ("index", "idx_publication_receipts_channel_week")
+        }
         for statement in (
             "UPDATE publishing_packages SET version = 2",
             "DELETE FROM publication_receipts",
@@ -967,3 +981,150 @@ def test_cli_rehearsal_never_observes_youtube(cli_world, capsys) -> None:
     with pytest.raises(publishing_cli.RehearsalObservationBlocked):
         adapter.observe_remote("video")
     assert adapter.authenticated_channel() == TARGET_CHANNEL
+
+
+# --- Security-review regressions ----------------------------------------------------------------
+
+
+def test_uncertain_upload_blocks_the_same_artifact_in_another_slot(world) -> None:
+    repo, _storage, fake, service, _clock, _artifact_id = world
+    fake.transfer = TransferResult("unknown", TARGET_CHANNEL, reason="response-lost")
+    first = _approved_od(service, repo)
+    service.begin_api_upload(service.reserve_upload(first.id, upload=_confirmed(first)).id)
+    second = _approved_od(service, repo, package_id="od-2", slot=2)
+    with pytest.raises(ValueError, match="already has an unresolved or successful"):
+        service.reserve_upload(second.id, upload=_confirmed(second))
+    assert fake.calls.count("begin") == 1
+
+
+def test_scheduled_intents_are_refused_on_legacy_packages_and_vice_versa(world) -> None:
+    repo, _storage, _fake, service, _clock, _artifact_id = world
+    legacy = service.prepare_package(
+        "legacy-1", "synthetic-pilot", 1, 1, "fake-artifact", _manifest()
+    )
+    service.approve_package("legacy-approval", legacy.id, "founder")
+    with pytest.raises(ValueError, match="only scheduled intents"):
+        repo.reserve_publication_operation(
+            legacy.id, "upload", "api", {"schema": SCHEDULED_UPLOAD_SCHEMA, "privacy": "private"}
+        )
+    package = _approved_od(service, repo)
+    with pytest.raises(ValueError, match="only scheduled intents"):
+        repo.reserve_publication_operation(
+            package.id, "upload", "api", {"schema": "private-transfer-v1", "privacy": "private"}
+        )
+    assert _count(repo, "publication_operations") == 0
+
+
+def test_commitment_lost_to_a_stop_is_recovered_at_reconciliation(world, monkeypatch) -> None:
+    repo, _storage, fake, service, clock, _artifact_id = world
+    package = _approved_od(service, repo)
+    upload = service.reserve_upload(package.id, upload=_confirmed(package))
+
+    def stop(*_args):
+        raise KeyboardInterrupt  # The process stops after the upload was recorded.
+
+    monkeypatch.setattr(service, "_record_scheduled_commitment", stop)
+    with pytest.raises(KeyboardInterrupt):
+        service.begin_api_upload(upload.id)
+    monkeypatch.undo()
+    assert repo.get_publication_operation(upload.id).outcome == "succeeded"
+    assert _count(repo, "publication_operations") == 1
+    publication_id = repo.connection.execute("SELECT id FROM platform_publications").fetchone()[0]
+    clock.now = T0 + timedelta(hours=6)
+    fake.remote = replace(
+        fake.remote,
+        privacy="public",
+        public_at=clock.now.isoformat(),
+        observed_at=clock.now.isoformat(),
+    )
+    receipt = service.reconcile_scheduled_publication("r-1", "s-1", publication_id)
+    transition = _transition(repo, package.id)
+    assert transition.outcome == "succeeded" and receipt.release_operation_id == transition.id
+
+
+def test_inconsistent_public_time_is_refused_before_anything_is_written(world) -> None:
+    repo, _storage, fake, service, clock, _artifact_id = world
+    package, _upload, publication = _scheduled(world)
+    clock.now = T0 + timedelta(hours=6)
+    statuses = _count(repo, "publication_status_snapshots")
+    fake.remote = replace(
+        fake.remote,
+        privacy="public",
+        public_at=clock.now.isoformat(),
+        observed_at=(clock.now - timedelta(minutes=5)).isoformat(),  # Observed before public.
+    )
+    with pytest.raises(ValueError, match="inconsistent; nothing recorded"):
+        service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
+    assert _count(repo, "publication_status_snapshots") == statuses
+    assert _transition(repo, package.id).outcome == "pending"
+
+
+def test_empty_claim_set_fails_closed(tmp_path) -> None:
+    repo = AtlasRepository(tmp_path / "x.sqlite")
+    storage = LocalMediaStorage(tmp_path / "media")
+    try:
+        _world_rows(repo, storage, "empty", 807, credits=False)
+        with repo.connection:
+            repo.connection.execute(
+                "INSERT INTO script_claim_sets VALUES ('empty-set', 'empty-script', ?)", (NOW,)
+            )
+        with pytest.raises(SourceCreditError, match="declares no sourced claims"):
+            source_credits(repo, "empty-run")
+    finally:
+        repo.close()
+
+
+def test_rebuild_migration_with_dangling_references_rolls_back(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS[:30])
+    path = tmp_path / "fk.sqlite"
+    repo = AtlasRepository(path)
+    try:
+        rows_before = _fingerprint(path)
+        dangling = (
+            "INSERT INTO publishing_packages_v30 VALUES ('dangling', 'k', 1, 1, NULL, "
+            f"'missing-artifact', '{'a' * 64}', 'youtube', 'c', 'w', '{{}}', '{'b' * 64}', 'now')"
+        )
+        statements = list(MIGRATION_31[1])
+        statements.insert(1, dangling)  # After the rename, before the copy.
+        with pytest.raises(sqlite3.IntegrityError, match="foreign-key violations"):
+            repo.apply_migrations(MIGRATIONS[:30] + ((31, tuple(statements)),))
+        version = repo.connection.execute("SELECT MAX(version) FROM schema_migrations")
+        assert version.fetchone()[0] == 30
+        assert _fingerprint(path) == rows_before
+        assert repo.connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
+    finally:
+        repo.close()
+
+
+def test_cli_refuses_live_commands_below_the_code_schema_head(tmp_path, monkeypatch, capsys):
+    for name in ("ATLAS_DB_PATH", "ATLAS_MEDIA_STORAGE_ROOT"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS[:30])
+    db = tmp_path / "v30.sqlite"
+    AtlasRepository(db).close()
+    (tmp_path / "media").mkdir()
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS)
+    before = database_sha256(db)
+    code, report = _cli(capsys, "status", "--db", db, "--media", tmp_path / "media")
+    assert code == 0 and (report["schema_version"], report["code_schema_head"]) == (30, 31)
+    code, report = _cli(
+        capsys,
+        "approve",
+        "od-1",
+        "--package-digest",
+        "0" * 64,
+        "--decision-id",
+        "d",
+        "--founder-actor",
+        "founder",
+        "--db",
+        db,
+        "--media",
+        tmp_path / "media",
+        "--expect-db-sha256",
+        before,
+        "--backup-root",
+        tmp_path / "backups",
+    )
+    assert code == 2 and "migration 30" in report["refused"]
+    assert database_sha256(db) == before and not (tmp_path / "backups").exists()

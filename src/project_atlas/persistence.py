@@ -1686,6 +1686,14 @@ class AtlasRepository(
                     self.connection.execute("BEGIN")
                     for statement in statements:
                         self.connection.execute(statement)
+                    if (
+                        rebuilds_foreign_key_target
+                        and self.connection.execute("PRAGMA foreign_key_check").fetchall()
+                    ):
+                        # References are not enforced during a rebuild: verify before commit.
+                        raise sqlite3.IntegrityError(
+                            f"Migration {version} would leave foreign-key violations."
+                        )
                     self.connection.execute(
                         "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
                         (version, now()),

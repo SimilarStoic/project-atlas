@@ -75,6 +75,8 @@ def source_credits(repository: Any, run_id: str) -> dict[str, Any]:
                     "url": source.url.strip(),
                 }
             )
+    if not sources:
+        raise SourceCreditError(f"Claim set {claim_set.id} declares no sourced claims.")
     lines = [CREDITS_HEADING]
     for item in sources:
         lead = f"{item['author']}. " if item["author"] else ""

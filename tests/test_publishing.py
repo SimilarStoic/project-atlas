@@ -884,20 +884,10 @@ def test_manual_window_expires_without_catchup(setup):
     assert "release" not in fake.calls
 
 
-def test_legacy_week_rule_lives_in_code_after_migration_31(setup):
-    """Migration 31 removed the schema-level channel-week rule; legacy series keep it in code."""
-
+def test_receipt_week_uniqueness_is_independent_of_service(setup):
     repo, storage, fake, service = setup
     package, upload, publication, private, release, receipt = _public(service, fake)
-    names = {row[0] for row in repo.connection.execute("SELECT name FROM sqlite_master")}
-    assert "publication_receipt_weekly_limit" not in names
-    # The legacy (pilot) package's week is still consumed, through the service-layer rule.
-    assert "channel pilot week" in repo.release_week_conflict(package)
-    # Direct inserts still meet every other receipt constraint (here: verified public state).
-    with (
-        pytest.raises(sqlite3.IntegrityError, match="verified public observation"),
-        repo.connection,
-    ):
+    with pytest.raises(sqlite3.IntegrityError, match="channel pilot week"), repo.connection:
         repo.connection.execute(
             "INSERT INTO publication_receipts SELECT 'other-receipt', 'other-publication', "
             "package_id, gate_decision_id, 'other-release', 'other-status', execution_mode, "

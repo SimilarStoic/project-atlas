@@ -650,6 +650,17 @@ MIGRATION_31: tuple[int, tuple[str, ...]] = (
           IS 'attest_external')
         BEGIN SELECT RAISE(ABORT, 'only founder-attested receipts may lack public status'); END
         """,
+        # The channel-week rule stays in the database for every week except on-demand
+        # publishing, as a partial UNIQUE index and the same trigger, now scoped.
+        "CREATE UNIQUE INDEX idx_publication_receipts_channel_week "
+        "ON publication_receipts(channel_id, pilot_week) WHERE pilot_week <> 'on-demand'",
+        """
+        CREATE TRIGGER publication_receipt_weekly_limit BEFORE INSERT ON publication_receipts
+        WHEN NEW.pilot_week <> 'on-demand' AND EXISTS (
+          SELECT 1 FROM publication_receipts r WHERE r.channel_id = NEW.channel_id
+            AND r.pilot_week = NEW.pilot_week)
+        BEGIN SELECT RAISE(ABORT, 'channel pilot week already consumed'); END
+        """,
     )
     + _immutable("publishing_packages", _table_columns("publishing_packages"))
     + _immutable(

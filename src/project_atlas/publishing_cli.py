@@ -98,11 +98,33 @@ def _rehearsal(db: Path, media: Path) -> Iterator[Any]:
         shutil.rmtree(root, ignore_errors=True)
 
 
+def _schema_version(db: Path) -> int:
+    connection = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
+    try:
+        return connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0]
+    finally:
+        connection.close()
+
+
+def _head_version() -> int:
+    from project_atlas.persistence import MIGRATIONS
+
+    return max(version for version, _statements in MIGRATIONS)
+
+
 def _live(args: argparse.Namespace, label: str, operation, live_adapter=None) -> dict[str, Any]:
     db, media = _paths(args)
     actual = database_sha256(db)
     if actual != args.expect_db_sha256:
         raise CliError(f"Database SHA-256 is {actual}, not {args.expect_db_sha256}; unchanged.")
+    # Opening the repository applies pending migrations, so a live command never runs on a
+    # database below this code's head: applying a migration is its own founder-authorized step.
+    version, head = _schema_version(db), _head_version()
+    if version != head:
+        raise CliError(
+            f"Database schema is at migration {version}, this code at {head}; apply the "
+            "migration through its own authorized procedure first. Unchanged."
+        )
     report: dict[str, Any] = {"command": label, "db_sha256_before": actual}
     with _rehearsal(db, media) as service:
         try:
@@ -143,6 +165,14 @@ def cmd_status(args: argparse.Namespace) -> dict[str, Any]:
     connection.row_factory = sqlite3.Row
     try:
         migration = connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0]
+        if migration != _head_version():
+            # The on-demand tables exist only from migration 31; report without querying them.
+            return {
+                "db_sha256": database_sha256(db),
+                "schema_version": migration,
+                "code_schema_head": _head_version(),
+                "on_demand": None,
+            }
         packages = [
             dict(row)
             for row in connection.execute(
@@ -178,7 +208,12 @@ def cmd_status(args: argparse.Namespace) -> dict[str, Any]:
             ]
     finally:
         connection.close()
-    return {"db_sha256": database_sha256(db), "schema_version": migration, "on_demand": packages}
+    return {
+        "db_sha256": database_sha256(db),
+        "schema_version": migration,
+        "code_schema_head": _head_version(),
+        "on_demand": packages,
+    }
 
 
 def _manifest(service: Any, artifact_id: str, slot: int, metadata: dict[str, Any]) -> dict:

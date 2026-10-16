@@ -480,6 +480,11 @@ class PublishingService:
             ),
             {},
         )
+        returned = evidence.get("returned_publish_at")
+        provider = {
+            "returned_publish_at": returned,
+            "returned_privacy": evidence.get("returned_privacy"),
+        }
         transition = self.repository.reserve_publication_operation(
             package.id,
             "release",
@@ -493,24 +498,13 @@ class PublishingService:
             },
             self.clock(),
         )
-        returned = evidence.get("returned_publish_at")
-        provider = {
-            "returned_publish_at": returned,
-            "returned_privacy": evidence.get("returned_privacy"),
-        }
+        # Without YouTube echoing the exact private schedule the public outcome is unknown, not
+        # refused: the transition stays reserved (pending) for the founder to check in YouTube
+        # Studio, and a receipt still needs an independently observed public state.
         if (
-            not _same_instant(returned, upload.intent["publish_at"])
-            or evidence.get("returned_privacy") != "private"
+            _same_instant(returned, upload.intent["publish_at"])
+            and evidence.get("returned_privacy") == "private"
         ):
-            # YouTube did not confirm the exact schedule: no public transition is expected.
-            self.repository.append_publication_operation_event(
-                transition.id,
-                "failed",
-                "Conveyor",
-                {"reason": "schedule-not-confirmed-by-youtube"},
-                provider,
-            )
-        else:
             self.repository.append_publication_operation_event(
                 transition.id,
                 "progress",
@@ -539,6 +533,14 @@ class PublishingService:
         self._target(publication.channel_id)
         upload = self.repository.get_publication_operation(publication.upload_operation_id)
         transition = self._scheduled_transition(upload)
+        if (
+            transition is None
+            and upload.intent.get("schema") == SCHEDULED_UPLOAD_SCHEMA
+            and upload.outcome == "succeeded"
+        ):
+            # Recovery: the commitment was never recorded (a stop after the upload succeeded,
+            # or an identity reconciled later). Recording it is idempotent and dispatches nothing.
+            transition = self._record_scheduled_commitment(upload.id, publication)
         if (
             upload.intent.get("schema") != SCHEDULED_UPLOAD_SCHEMA
             or upload.outcome != "succeeded"
@@ -570,6 +572,12 @@ class PublishingService:
             # Public before the schedule: not YouTube's scheduled transition (for example a
             # manual Studio publication). It needs founder review, not an automatic receipt.
             raise ValueError("The video became public before its scheduled time; nothing recorded.")
+        public_time = datetime.fromisoformat(observation.public_at.replace("Z", "+00:00"))
+        if public_time <= datetime.fromisoformat(publication.identified_at) or (
+            public_time > datetime.fromisoformat(observation.observed_at.replace("Z", "+00:00"))
+        ):
+            # The receipt would refuse these times; refuse before writing anything.
+            raise ValueError("The observed public time is inconsistent; nothing recorded.")
         status = self.repository.append_publication_status(
             status_id,
             publication_id,

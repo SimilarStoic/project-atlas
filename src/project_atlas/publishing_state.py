@@ -902,6 +902,23 @@ class PublishingRepositoryMixin:
         if existing:
             return self.get_publication_operation(existing["id"])
         on_demand = is_on_demand(package.manifest)
+        scheduled_schemas = {SCHEDULED_UPLOAD_SCHEMA, SCHEDULED_TRANSITION_SCHEMA}
+        if on_demand != (intent.get("schema") in scheduled_schemas):
+            raise ValueError("On-demand packages take only scheduled intents, and only they may.")
+        if action_kind == "upload" and on_demand:
+            # One artifact, one scheduled publication: any non-failed on-demand upload of the
+            # same bytes (including an uncertain one in another slot) blocks another.
+            rows = self.connection.execute(
+                "SELECT o.id FROM publication_operations o JOIN publishing_packages p "
+                "ON p.id = o.package_id WHERE o.action_kind = 'upload' AND p.pilot_key = ? "
+                "AND p.channel_id = ? AND p.artifact_digest = ?",
+                (package.pilot_key, package.channel_id, package.artifact_digest),
+            )
+            for row in rows:
+                if self.get_publication_operation(row["id"]).outcome != "failed":
+                    raise ValueError(
+                        "This artifact already has an unresolved or successful scheduled upload."
+                    )
         if action_kind == "release" and on_demand:
             # The only on-demand release record is YouTube's scheduled transition of one exact
             # successful upload; Conveyor never dispatches it.
@@ -1011,7 +1028,8 @@ class PublishingRepositoryMixin:
             # record goes reserved -> progress (the accepted commitment) -> succeeded (observed
             # public) or failed; nothing else.
             allowed = {
-                "reserved": {"progress", "failed"},
+                # reserved -> succeeded: a schedule YouTube did not echo, later observed public.
+                "reserved": {"progress", "succeeded", "failed"},
                 "progress": {"succeeded", "failed"},
                 "failed": set(),
                 "succeeded": set(),

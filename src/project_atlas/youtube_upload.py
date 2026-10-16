@@ -22,7 +22,7 @@ from typing import Any
 from urllib.parse import quote
 
 from project_atlas.media import LocalMediaStorage, MediaRuntimeError
-from project_atlas.publishing import PublishingService, TransferResult
+from project_atlas.publishing import PublishingService, TransferResult, _same_instant
 from project_atlas.publishing_state import (
     CONFIRMATION_TTL,
     PUBLISH_AT_MAX_AHEAD,
@@ -751,7 +751,20 @@ class YouTubeUploadController:
                 rows.insert(4, ("Scheduled publication time", provider.get("returned_publish_at")))
         elif reason:
             rows.append(("Reason", reason))
-        if operation.outcome == "succeeded" and operation.intent.get("publish_at"):
+        if (
+            operation.outcome == "succeeded"
+            and operation.intent.get("publish_at")
+            and not _same_instant(
+                provider.get("returned_publish_at"), operation.intent["publish_at"]
+            )
+        ):
+            summary = (
+                "<p class='blocked'>YouTube accepted the upload but did not confirm the exact "
+                "scheduled publication time. Whether and when it becomes public is unknown: check "
+                "the video in YouTube Studio now. A publication is recorded only after Conveyor "
+                "independently observes the exact video public.</p>"
+            )
+        elif operation.outcome == "succeeded" and operation.intent.get("publish_at"):
             summary = (
                 "<p>YouTube accepted the scheduled upload. The video stays private until the "
                 "scheduled time; publication is recorded only after Conveyor independently "
