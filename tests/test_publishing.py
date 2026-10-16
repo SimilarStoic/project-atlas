@@ -247,12 +247,12 @@ def _public(
 
 
 def test_migration_25_fresh_schema_integrity_and_legacy_path_guard(tmp_path):
-    assert [version for version, _ in MIGRATIONS] == list(range(1, 31))
+    assert [version for version, _ in MIGRATIONS] == list(range(1, 32))
     repo = AtlasRepository(tmp_path / "schema.sqlite")
     assert [
         row[0]
         for row in repo.connection.execute("SELECT version FROM schema_migrations ORDER BY version")
-    ] == list(range(1, 31))
+    ] == list(range(1, 32))
     assert repo.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     assert repo.connection.execute("PRAGMA foreign_key_check").fetchall() == []
     repo.close()
@@ -266,7 +266,7 @@ def test_portable_default_repository_uses_a_separate_dev_path(tmp_path, monkeypa
     monkeypatch.chdir(tmp_path)
     repo = AtlasRepository()
     assert repo.database_path.resolve() == (tmp_path / "data" / "atlas-local.db").resolve()
-    assert repo.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 30
+    assert repo.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 31
     repo.close()
 
 
@@ -282,7 +282,7 @@ def test_migration_24_to_25_preserves_historical_data(tmp_path, monkeypatch):
     upgraded = AtlasRepository(path)
     assert (
         upgraded.connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0]
-        == 30
+        == 31
     )
     assert upgraded.connection.execute("SELECT COUNT(*) FROM opportunities").fetchone()[0] == before
     assert upgraded.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
@@ -884,10 +884,20 @@ def test_manual_window_expires_without_catchup(setup):
     assert "release" not in fake.calls
 
 
-def test_receipt_week_uniqueness_is_independent_of_service(setup):
+def test_legacy_week_rule_lives_in_code_after_migration_31(setup):
+    """Migration 31 removed the schema-level channel-week rule; legacy series keep it in code."""
+
     repo, storage, fake, service = setup
     package, upload, publication, private, release, receipt = _public(service, fake)
-    with pytest.raises(sqlite3.IntegrityError, match="channel pilot week"), repo.connection:
+    names = {row[0] for row in repo.connection.execute("SELECT name FROM sqlite_master")}
+    assert "publication_receipt_weekly_limit" not in names
+    # The legacy (pilot) package's week is still consumed, through the service-layer rule.
+    assert "channel pilot week" in repo.release_week_conflict(package)
+    # Direct inserts still meet every other receipt constraint (here: verified public state).
+    with (
+        pytest.raises(sqlite3.IntegrityError, match="verified public observation"),
+        repo.connection,
+    ):
         repo.connection.execute(
             "INSERT INTO publication_receipts SELECT 'other-receipt', 'other-publication', "
             "package_id, gate_decision_id, 'other-release', 'other-status', execution_mode, "

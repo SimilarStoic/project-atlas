@@ -9,7 +9,12 @@ from typing import Any, Protocol
 
 from project_atlas.media import LocalMediaStorage
 from project_atlas.persistence import AtlasRepository
+from project_atlas.publishing_credits import source_credits
 from project_atlas.publishing_state import (
+    CONFIRMATION_TTL,
+    ON_DEMAND_SERIES,
+    SCHEDULED_TRANSITION_SCHEMA,
+    SCHEDULED_UPLOAD_SCHEMA,
     TARGET_CHANNEL,
     LearningAssessment,
     PerformanceSnapshot,
@@ -19,8 +24,11 @@ from project_atlas.publishing_state import (
     PublicationStatusSnapshot,
     PublishingPackage,
     is_never_release,
+    is_on_demand,
     is_retrospective,
+    publish_at_wire,
     timing_is_open,
+    validate_publish_at,
 )
 
 
@@ -64,6 +72,18 @@ class AggregateObservation:
     provider_payload: dict[str, Any] | None = None
     retention: dict[str, Any] | None = None
     missing_reasons: dict[str, str] | None = None
+
+
+def _same_instant(left: Any, right: Any) -> bool:
+    """Two RFC 3339 timestamps denote the same instant (YouTube may add milliseconds)."""
+
+    try:
+        values = [
+            datetime.fromisoformat(str(item).replace("Z", "+00:00")) for item in (left, right)
+        ]
+    except ValueError:
+        return False
+    return all(item.tzinfo is not None for item in values) and values[0] == values[1]
 
 
 class PublishingAdapter(Protocol):
@@ -208,6 +228,8 @@ class PublishingService:
     ) -> PublishingPackage:
         artifact = self.repository.get_final_media_artifact(artifact_id)
         self.storage.read_verified(artifact.storage_path, artifact.content_digest)
+        if pilot_key == ON_DEMAND_SERIES:
+            manifest = self._on_demand_manifest(artifact_id, manifest)
         required = {
             "title",
             "description",
@@ -244,6 +266,60 @@ class PublishingService:
             predecessor_id,
         )
 
+    def founder_accepted_run(self, artifact_id: str) -> str:
+        """The production run whose current, founder-accepted render is exactly this artifact."""
+
+        rows = self.repository.connection.execute(
+            "SELECT DISTINCT production_run_id FROM production_run_evidence "
+            "WHERE evidence_type = 'render' AND final_media_artifact_id = ?",
+            (artifact_id,),
+        ).fetchall()
+        if len(rows) != 1:
+            raise ValueError("The artifact is not the render of exactly one production run.")
+        run_id = rows[0]["production_run_id"]
+        latest = self.repository.latest_production_run_event(run_id)
+        if latest is None or latest.status != "founder_accepted":
+            raise ValueError(f"Production {run_id} is not founder-accepted.")
+        renders = self.repository.list_production_evidence(run_id, "render")
+        current = max(renders, key=lambda item: int(item.id.rsplit(":", 1)[1]))
+        if current.final_media_artifact_id != artifact_id:
+            raise ValueError("Only the production's current render can be published.")
+        whole = sorted(
+            (
+                review
+                for review in self.repository.list_production_qa_reviews(run_id)
+                if review.scope == "whole_video"
+            ),
+            key=lambda review: (review.created_at, review.id),
+        )
+        if (
+            not whole
+            or whole[-1].outcome != "passed"
+            or whole[-1].final_media_artifact_id != artifact_id
+        ):
+            raise ValueError("The current render has no passing whole-video review.")
+        founder = self.repository.connection.execute(
+            "SELECT outcome FROM production_founder_reviews WHERE production_run_id = ?",
+            (run_id,),
+        ).fetchall()
+        if [row["outcome"] for row in founder] != ["accepted"]:
+            raise ValueError("The production lacks exactly one founder acceptance.")
+        return run_id
+
+    def _on_demand_manifest(self, artifact_id: str, manifest: Any) -> dict[str, Any]:
+        """Freeze the projected source credits; the description must carry them exactly."""
+
+        if not isinstance(manifest, dict):
+            raise ValueError("The exact external publication proposition is incomplete.")
+        run_id = self.founder_accepted_run(artifact_id)
+        credits = source_credits(self.repository, run_id)
+        if "source_credits" in manifest and manifest["source_credits"] != credits:
+            raise ValueError("Supplied source credits differ from the production's provenance.")
+        description = manifest.get("description")
+        if not isinstance(description, str) or credits["text"] not in description:
+            raise ValueError("The description must include the projected source credits exactly.")
+        return {**manifest, "source_credits": credits, "production_run_id": run_id}
+
     def approve_package(
         self, decision_id: str, package_id: str, founder_actor: str, comment: str | None = None
     ):
@@ -278,6 +354,8 @@ class PublishingService:
         self._authority(package, package.manifest["transfer_route"], "upload")
         if attempt < 1:
             raise ValueError("Technical attempt number must be positive.")
+        if is_on_demand(package.manifest):
+            return self._reserve_scheduled_upload(package, attempt, upload)
         intent = {
             "schema": "private-transfer-v1",
             "package_digest": package.package_digest,
@@ -320,6 +398,203 @@ class PublishingService:
             "upload",
             package.manifest["transfer_route"],
             intent,
+        )
+
+    def _reserve_scheduled_upload(
+        self, package: PublishingPackage, attempt: int, upload: dict[str, Any] | None
+    ) -> PublicationOperation:
+        """One founder confirmation = one scheduled videos.insert (private + publishAt)."""
+
+        actor = upload.get("founder_actor") if isinstance(upload, dict) else None
+        if (
+            not isinstance(upload, dict)
+            or upload.get("founder_confirmed") is not True
+            or not isinstance(actor, str)
+            or not actor.strip()
+            or not isinstance(upload.get("title"), str)
+            or not isinstance(upload.get("description"), str)
+        ):
+            raise ValueError(
+                "A scheduled publication needs the founder-confirmed title, description and "
+                "publication time."
+            )
+        if upload.get("privacy") != "private":
+            raise ValueError(
+                "A scheduled publication is uploaded private; YouTube makes it public at publishAt."
+            )
+        now = self.clock()
+        publish_at = validate_publish_at(upload.get("publish_at"), now)
+        credits = package.manifest["source_credits"]
+        if credits["text"] not in upload["description"]:
+            raise ValueError("The confirmed description must keep the source credits exactly.")
+        confirmed_at = now.replace(microsecond=0)
+        intent = {
+            "schema": SCHEDULED_UPLOAD_SCHEMA,
+            "package_digest": package.package_digest,
+            "artifact_digest": package.artifact_digest,
+            "channel_id": package.channel_id,
+            "pilot_slot": package.pilot_slot,
+            "attempt": attempt,
+            "privacy": "private",
+            "publish_at": publish_at_wire(publish_at),
+            "title": upload["title"],
+            "description": upload["description"],
+            "source_credits_digest": credits["digest"],
+            "founder_confirmation": {
+                "actor": actor.strip(),
+                "confirmed_at": confirmed_at.isoformat(),
+                "expires_at": (confirmed_at + CONFIRMATION_TTL).isoformat(),
+            },
+        }
+        return self.repository.reserve_publication_operation(
+            package.id, "upload", package.manifest["transfer_route"], intent
+        )
+
+    def _scheduled_transition(self, upload: PublicationOperation) -> PublicationOperation | None:
+        rows = self.repository.connection.execute(
+            "SELECT id FROM publication_operations "
+            "WHERE package_id = ? AND action_kind = 'release'",
+            (upload.package_id,),
+        ).fetchall()
+        for row in rows:
+            operation = self.repository.get_publication_operation(row["id"])
+            if operation.intent.get("upload_operation_id") == upload.id:
+                return operation
+        return None
+
+    def _record_scheduled_commitment(
+        self, upload_operation_id: str, publication: PlatformPublication
+    ) -> PublicationOperation:
+        """Record YouTube's accepted schedule as a pending transition Conveyor never dispatches."""
+
+        upload = self.repository.get_publication_operation(upload_operation_id)
+        existing = self._scheduled_transition(upload)
+        if existing is not None:
+            return existing
+        package = self.repository.get_publishing_package(upload.package_id)
+        evidence = next(
+            (
+                event.provider_evidence or {}
+                for event in self.repository.get_publication_operation_events(upload.id)
+                if event.kind == "remote_identity_observed"
+            ),
+            {},
+        )
+        transition = self.repository.reserve_publication_operation(
+            package.id,
+            "release",
+            "api",
+            {
+                "schema": SCHEDULED_TRANSITION_SCHEMA,
+                "package_digest": package.package_digest,
+                "upload_operation_id": upload.id,
+                "publication_id": publication.id,
+                "publish_at": upload.intent["publish_at"],
+            },
+            self.clock(),
+        )
+        returned = evidence.get("returned_publish_at")
+        provider = {
+            "returned_publish_at": returned,
+            "returned_privacy": evidence.get("returned_privacy"),
+        }
+        if (
+            not _same_instant(returned, upload.intent["publish_at"])
+            or evidence.get("returned_privacy") != "private"
+        ):
+            # YouTube did not confirm the exact schedule: no public transition is expected.
+            self.repository.append_publication_operation_event(
+                transition.id,
+                "failed",
+                "Conveyor",
+                {"reason": "schedule-not-confirmed-by-youtube"},
+                provider,
+            )
+        else:
+            self.repository.append_publication_operation_event(
+                transition.id,
+                "progress",
+                "YouTube",
+                {
+                    "kind": "scheduled-commitment-accepted",
+                    "executor": "youtube-scheduled-publish",
+                    "conveyor_dispatch": False,
+                    "publish_at": upload.intent["publish_at"],
+                },
+                provider,
+            )
+        return self.repository.get_publication_operation(transition.id)
+
+    def reconcile_scheduled_publication(
+        self, receipt_id: str, status_id: str, publication_id: str
+    ) -> PublicationReceipt:
+        """Issue the receipt only once the exact video is independently observed public."""
+
+        publication = self.repository.get_platform_publication(publication_id)
+        if publication.remote_id is None:
+            raise ValueError("Purged API identity cannot be reconciled as a new receipt.")
+        package = self.repository.get_publishing_package(publication.package_id)
+        if not is_on_demand(package.manifest):
+            raise ValueError("Only on-demand scheduled publications reconcile here.")
+        self._target(publication.channel_id)
+        upload = self.repository.get_publication_operation(publication.upload_operation_id)
+        transition = self._scheduled_transition(upload)
+        if (
+            upload.intent.get("schema") != SCHEDULED_UPLOAD_SCHEMA
+            or upload.outcome != "succeeded"
+            or transition is None
+            or transition.outcome != "pending"
+        ):
+            raise ValueError("No accepted, pending scheduled transition exists for this video.")
+        publish_at = datetime.fromisoformat(upload.intent["publish_at"].replace("Z", "+00:00"))
+        if self.clock() < publish_at:
+            raise ValueError("The scheduled publication time has not arrived; nothing recorded.")
+        observation = self.adapter.observe_remote(
+            publication.remote_id, self._expected(package, publication.upload_operation_id)
+        )
+        if (
+            observation.remote_id != publication.remote_id
+            or observation.channel_id != publication.channel_id
+            or observation.metadata_matches is not True
+            or observation.privacy != "public"
+            or observation.processing != "succeeded"
+            or observation.api_locked
+            or observation.public_at is None
+        ):
+            raise ValueError(
+                "The exact video is not yet independently observed public; nothing recorded."
+            )
+        if not _same_instant(observation.public_at, upload.intent["publish_at"]) and (
+            datetime.fromisoformat(observation.public_at.replace("Z", "+00:00")) < publish_at
+        ):
+            # Public before the schedule: not YouTube's scheduled transition (for example a
+            # manual Studio publication). It needs founder review, not an automatic receipt.
+            raise ValueError("The video became public before its scheduled time; nothing recorded.")
+        status = self.repository.append_publication_status(
+            status_id,
+            publication_id,
+            observation.privacy,
+            observation.processing,
+            "passed",
+            False,
+            "offline-adapter-v1",
+            observation.observed_at,
+            observation.provider_payload,
+        )
+        self.repository.append_publication_operation_event(
+            transition.id,
+            "succeeded",
+            "Conveyor",
+            {"method": "independent-public-observation", "public_status_id": status.id},
+        )
+        return self.repository.create_publication_receipt(
+            receipt_id,
+            publication_id,
+            transition.id,
+            status.id,
+            observation.public_at,
+            "provider-public-state",
+            "second",
         )
 
     def _record_transfer(
@@ -422,6 +697,8 @@ class PublishingService:
         if operation.intent.get("privacy", "private") != "private":
             # Re-check immediately before dispatch: the approved window can close.
             self._public_upload_governance(package, operation.id)
+        if is_on_demand(package.manifest):
+            self._check_scheduled_dispatch(operation)
         self.storage.read_verified(
             self.repository.get_final_media_artifact(package.final_media_artifact_id).storage_path,
             package.artifact_digest,
@@ -431,10 +708,13 @@ class PublishingService:
         )
         try:
             result = self.adapter.begin_private_transfer(package, operation)
-            return self._record_transfer(
+            publication = self._record_transfer(
                 self.repository.get_publication_operation(operation_id),
                 result,
             )
+            if publication is not None and is_on_demand(package.manifest):
+                self._record_scheduled_commitment(operation_id, publication)
+            return publication
         except Exception:
             if self.repository.get_publication_operation(operation_id).outcome == "pending":
                 self.repository.append_publication_operation_event(
@@ -444,6 +724,33 @@ class PublishingService:
                     {"reason": "client-exception-after-dispatch"},
                 )
             raise
+
+    def _check_scheduled_dispatch(self, operation: PublicationOperation) -> None:
+        """Immediately before dispatch: the confirmation is unexpired and publishAt still valid.
+
+        A refused scheduled reservation is closed as failed (nothing was sent), so a fresh
+        founder confirmation can replace it.
+        """
+
+        intent = operation.intent
+        now = self.clock()
+        reason = None
+        if intent.get("schema") != SCHEDULED_UPLOAD_SCHEMA:
+            reason = "An on-demand upload needs a scheduled founder confirmation."
+        else:
+            expires = datetime.fromisoformat(intent["founder_confirmation"]["expires_at"])
+            if now > expires:
+                reason = "The founder confirmation expired before dispatch; confirm again."
+            else:
+                try:
+                    validate_publish_at(intent["publish_at"].replace("Z", "+00:00"), now)
+                except ValueError as exc:
+                    reason = f"The scheduled time is no longer valid: {exc}"
+        if reason is not None:
+            self.repository.append_publication_operation_event(
+                operation.id, "failed", "Conveyor", {"reason": "refused-before-dispatch"}
+            )
+            raise ValueError(reason + " Nothing was sent to YouTube.")
 
     def inspect_or_resume_upload(self, operation_id: str) -> PlatformPublication | None:
         operation = self.repository.get_publication_operation(operation_id)
@@ -460,7 +767,10 @@ class PublishingService:
             raise ValueError("Only a known active session can be inspected/resumed automatically.")
         try:
             result = self.adapter.inspect_or_resume_transfer(operation)
-            return self._record_transfer(operation, result)
+            publication = self._record_transfer(operation, result)
+            if publication is not None and is_on_demand(package.manifest):
+                self._record_scheduled_commitment(operation_id, publication)
+            return publication
         except Exception:
             if self.repository.get_publication_operation(operation_id).outcome == "pending":
                 self.repository.append_publication_operation_event(
