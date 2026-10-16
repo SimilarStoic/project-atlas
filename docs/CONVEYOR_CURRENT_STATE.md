@@ -518,8 +518,11 @@ this section. No subsequent phase is authorized automatically.
 - Prospective inquiry (founder, 16 October 2026): the founder will send an inquiry on the existing 6-8 October thread
   explaining the planned Analytics use (not active: no Analytics API calls, no new scopes, and the privacy-policy
   update will precede activation) and asking whether that thread is the correct notification route or a new audit
-  submission is required. The formal notice remains a separate obligation until its route is confirmed. Send date:
-  not yet confirmed by the founder (record it only on the founder's confirmation).
+  submission is required. The formal notice remains a separate obligation until its route is confirmed. **Sent by
+  the founder on 16 October 2026** on the existing thread; delivery to a human on a closed case is unconfirmed.
+  23 October 2026 is a decision checkpoint, not an automatic submission: if there is no reply, the founder reviews
+  the available official contact options and decides the next step, without selecting an inaccurate request
+  category.
 - The OAuth app and both authorizations remain as recorded (YouTube block below). The durability check is due on or
   after 23 October 2026 and still needs explicit founder authorization.
 - Future analytics compliance obligations stay open (Phase 4;
@@ -564,8 +567,9 @@ this section. No subsequent phase is authorized automatically.
 
 - Phase 3 (on-demand publishing): next; read-only implementation plan first, then a founder approval decision.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
-- Analytics notification route: prospective inquiry on the existing 6-8 October thread planned by the founder (send
-  date to be recorded on confirmation); formal sufficiency unconfirmed (before Phase 4 activation).
+- Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
+  delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
+  (before Phase 4 activation).
 - Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
 - P10 (`production-10-r2`) and P11 (`production-11-flow`) are founder-accepted and unpublished.
 
