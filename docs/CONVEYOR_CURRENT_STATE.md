@@ -454,9 +454,10 @@ Publication remains manual and separate. Retiming (`POST /api/v2/productions/{ru
 - **A cross-production pose library is deferred to after P12.**
 - **Before P12, follow the pre-P12 sequence** below (founder, 15 October 2026). No phase is authorized
   automatically; each build, migration, runtime change and publication still needs its own authorization.
-- **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026), but they stay until
-  on-demand publishing is built, together with a successor publishing series (the pilot series is full) and
-  migration 31. Real public publishing through the API is still unproven.
+- **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026). Since migration 31
+  (applied 16 October 2026) they apply only to the legacy pilot series; the successor series
+  `similarstoic-youtube-on-demand-v1` has neither. Real public publishing through the API is still unproven (the P11
+  scheduled-publish proof).
 
 ### Recording decisions (permanent working rule)
 
@@ -537,8 +538,27 @@ this section. No subsequent phase is authorized automatically.
 - Future analytics compliance obligations stay open (Phase 4;
   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
 
-**Phase 3 — On-demand publishing: BUILD COMPLETE on a branch (16 October 2026); PR #1 not merged; migration 31
-not applied.**
+**Phase 3 — On-demand publishing: BUILT, MERGED AND MIGRATION 31 APPLIED (16 October 2026); the P11
+scheduled-publish proof is pending.**
+
+Applied and merged (founder-authorized, one sitting, 16 October 2026; every check passed):
+
+- Maintenance task "Conveyor YouTube maintenance" disabled first (no sidecars, no other process on the runtime) and
+  re-enabled only after `main` contained migration 31.
+- Before: runtime `conveyor.db` SHA-256 `75829bfa0740bc35c31505ee85ff70c9c29971b0d6afeead8f0a39da960a37ec`, schema 30.
+- Verified backup: `D:\ConveyorBackups\pre-migration-31-on-demand-publishing-20261016-150347\conveyor.db`, SHA-256
+  `1f33831f5f89e2199713c67a44392ea9ebbcdec2866576828b06faa49f52b5a1` (integrity ok, 0 FK violations, content
+  identical, schema 30).
+- Migration 31 applied once with the branch code at `2921ed9`. After: SHA-256
+  `5f1c982e877f606ea9e3521089210a8182ab9b8c6ae223f42493d9c322150a81`, schema 31.
+- Verified read-only against the backup:
+  - `integrity_check` ok and `foreign_key_check` empty;
+  - all 68 tables' fingerprints identical except `schema_migrations` (30 → 31 rows);
+  - schema changes exactly: the rebuilt `publishing_packages` and `publication_receipts`, the scoped
+    `publication_receipt_weekly_limit` trigger and the new `idx_publication_receipts_channel_week` index; nothing
+    removed, no `_v30` leftovers.
+- PR #1 merged with merge commit `c5a97292039d9b1084242afd677fb891b424c17c` (parents `3222150`, `2921ed9`); CI on
+  `main` run 38912834217 passed. The main checkout was pulled to `c5a9729`.
 
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
@@ -561,19 +581,16 @@ not applied.**
   Proof video: P11, after the 23 October 2026 OAuth durability check.
 - Route A (a direct public `videos.insert`) is a separately authorized fallback and is not built now. `videos.update`
   and any new scope are not proposed.
-- Migration 31 (unapplied): rebuilds `publishing_packages` (slot CHECK ≥ 1; the pilot series keep their 1-3 limit in
+- Migration 31 (applied 16 October 2026, above): rebuilds `publishing_packages` (slot CHECK ≥ 1; the pilot series keep their 1-3 limit in
   code) and `publication_receipts`, copying every legacy row verbatim. It lifts the channel-week rule **only for
   on-demand receipts** (pilot week `on-demand`): legacy series keep it in the database through the
   `publication_receipt_weekly_limit` trigger, now scoped to `pilot_week <> 'on-demand'`, and a partial UNIQUE index
   `idx_publication_receipts_channel_week` with the same scope, plus their windows and week rule in code. Every
   other trigger, index and constraint is recreated unchanged; tested fresh and as an upgrade from 30 (every table's
-  fingerprint, integrity and foreign keys unchanged), and rolls back atomically on failure. Neither `main` nor the
-  live checkout may contain migration 31 before the apply procedure below, because the 03:00 maintenance task and
-  live commands construct `AtlasRepository`, which applies pending migrations.
-- Merging, applying migration 31, pausing the maintenance task, packaging or publishing P11 and any YouTube API call
-  remain separately authorized.
+  fingerprint, integrity and foreign keys unchanged), and rolls back atomically on failure.
+- Packaging or publishing P11 and any YouTube API call remain separately authorized.
 
-Build result (branch `phase3-on-demand-publishing` at `2921ed9`, draft PR #1, 16 October 2026):
+Build result (branch `phase3-on-demand-publishing` at `2921ed9`, PR #1, 16 October 2026):
 
 - Verification on `2921ed9`: CI run 38906794669 passed; `/zero-spend-verify` full suite 745 passed, 0 failed,
   0 skipped, pytest exit 0; focused set 41 passed.
@@ -612,7 +629,8 @@ Build result (branch `phase3-on-demand-publishing` at `2921ed9`, draft PR #1, 16
   is not a new API use, so no policy update or YouTube notice is needed for it. Caveat: whether the unaudited
   project's private-only lock still applies stays unconfirmed until the P11 proof.
 
-Migration 31 apply procedure (each run needs founder authorization; PowerShell in `D:\ConveyorOS\source\Conveyor`
+Migration 31 apply procedure (completed 16 October 2026, record above; kept as the template for future
+migrations; PowerShell in `D:\ConveyorOS\source\Conveyor`
 after `. .\scripts\set_conveyor_environment.ps1`):
 
 - **Rule:** applying migration 31, verifying, marking PR #1 ready, merging, pulling main and re-enabling
@@ -662,9 +680,8 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 
 ### Open items (as of 15 October 2026)
 
-- Phase 3 (on-demand publishing): build complete on branch `phase3-on-demand-publishing` at `2921ed9` (draft PR #1,
-  CI passed); not merged, migration 31 not applied. Next, each separately authorized: the migration 31 apply
-  procedure, then the P11 scheduled-publish proof after the 23 October OAuth durability check.
+- Phase 3 (on-demand publishing): built, merged (`c5a9729`) and migration 31 applied to the runtime (16 October
+  2026). Next, separately authorized: the P11 scheduled-publish proof after the 23 October OAuth durability check.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
@@ -1201,9 +1218,10 @@ Read them with `AtlasRepository.list_plate_approvals()`.
 ## Schema authority
 
 Application schema authority is the `schema_migrations` table. The repository defines contiguous versions
-**1 through 30**, and the protected production runtime is at **30**: migration 30 was applied on 9 October 2026
-under founder authorization, after a verified backup and with the maintenance task paused, changing no existing row
-(the publishing series migration becomes 31). The P11 consolidation (spend authorizations, dispatch records, spec
+**1 through 31**, and the protected production runtime is at **31**: migration 31 (on-demand publishing) was applied
+on 16 October 2026 under founder authorization (Phase 3 below), changing no existing row. Migration 30 was applied on
+9 October 2026 under founder authorization, after a verified backup and with the maintenance task paused, changing no
+existing row. The P11 consolidation (spend authorizations, dispatch records, spec
 revisions, fixture clarifications and the founder-review artifact binding) uses existing append-only production
 evidence and run events and adds no migration. Migration 29 was applied to the protected
 runtime on 7 October 2026 under founder authorization, after a verified backup, together with the P8/P9 recording.
