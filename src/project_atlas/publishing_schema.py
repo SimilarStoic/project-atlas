@@ -559,3 +559,114 @@ MIGRATION_29: tuple[int, tuple[str, ...]] = (
         purge_guard="OLD.public_status_id IS NOT NULL",
     ),
 )
+
+
+# Migration 31: on-demand publishing. Rebuilds publishing_packages (the pilot slot CHECK becomes
+# pilot_slot >= 1; the three-slot limit of the pilot series stays in code) and
+# publication_receipts (without the channel-week UNIQUE and the weekly-limit trigger; legacy
+# series keep their week rule in code). Every legacy row is copied verbatim; every other
+# constraint, index and trigger of both tables is recreated exactly.
+MIGRATION_31: tuple[int, tuple[str, ...]] = (
+    31,
+    (
+        "ALTER TABLE publishing_packages RENAME TO publishing_packages_v30",
+        """
+        CREATE TABLE publishing_packages (
+          id TEXT PRIMARY KEY, pilot_key TEXT NOT NULL, pilot_slot INTEGER NOT NULL
+            CHECK (pilot_slot >= 1), version INTEGER NOT NULL CHECK (version >= 1),
+          predecessor_id TEXT NULL, final_media_artifact_id TEXT NOT NULL,
+          artifact_digest TEXT NOT NULL CHECK (length(artifact_digest) = 64),
+          platform TEXT NOT NULL CHECK (platform = 'youtube'),
+          channel_id TEXT NOT NULL CHECK (length(trim(channel_id)) > 0),
+          pilot_week TEXT NOT NULL,
+          manifest_json TEXT NOT NULL, package_digest TEXT NOT NULL
+            CHECK (length(package_digest) = 64), created_at TEXT NOT NULL,
+          UNIQUE (pilot_key, pilot_slot, version),
+          FOREIGN KEY (predecessor_id) REFERENCES publishing_packages(id) ON DELETE RESTRICT,
+          FOREIGN KEY (final_media_artifact_id)
+            REFERENCES final_media_artifacts(id) ON DELETE RESTRICT
+        )
+        """,
+        "INSERT INTO publishing_packages (id, pilot_key, pilot_slot, version, predecessor_id, "
+        "final_media_artifact_id, artifact_digest, platform, channel_id, pilot_week, "
+        "manifest_json, package_digest, created_at) SELECT id, pilot_key, pilot_slot, version, "
+        "predecessor_id, final_media_artifact_id, artifact_digest, platform, channel_id, "
+        "pilot_week, manifest_json, package_digest, created_at FROM publishing_packages_v30",
+        "DROP TABLE publishing_packages_v30",
+        "CREATE INDEX idx_publishing_packages_artifact "
+        "ON publishing_packages(final_media_artifact_id)",
+        "ALTER TABLE publication_receipts RENAME TO publication_receipts_v30",
+        """
+        CREATE TABLE publication_receipts (
+          id TEXT PRIMARY KEY, publication_id TEXT NOT NULL UNIQUE, package_id TEXT NOT NULL,
+          gate_decision_id TEXT NOT NULL, release_operation_id TEXT NOT NULL UNIQUE,
+          public_status_id TEXT NULL UNIQUE,
+          execution_mode TEXT NOT NULL CHECK (execution_mode IN ('api', 'manual')),
+          channel_id TEXT NOT NULL, pilot_week TEXT NOT NULL,
+          public_at TEXT NULL, timestamp_source TEXT NOT NULL,
+          timestamp_precision TEXT NOT NULL, first_public_observed_at TEXT NULL,
+          receipt_digest TEXT NULL CHECK (receipt_digest IS NULL OR length(receipt_digest) = 64),
+          created_at TEXT NOT NULL, provider_purged_at TEXT NULL,
+          CHECK ((public_at IS NULL) = (receipt_digest IS NULL)),
+          CHECK ((timestamp_source = 'founder-attestation') = (public_status_id IS NULL)),
+          CHECK (public_status_id IS NOT NULL OR (
+            execution_mode = 'manual' AND public_at IS NOT NULL
+            AND first_public_observed_at IS NULL AND provider_purged_at IS NULL
+            AND timestamp_precision IN ('second', 'day'))),
+          FOREIGN KEY (publication_id) REFERENCES platform_publications(id) ON DELETE RESTRICT,
+          FOREIGN KEY (package_id) REFERENCES publishing_packages(id) ON DELETE RESTRICT,
+          FOREIGN KEY (gate_decision_id, package_id)
+            REFERENCES publication_gate_decisions(id, package_id) ON DELETE RESTRICT,
+          FOREIGN KEY (release_operation_id)
+            REFERENCES publication_operations(id) ON DELETE RESTRICT,
+          FOREIGN KEY (public_status_id)
+            REFERENCES publication_status_snapshots(id) ON DELETE RESTRICT
+        )
+        """,
+        "INSERT INTO publication_receipts (id, publication_id, package_id, gate_decision_id, "
+        "release_operation_id, public_status_id, execution_mode, channel_id, pilot_week, "
+        "public_at, timestamp_source, timestamp_precision, first_public_observed_at, "
+        "receipt_digest, created_at, provider_purged_at) SELECT id, publication_id, package_id, "
+        "gate_decision_id, release_operation_id, public_status_id, execution_mode, channel_id, "
+        "pilot_week, public_at, timestamp_source, timestamp_precision, "
+        "first_public_observed_at, receipt_digest, created_at, provider_purged_at "
+        "FROM publication_receipts_v30",
+        "DROP TABLE publication_receipts_v30",
+        """
+        CREATE TRIGGER publication_receipt_public_state BEFORE INSERT ON publication_receipts
+        WHEN NEW.public_status_id IS NOT NULL AND NOT EXISTS (
+          SELECT 1 FROM publication_status_snapshots s
+          WHERE s.id = NEW.public_status_id AND s.publication_id = NEW.publication_id
+            AND s.privacy = 'public' AND s.processing = 'succeeded'
+            AND s.verification = 'passed' AND s.api_locked = 0
+        )
+        BEGIN SELECT RAISE(ABORT, 'receipt requires verified public observation'); END
+        """,
+        """
+        CREATE TRIGGER publication_receipt_attestation_scope BEFORE INSERT
+        ON publication_receipts
+        WHEN (NEW.public_status_id IS NULL) IS NOT (
+          (SELECT decision FROM publication_gate_decisions WHERE id = NEW.gate_decision_id)
+          IS 'attest_external')
+        BEGIN SELECT RAISE(ABORT, 'only founder-attested receipts may lack public status'); END
+        """,
+        # The channel-week rule stays in the database for every week except on-demand
+        # publishing, as a partial UNIQUE index and the same trigger, now scoped.
+        "CREATE UNIQUE INDEX idx_publication_receipts_channel_week "
+        "ON publication_receipts(channel_id, pilot_week) WHERE pilot_week <> 'on-demand'",
+        """
+        CREATE TRIGGER publication_receipt_weekly_limit BEFORE INSERT ON publication_receipts
+        WHEN NEW.pilot_week <> 'on-demand' AND EXISTS (
+          SELECT 1 FROM publication_receipts r WHERE r.channel_id = NEW.channel_id
+            AND r.pilot_week = NEW.pilot_week)
+        BEGIN SELECT RAISE(ABORT, 'channel pilot week already consumed'); END
+        """,
+    )
+    + _immutable("publishing_packages", _table_columns("publishing_packages"))
+    + _immutable(
+        "publication_receipts",
+        _table_columns("publication_receipts"),
+        purgeable=True,
+        purge_guard="OLD.public_status_id IS NOT NULL",
+    ),
+)

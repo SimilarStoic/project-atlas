@@ -22,8 +22,16 @@ from typing import Any
 from urllib.parse import quote
 
 from project_atlas.media import LocalMediaStorage, MediaRuntimeError
-from project_atlas.publishing import PublishingService, TransferResult
-from project_atlas.publishing_state import PublicationOperation, PublishingPackage
+from project_atlas.publishing import PublishingService, TransferResult, _same_instant
+from project_atlas.publishing_state import (
+    CONFIRMATION_TTL,
+    PUBLISH_AT_MAX_AHEAD,
+    PUBLISH_AT_MIN_LEAD,
+    SCHEDULED_UPLOAD_SCHEMA,
+    PublicationOperation,
+    PublishingPackage,
+    is_on_demand,
+)
 from project_atlas.youtube_adapter import (
     CredentialProvider,
     GoogleReadOnlyYouTubeClient,
@@ -112,14 +120,17 @@ def build_insert_body(package: PublishingPackage, intent: dict[str, Any]) -> dic
     if category.get("id") is not None:
         snippet["categoryId"] = str(category["id"])
     synthetic = (manifest.get("compliance") or {}).get("altered_or_synthetic_media") or {}
-    return {
-        "snippet": snippet,
-        "status": {
-            "privacyStatus": intent["privacy"],
-            "selfDeclaredMadeForKids": bool((manifest.get("audience") or {}).get("made_for_kids")),
-            "containsSyntheticMedia": bool(synthetic.get("declare_to_youtube")),
-        },
+    status = {
+        "privacyStatus": intent["privacy"],
+        "selfDeclaredMadeForKids": bool((manifest.get("audience") or {}).get("made_for_kids")),
+        "containsSyntheticMedia": bool(synthetic.get("declare_to_youtube")),
     }
+    if intent.get("schema") == SCHEDULED_UPLOAD_SCHEMA:
+        # One videos.insert, private, with YouTube's own scheduled public transition.
+        if intent["privacy"] != "private" or not intent.get("publish_at"):
+            raise ValueError("A scheduled upload is private and carries publishAt.")
+        status["publishAt"] = intent["publish_at"]
+    return {"snippet": snippet, "status": status}
 
 
 class GoogleYouTubeUploadClient(GoogleReadOnlyYouTubeClient):
@@ -226,7 +237,7 @@ class YouTubeUploadAdapter(YouTubeReadOnlyObservationAdapter):
         intent = operation.intent
         confirmation = intent.get("founder_confirmation") or {}
         if (
-            intent.get("schema") != "confirmed-upload-v1"
+            intent.get("schema") not in {"confirmed-upload-v1", SCHEDULED_UPLOAD_SCHEMA}
             or not confirmation.get("actor")
             or validate_upload_values(
                 intent.get("title"), intent.get("description"), intent.get("privacy")
@@ -257,11 +268,20 @@ class YouTubeUploadAdapter(YouTubeReadOnlyObservationAdapter):
             return TransferResult("unknown", package.channel_id, reason="upload_response_invalid")
         if not isinstance(remote_id, str) or not remote_id:
             return TransferResult("unknown", package.channel_id, reason="upload_response_invalid")
+        scheduled = (
+            {
+                "requested_publish_at": intent.get("publish_at"),
+                "returned_publish_at": status.get("publishAt"),
+            }
+            if intent.get("schema") == SCHEDULED_UPLOAD_SCHEMA
+            else {}
+        )
         return TransferResult(
             "succeeded",
             channel_id,
             remote_id,
-            evidence={
+            evidence=scheduled
+            | {
                 "schema": UPLOAD_ADAPTER_VERSION,
                 "api_call": "videos.insert(part=snippet,status)",
                 "requested_privacy": intent["privacy"],
@@ -523,10 +543,30 @@ class YouTubeUploadController:
         nonce = self._issue("upload", package.id, package.package_digest)
         manifest = package.manifest
         private_first = manifest.get("private_first") is True
-        choices = "".join(
-            f"<label><input type='radio' name='privacy' value='{value}' required> "
-            f"{value.capitalize()}</label>"
-            for value in PRIVACY_CHOICES
+        scheduled = is_on_demand(manifest)
+        choices = (
+            "<input type='hidden' name='privacy' value='private'>"
+            "<p><b>Private until the scheduled time.</b> Conveyor makes one videos.insert, "
+            "private, with this publication time; YouTube itself makes the video public then.</p>"
+            "<label for='publish_at'>Scheduled publication time (publishAt), with its timezone "
+            "offset, e.g. 2026-10-24T18:30+01:00</label>"
+            "<input type='text' id='publish_at' name='publish_at' required>"
+            f"<p>At least {int(PUBLISH_AT_MIN_LEAD.total_seconds() // 60)} minutes and at most "
+            f"{PUBLISH_AT_MAX_AHEAD.days} days from now. This confirmation must be used within "
+            f"{int(CONFIRMATION_TTL.total_seconds() // 60)} minutes and only once.</p>"
+            "<p class='notice' id='scheduled-cancel-notice'><b>Conveyor cannot cancel a "
+            "scheduled publication.</b> Once uploaded, stopping or changing it requires manual "
+            "action in YouTube Studio before the scheduled time.</p>"
+            "<h3>Source credits (from the production's approved claims; keep them in the "
+            "description)</h3><pre>"
+            + html.escape(str((manifest.get("source_credits") or {}).get("text", "")))
+            + "</pre>"
+            if scheduled
+            else "".join(
+                f"<label><input type='radio' name='privacy' value='{value}' required> "
+                f"{value.capitalize()}</label>"
+                for value in PRIVACY_CHOICES
+            )
         )
         body = (
             header
@@ -578,8 +618,15 @@ class YouTubeUploadController:
             + "<label><input type='checkbox' name='founder_confirmation' value='confirmed' "
             + "required> I confirm this YouTube upload of "
             + f"{html.escape(package.final_media_artifact_id)} "
+            + f"(SHA-256 {html.escape(package.artifact_digest)}) "
             + f"to channel {html.escape(channel_title or channel_id)} ({html.escape(channel_id)}) "
-            + "with the title, description and privacy shown above.</label>"
+            + (
+                "with the title, description (including source credits), private status and "
+                "the scheduled publication time shown above. This confirmation is the "
+                "authorization for this publication.</label>"
+                if scheduled
+                else "with the title, description and privacy shown above.</label>"
+            )
             + f"<p class='notice' id='youtube-upload-notice'>{html.escape(REQUIRED_UPLOAD_NOTICE)}"
             + f" <a href='{YOUTUBE_TERMS_URL}' target='_blank' rel='noopener'>"
             + "YouTube Terms of Service</a></p>"
@@ -640,16 +687,16 @@ class YouTubeUploadController:
             )
         operation = None
         try:
-            operation = self.service.reserve_upload(
-                package.id,
-                upload={
-                    "title": title,
-                    "description": description,
-                    "privacy": privacy,
-                    "founder_actor": approval.founder_actor,
-                    "founder_confirmed": True,
-                },
-            )
+            upload = {
+                "title": title,
+                "description": description,
+                "privacy": privacy,
+                "founder_actor": approval.founder_actor,
+                "founder_confirmed": True,
+            }
+            if is_on_demand(package.manifest):
+                upload["publish_at"] = form.get("publish_at")
+            operation = self.service.reserve_upload(package.id, upload=upload)
             self.service.begin_api_upload(operation.id)
         except Exception as exc:
             if operation is not None and self._dispatched(operation.id):
@@ -700,9 +747,31 @@ class YouTubeUploadController:
                 ("Requested at", provider.get("requested_at")),
                 ("Completed at", provider.get("completed_at")),
             ]
+            if operation.intent.get("publish_at"):
+                rows.insert(4, ("Scheduled publication time", provider.get("returned_publish_at")))
         elif reason:
             rows.append(("Reason", reason))
-        if operation.outcome == "succeeded":
+        if (
+            operation.outcome == "succeeded"
+            and operation.intent.get("publish_at")
+            and not _same_instant(
+                provider.get("returned_publish_at"), operation.intent["publish_at"]
+            )
+        ):
+            summary = (
+                "<p class='blocked'>YouTube accepted the upload but did not confirm the exact "
+                "scheduled publication time. Whether and when it becomes public is unknown: check "
+                "the video in YouTube Studio now. A publication is recorded only after Conveyor "
+                "independently observes the exact video public.</p>"
+            )
+        elif operation.outcome == "succeeded" and operation.intent.get("publish_at"):
+            summary = (
+                "<p>YouTube accepted the scheduled upload. The video stays private until the "
+                "scheduled time; publication is recorded only after Conveyor independently "
+                "observes the exact video public. Conveyor cannot cancel the schedule: use "
+                "YouTube Studio to stop or change it.</p>"
+            )
+        elif operation.outcome == "succeeded":
             summary = "<p>YouTube accepted the upload.</p>"
         elif operation.outcome == "failed":
             # Definitive: YouTube did not create a video (no upload session was accepted).

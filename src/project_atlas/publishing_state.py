@@ -96,6 +96,59 @@ NEVER_RELEASE_TIMING = {"mode": "never_release"}
 NEVER_RELEASE_WEEK = "never-release"
 NEVER_RELEASE_ROUTE_SENTINEL = "manual"
 
+# On-demand publishing (successor series, migration 31): no publication window and no
+# channel-week rule. Each publication is a founder-confirmed scheduled videos.insert (private
+# with status.publishAt); YouTube performs the public transition, which Conveyor only observes.
+ON_DEMAND_SERIES = "similarstoic-youtube-on-demand-v1"
+ON_DEMAND_TIMING = {"mode": "on_demand"}
+ON_DEMAND_WEEK = "on-demand"
+SCHEDULED_UPLOAD_SCHEMA = "scheduled-upload-v1"
+SCHEDULED_TRANSITION_SCHEMA = "scheduled-public-transition-v1"
+# publishAt bounds: far enough ahead for upload and processing, near enough to stay current.
+PUBLISH_AT_MIN_LEAD = timedelta(minutes=30)
+# At most 14 days ahead: the 30-day stale-data purge deletes an unobserved publication's
+# YouTube identity, so reconciliation must stay well inside that window.
+PUBLISH_AT_MAX_AHEAD = timedelta(days=14)
+# A founder confirmation must be dispatched within this time, once.
+CONFIRMATION_TTL = timedelta(minutes=15)
+
+
+def is_on_demand(manifest: dict[str, Any]) -> bool:
+    return isinstance(manifest, dict) and manifest.get("publication_timing") == ON_DEMAND_TIMING
+
+
+def validate_publish_at(value: Any, now: datetime) -> datetime:
+    """An explicit-offset ISO 8601 instant, at least the minimum lead and at most the maximum
+    ahead of ``now``; returns it in UTC."""
+
+    if now.tzinfo is None:
+        raise ValueError("Execution clock must be timezone-aware.")
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("A scheduled publication time (publishAt) is required.")
+    try:
+        moment = datetime.fromisoformat(value.strip())
+    except ValueError as exc:
+        raise ValueError("publishAt must be an ISO 8601 date and time.") from exc
+    if moment.tzinfo is None or moment.utcoffset() is None:
+        raise ValueError("publishAt must state its timezone offset explicitly.")
+    moment = moment.astimezone(UTC)
+    if moment.second or moment.microsecond:
+        raise ValueError("publishAt has minute precision.")
+    if moment < now.astimezone(UTC) + PUBLISH_AT_MIN_LEAD:
+        raise ValueError(
+            f"publishAt must be at least {int(PUBLISH_AT_MIN_LEAD.total_seconds() // 60)} "
+            "minutes in the future."
+        )
+    if moment > now.astimezone(UTC) + PUBLISH_AT_MAX_AHEAD:
+        raise ValueError(f"publishAt must be within {PUBLISH_AT_MAX_AHEAD.days} days from now.")
+    return moment
+
+
+def publish_at_wire(moment: datetime) -> str:
+    """YouTube's RFC 3339 form for status.publishAt."""
+
+    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
 
 def is_never_release(manifest: dict[str, Any]) -> bool:
     return isinstance(manifest, dict) and manifest.get("release_policy") == NEVER_RELEASE_POLICY
@@ -213,6 +266,19 @@ def package_release_week(manifest: dict[str, Any]) -> str:
         return NEVER_RELEASE_WEEK
     if isinstance(timing, dict) and timing.get("mode") == NEVER_RELEASE_TIMING["mode"]:
         raise ValueError("never_release timing is only valid on a never-release package.")
+    if is_on_demand(manifest):
+        if (
+            manifest.get("transfer_route") != "api"
+            or manifest.get("release_route") != "api"
+            or manifest.get("private_first") is not True
+        ):
+            raise ValueError(
+                "An on-demand package needs API transfer, API (scheduled) release and "
+                "private_first."
+            )
+        return ON_DEMAND_WEEK
+    if isinstance(timing, dict) and timing.get("mode") == ON_DEMAND_TIMING["mode"]:
+        raise ValueError("on_demand timing must be exactly {'mode': 'on_demand'}.")
     pilot_week, _, _ = pilot_timing(timing)
     return pilot_week
 
@@ -550,8 +616,19 @@ class PublishingRepositoryMixin:
         predecessor_id: str | None = None,
     ) -> PublishingPackage:
         _required_text(package_id, pilot_key, artifact_id, artifact_digest, channel_id)
-        if channel_id != TARGET_CHANNEL or not 1 <= pilot_slot <= 3 or version < 1:
+        on_demand_series = pilot_key == ON_DEMAND_SERIES
+        # Pilot series keep three slots; the on-demand series numbers publications without cap.
+        slot_valid = (
+            isinstance(pilot_slot, int)
+            and pilot_slot >= 1
+            and (on_demand_series or pilot_slot <= 3)
+        )
+        if channel_id != TARGET_CHANNEL or not slot_valid or version < 1:
             raise ValueError("Package target channel, pilot slot or version is invalid.")
+        if isinstance(manifest, dict) and on_demand_series != is_on_demand(manifest):
+            raise ValueError(
+                "Only the on-demand series uses on_demand timing, and it uses nothing else."
+            )
         artifact = self.get_final_media_artifact(artifact_id)
         if artifact.content_digest != artifact_digest:
             raise ValueError("FinalMediaArtifact digest mismatch.")
@@ -574,8 +651,11 @@ class PublishingRepositoryMixin:
             "manual",
         }:
             raise ValueError("Pilot slot and release route must be frozen in the package.")
-        if not is_never_release(manifest) and (manifest["release_route"] == "api") != (
-            manifest["publication_timing"]["mode"] == "exact"
+        if (
+            not is_never_release(manifest)
+            and not is_on_demand(manifest)
+            and (manifest["release_route"] == "api")
+            != (manifest["publication_timing"]["mode"] == "exact")
         ):
             raise ValueError("API release needs exact time; manual release needs a bounded window.")
         package_digest = package_identity_digest(
@@ -821,7 +901,39 @@ class PublishingRepositoryMixin:
         ).fetchone()
         if existing:
             return self.get_publication_operation(existing["id"])
-        if action_kind == "release" and (
+        on_demand = is_on_demand(package.manifest)
+        scheduled_schemas = {SCHEDULED_UPLOAD_SCHEMA, SCHEDULED_TRANSITION_SCHEMA}
+        if on_demand != (intent.get("schema") in scheduled_schemas):
+            raise ValueError("On-demand packages take only scheduled intents, and only they may.")
+        if action_kind == "upload" and on_demand:
+            # One artifact, one scheduled publication: any non-failed on-demand upload of the
+            # same bytes (including an uncertain one in another slot) blocks another.
+            rows = self.connection.execute(
+                "SELECT o.id FROM publication_operations o JOIN publishing_packages p "
+                "ON p.id = o.package_id WHERE o.action_kind = 'upload' AND p.pilot_key = ? "
+                "AND p.channel_id = ? AND p.artifact_digest = ?",
+                (package.pilot_key, package.channel_id, package.artifact_digest),
+            )
+            for row in rows:
+                if self.get_publication_operation(row["id"]).outcome != "failed":
+                    raise ValueError(
+                        "This artifact already has an unresolved or successful scheduled upload."
+                    )
+        if action_kind == "release" and on_demand:
+            # The only on-demand release record is YouTube's scheduled transition of one exact
+            # successful upload; Conveyor never dispatches it.
+            if intent.get("schema") != SCHEDULED_TRANSITION_SCHEMA:
+                raise ValueError("An on-demand release can only record a scheduled transition.")
+            upload = self.get_publication_operation(intent.get("upload_operation_id", ""))
+            if (
+                upload.package_id != package.id
+                or upload.action_kind != "upload"
+                or upload.outcome != "succeeded"
+                or upload.intent.get("schema") != SCHEDULED_UPLOAD_SCHEMA
+                or upload.intent.get("publish_at") != intent.get("publish_at")
+            ):
+                raise ValueError("A scheduled transition needs its exact successful upload.")
+        elif action_kind == "release" and (
             intent.get("pilot_slot") != package.pilot_slot
             or intent.get("timing") != approval.timing
             or now is None
@@ -841,7 +953,7 @@ class PublishingRepositoryMixin:
                     raise ValueError(
                         "An unresolved or successful predecessor blocks another upload."
                     )
-        if action_kind == "release":
+        if action_kind == "release" and not on_demand:
             rows = self.connection.execute(
                 "SELECT o.id FROM publication_operations o JOIN publishing_packages p "
                 "ON p.id = o.package_id WHERE o.action_kind = 'release' "
@@ -910,7 +1022,19 @@ class PublishingRepositoryMixin:
             "succeeded": set(),
             "reconciled": set(),
         }
-        if kind not in allowed[last.kind]:
+        scheduled = operation.intent.get("schema") == SCHEDULED_TRANSITION_SCHEMA
+        if scheduled:
+            # YouTube, not Conveyor, performs a scheduled transition: there is no dispatch. The
+            # record goes reserved -> progress (the accepted commitment) -> succeeded (observed
+            # public) or failed; nothing else.
+            allowed = {
+                # reserved -> succeeded: a schedule YouTube did not echo, later observed public.
+                "reserved": {"progress", "succeeded", "failed"},
+                "progress": {"succeeded", "failed"},
+                "failed": set(),
+                "succeeded": set(),
+            }
+        if kind not in allowed.get(last.kind, set()):
             raise ValueError("Invalid or duplicate publishing operation transition.")
         if kind == "reconciled" and evidence.get("resolution") not in {"succeeded", "failed"}:
             raise ValueError("Reconciliation requires a definitive resolution.")
@@ -957,6 +1081,8 @@ class PublishingRepositoryMixin:
 
         if is_never_release(package.manifest):
             return None  # Never-release packages neither consume nor contend for a release week.
+        if is_on_demand(package.manifest):
+            return None  # On-demand publishing has no channel-week rule.
         rows = self.connection.execute(
             "SELECT o.id FROM publication_operations o JOIN publishing_packages p "
             "ON p.id = o.package_id WHERE o.id <> ? AND p.channel_id = ? AND p.pilot_week = ? "
