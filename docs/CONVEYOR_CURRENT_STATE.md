@@ -465,6 +465,15 @@ findings must be recorded in the appropriate repository authority document befor
 short documentation commit in the same working session. Exploratory discussion is not approval. Avoid unnecessary
 duplication and report the verified live main SHA after pushing.
 
+### Verification working rules (founder, 16 October 2026)
+
+- Any test run used to justify a commit must preserve and check pytest's real exit code (`set -o pipefail` or an
+  explicit check of the exit status). A filter such as `| tail` must never decide whether a commit proceeds. The
+  commit is a separate step, taken after a real exit 0.
+- Long verification (the full suite, CI) is waited on to completion before ending a turn: write the output to a
+  file, then wait in consecutive foreground calls until an exit code is reported. Never end a turn with "I'll
+  report when it finishes".
+
 ### Pre-P12 sequence (founder, 15 October 2026)
 
 **Permanent working rule:** complete the phases below in order. After each phase, record its verified outcome,
@@ -528,7 +537,8 @@ this section. No subsequent phase is authorized automatically.
 - Future analytics compliance obligations stay open (Phase 4;
   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
 
-**Phase 3 — On-demand publishing: plan approved (16 October 2026); build on a branch, not merged.**
+**Phase 3 — On-demand publishing: BUILD COMPLETE on a branch (16 October 2026); PR #1 not merged; migration 31
+not applied.**
 
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
@@ -551,16 +561,83 @@ this section. No subsequent phase is authorized automatically.
   Proof video: P11, after the 23 October 2026 OAuth durability check.
 - Route A (a direct public `videos.insert`) is a separately authorized fallback and is not built now. `videos.update`
   and any new scope are not proposed.
-- Migration 31 (unapplied): rebuilds `publishing_packages` (slot CHECK ≥ 1) and `publication_receipts` (without the
-  channel-week UNIQUE and the weekly-limit trigger), copying every legacy row verbatim with fingerprint, integrity
-  and foreign-key verification; legacy series keep their windows and week rule. It is built on a branch and applied
-  only as a founder-authorized step: maintenance task paused, verified backup, apply and verify, merge, task
-  resumed. Neither `main` nor the live checkout may contain migration 31 before that step, because the 03:00
-  maintenance task and live commands construct `AtlasRepository`, which applies pending migrations.
-- The build report must assess whether scheduled publishing fits the existing declared YouTube use and the
-  published privacy policy (version 2026-10-06), not assume it from unchanged scopes.
+- Migration 31 (unapplied): rebuilds `publishing_packages` (slot CHECK ≥ 1; the pilot series keep their 1-3 limit in
+  code) and `publication_receipts`, copying every legacy row verbatim. It lifts the channel-week rule **only for
+  on-demand receipts** (pilot week `on-demand`): legacy series keep it in the database through the
+  `publication_receipt_weekly_limit` trigger, now scoped to `pilot_week <> 'on-demand'`, and a partial UNIQUE index
+  `idx_publication_receipts_channel_week` with the same scope, plus their windows and week rule in code. Every
+  other trigger, index and constraint is recreated unchanged; tested fresh and as an upgrade from 30 (every table's
+  fingerprint, integrity and foreign keys unchanged), and rolls back atomically on failure. Neither `main` nor the
+  live checkout may contain migration 31 before the apply procedure below, because the 03:00 maintenance task and
+  live commands construct `AtlasRepository`, which applies pending migrations.
 - Merging, applying migration 31, pausing the maintenance task, packaging or publishing P11 and any YouTube API call
   remain separately authorized.
+
+Build result (branch `phase3-on-demand-publishing` at `2921ed9`, draft PR #1, 16 October 2026):
+
+- Verification on `2921ed9`: CI run 38906794669 passed; `/zero-spend-verify` full suite 745 passed, 0 failed,
+  0 skipped, pytest exit 0; focused set 41 passed.
+- Built: the successor series and on-demand packaging; source credits projected from the closed claim set (fail
+  closed, including an empty set); the single-use 15-minute founder confirmation; the scheduled private
+  `videos.insert`; the scheduled-transition journal; `reconcile_scheduled_publication`; migration 31; and
+  `python -m project_atlas.publishing_cli` (`status` read-only; `prepare`, `approve` and `reconcile-scheduled` with
+  hash check, rehearsal on a copy and verified backup).
+- `publishAt` must carry an explicit offset and fall between 30 minutes and **14 days** ahead (re-checked at
+  dispatch). 14 days, not 30: the daily 30-day stale-data purge deletes an unobserved publication's YouTube
+  identity, so reconciliation must stay well inside that window.
+- Security review (read-only reviewer under `.claude/agents/security-reviewer.md`), seven findings, all fixed with
+  regression tests:
+  1. High: live CLI commands would have applied migration 31 implicitly → every live command refuses unless the
+     database is already at the code's schema head.
+  2. Medium: an uncertain upload did not block the same artifact in another slot → any non-failed on-demand upload
+     of the same bytes blocks another.
+  3. Medium: a schedule YouTube did not echo was closed as failed → it stays pending (unknown); the result page
+     directs the founder to YouTube Studio; a receipt still needs an observed public state.
+  4. Low: a stop between upload and commitment left no recovery → reconciliation records the missing commitment
+     idempotently.
+  5. Low: the transition was marked succeeded before the receipt's times were checked → times validated before any
+     write.
+  6. Low: migration 31 dropped the database week guard for legacy series too → restored, scoped to non-on-demand
+     weeks.
+  7. Low: the repository accepted scheduled intents on any package → only on on-demand packages, and only scheduled
+     intents there.
+  Also: foreign-key rebuild migrations from 31 on may not add a violation (checked before commit).
+- Reconciliation recovery (independent review): if the receipt fails after the transition is recorded succeeded, a
+  retry rebuilds the receipt from the public observation recorded on the success event (status ID and `public_at`):
+  no new YouTube observation, status or event. A publication that already has its receipt is refused, so receipts
+  are never duplicated.
+- Compliance fit: scheduled publishing is the existing `videos.insert` / `youtube.upload` use (`status.publishAt` is
+  a field of the declared endpoint; use case Video Uploading & Account Management). Policy 2026-10-06 covers "the
+  selected video file and publishing metadata" when expressly authorised, and "authorised publishing features". It
+  is not a new API use, so no policy update or YouTube notice is needed for it. Caveat: whether the unaudited
+  project's private-only lock still applies stays unconfirmed until the P11 proof.
+
+Migration 31 apply procedure (each run needs founder authorization; PowerShell in `D:\ConveyorOS\source\Conveyor`
+after `. .\scripts\set_conveyor_environment.ps1`):
+
+- **Rule:** applying migration 31, verifying, marking PR #1 ready, merging, pulling main and re-enabling
+  maintenance happen in one sitting. Nothing runs from the main checkout between applying and merging.
+- **Failure before merge:** restore the backup with maintenance still disabled.
+- **Failure after merge:** leave maintenance disabled and report. Do not restore a version-30 backup under
+  version-31 code.
+
+1. `Disable-ScheduledTask -TaskName "Conveyor YouTube maintenance"`; confirm it is Disabled and not running, and
+   that `conveyor.db` has no `-wal` or `-journal` sidecar files.
+2. Record `(Get-FileHash $env:ATLAS_DB_PATH -Algorithm SHA256).Hash` and confirm the schema version is 30 (read with
+   `mode=ro`).
+3. Verified backup with the branch code:
+   `$env:PYTHONPATH="D:\ConveyorOS\source\Conveyor-phase3\src"; .venv\Scripts\python.exe -c "import os; from pathlib import Path; from project_atlas.production_backup import verified_backup; print(verified_backup(Path(os.environ['ATLAS_DB_PATH']), Path(r'D:\ConveyorBackups'), 'pre-migration-31-on-demand-publishing'))"`
+4. Apply (one repository open with the branch code):
+   `$env:PYTHONPATH="D:\ConveyorOS\source\Conveyor-phase3\src"; .venv\Scripts\python.exe -c "import os; from project_atlas.persistence import AtlasRepository; AtlasRepository(os.environ['ATLAS_DB_PATH']).close()"`
+5. Verify with `mode=ro` against the backup:
+   - schema version 31;
+   - `integrity_check` ok and `foreign_key_check` empty;
+   - `table_fingerprint` identical for every table except `schema_migrations`;
+   - the only schema changes are the two rebuilt tables, the scoped `publication_receipt_weekly_limit` trigger and
+     the new `idx_publication_receipts_channel_week` index.
+6. Mark PR #1 ready, merge it, then `git pull` in the main checkout and confirm the HEAD SHA.
+7. `Enable-ScheduledTask -TaskName "Conveyor YouTube maintenance"`.
+8. Record the new database SHA-256, the backup path and the date here.
 
 **Phase 4 — YouTube Analytics: AFTER Phase 3.**
 
@@ -585,9 +662,9 @@ this section. No subsequent phase is authorized automatically.
 
 ### Open items (as of 15 October 2026)
 
-- Phase 3 (on-demand publishing): plan approved 16 October 2026; build on a branch (not merged, migration 31 not
-  applied); the P11 scheduled-publish proof follows the 23 October OAuth durability check, each step separately
-  authorized.
+- Phase 3 (on-demand publishing): build complete on branch `phase3-on-demand-publishing` at `2921ed9` (draft PR #1,
+  CI passed); not merged, migration 31 not applied. Next, each separately authorized: the migration 31 apply
+  procedure, then the P11 scheduled-publish proof after the 23 October OAuth durability check.
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
