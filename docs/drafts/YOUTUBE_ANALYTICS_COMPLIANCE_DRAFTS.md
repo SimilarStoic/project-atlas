@@ -120,7 +120,8 @@ only as reference wording.
 
 ### Pending
 
-- **Google's response** to the 19 October submission (acknowledgement, approval, or a requirement for more). The
+- **Google's review decision** on the 19 October submission (approval, or a requirement for more). Google
+  acknowledged receipt by email at 15:24 on 19 October 2026; no case number was stated. The
   submitted narrative commits that no Analytics request is made until YouTube approves the change or confirms in
   writing that approval is not required.
 

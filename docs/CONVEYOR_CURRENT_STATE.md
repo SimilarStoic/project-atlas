@@ -832,9 +832,11 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 
 **Phase 4 — YouTube Analytics: AFTER Phase 3.**
 
-- The approved Option B design (YouTube block below) and its activation sequence stand: switched-off implementation
-  → written YouTube notice → privacy-policy update with the matching `POLICY_VERSION` → renewed acceptance and
-  analytics consent → first authorized collection.
+- The approved Option B design (YouTube block below) and its activation sequence stand. The formal written
+  notification was submitted on 19 October 2026 through Google's audit form, and Google acknowledged receipt (Phase
+  2). Remaining sequence: switched-off implementation → YouTube's approval, or its written confirmation that none is
+  required (pending) → privacy-policy update with the matching `POLICY_VERSION` → renewed acceptance and analytics
+  consent → first authorized collection.
 - No analytics activation or additional scopes are authorized now.
 - Completion criteria: authorized Analytics collection, storage, refresh and revocation verified working, **and** at
   least one compliant production-linked learning review that interprets YouTube's reported values without creating
@@ -859,8 +861,8 @@ after `. .\scripts\set_conveyor_environment.ps1`):
   obligation and no longer gates the P11 proof.
 - Analytics audit (Phase 2): formal audit submitted 19 October 2026; website confirmation and Google's acknowledgement
   email (15:24) saved. No case reference stated. Google's review and response are pending.
-  Checkpoint on or after 23 October 2026: look for Google's acknowledgement or status and, only if needed, decide a
-  proportionate follow-up. Do not resubmit automatically.
+  Checkpoint on or after 23 October 2026: acknowledgement has arrived; check for Google's review decision and, only
+  if needed, decide a proportionate follow-up. Do not resubmit automatically.
 - Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. Activation now also
   requires YouTube's approval of the 19 October submission (or written confirmation that none is needed). The
   published privacy policy stays at version `2026-10-06` until an authorized Phase 4 activation step.
