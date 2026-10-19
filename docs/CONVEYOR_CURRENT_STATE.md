@@ -559,22 +559,24 @@ PENDING.**
   The form has no exact-fit request type for a voluntary use-case change without extra quota. The founder chose the
   general audit option ("…request additional quota") and explained the discrepancy in the narrative. The narrative
   also discloses the 16 October email as a possible duplicate.
-- Evidence (outside the repository; it contains account details and stays out of GitHub):
-  - folder `D:\ConveyorOS\evidence\youtube-audit\2026-10-19\submission\`: a byte-identical copy of the
-    founder's original folder `D:\ConveyorOS\evidence\youtube-audit\2926-10-19\submission\` (year typo in the
-    folder name; the original is kept unaltered);
+- Evidence (outside the repository; it contains account details and stays out of GitHub), in
+  `D:\ConveyorOS\evidence\youtube-audit\2026-10-19\submission\`:
   - `01-analytics-audit-submission-confirmation.png` (SHA-256
     `3cdc2e9e1689dd8cf99c0abf9815647d93480e30fb67b22d1bc913a1f4fccc94`): Google's page "Your email has been sent —
     Thank you for submitting the YouTube API Services form". **The website submission is confirmed.**
-  - `02-submitted-audit-narrative.txt.txt` (SHA-256
+  - `02-submitted-audit-narrative.txt` (SHA-256
     `671115b1331f4fa3b8ca042621017209c837cd972c049b73bedfa7c559085baf`): the founder's saved copy of the submitted
     narrative. Google's form shows no echo, so exact identity with what Google received cannot be independently
     verified.
+  - `03-google-acknowledgement-email.png` (SHA-256
+    `47208588d61532550beb552c057ddbad5e05b07d67b888dc94e338c329a57d07`; a copy of the founder's screenshot
+    `Screenshot 2026-10-19 155522.png`). It shows Google's email "YouTube API Services: Thank you for your
+    submission" from YouTube API Quota, received 15:24 on 19 October 2026: "We will follow up with a response once
+    the application has been reviewed." **Google's receipt of the submission is acknowledged.**
   - The 6 October evidence is untouched.
-- Email verification: receipt of a verification email afterwards is **founder-reported**. The founder's saved
-  verification evidence was not in the evidence folder on 19 October and its location was not given, so successful
-  completion of the verification link is **not established**.
-- No case acknowledgement or reference number is recorded. **Google's review, approval or determination of the
+- The evidence shows an acknowledgement email, not an email-verification step. No verification link or its completion
+  is evidenced, and none is recorded as needed.
+- No case or reference number is stated in the acknowledgement. **Google's review, approval or determination of the
   Analytics use is pending.** The submission is the formal written notification. Whether it satisfies the
   notification obligation is established only by Google's response.
 - Material difference from the approved Phase 4 design: the narrative commits that no Analytics request is made until
@@ -855,8 +857,8 @@ after `. .\scripts\set_conveyor_environment.ps1`):
   `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
   obligation and no longer gates the P11 proof.
-- Analytics audit (Phase 2): formal audit submitted 19 October 2026 (website confirmation saved). Email verification
-  is founder-reported; its completion evidence is not located. No case reference. Google's response is pending.
+- Analytics audit (Phase 2): formal audit submitted 19 October 2026; website confirmation and Google's acknowledgement
+  email (15:24) saved. No case reference stated. Google's review and response are pending.
   Checkpoint on or after 23 October 2026: look for Google's acknowledgement or status and, only if needed, decide a
   proportionate follow-up. Do not resubmit automatically.
 - Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. Activation now also
