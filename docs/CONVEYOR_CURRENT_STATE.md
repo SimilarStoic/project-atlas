@@ -205,8 +205,15 @@ to the founder-accepted final artifact.
   never touches the P9 never-release audit package, and takes a verified SQLite backup before any live write. Release
   conflicts stay per channel and ISO week, across all pilot keys.
 - P9's separate never-release private API audit-evidence copy `JuouBEMCNzg` is not its public release.
+- **P11 is the first video published through Conveyor itself** (not in the manual table above):
+  `production-11-flow:founder-review:1`, artifact `production-11-flow-artifact-1`
+  (`6018887a53da9d9a62061353e5acab87ecbe4674102fce9434e7b2d7f36bbc85`, 36.400 s),
+  https://youtube.com/shorts/62mEQWPWVpE, public 2026-10-16T17:45:28Z (18:45:28 Europe/London). It was a
+  founder-confirmed scheduled API upload, YouTube made it public, and Conveyor's receipt is
+  `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (Phase 3 below).
 - P7 remains private evidence only, with no founder acceptance. P10 (as `production-10-r2`) is founder-accepted,
-  packaged and founder-approved for a manual 2026-W42 release, but is not uploaded or published (see below).
+  packaged and founder-approved for a manual 2026-W42 release, but is not uploaded or published; that window
+  expired unused on 19 October 2026, as decided (see below).
 - Rule: any external publication made outside Conveyor (for example a manual YouTube Studio release) must be recorded
   here the same day with URL, artifact ID and SHA-256, and then recorded in runtime as founder-attested provenance
   under its own explicit authorization.
@@ -243,8 +250,8 @@ clear). **v2 is founder-approved** for that manual W42 release: gate decision
 `publication-gate-similarstoic-youtube-pilot-1-slot-3-v2-founder-approval` (7 October 2026, after a verified backup;
 routes manual/manual, timing = the package window). v1 has no decision. P10 is **not uploaded and not published**;
 there are no publication operations. The founder does not intend to use this window (2026-10-12T00:00 to
-2026-10-19T00:00 Europe/London, end exclusive) and will let it expire (15 October 2026); the video, package and
-approval remain. Any future P10 publication needs fresh verification of its packaging, approval and
+2026-10-19T00:00 Europe/London, end exclusive) and will let it expire (15 October 2026); **it expired unused on
+19 October 2026**. The video, package and approval remain. Any future P10 publication needs fresh verification of its packaging, approval and
 publishing-series requirements; do not assume re-approval is trivial. The publish-day runbook and SHA-manifested copy-paste metadata are kept outside
 the repository in `D:\ConveyorOS\channels\SimilarStoic\production-10\publish\`; the manual route needs only the
 `youtube.readonly` authorization.
@@ -459,7 +466,8 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 - **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026). Since migration 31
   (applied 16 October 2026) they apply only to the legacy pilot series; the successor series
   `similarstoic-youtube-on-demand-v1` has neither. P11 was uploaded through the API with a YouTube-accepted schedule
-  (16 October 2026); the public transition and its independent observation (the receipt) are not yet proven.
+  (16 October 2026). YouTube made it public at `publishAt` and Conveyor's independent reconciliation recorded the
+  receipt (19 October 2026): real public publishing through the API is proven.
 
 ### Recording decisions (permanent working rule)
 
@@ -540,14 +548,15 @@ this section. No subsequent phase is authorized automatically.
 - Future analytics compliance obligations stay open (Phase 4;
   [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md)).
 
-**Phase 3 — On-demand publishing: NOT YET COMPLETE. Built, merged, migration 31 applied, and P11 uploaded with a
-YouTube-accepted schedule (16 October 2026). Phase 3 completes only when the public-state reconciliation succeeds.**
+**Phase 3 — On-demand publishing: COMPLETE (19 October 2026).** Conveyor published P11 through its own API path and
+independently verified the public outcome.
 
-- Completed: accepted artifact, approved package, founder-confirmed API upload and YouTube-acknowledged schedule
-  (P11 upload record below).
-- Pending: YouTube actually making P11 public at `publishAt`, Conveyor independently observing that exact video
-  public, and the publication receipt (`reconcile-scheduled`; dry run, verified backup, then live; separately
-  authorized).
+- Conveyor's API upload (16 October 2026): one founder-confirmed private `videos.insert` with `status.publishAt`
+  (video `62mEQWPWVpE`).
+- YouTube's scheduled public transition: YouTube made the video public at `2026-10-16T17:45:28Z`, 28 seconds after the
+  scheduled `2026-10-16T17:45:00Z`. Conveyor did not dispatch it.
+- Conveyor's independent reconciliation (19 October 2026): a read-only observation of the exact video, then the
+  publication receipt (P11 reconciliation record below).
 
 Applied and merged (founder-authorized, one sitting, 16 October 2026; every check passed):
 
@@ -631,10 +640,56 @@ P11 scheduled upload — Conveyor's first successful real scheduled YouTube API 
   - Scheduled transition (release) operation
     `publication-operation-c9e6e085df76725a506a7767472af5aa122e2613f7c13cb201c7dabb6717e3bf` (schema
     `scheduled-public-transition-v1`): reserved, then `progress` by actor YouTube, `scheduled-commitment-accepted`,
-    `conveyor_dispatch: false`. Outcome pending.
-  - No status snapshot and no receipt yet.
-- Not yet proven: that YouTube makes the video public at `publishAt` and that the unaudited project's private-only
-  lock no longer applies. The receipt comes only from `reconcile-scheduled` after `publishAt`.
+    `conveyor_dispatch: false`. Outcome pending at upload time (succeeded on 19 October, below).
+  - At upload time, no status snapshot and no receipt.
+- The unaudited project's private-only lock no longer applied: YouTube made the video public at `publishAt` (record
+  below).
+
+P11 publication reconciliation — Phase 3 completion (19 October 2026, founder-authorized, one live attempt):
+
+- First attempt (19 October, before PR #3): refused before any backup, runtime write or YouTube call. The backup label
+  `pre-publishing-reconcile-<publication id>` was 110 characters, but `verified_backup` accepts at most 100.
+  - Fix: PR #3 (branch `fix-publishing-backup-label`, `d99b5a0`), independently reviewed and merged with merge commit
+    `be48afdfe1dd4dc01ff21e5fbe22fd61230509d6`; CI on main run 39252433607 passed.
+  - Valid labels are unchanged. Oversized or invalid labels become a readable prefix plus a 12-character SHA-256
+    fingerprint (at most 100 characters). `verified_backup`'s validation is unchanged.
+  - Tests: the real CLI backup path for prepare, approve and reconcile-scheduled, with full-length IDs. The full
+    `/zero-spend-verify` suite: 761 passed, exit 0.
+- Pre-checks:
+  - no process held the database and there were no sidecars;
+  - package, approval, upload journal, publication `62mEQWPWVpE` on `UC1cX-OTF9-LZeNo5TaFgrgQ`, pending scheduled
+    transition and schema 31 all as recorded; no receipt;
+  - consent current.
+- Dry run: stopped at its designed boundary (YouTube observation blocked); database unchanged.
+- Database hashes:
+  - fresh before: `4593143c3174e83bda28fddd9bd9c9d6bf8fbc81be0f2f3a6896e68962fed445` (moved by the 19 October
+    maintenance catch-up run, a no-op);
+  - after: `92329e8c335b6b2c37ab20c846c2cabb512a99eacaaa9c9b9ef0ced8168f7351`.
+- Verified backup:
+  `D:\ConveyorBackups\pre-publishing-reconcile-platform-publication-2a975ee56f0b5558f46fc781a302211db54d21f57-128e4393a261-20261019-133139\conveyor.db`
+  (SHA-256 `7426ad9dc0e3e888bd4ea769c635157c1e9a7d00d313a1dd96a14f4956226872`; integrity ok, 0 FK violations,
+  content identical, schema 31).
+- Independent observation (read-only `videos.list`, 2026-10-19T12:31:42Z) of the exact video `62mEQWPWVpE`:
+  - video ID and channel matched;
+  - privacy `public`, processing succeeded, upload status `processed`, not API-locked;
+  - all metadata checks passed: title, description (including the source credits), tags, category, language,
+    audience, synthetic-media declaration;
+  - YouTube public time `2026-10-16T17:45:28Z`, at or after `publishAt`.
+- Persisted records:
+  - status `publication-status-similarstoic-youtube-on-demand-v1-slot-1-public-1` (verification passed; its
+    `adapter_version` column reads `offline-adapter-v1`, the service's fixed label, while the provider payload schema
+    is `youtube-readonly-observation-v1`);
+  - scheduled transition `publication-operation-c9e6e085df76725a506a7767472af5aa122e2613f7c13cb201c7dabb6717e3bf`:
+    reserved → progress (YouTube, scheduled commitment) → succeeded (Conveyor, independent public observation);
+  - **receipt `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1`**: public at `2026-10-16T17:45:28Z`,
+    source `provider-public-state`, second precision, first observed public 2026-10-19T12:31:42Z, week `on-demand`,
+    mode `api`, receipt digest `c3a431a8e536e8e5addf338e2820848f2c152aa60fb67d95d52a8877eb74d3eb`;
+  - artifact `production-11-flow-artifact-1`, SHA-256
+    `6018887a53da9d9a62061353e5acab87ecbe4674102fce9434e7b2d7f36bbc85`.
+- Testing lesson: both real-workflow failures (browser textarea CRLF line breaks; a 110-character backup label from a
+  real publication ID) passed every synthetic test, and both failed closed before any external effect. Realistic
+  browser submissions and full-length operational identifiers must be exercised through the actual workflow (real
+  HTTP form path, real CLI backup path) before a live step relies on them.
 
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
@@ -756,20 +811,17 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 
 ### Open items (as of 15 October 2026)
 
-- Phase 3 (on-demand publishing): NOT YET COMPLETE. Built, merged (`c5a9729`, upload-form fix `83ba00c`),
-  migration 31 applied, and P11 uploaded as YouTube video `62mEQWPWVpE` with an accepted schedule `publishAt`
-  `2026-10-16T17:45:00Z` (16 October 2026). Next, separately authorized: once `publishAt` has passed, independently
-  verify P11 is public and run `reconcile-scheduled` (dry run, verified backup, then live) to record the receipt and
-  the final Phase 3 outcome.
+- Phase 3 (on-demand publishing): COMPLETE (19 October 2026). P11 is public as `62mEQWPWVpE` with receipt
+  `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
   obligation and no longer gates the P11 proof.
 - Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
   delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
   (before Phase 4 activation).
 - Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
-- P10 (`production-10-r2`) is founder-accepted, not uploaded and not published. P11 (`production-11-flow`) is
-  founder-accepted and uploaded privately (`62mEQWPWVpE`) with a YouTube-accepted schedule (`2026-10-16T17:45:00Z`);
-  it is not yet observed public and has no receipt.
+- P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
+  unused on 19 October 2026, as the founder decided. P11 (`production-11-flow`) is public on YouTube
+  (`62mEQWPWVpE`, public 2026-10-16T17:45:28Z) with a Conveyor publication receipt.
 
 ## Approved visual evidence
 
