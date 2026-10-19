@@ -106,6 +106,8 @@ commit SHAs and GitHub Actions run IDs are volatile verification results, not pe
 - After the P11 consolidation (provider isolation for every test, founder spend control with dispatch records, retime
   overlay fix, review controls, the `similarstoic-flow-v1` recipe with its P11 equivalence test and the operator CLI),
   the verified local full suite is **680 passed, 0 skipped, 0 failed**, with every provider key removed.
+- After Phase 3 (PRs #1-#3, last merge `be48afd`, 19 October 2026), the verified `/zero-spend-verify` full suite is
+  **761 passed, 0 skipped, 0 failed** (exit 0, on `d99b5a0`, the merged head of PR #3).
 - Repository CI is restored to green for Ruff lint, Black formatting, and pytest. Verify the current run live when its
   result matters.
 - The SHA-256 `97FF9F4B37766A98BE3C94506D5E45A399648B070DEAC686CA25EF755B29EDE2` is a historical
@@ -526,23 +528,61 @@ this section. No subsequent phase is authorized automatically.
   4. Write one page: the aligned table, each timing source and its precision, and hypotheses only. No derived numbers
      (no differences, ratios, rankings or scores); YouTube's values are quoted as exported.
 
-**Phase 2 — Existing Google compliance evidence: REVIEWED.**
+**Phase 2 — Google compliance: REVIEWED; formal Analytics audit SUBMITTED 19 October 2026; Google's response
+PENDING.**
 
 - Google acknowledged the YouTube API Services submission on 6 October 2026, sent a review update on 7 October and
   closed it on 8 October (founder's email thread).
 - The exact original submission wording has not been located in the available email thread or the evidence folder.
   The recorded commitment stands: before any new YouTube API use (such as Analytics), update the privacy policy and
   notify YouTube in writing.
-- The founder's intended notification route is a reply to the existing Google correspondence; whether that is
-  formally sufficient is not confirmed and must be resolved before analytics is activated.
-- Prospective inquiry (founder, 16 October 2026): the founder will send an inquiry on the existing 6-8 October thread
-  explaining the planned Analytics use (not active: no Analytics API calls, no new scopes, and the privacy-policy
-  update will precede activation) and asking whether that thread is the correct notification route or a new audit
-  submission is required. The formal notice remains a separate obligation until its route is confirmed. **Sent by
-  the founder on 16 October 2026** on the existing thread; delivery to a human on a closed case is unconfirmed.
-  23 October 2026 is a decision checkpoint, not an automatic submission: if there is no reply, the founder reviews
-  the available official contact options and decides the next step, without selecting an inaccurate request
-  category.
+- Historical: on 16 October 2026 the founder emailed an inquiry about the planned Analytics use as a reply on the
+  closed 6-8 October thread. Delivery to a human on a closed case is unconfirmed, and no reply is recorded.
+- **Formal notification route.** Developer Policies III.D ("Usage and Quotas") says: "If your API Client's use case
+  changes ... you must notify YouTube of the change by resubmitting an API Compliance Audit and receive approval".
+  The route is therefore Google's YouTube API Services Audit and Quota Extension Form
+  (https://support.google.com/youtube/contact/yt_api_form?hl=en-GB), not a reply on the old thread.
+- **New audit submitted by the founder on 19 October 2026** for the proposed read-only YouTube Analytics use. The
+  submitted facts:
+  - project `1031021502761`, channel SimilarStoic `UC1cX-OTF9-LZeNo5TaFgrgQ`;
+  - existing use unchanged: video uploading and account management, with `channels.list`, `videos.list` and
+    `videos.insert`;
+  - proposed: YouTube Analytics API `reports.query`, under a separate authorization (`yt-analytics.readonly` +
+    `youtube.readonly`), for non-monetary video metrics and audience retention, for the operator's own editorial
+    learning;
+  - collection about 24 h, 72 h, 7 d and 28 d after publication;
+  - no monetary or revenue data, and no derived numeric metrics, scores or rankings;
+  - "No change/Default quota (10K quota points)" selected; no derived-metrics or extended-storage allowance
+    requested;
+  - Analytics disclosed as not implemented and not active.
+
+  The form has no exact-fit request type for a voluntary use-case change without extra quota. The founder chose the
+  general audit option ("…request additional quota") and explained the discrepancy in the narrative. The narrative
+  also discloses the 16 October email as a possible duplicate.
+- Evidence (outside the repository; it contains account details and stays out of GitHub):
+  - folder `D:\ConveyorOS\evidence\youtube-audit\2026-10-19\submission\`: a byte-identical copy of the
+    founder's original folder `D:\ConveyorOS\evidence\youtube-audit\2926-10-19\submission\` (year typo in the
+    folder name; the original is kept unaltered);
+  - `01-analytics-audit-submission-confirmation.png` (SHA-256
+    `3cdc2e9e1689dd8cf99c0abf9815647d93480e30fb67b22d1bc913a1f4fccc94`): Google's page "Your email has been sent —
+    Thank you for submitting the YouTube API Services form". **The website submission is confirmed.**
+  - `02-submitted-audit-narrative.txt.txt` (SHA-256
+    `671115b1331f4fa3b8ca042621017209c837cd972c049b73bedfa7c559085baf`): the founder's saved copy of the submitted
+    narrative. Google's form shows no echo, so exact identity with what Google received cannot be independently
+    verified.
+  - The 6 October evidence is untouched.
+- Email verification: receipt of a verification email afterwards is **founder-reported**. The founder's saved
+  verification evidence was not in the evidence folder on 19 October and its location was not given, so successful
+  completion of the verification link is **not established**.
+- No case acknowledgement or reference number is recorded. **Google's review, approval or determination of the
+  Analytics use is pending.** The submission is the formal written notification. Whether it satisfies the
+  notification obligation is established only by Google's response.
+- Material difference from the approved Phase 4 design: the narrative commits that no Analytics request is made until
+  YouTube **approves the change, or confirms in writing that approval is not required**. That is in addition to
+  implementing and testing, the privacy-policy update, renewed acceptance and separate Analytics consent. The Phase
+  4 activation order (YouTube block below) did not include this approval wait, so it is now a binding activation
+  requirement. Scopes, method, metrics, retention and re-verification, deletion periods, the no-derived-metrics rule
+  and quota match the approved design.
 - The OAuth app and both authorizations remain as recorded (YouTube block below). The durability check is due on or
   after 23 October 2026 and still needs explicit founder authorization.
 - Future analytics compliance obligations stay open (Phase 4;
@@ -809,16 +849,22 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 - This sequencing decision authorizes no change to the production recipe, the production CLI, providers or spend
   gates.
 
-### Open items (as of 15 October 2026)
+### Open items (as of 19 October 2026)
 
 - Phase 3 (on-demand publishing): COMPLETE (19 October 2026). P11 is public as `62mEQWPWVpE` with receipt
   `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
   obligation and no longer gates the P11 proof.
-- Analytics notification route: prospective inquiry sent on the existing 6-8 October thread on 16 October 2026;
-  delivery unconfirmed; 23 October 2026 founder decision checkpoint if no reply; formal sufficiency unconfirmed
-  (before Phase 4 activation).
-- Phase 4 (analytics) and Phase 5 (P12): later phases, not authorized.
+- Analytics audit (Phase 2): formal audit submitted 19 October 2026 (website confirmation saved). Email verification
+  is founder-reported; its completion evidence is not located. No case reference. Google's response is pending.
+  Checkpoint on or after 23 October 2026: look for Google's acknowledgement or status and, only if needed, decide a
+  proportionate follow-up. Do not resubmit automatically.
+- Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. Activation now also
+  requires YouTube's approval of the 19 October submission (or written confirmation that none is needed). The
+  published privacy policy stays at version `2026-10-06` until an authorized Phase 4 activation step.
+- Phase 5 (P12): not authorized.
+- Next smallest useful action: check for Google's response to the 19 October audit and, on or after 23 October, run
+  the OAuth durability check when the founder authorizes it.
 - P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
   unused on 19 October 2026, as the founder decided. P11 (`production-11-flow`) is public on YouTube
   (`62mEQWPWVpE`, public 2026-10-16T17:45:28Z) with a Conveyor publication receipt.
@@ -1276,9 +1322,10 @@ its only API-route package is the never-release private audit-evidence package b
     returned, describe the returned data qualitatively and use Conveyor's own production facts; it must not contain
     any number, comparison, ranking or score derived from API data. Labelling alone does not make derived data
     acceptable.
-  - Activation order: build switched off with `POLICY_VERSION` unchanged; send the written notice to YouTube; on a
-    day with no planned upload, publish the new policy and ship the matching `POLICY_VERSION`, re-accept at once,
-    then authorize analytics and collect. Drafts of the policy addition and the notice:
+  - Activation order: build switched off with `POLICY_VERSION` unchanged; the formal written notification was
+    submitted on 19 October 2026 (Phase 2), and YouTube's approval, or its written confirmation that none is needed,
+    is required before any Analytics request; on a day with no planned upload, publish the new policy and ship the
+    matching `POLICY_VERSION`, re-accept at once, then authorize analytics and collect. Drafts of the policy addition and the notice:
     [`drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md`](drafts/YOUTUBE_ANALYTICS_COMPLIANCE_DRAFTS.md) (not
     authority).
 - Consent state (accepted version, reconfirmation times; no secrets) is a JSON file outside the repository, required

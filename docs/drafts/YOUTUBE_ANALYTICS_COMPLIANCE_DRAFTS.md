@@ -73,8 +73,10 @@ its tests are in place.
 
 ## 2. Written notice to YouTube
 
-To be sent by the founder through the confirmed route (see section 3), only after the build exists and before any
-analytics API use.
+**Not sent as written.** The initial formal notification was made instead through Google's audit form on 19 October
+2026, before implementation (see section 3 and CURRENT_STATE Phase 2), and awaits Google's response. Do not send this
+notice as a duplicate. Any further notification Google requires is a future founder decision. The text below is kept
+only as reference wording.
 
 > **Subject:** Conveyor (project 1031021502761) — notice of new YouTube API use: YouTube Analytics (read-only,
 > non-monetary)
@@ -110,15 +112,20 @@ analytics API use.
   answers) and not found. The recorded commitment stands as the basis for the notice: update the privacy policy and
   notify YouTube in writing before any new API use.
 
-### Unconfirmed
+- **Notification route (resolved 19 October 2026).** Developer Policies III.D directs use-case changes through a
+  resubmitted API Compliance Audit. The founder submitted Google's audit form on 19 October 2026; the 16 October
+  reply on the closed thread is historical. The submission and its evidence are recorded in CURRENT_STATE Phase 2.
+- **Published policy contact address.** Confirmed present and readable on the live page on 19 October 2026 (policy
+  version 2026-10-06); not repeated here.
 
-- **Notification route.** The founder intends to reply to the existing Google correspondence. Developer Policies
-  III.D.3 directs use-case changes through a resubmitted API Compliance Audit; whether the reply is formally
-  sufficient is not confirmed and must be resolved before analytics is activated.
-- **Published policy contact address.** Obfuscated in the page source; confirm it on the live page before publishing.
+### Pending
+
+- **Google's response** to the 19 October submission (acknowledgement, approval, or a requirement for more). The
+  submitted narrative commits that no Analytics request is made until YouTube approves the change or confirms in
+  writing that approval is not required.
 
 ### Future activation obligations (Phase 4, not authorized)
 
-- Send the written notice (section 2) through the confirmed route.
+- Receive YouTube's approval of the 19 October submission, or its written confirmation that none is needed.
 - Publish the policy addition (section 1) with a new version, and ship the matching `POLICY_VERSION`.
 - Renew acceptance, grant the analytics consent, then make the first authorized collection.
