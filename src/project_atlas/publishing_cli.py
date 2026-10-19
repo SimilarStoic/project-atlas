@@ -18,15 +18,17 @@ import argparse
 import contextlib
 import json
 import os
+import re
 import shutil
 import sqlite3
 import sys
 import tempfile
 from collections.abc import Iterator
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from project_atlas.production_backup import database_sha256, verified_backup
+from project_atlas.production_backup import _LABEL, database_sha256, verified_backup
 from project_atlas.publishing_credits import SourceCreditError, source_credits
 from project_atlas.publishing_state import ON_DEMAND_SERIES, ON_DEMAND_TIMING
 
@@ -34,6 +36,25 @@ REHEARSAL_NOTE = (
     "Rehearsal on a temporary copy: it validates preconditions and wiring only; no YouTube call "
     "was made."
 )
+BACKUP_LABEL_MAX = 100  # verified_backup's label limit
+BACKUP_LABEL_FINGERPRINT = 12  # hex characters of SHA-256 over the full original label
+
+
+def backup_label(label: str) -> str:
+    """The verified-backup label for a publishing command: unchanged when already valid.
+
+    Otherwise (too long, or characters the backup helper refuses) a readable, lower-case safe
+    prefix plus a short SHA-256 fingerprint of the full original label: deterministic, at most
+    BACKUP_LABEL_MAX characters, and distinct for different original labels.
+    """
+
+    full = f"pre-publishing-{label}"
+    if _LABEL.fullmatch(full):
+        return full
+    fingerprint = sha256(full.encode("utf-8")).hexdigest()[:BACKUP_LABEL_FINGERPRINT]
+    safe = re.sub(r"[^a-z0-9_.-]+", "-", full.lower())
+    prefix = safe[: BACKUP_LABEL_MAX - BACKUP_LABEL_FINGERPRINT - 1].rstrip("-_.")
+    return f"{prefix}-{fingerprint}"
 
 
 class CliError(RuntimeError):
@@ -146,7 +167,7 @@ def _live(args: argparse.Namespace, label: str, operation, live_adapter=None) ->
     if args.dry_run:
         report["mode"] = "dry-run"
         return report
-    report["backup"] = verified_backup(db, Path(args.backup_root), f"pre-publishing-{label}")
+    report["backup"] = verified_backup(db, Path(args.backup_root), backup_label(label))
     if database_sha256(db) != actual:
         raise CliError("The database changed during the backup; nothing was written.")
     service = _service(db, media, live_adapter() if live_adapter else _BlockedAdapter())

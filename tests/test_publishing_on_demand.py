@@ -1282,3 +1282,198 @@ def test_browser_submission_with_changed_sources_is_still_refused(screen, tmp_pa
     assert "keep the source credits exactly" in page
     assert client.inserts == []
     assert _count(repo, "publication_operations") == 0
+
+
+# --- Backup labels: every publishing command yields a label verified_backup accepts -----------
+
+P11_PREPARE = "prepare-publishing-package-similarstoic-youtube-on-demand-v1-slot-1-v1"
+P11_RECONCILE = (
+    "reconcile-platform-publication-"
+    "2a975ee56f0b5558f46fc781a302211db54d21f57b667f37cd303a81e212124a"
+)
+
+
+def test_valid_backup_labels_are_unchanged() -> None:
+    from project_atlas.publishing_cli import backup_label
+
+    # The labels already used for P11's prepare and approve backups stay exactly as they were.
+    assert backup_label(P11_PREPARE) == f"pre-publishing-{P11_PREPARE}"
+    approve = P11_PREPARE.replace("prepare-", "approve-", 1)
+    assert backup_label(approve) == f"pre-publishing-{approve}"
+    assert backup_label("prepare-od-1") == "pre-publishing-prepare-od-1"
+
+
+def test_oversized_backup_label_is_readable_fingerprinted_and_deterministic() -> None:
+    from hashlib import sha256
+
+    from project_atlas.production_backup import _LABEL
+    from project_atlas.publishing_cli import backup_label
+
+    full = f"pre-publishing-{P11_RECONCILE}"
+    assert len(full) == 110 and not _LABEL.fullmatch(full)  # The refused live label.
+    label = backup_label(P11_RECONCILE)
+    assert _LABEL.fullmatch(label) and len(label) == 100
+    assert label == backup_label(P11_RECONCILE)  # Deterministic.
+    assert label.startswith("pre-publishing-reconcile-platform-publication-2a975ee5")
+    assert label.endswith("-" + sha256(full.encode()).hexdigest()[:12])
+    # Two long identifiers sharing the readable prefix still get different labels.
+    other = P11_RECONCILE[:-1] + "f"
+    assert backup_label(other) != label and len(backup_label(other)) == 100
+
+
+@pytest.mark.parametrize(
+    "identifier",
+    [
+        "x" * 300,
+        "Mixed-Case_ID.With.Dots",
+        "spaces and / slashes \\ and ünïcode",
+        "-leading-dash",
+        "...",
+        "a" * 84 + "-" * 30,
+        "",
+    ],
+)
+def test_no_publishing_command_builds_an_invalid_backup_label(identifier) -> None:
+    from project_atlas.production_backup import _LABEL
+    from project_atlas.publishing_cli import backup_label
+
+    for command in ("prepare", "approve", "reconcile"):
+        label = backup_label(f"{command}-{identifier}")
+        assert _LABEL.fullmatch(label) and len(label) <= 100
+        assert label == backup_label(f"{command}-{identifier}")
+
+
+def _backup_dir(report: dict) -> Path:
+    backup = report["backup"]
+    assert backup["integrity"] == "ok" and backup["content_identical"] is True
+    assert backup["foreign_key_violations"] == 0
+    path = Path(backup["backup"])
+    assert path.is_file()
+    return path.parent
+
+
+def test_cli_prepare_and_approve_live_with_an_oversized_package_id(cli_world, capsys) -> None:
+    from project_atlas.publishing_cli import backup_label
+
+    db, media, metadata, root = cli_world
+    package_id = "publishing-package-similarstoic-youtube-on-demand-v1-slot-1-v1-" + "x" * 60
+    backups = root / "backups"
+    code, report = _cli(
+        capsys,
+        "prepare",
+        "od-artifact",
+        "--package-id",
+        package_id,
+        "--slot",
+        1,
+        "--metadata",
+        metadata,
+        "--db",
+        db,
+        "--media",
+        media,
+        "--expect-db-sha256",
+        database_sha256(db),
+        "--backup-root",
+        backups,
+    )
+    assert code == 0 and report["mode"] == "live", report
+    label = backup_label(f"prepare-{package_id}")
+    assert len(f"pre-publishing-prepare-{package_id}") > 100 and len(label) == 100
+    assert _backup_dir(report).name.startswith(label + "-")
+    digest = report["live"]["result"]["package_digest"]
+    code, report = _cli(
+        capsys,
+        "approve",
+        package_id,
+        "--package-digest",
+        digest,
+        "--decision-id",
+        "d-1",
+        "--founder-actor",
+        "founder",
+        "--db",
+        db,
+        "--media",
+        media,
+        "--expect-db-sha256",
+        database_sha256(db),
+        "--backup-root",
+        backups,
+    )
+    assert code == 0 and report["mode"] == "live", report
+    assert _backup_dir(report).name.startswith(backup_label(f"approve-{package_id}") + "-")
+    assert report["live"]["result"]["package_digest"] == digest
+
+
+def test_cli_reconcile_scheduled_live_with_a_full_length_publication_id(
+    cli_world, capsys, monkeypatch
+) -> None:
+    from project_atlas import youtube_adapter
+    from project_atlas.publishing_cli import backup_label
+
+    db, media, _metadata, root = cli_world
+    start = datetime.now(UTC).replace(second=0, microsecond=0) - timedelta(hours=2)
+    publish_at = start + timedelta(hours=1)  # Already passed for the real-clock CLI.
+    repo = AtlasRepository(db)
+    try:
+        fake = FakePublishingAdapter()
+        fake.transfer = _scheduled_result(publish_at=publish_at_wire(publish_at))
+        service = PublishingService(repo, LocalMediaStorage(media), fake, lambda: start)
+        package = _approved_od(service, repo)
+        upload = service.reserve_upload(
+            package.id, upload=_confirmed(package, publish_at=publish_at.isoformat())
+        )
+        publication = service.begin_api_upload(upload.id)
+    finally:
+        repo.close()
+    assert len(f"pre-publishing-reconcile-{publication.id}") == 110  # As for P11.
+    observer = FakePublishingAdapter()
+    moment = datetime.now(UTC).replace(microsecond=0)
+    observer.remote = replace(
+        observer.remote,
+        privacy="public",
+        public_at=(moment + timedelta(seconds=30)).isoformat(),
+        observed_at=(moment + timedelta(seconds=60)).isoformat(),
+    )
+    monkeypatch.setattr(
+        youtube_adapter.YouTubeReadOnlyObservationAdapter,
+        "from_client_config",
+        lambda *_args, **_kwargs: observer,  # Fake observer: no credential, no network.
+    )
+    code, report = _cli(
+        capsys,
+        "reconcile-scheduled",
+        publication.id,
+        "--receipt-id",
+        "r-1",
+        "--status-id",
+        "s-1",
+        "--client-config",
+        root / "client-config.json",
+        "--consent-state",
+        root / "consent-state.json",
+        "--db",
+        db,
+        "--media",
+        media,
+        "--expect-db-sha256",
+        database_sha256(db),
+        "--backup-root",
+        root / "backups",
+    )
+    assert code == 0 and report["mode"] == "live", report
+    assert "observe_remote" in report["rehearsal"]["stopped_at"]  # Rehearsal never observes.
+    assert _backup_dir(report).name.startswith(backup_label(f"reconcile-{publication.id}") + "-")
+    assert report["live"]["result"]["receipt_id"] == "r-1"
+    assert observer.calls.count("observe") == 1
+    connection = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
+    try:
+        assert (
+            connection.execute(
+                "SELECT release_operation_id FROM publication_receipts WHERE id = 'r-1'"
+            ).fetchone()
+            is not None
+        )
+    finally:
+        connection.close()
