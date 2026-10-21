@@ -16,7 +16,7 @@ from typing import Any
 from project_atlas.demo_data import OPPORTUNITIES, content_payload
 from project_atlas.production_persistence import ProductionRepositoryMixin
 from project_atlas.production_schema import MIGRATION_28
-from project_atlas.publishing_schema import MIGRATION_25, MIGRATION_29, MIGRATION_31
+from project_atlas.publishing_schema import MIGRATION_25, MIGRATION_29, MIGRATION_31, MIGRATION_32
 from project_atlas.publishing_state import PublishingRepositoryMixin
 from project_atlas.scene_persistence import PersistentSceneRepositoryMixin
 from project_atlas.scene_schema import MIGRATION_27
@@ -1623,6 +1623,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     MIGRATION_29,
     MIGRATION_30,
     MIGRATION_31,
+    MIGRATION_32,
 )
 
 

@@ -670,3 +670,30 @@ MIGRATION_31: tuple[int, tuple[str, ...]] = (
         purge_guard="OLD.public_status_id IS NOT NULL",
     ),
 )
+
+
+# YouTube Analytics (Option B, founder-amended 21 October 2026): durable, independently purgeable
+# evidence that a published video still exists. Analytics data may be kept beyond 30 days only
+# while such a check (and the Analytics authorization) is fresh. Additive only: no existing row,
+# constraint or trigger changes.
+ANALYTICS_VIDEO_CHECK_COLUMNS = ("id", "receipt_id", "checked_at", "created_at")
+_PURGE_FIELDS["analytics_video_checks"] = ("outcome",)
+
+MIGRATION_32: tuple[int, tuple[str, ...]] = (
+    32,
+    (
+        """
+        CREATE TABLE analytics_video_checks (
+          id TEXT PRIMARY KEY, receipt_id TEXT NOT NULL,
+          checked_at TEXT NOT NULL,
+          outcome TEXT NULL CHECK (outcome IN ('exists', 'missing', 'inaccessible')),
+          created_at TEXT NOT NULL, provider_purged_at TEXT NULL,
+          CHECK ((outcome IS NULL) = (provider_purged_at IS NOT NULL)),
+          FOREIGN KEY (receipt_id) REFERENCES publication_receipts(id) ON DELETE RESTRICT
+        )
+        """,
+        "CREATE INDEX idx_analytics_video_checks_receipt "
+        "ON analytics_video_checks(receipt_id, checked_at)",
+    )
+    + _immutable("analytics_video_checks", ANALYTICS_VIDEO_CHECK_COLUMNS, purgeable=True),
+)

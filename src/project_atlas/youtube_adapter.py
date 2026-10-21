@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -15,6 +15,7 @@ from project_atlas.publishing_state import (
     PublishingPackage,
 )
 from project_atlas.youtube_preflight import (
+    ANALYTICS_SCOPES,
     EXPECTED_CHANNEL_ID,
     YOUTUBE_READONLY_SCOPE,
     CredentialView,
@@ -274,3 +275,95 @@ class YouTubeReadOnlyObservationAdapter:
         raise UnsupportedYouTubeMutation(
             "YouTube analytics are unavailable in the read-only adapter."
         )
+
+
+ANALYTICS_REPORTS_ENDPOINT = "https://youtubeanalytics.googleapis.com/v2/reports"
+# Existence outcomes recorded as Analytics retention evidence (migration 32).
+_MISSING = {"remote_video_inaccessible"}
+_INACCESSIBLE = {"remote_video_identity_mismatch", "remote_video_channel_mismatch"}
+
+
+class GoogleYouTubeAnalyticsClient(GoogleReadOnlyYouTubeClient):
+    """The read-only Data API methods plus YouTube Analytics reports.query; no mutation."""
+
+    def report(self, credentials: CredentialView, params: dict[str, Any]) -> dict[str, Any]:
+        return self._get(credentials, ANALYTICS_REPORTS_ENDPOINT, params)
+
+
+class YouTubeAnalyticsAdapter(YouTubeReadOnlyObservationAdapter):
+    """Read-only YouTube Analytics for the channel's own videos (Option B; disabled by default).
+
+    Uses the separate Analytics authorization (exactly youtube.readonly + yt-analytics.readonly).
+    Values are returned as reported; the caller records them without deriving new metrics.
+    """
+
+    REQUIRED_SCOPES: tuple[str, ...] = tuple(sorted(ANALYTICS_SCOPES))
+
+    def __init__(
+        self,
+        credential_provider: CredentialProvider,
+        client: Any | None = None,
+        clock: Callable[[], datetime] | None = None,
+    ) -> None:
+        super().__init__(credential_provider, client or GoogleYouTubeAnalyticsClient(), clock)
+
+    @classmethod
+    def from_client_config(
+        cls,
+        client_config: Path,
+        repository_root: Path,
+        governance: Any,
+        *,
+        clock: Callable[[], datetime] | None = None,
+    ) -> YouTubeAnalyticsAdapter:
+        """Governed Analytics credentials; refused outright while Analytics is disabled."""
+
+        from project_atlas.youtube_consent import analytics_enabled, governed_provider
+
+        if not analytics_enabled():
+            raise YouTubeObservationBlocked("analytics_disabled")
+        return cls(
+            governed_provider("analytics", client_config, repository_root, governance), clock=clock
+        )
+
+    def _report(self, params: dict[str, Any]) -> dict[str, Any]:
+        credentials = self._authorized()
+        return self.client.report(credentials, params)
+
+    def analytics_report(
+        self, remote_id: str, start: date, end: date, metrics: tuple[str, ...]
+    ) -> dict[str, Any]:
+        return self._report(
+            {
+                "ids": "channel==MINE",
+                "startDate": start.isoformat(),
+                "endDate": end.isoformat(),
+                "metrics": ",".join(metrics),
+                "filters": f"video=={remote_id}",
+            }
+        )
+
+    def analytics_retention(self, remote_id: str, start: date, end: date) -> dict[str, Any]:
+        return self._report(
+            {
+                "ids": "channel==MINE",
+                "startDate": start.isoformat(),
+                "endDate": end.isoformat(),
+                "dimensions": "elapsedVideoTimeRatio",
+                "metrics": "audienceWatchRatio",
+                "filters": f"video=={remote_id}",
+            }
+        )
+
+    def video_existence(self, remote_id: str) -> str:
+        """'exists', 'missing' or 'inaccessible'; authorization and transient failures raise."""
+
+        try:
+            observation = self.observe_remote(remote_id)
+        except YouTubeObservationBlocked as exc:
+            if str(exc) in _MISSING:
+                return "missing"
+            if str(exc) in _INACCESSIBLE:
+                return "inaccessible"
+            raise
+        return "inaccessible" if observation.api_locked else "exists"

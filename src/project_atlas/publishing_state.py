@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from calendar import monthrange
 from dataclasses import dataclass
@@ -25,8 +26,18 @@ RAW_METRICS = frozenset(
         "comments",
         "shares",
         "subscribersGained",
+        "subscribersLost",
     }
 )
+# YouTube Analytics snapshots (Option B) carry this schema in their api_context. Their retention
+# follows the Analytics authorization and video-existence checks, not the 30-day collected_at rule.
+ANALYTICS_SNAPSHOT_SCHEMA = "youtube-analytics-reports-v1"
+ANALYTICS_CHECK_OUTCOMES = frozenset({"exists", "missing", "inaccessible"})
+# Learning text citing Analytics snapshots stays qualitative: YouTube's values are cited by
+# snapshot reference, never retyped. Identifiers such as P11 or production-11-flow are allowed;
+# a standalone number or percentage is not. This cannot detect every derived claim in prose
+# (for example "roughly double"); founder review remains the control for that.
+_STANDALONE_NUMBER = re.compile(r"(?<![\w-])[-+]?\d[\d.,]*%?(?![\w-])|%")
 _FORBIDDEN_KEY_PARTS = (
     "authorization",
     "apikey",
@@ -291,6 +302,16 @@ def timing_is_open(value: dict[str, Any], now: datetime) -> bool:
 
 
 _AVAILABILITY = {"available", "unavailable", "immature", "not_returned"}
+
+
+def _is_analytics_context(api_context_json: str | None) -> bool:
+    if not api_context_json:
+        return False
+    try:
+        context = json.loads(api_context_json)
+    except ValueError:
+        return False
+    return isinstance(context, dict) and context.get("schema") == ANALYTICS_SNAPSHOT_SCHEMA
 
 
 def _metric_observations(
@@ -1552,13 +1573,95 @@ class PublishingRepositoryMixin:
         ]
         for operation_id in operations:
             self.purge_provider_operation_evidence(operation_id)
-        return {"publications": len(publications), "operations": len(operations)}
+        checks = [
+            row["id"]
+            for row in self.connection.execute(
+                "SELECT id FROM analytics_video_checks WHERE provider_purged_at IS NULL"
+            ).fetchall()
+        ]
+        for check_id in checks:
+            self._purge_analytics_video_check(check_id)
+        result = {"publications": len(publications), "operations": len(operations)}
+        if checks:
+            result["analytics_video_checks"] = len(checks)
+        return result
 
-    def purge_stale_youtube_api_data(self, cutoff: datetime) -> dict[str, int]:
+    # --- YouTube Analytics: video-existence evidence (migration 32) -----------------------------
+
+    def record_analytics_video_check(
+        self, check_id: str, receipt_id: str, outcome: str, checked_at: str
+    ) -> dict[str, Any]:
+        """Append one existence check. A missing or inaccessible video deletes its Analytics."""
+
+        self.get_publication_receipt(receipt_id)
+        _required_text(check_id, checked_at)
+        if outcome not in ANALYTICS_CHECK_OUTCOMES:
+            raise ValueError("Video-existence outcome is invalid.")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO analytics_video_checks VALUES (?, ?, ?, ?, ?, NULL)",
+                (check_id, receipt_id, checked_at, outcome, stamp()),
+            )
+        if outcome != "exists":
+            self.purge_analytics_snapshots(receipt_id)
+        return self.latest_analytics_video_check(receipt_id)
+
+    def latest_analytics_video_check(self, receipt_id: str) -> dict[str, Any] | None:
+        row = self.connection.execute(
+            "SELECT * FROM analytics_video_checks WHERE receipt_id = ? "
+            "ORDER BY checked_at DESC, created_at DESC, id DESC LIMIT 1",
+            (receipt_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def purge_analytics_snapshots(self, receipt_id: str | None = None) -> int:
+        """Delete stored YouTube Analytics values (one receipt, or all)."""
+
+        rows = self.connection.execute(
+            "SELECT id, api_context_json FROM performance_snapshots "
+            "WHERE provider_purged_at IS NULL"
+            + (" AND receipt_id = ?" if receipt_id is not None else ""),
+            (receipt_id,) if receipt_id is not None else (),
+        ).fetchall()
+        purged = 0
+        for row in rows:
+            if _is_analytics_context(row["api_context_json"]):
+                self.purge_provider_snapshot_payload("performance_snapshots", row["id"])
+                purged += 1
+        return purged
+
+    def analytics_snapshot_attempts(self, receipt_id: str, checkpoint: str) -> list[dict]:
+        """Every Analytics collection attempt for one receipt and checkpoint (purged included)."""
+
+        prefix = f"analytics-{receipt_id}-{checkpoint}-"
+        rows = self.connection.execute(
+            "SELECT id, maturity, api_context_json, provider_purged_at FROM performance_snapshots "
+            "WHERE receipt_id = ? AND checkpoint = ? AND substr(id, 1, ?) = ?",
+            (receipt_id, checkpoint, len(prefix), prefix),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+    def _purge_analytics_video_check(self, check_id: str) -> None:
+        with self.connection:
+            self.connection.execute(
+                "UPDATE analytics_video_checks SET outcome = NULL, provider_purged_at = ? "
+                "WHERE id = ? AND provider_purged_at IS NULL",
+                (stamp(), check_id),
+            )
+
+    def purge_stale_youtube_api_data(
+        self, cutoff: datetime, analytics_authorized_at: datetime | None = None
+    ) -> dict[str, int]:
         """Delete YouTube API payloads not refreshed since ``cutoff`` (30-day rule).
 
         A publication's API identity counts as refreshed by a verified status observation
         newer than the cutoff; observation is the refresh path, deletion the default.
+
+        YouTube Analytics snapshots are kept past the cutoff only while the Analytics
+        authorization was re-verified since the cutoff (``analytics_authorized_at``) and the
+        video's latest existence check is ``exists`` and newer than the cutoff; otherwise they
+        are deleted, also when Analytics is disabled. Existence-check outcomes follow the
+        ordinary 30-day rule.
         """
 
         def older(value: str | None) -> bool:
@@ -1581,12 +1684,35 @@ class PublishingRepositoryMixin:
             if older(row["observed_at"]):
                 self.purge_provider_snapshot_payload("publication_status_snapshots", row["id"])
                 counts["status_snapshots"] += 1
+        analytics_authorized = analytics_authorized_at is not None and not older(
+            analytics_authorized_at.isoformat()
+        )
         for row in self.connection.execute(
-            "SELECT id, collected_at FROM performance_snapshots WHERE provider_purged_at IS NULL"
+            "SELECT id, receipt_id, collected_at, api_context_json FROM performance_snapshots "
+            "WHERE provider_purged_at IS NULL"
         ).fetchall():
-            if older(row["collected_at"]):
+            if _is_analytics_context(row["api_context_json"]):
+                check = self.latest_analytics_video_check(row["receipt_id"])
+                keep = (
+                    analytics_authorized
+                    and check is not None
+                    and check["outcome"] == "exists"
+                    and not older(check["checked_at"])
+                )
+            else:
+                keep = not older(row["collected_at"])
+            if not keep:
                 self.purge_provider_snapshot_payload("performance_snapshots", row["id"])
                 counts["performance_snapshots"] += 1
+        checks = 0
+        for row in self.connection.execute(
+            "SELECT id, checked_at FROM analytics_video_checks WHERE provider_purged_at IS NULL"
+        ).fetchall():
+            if older(row["checked_at"]):
+                self._purge_analytics_video_check(row["id"])
+                checks += 1
+        if checks:
+            counts["analytics_video_checks"] = checks
         stale_operations = {
             row["operation_id"]
             for row in self.connection.execute(
@@ -1637,6 +1763,17 @@ class PublishingRepositoryMixin:
         if not snapshot_ids or len(set(snapshot_ids)) != len(snapshot_ids):
             raise ValueError("Learning needs distinct exact supporting observations.")
         snapshots = [self.get_performance_snapshot(item) for item in snapshot_ids]
+        if any(
+            isinstance(item.api_context, dict)
+            and item.api_context.get("schema") == ANALYTICS_SNAPSHOT_SCHEMA
+            for item in snapshots
+        ):
+            texts = [feature, outcome, interpretation, recommendation, *map(str, confounds)]
+            if any(_STANDALONE_NUMBER.search(text) for text in texts):
+                raise ValueError(
+                    "Learning text citing YouTube Analytics must stay qualitative: cite values "
+                    "by snapshot reference, not as numbers or percentages."
+                )
         receipts = [self.get_publication_receipt(item.receipt_id) for item in snapshots]
         publication_ids = sorted({item.publication_id for item in receipts})
         if evidence_tier in {"repeated", "consequential_review"} and len(publication_ids) < 3:

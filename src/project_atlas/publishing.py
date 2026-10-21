@@ -7,10 +7,12 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
+from project_atlas import publishing_analytics as analytics
 from project_atlas.media import LocalMediaStorage
 from project_atlas.persistence import AtlasRepository
 from project_atlas.publishing_credits import source_credits
 from project_atlas.publishing_state import (
+    ANALYTICS_SNAPSHOT_SCHEMA,
     CONFIRMATION_TTL,
     ON_DEMAND_SERIES,
     SCHEDULED_TRANSITION_SCHEMA,
@@ -1203,6 +1205,99 @@ class PublishingService:
             ),
             "second",
         )
+
+    # --- YouTube Analytics (Option B; the adapter is only buildable while enabled) -------------
+
+    def _analytics_target(self, receipt_id: str) -> tuple[PublicationReceipt, PlatformPublication]:
+        receipt = self.repository.get_publication_receipt(receipt_id)
+        publication = self.repository.get_platform_publication(receipt.publication_id)
+        if receipt.public_at is None or publication.remote_id is None:
+            raise ValueError("Purged provider binding cannot support Analytics; nothing recorded.")
+        self._target(publication.channel_id)
+        return receipt, publication
+
+    def verify_analytics_video(self, check_id: str, receipt_id: str) -> dict[str, Any]:
+        """Record whether the published video still exists (Analytics retention evidence).
+
+        A missing or inaccessible video deletes its stored Analytics. Authorization and
+        transient failures raise and record nothing.
+        """
+
+        _receipt, publication = self._analytics_target(receipt_id)
+        outcome = self.adapter.video_existence(publication.remote_id)
+        checked_at = self.clock().astimezone(UTC).replace(microsecond=0).isoformat()
+        return self.repository.record_analytics_video_check(
+            check_id, receipt_id, outcome, checked_at
+        )
+
+    def collect_analytics(self, receipt_id: str) -> list[PerformanceSnapshot]:
+        """Collect every due, not-yet-mature checkpoint once, values exactly as reported.
+
+        Refused unless the video's latest existence check is ``exists`` and fresh. Each attempt
+        is a new snapshot; a checkpoint with a mature snapshot is never collected again. A failed
+        request records nothing for that checkpoint.
+        """
+
+        receipt, publication = self._analytics_target(receipt_id)
+        now = self.clock().astimezone(UTC)
+        check = self.repository.latest_analytics_video_check(receipt_id)
+        if (
+            check is None
+            or check["outcome"] != "exists"
+            or datetime.fromisoformat(check["checked_at"]) < now - analytics.EXISTENCE_CHECK_MAX_AGE
+        ):
+            raise ValueError(
+                "Confirm the video still exists (a fresh existence check) before collecting "
+                "Analytics; nothing recorded."
+            )
+        collected = []
+        for checkpoint in analytics.CHECKPOINTS:
+            start, end = analytics.checkpoint_window(receipt.public_at, checkpoint)
+            due_at = analytics.window_due_at(end)
+            if now < due_at:
+                continue
+            attempts = self.repository.analytics_snapshot_attempts(receipt_id, checkpoint)
+            if any(
+                row["maturity"] == "mature" and row["provider_purged_at"] is None
+                for row in attempts
+            ):
+                continue
+            report = self.adapter.analytics_report(
+                publication.remote_id, start, end, analytics.ANALYTICS_METRICS
+            )
+            retention_report = self.adapter.analytics_retention(publication.remote_id, start, end)
+            metrics, availability, reasons, columns = analytics.parse_metrics_report(
+                report, analytics.ANALYTICS_METRICS
+            )
+            retention = analytics.parse_retention_report(retention_report)
+            collected.append(
+                self.repository.append_performance_snapshot(
+                    f"analytics-{receipt_id}-{checkpoint}-{len(attempts) + 1}",
+                    receipt_id,
+                    checkpoint,
+                    due_at.isoformat(),
+                    now.replace(microsecond=0).isoformat(),
+                    {
+                        "metrics": list(analytics.ANALYTICS_METRICS),
+                        "startDate": start.isoformat(),
+                        "endDate": end.isoformat(),
+                        "timezone": analytics.REPORT_TIMEZONE,
+                    },
+                    {"columns": columns},
+                    metrics,
+                    availability,
+                    analytics.maturity(now, due_at, availability, retention),
+                    {
+                        "schema": ANALYTICS_SNAPSHOT_SCHEMA,
+                        "api": "youtubeAnalytics.reports.query",
+                        "ids": "channel==MINE",
+                    },
+                    None,
+                    retention,
+                    reasons,
+                )
+            )
+        return collected
 
     def collect_performance(
         self, snapshot_id: str, receipt_id: str, checkpoint: str

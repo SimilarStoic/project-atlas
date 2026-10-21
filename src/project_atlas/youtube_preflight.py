@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Any, Protocol
 
 YOUTUBE_READONLY_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
+# YouTube Analytics (Option B, disabled by default): reports.query also needs youtube.readonly.
+YT_ANALYTICS_READONLY_SCOPE = "https://www.googleapis.com/auth/yt-analytics.readonly"
+ANALYTICS_SCOPES = (YOUTUBE_READONLY_SCOPE, YT_ANALYTICS_READONLY_SCOPE)
 EXPECTED_CHANNEL_ID = "UC1cX-OTF9-LZeNo5TaFgrgQ"
 CHANNELS_ENDPOINT = "https://www.googleapis.com/youtube/v3/channels"
 PREFLIGHT_VERSION = "youtube-channel-preflight-v1"
