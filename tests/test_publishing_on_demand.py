@@ -1477,3 +1477,300 @@ def test_cli_reconcile_scheduled_live_with_a_full_length_publication_id(
         )
     finally:
         connection.close()
+
+
+# --- Retention of YouTube's public time (future writes) ------------------------------------------
+
+
+def _published(world):
+    """A scheduled upload observed public, with its receipt; returns the moving parts."""
+
+    repo, _storage, fake, service, clock, _artifact_id = world
+    package, _upload, publication = _scheduled(world)
+    clock.now = T0 + timedelta(hours=6)
+    public_at = (T0 + timedelta(hours=5, minutes=30)).isoformat()
+    fake.remote = replace(
+        fake.remote, privacy="public", public_at=public_at, observed_at=clock.now.isoformat()
+    )
+    return package, publication, public_at
+
+
+def test_success_event_keeps_public_time_only_in_purgeable_provider_evidence(world) -> None:
+    repo, _storage, _fake, service, _clock, _artifact_id = world
+    package, publication, public_at = _published(world)
+    receipt = service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
+    transition = _transition(repo, package.id)
+    succeeded = repo.get_publication_operation_events(transition.id)[-1]
+    assert succeeded.kind == "succeeded"
+    assert succeeded.evidence == {
+        "method": "independent-public-observation",
+        "public_status_id": "s-1",
+    }
+    assert succeeded.provider_evidence == {"public_at": public_at}
+    assert receipt.public_at == public_at
+    # The existing purge clears it with the rest of the provider evidence; lineage stays.
+    repo.purge_provider_operation_evidence(transition.id)
+    purged = repo.get_publication_operation_events(transition.id)[-1]
+    assert purged.provider_evidence is None and purged.provider_purged_at is not None
+    assert purged.evidence == succeeded.evidence
+
+
+def test_stale_purge_rule_clears_the_success_event_public_time_unchanged(world) -> None:
+    repo, _storage, _fake, service, clock, _artifact_id = world
+    package, publication, _public_at = _published(world)
+    service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
+    transition = _transition(repo, package.id)
+    counts = repo.purge_stale_youtube_api_data(datetime.now(UTC) + timedelta(days=31))
+    assert counts["operations"] >= 1 and counts["publications"] == 1
+    succeeded = repo.get_publication_operation_events(transition.id)[-1]
+    assert succeeded.provider_evidence is None
+    assert "public_at" not in json.dumps(succeeded.evidence)
+
+
+def _interrupted(world, monkeypatch):
+    """Reconciliation that stopped after the success event, before the receipt."""
+
+    repo, _storage, _fake, service, _clock, _artifact_id = world
+    package, publication, public_at = _published(world)
+    create = repo.create_publication_receipt
+
+    def fail(*_args, **_kwargs):
+        raise sqlite3.OperationalError("disk I/O error")
+
+    monkeypatch.setattr(repo, "create_publication_receipt", fail)
+    with pytest.raises(sqlite3.OperationalError):
+        service.reconcile_scheduled_publication("r-1", "s-1", publication.id)
+    monkeypatch.setattr(repo, "create_publication_receipt", create)
+    assert _transition(repo, package.id).outcome == "succeeded"
+    assert _count(repo, "publication_receipts") == 0
+    return package, publication, public_at
+
+
+def test_interrupted_reconciliation_recovers_from_unpurged_provider_evidence(
+    world, monkeypatch
+) -> None:
+    repo, _storage, fake, service, _clock, _artifact_id = world
+    _package, publication, public_at = _interrupted(world, monkeypatch)
+    fake.calls.clear()
+    receipt = service.reconcile_scheduled_publication("r-1", "s-2", publication.id)
+    assert (receipt.public_at, receipt.public_status_id) == (public_at, "s-1")
+    assert "observe" not in fake.calls
+
+
+def test_recovery_refuses_once_the_provider_public_time_is_purged(world, monkeypatch) -> None:
+    repo, _storage, fake, service, _clock, _artifact_id = world
+    package, publication, _public_at = _interrupted(world, monkeypatch)
+    repo.purge_provider_operation_evidence(_transition(repo, package.id).id)
+    fake.calls.clear()
+    with pytest.raises(ValueError, match="purged under the 30-day rule"):
+        service.reconcile_scheduled_publication("r-1", "s-2", publication.id)
+    assert _count(repo, "publication_receipts") == 0 and "observe" not in fake.calls
+
+
+def test_recovery_refuses_an_earlier_format_event_with_immutable_public_time(world) -> None:
+    """Earlier code stored YouTube's public time in the immutable evidence; never reuse it."""
+
+    repo, _storage, fake, service, clock, _artifact_id = world
+    package, publication, public_at = _published(world)
+    transition = _transition(repo, package.id)
+    repo.append_publication_status(
+        "s-1",
+        publication.id,
+        "public",
+        "succeeded",
+        "passed",
+        False,
+        "offline-adapter-v1",
+        clock.now.isoformat(),
+        None,
+    )
+    repo.append_publication_operation_event(
+        transition.id,
+        "succeeded",
+        "Conveyor",
+        {
+            "method": "independent-public-observation",
+            "public_status_id": "s-1",
+            "public_at": public_at,
+        },
+    )
+    fake.calls.clear()
+    with pytest.raises(ValueError, match="earlier format"):
+        service.reconcile_scheduled_publication("r-1", "s-2", publication.id)
+    assert _count(repo, "publication_receipts") == 0 and "observe" not in fake.calls
+
+
+# --- publishing_cli observe ----------------------------------------------------------------------
+
+
+def _cli_publication(db: Path, media: Path) -> str:
+    """A real-format on-demand publication (full-length id) in an isolated database."""
+
+    start = datetime.now(UTC).replace(second=0, microsecond=0) - timedelta(hours=2)
+    publish_at = start + timedelta(hours=1)
+    repo = AtlasRepository(db)
+    try:
+        fake = FakePublishingAdapter()
+        fake.transfer = _scheduled_result(publish_at=publish_at_wire(publish_at))
+        service = PublishingService(repo, LocalMediaStorage(media), fake, lambda: start)
+        package = _approved_od(service, repo)
+        upload = service.reserve_upload(
+            package.id, upload=_confirmed(package, publish_at=publish_at.isoformat())
+        )
+        return service.begin_api_upload(upload.id).id
+    finally:
+        repo.close()
+
+
+def _observe_args(publication_id, db, media, root, *mode):
+    return (
+        "observe",
+        publication_id,
+        "--status-id",
+        "observe-status-1",
+        "--client-config",
+        root / "client-config.json",
+        "--consent-state",
+        root / "consent-state.json",
+        "--db",
+        db,
+        "--media",
+        media,
+        "--expect-db-sha256",
+        database_sha256(db),
+        *mode,
+    )
+
+
+def _fake_observer(monkeypatch, **changes) -> FakePublishingAdapter:
+    from project_atlas import youtube_adapter
+
+    observer = FakePublishingAdapter()
+    observer.remote = replace(
+        observer.remote,
+        privacy="public",
+        observed_at=datetime.now(UTC).replace(microsecond=0).isoformat(),
+        **changes,
+    )
+    monkeypatch.setattr(
+        youtube_adapter.YouTubeReadOnlyObservationAdapter,
+        "from_client_config",
+        lambda *_args, **_kwargs: observer,  # Fake observer: no credential, no network.
+    )
+    return observer
+
+
+def test_cli_observe_requires_publication_status_and_credentials_paths() -> None:
+    parser = publishing_cli._parser()
+    args = parser.parse_args(
+        [
+            "observe",
+            "pub-1",
+            "--status-id",
+            "s-1",
+            "--client-config",
+            "c.json",
+            "--consent-state",
+            "s.json",
+            "--expect-db-sha256",
+            "0" * 64,
+            "--dry-run",
+        ]
+    )
+    assert (args.command, args.publication_id, args.status_id) == ("observe", "pub-1", "s-1")
+    assert publishing_cli.COMMANDS["observe"] is publishing_cli.cmd_observe
+    with pytest.raises(SystemExit):
+        parser.parse_args(["observe", "pub-1", "--expect-db-sha256", "0" * 64, "--dry-run"])
+
+
+def test_cli_observe_dry_run_stops_before_youtube_and_changes_nothing(
+    cli_world, capsys, monkeypatch
+) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    observer = _fake_observer(monkeypatch)
+    before = database_sha256(db)
+    code, report = _cli(capsys, *_observe_args(publication_id, db, media, root, "--dry-run"))
+    assert code == 0 and report["mode"] == "dry-run", report
+    assert "observe_remote" in report["rehearsal"]["stopped_at"]
+    assert database_sha256(db) == before and observer.calls == []
+
+
+def test_cli_observe_live_records_one_status_after_a_verified_backup(
+    cli_world, capsys, monkeypatch
+) -> None:
+    from project_atlas.publishing_cli import backup_label
+
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    observer = _fake_observer(monkeypatch)
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 0 and report["mode"] == "live", report
+    assert len(f"pre-publishing-observe-{publication_id}") > 100  # Full-length identifier.
+    label = backup_label(f"observe-{publication_id}")
+    assert len(label) <= 100 and _backup_dir(report).name.startswith(label + "-")
+    result = report["live"]["result"]
+    assert (result["status_id"], result["publication_id"]) == ("observe-status-1", publication_id)
+    assert (result["privacy"], result["verification"]) == ("public", "passed")
+    assert observer.calls.count("observe") == 1
+    connection = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
+    try:
+        assert connection.execute(
+            "SELECT COUNT(*) FROM publication_status_snapshots WHERE id = 'observe-status-1'"
+        ).fetchone() == (1,)
+        assert connection.execute("SELECT COUNT(*) FROM publication_receipts").fetchone() == (0,)
+    finally:
+        connection.close()
+
+
+def test_cli_observe_records_a_metadata_mismatch_as_failed_verification(
+    cli_world, capsys, monkeypatch
+) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    _fake_observer(monkeypatch, metadata_matches=False)
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 0 and report["live"]["result"]["verification"] == "failed", report
+
+
+def test_cli_observe_refuses_a_different_remote_identity_in_the_live_step(
+    cli_world, capsys, monkeypatch
+) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    observer = _fake_observer(monkeypatch)
+    observer.observe_remote = lambda remote_id, package=None: replace(
+        observer.remote, remote_id="someone-elses-video"
+    )
+    rows_before = _fingerprint(db)
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 2 and report["mode"] == "refused-live", report
+    assert "differs from bound lineage" in report["live"]["error"]
+    # Nothing recorded: every table's content is unchanged (opening the database may still
+    # rewrite SQLite's file header, so the file hash is not the measure).
+    assert _fingerprint(db) == rows_before
+
+
+def test_cli_observe_refuses_a_purged_api_identity(cli_world, capsys, monkeypatch) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    repo = AtlasRepository(db)
+    try:
+        repo.purge_publication_api_data(publication_id)
+    finally:
+        repo.close()
+    observer = _fake_observer(monkeypatch)
+    before = database_sha256(db)
+    code, report = _cli(capsys, *_observe_args(publication_id, db, media, root, "--dry-run"))
+    assert code == 2 and report["mode"] == "refused-by-rehearsal", report
+    assert "Purged API identity" in report["rehearsal"]["error"]
+    assert database_sha256(db) == before and observer.calls == []

@@ -3,10 +3,11 @@
     python -m project_atlas.publishing_cli <command> ...
 
 ``status`` reads the database with ``mode=ro``. Every live command (``prepare``, ``approve``,
-``reconcile-scheduled``) refuses unless the database SHA-256 equals ``--expect-db-sha256``,
-rehearses on a temporary copy first (no YouTube call: the observation adapter is blocked, so a
-rehearsal validates preconditions and wiring only), then takes a verified backup and runs.
-``--dry-run`` stops after the rehearsal.
+``reconcile-scheduled``, ``observe``) refuses unless the database SHA-256 equals
+``--expect-db-sha256``, rehearses on a temporary copy first (no YouTube call: the observation
+adapter is blocked, so a rehearsal validates preconditions and wiring only), then takes a verified
+backup and runs. ``--dry-run`` stops after the rehearsal. ``observe`` is one manual read-only status
+observation through ``PublishingService.observe_status``; nothing schedules or repeats it.
 
 The publication itself is not a CLI command: the founder confirms the exact scheduled upload on
 the loopback YouTube upload screen, and that confirmation is the publication authorization.
@@ -173,9 +174,14 @@ def _live(args: argparse.Namespace, label: str, operation, live_adapter=None) ->
     service = _service(db, media, live_adapter() if live_adapter else _BlockedAdapter())
     try:
         report["live"] = {"result": operation(service)}
+        report["mode"] = "live"
+    except ValueError as error:
+        # A service refusal in the live step (for example an observed identity that differs from
+        # the bound lineage): reported, not raised; the hashes show whether anything was written.
+        report["live"] = {"error": f"{type(error).__name__}: {error}"}
+        report["mode"] = "refused-live"
     finally:
         service.repository.close()
-    report["mode"] = "live"
     report["db_sha256_after"] = database_sha256(db)
     return report
 
@@ -305,7 +311,9 @@ def cmd_approve(args: argparse.Namespace) -> dict[str, Any]:
     return _live(args, f"approve-{args.package_id}", operation)
 
 
-def cmd_reconcile(args: argparse.Namespace) -> dict[str, Any]:
+def _observation_adapter(args: argparse.Namespace):
+    """The governed read-only YouTube adapter, built only for a live (post-backup) run."""
+
     def adapter():
         from project_atlas.youtube_adapter import YouTubeReadOnlyObservationAdapter
         from project_atlas.youtube_consent import ConsentRegistry, YouTubeGovernance
@@ -321,13 +329,45 @@ def cmd_reconcile(args: argparse.Namespace) -> dict[str, Any]:
             Path(args.client_config), root, governance
         )
 
+    return adapter
+
+
+def cmd_reconcile(args: argparse.Namespace) -> dict[str, Any]:
     def operation(service: Any) -> dict[str, Any]:
         receipt = service.reconcile_scheduled_publication(
             args.receipt_id, args.status_id, args.publication_id
         )
         return {"receipt_id": receipt.id, "public_at": receipt.public_at}
 
-    return _live(args, f"reconcile-{args.publication_id}", operation, live_adapter=adapter)
+    return _live(
+        args,
+        f"reconcile-{args.publication_id}",
+        operation,
+        live_adapter=_observation_adapter(args),
+    )
+
+
+def cmd_observe(args: argparse.Namespace) -> dict[str, Any]:
+    """One manual status observation through the existing ``observe_status`` (no scheduling)."""
+
+    def operation(service: Any) -> dict[str, Any]:
+        status = service.observe_status(args.status_id, args.publication_id)
+        return {
+            "status_id": status.id,
+            "publication_id": status.publication_id,
+            "privacy": status.privacy,
+            "processing": status.processing,
+            "verification": status.verification,
+            "api_locked": status.api_locked,
+            "observed_at": status.observed_at,
+        }
+
+    return _live(
+        args,
+        f"observe-{args.publication_id}",
+        operation,
+        live_adapter=_observation_adapter(args),
+    )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -367,6 +407,12 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--status-id", required=True)
     p.add_argument("--client-config", required=True)
     p.add_argument("--consent-state", required=True)
+    p = sub.add_parser("observe", help="one manual read-only status observation")
+    live(p)
+    p.add_argument("publication_id")
+    p.add_argument("--status-id", required=True)
+    p.add_argument("--client-config", required=True)
+    p.add_argument("--consent-state", required=True)
     return parser
 
 
@@ -375,6 +421,7 @@ COMMANDS = {
     "prepare": cmd_prepare,
     "approve": cmd_approve,
     "reconcile-scheduled": cmd_reconcile,
+    "observe": cmd_observe,
 }
 
 
@@ -389,7 +436,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"refused": str(error)}, indent=1), file=sys.stderr)
         return 2
     print(json.dumps(report, indent=1, default=str, ensure_ascii=False))
-    if report.get("mode") == "refused-by-rehearsal":
+    if report.get("mode") in {"refused-by-rehearsal", "refused-live"}:
         return 2
     return 0
 
