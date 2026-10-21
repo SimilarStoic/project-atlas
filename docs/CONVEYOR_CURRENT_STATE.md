@@ -771,10 +771,37 @@ P11 publication reconciliation — Phase 3 completion (19 October 2026, founder-
   - After the purge, `collect_performance` and any analytics for P11 are refused ("purged provider binding"). P8 and
     P9 are unaffected: their founder-attested identities are not API data.
   - Refresh: a new verified status observation (the existing read-only `observe_status`, `videos.list`) within 30
-    days keeps the identity for another 30 days. It is a read-only YouTube call, has no CLI command, and is an
+    days keeps the identity for another 30 days. Only `verification = passed` counts. It is a read-only YouTube
+    call, now available as the manual `publishing_cli observe` command (PR #4, below), and running it for P11 is an
     **unresolved founder decision**. Existing deletion behaviour is preserved until the founder decides otherwise.
-  - Noted for review: the transition's `succeeded` event evidence (Conveyor-authored) also records YouTube's
-    `public_at`, which the purge does not clear.
+  - P11's historical `public_at`: the transition's `succeeded` event evidence (Conveyor-authored, immutable) also
+    records YouTube's `public_at`, which the purge does not clear. **Unresolved.** PR #4 fixes only future writes, and
+    `observe` neither corrects nor re-verifies this stored value.
+  - Earlier purge than the horizon: a definitive authorization failure (`handle_definitive`) deletes that credential
+    and purges all stored YouTube API data. An unsuccessful OAuth durability check (on or after 23 October 2026,
+    separately authorized) or a future maintenance reconfirmation could therefore purge P11's identity before the
+    ordinary 30-day horizon.
+
+P11 retention fixes — PR #4 merged 21 October 2026 (merge commit `a74f2df3d3a79927f6de4b6dc5294168abb78f02`,
+parents `1ebcbdc`, `7cedcbb`; independently reviewed; CI on `main` run 39595240101 passed):
+
+- Future scheduled reconciliations store YouTube's `public_at` in the success event's purgeable provider evidence,
+  not the immutable Conveyor evidence, so the 30-day rule clears it.
+- Interrupted-reconciliation recovery completes only from current-format, unpurged evidence. It refuses once that
+  evidence is purged, and refuses an earlier-format event rather than reusing its immutable `public_at`.
+- `python -m project_atlas.publishing_cli observe <publication-id> --status-id <id>` is implemented: one manual
+  read-only status observation through the unchanged `observe_status`, with database SHA-256 verification, a
+  rehearsal on a copy (YouTube blocked) and a verified backup. There is no scheduling, automatic refresh or
+  maintenance hook. It refuses retrospective packages and purged identities.
+  - Exit codes: `0` = observation recorded, verification passed, counts as an identity refresh; `2` = refused;
+    `3` = observation recorded, but verification did not pass, so it does not count as an identity refresh.
+  - Live refusals are reported, not raised. Observation and authorization refusals carry a warning that governed
+    access may have deleted stored YouTube API data. A `reconcile-scheduled` refusal that leaves a status without a
+    receipt names the recovery path (rerun, subject to unpurged current-format evidence).
+- **No observation has been authorized or executed against production.**
+- Tests: local `/zero-spend-verify` full suite **781 passed, 0 skipped** (exit 0, on `7cedcbb`). GitHub CI (PR run
+  39587910686 and `main` run 39595240101): **630 passed, 151 skipped**. The skips are the FFmpeg-dependent tests,
+  which all ran locally with the bundled FFmpeg.
 
 Phase 3 plan as approved on 16 October 2026 (historical; completed, outcome recorded above):
 
@@ -917,12 +944,17 @@ authorization.**
   separate authorization. Activation also requires YouTube's approval of the 19 October submission (or written
   confirmation that none is needed). The published privacy policy stays at version `2026-10-06` until an authorized
   Phase 4 activation step.
-- Phase 5 (P12): not authorized; independent of Phase 4. Checkpoint per the 20 October sequencing decision.
-- P11 provider-data purge horizon about 16-19 November 2026: refresh decision unresolved (Phase 3).
+- Phase 5 (P12): not authorized; independently available for separate founder consideration (20 October
+  sequencing decision).
+- P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
+  live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
+- P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next smallest useful action: the founder's decision on the Analytics implementation plan; check for Google's
-  response to the 19 October audit; on or after 23 October, the OAuth durability check, when the founder authorizes
-  it.
+- Next smallest useful action: the founder's decision on the Analytics implementation plan (offline
+  implementation and activation separately gated); check for Google's response to the 19 October audit; on or after
+  23 October, the OAuth durability check, when the founder authorizes it.
+- The Windows checkout `D:\ConveyorOS\source\Conveyor` was not updated by the PR #4 merge (or the documentation
+  commit after it). Synchronizing it is a separate step.
 - P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
   unused on 19 October 2026, as the founder decided (decision checkpoint above). P11 (`production-11-flow`) is public on YouTube
   (`62mEQWPWVpE`, public 2026-10-16T17:45:28Z) with a Conveyor publication receipt.
