@@ -395,12 +395,29 @@ class YouTubeGovernance:
             return report
         report["policy_acceptance"] = "current"
         results: dict[str, str] = {}
-        self._reconfirm_due(inner_for, self.active_kinds(), results)
-        if analytics_enabled() and DEFINITIVE_FAILURES & set(results.values()):
-            # Cross-authorization re-check (Option B): handle_definitive made the others due;
-            # verify each remaining stored authorization now rather than at its next use.
-            pending = [kind for kind in self.active_kinds() if results.get(kind) == "not_due"]
-            self._reconfirm_due(inner_for, pending, results)
+        kinds = self.active_kinds()
+        self._reconfirm_due(inner_for, kinds, results)
+        if analytics_enabled():
+            # Cross-authorization re-check (Option B). A definitive failure makes every other
+            # authorization due (handle_definitive), which invalidates a "reconfirmed" or
+            # "not_due" result recorded earlier in this pass. Re-verify exactly those now and
+            # report each authorization's last actual check. Each further round needs a new
+            # definitive failure (which deletes a credential), so it ends within len(kinds).
+            for _round in range(len(kinds)):
+                invalidated = [
+                    kind
+                    for kind in kinds
+                    if results.get(kind) in {"reconfirmed", "not_due"}
+                    and self.registry.due(kind, self.clock())
+                ]
+                if not invalidated:
+                    break
+                self._reconfirm_due(inner_for, invalidated, results)
+            for kind in kinds:  # Never report an invalidated check as current.
+                if results.get(kind) in {"reconfirmed", "not_due"} and self.registry.due(
+                    kind, self.clock()
+                ):
+                    results[kind] = "due_after_definitive_failure"
         report["reconfirmation"] = results
         return report
 

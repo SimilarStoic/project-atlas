@@ -927,8 +927,17 @@ after `. .\scripts\set_conveyor_environment.ps1`):
   Disabled by default: `ANALYTICS_ENABLED = False` in `youtube_consent.py`.
   - **Analytics authorization:** a separate credential with exactly `youtube.readonly` + `yt-analytics.readonly`
     (`youtube_consent authorize-analytics`). It refuses before any consent or API call while disabled.
-  - **Cross-authorization re-check (enabled state only):** a definitive failure makes the other authorizations due,
-    and maintenance re-verifies them in the same run.
+  - **Cross-authorization re-check (enabled state only):** a definitive failure makes the other authorizations due.
+    Within maintenance, every result it invalidated (including one already reported `reconfirmed` earlier in the
+    pass) is re-verified in the same run, in bounded rounds, and the report shows each authorization's last actual
+    check. Transient failures trigger no re-checks.
+  - **Open design decision (not implemented):** a definitive failure *outside* maintenance (in any governed API use)
+    purges all stored YouTube API data and makes the other authorizations due. They are then re-verified before
+    their next use and at the next maintenance run, **not immediately**. Immediate re-verification there would need
+    governance to hold a way to build each kind's credential provider. The minimal amendment for a founder
+    decision: an optional `inner_for` given to `YouTubeGovernance` by the governed factories, used only by
+    `handle_definitive` while Analytics is enabled. Until decided, the approved immediate-check requirement is met
+    only within maintenance.
   - **Collection:** `YouTubeAnalyticsAdapter` (`reports.query`, `ids=channel==MINE`, `filters=video==<id>`, using
     the existing google-auth HTTP session; no new dependency).
     - Metrics: views, estimatedMinutesWatched, averageViewDuration, averageViewPercentage, likes, comments, shares,
@@ -951,10 +960,14 @@ after `. .\scripts\set_conveyor_environment.ps1`):
     cited by snapshot). This cannot catch every derived claim in prose; founder review covers that.
   - **CLI:** `publishing_cli analytics-check` and `collect-analytics` are manual only, with the usual hash check,
     rehearsal and verified backup. They refuse while disabled. There is no scheduling or maintenance hook.
-  - **Deployment boundary:** opening an `AtlasRepository` (for example the 03:00 maintenance task from the main
-    checkout) applies pending migrations. Once `main` contains migration 32, syncing the Windows checkout would apply
-    it to the runtime. Live publishing CLI commands refuse while the runtime is below the code's schema head.
-    Merging and the production rollout of migration 32 therefore need a separately authorized procedure:
+  - **Missing or inaccessible video:** recording that outcome and deleting the video's Analytics happen in one
+    SQLite transaction; a failed deletion leaves neither the outcome nor a partial purge.
+  - **Deployment boundary:** opening an `AtlasRepository` applies pending migrations. That happens in
+    `youtube_consent` (`maintain`, including the 03:00 task from the main checkout, and `reconfirm`, `revoke`,
+    `delete-data`) and in `production_cli` live commands (through the web server). Only `publishing_cli` live
+    commands refuse while the runtime is below the code's schema head. Once `main` contains migration 32, syncing
+    the Windows checkout and running any of those would apply it to the runtime.
+  - **This PR must stay unmerged** until migration 32 has a reviewed, founder-authorized rollout procedure:
     maintenance isolation, verified backup, schema verification, and failure and rollback handling.
 
 **Phase 5 — P12: NOT AUTHORIZED; independent of Phase 4 (founder, 20 October 2026); needs explicit founder

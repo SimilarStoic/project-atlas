@@ -1463,6 +1463,12 @@ class PublishingRepositoryMixin:
     def purge_provider_snapshot_payload(self, table: str, snapshot_id: str) -> None:
         """Purge all API-origin fields of one snapshot, not only its raw payload."""
 
+        with self.connection:
+            self._purge_snapshot_payload_rows(table, snapshot_id)
+
+    def _purge_snapshot_payload_rows(self, table: str, snapshot_id: str) -> None:
+        """The purge statements only; the caller owns the (single) transaction."""
+
         if table not in {"publication_status_snapshots", "performance_snapshots"}:
             raise ValueError("Only designated provider snapshots may be purged.")
         columns = (
@@ -1473,18 +1479,17 @@ class PublishingRepositoryMixin:
             "maturity, api_context_json, observation_digest, provider_payload_json, "
             "provider_payload_digest"
         )
-        with self.connection:
-            row = self.connection.execute(
-                f"SELECT provider_purged_at FROM {table} WHERE id = ?", (snapshot_id,)
-            ).fetchone()
-            if row is None:
-                raise KeyError(snapshot_id)
-            if row["provider_purged_at"] is None:
-                assignments = ", ".join(f"{column.strip()} = NULL" for column in columns.split(","))
-                self.connection.execute(
-                    f"UPDATE {table} SET {assignments}, provider_purged_at = ? WHERE id = ?",
-                    (stamp(), snapshot_id),
-                )
+        row = self.connection.execute(
+            f"SELECT provider_purged_at FROM {table} WHERE id = ?", (snapshot_id,)
+        ).fetchone()
+        if row is None:
+            raise KeyError(snapshot_id)
+        if row["provider_purged_at"] is None:
+            assignments = ", ".join(f"{column.strip()} = NULL" for column in columns.split(","))
+            self.connection.execute(
+                f"UPDATE {table} SET {assignments}, provider_purged_at = ? WHERE id = ?",
+                (stamp(), snapshot_id),
+            )
 
     def purge_publication_api_data(self, publication_id: str) -> None:
         """Remove provider-origin responses/hashes but retain authored FK/approval lineage."""
@@ -1597,13 +1602,15 @@ class PublishingRepositoryMixin:
         _required_text(check_id, checked_at)
         if outcome not in ANALYTICS_CHECK_OUTCOMES:
             raise ValueError("Video-existence outcome is invalid.")
+        # One transaction: a missing or inaccessible outcome is never committed without the
+        # deletion it requires, and a failed deletion leaves no partial purge.
         with self.connection:
             self.connection.execute(
                 "INSERT INTO analytics_video_checks VALUES (?, ?, ?, ?, ?, NULL)",
                 (check_id, receipt_id, checked_at, outcome, stamp()),
             )
-        if outcome != "exists":
-            self.purge_analytics_snapshots(receipt_id)
+            if outcome != "exists":
+                self._purge_analytics_snapshot_rows(receipt_id)
         return self.latest_analytics_video_check(receipt_id)
 
     def latest_analytics_video_check(self, receipt_id: str) -> dict[str, Any] | None:
@@ -1615,8 +1622,12 @@ class PublishingRepositoryMixin:
         return dict(row) if row else None
 
     def purge_analytics_snapshots(self, receipt_id: str | None = None) -> int:
-        """Delete stored YouTube Analytics values (one receipt, or all)."""
+        """Delete stored YouTube Analytics values (one receipt, or all), in one transaction."""
 
+        with self.connection:
+            return self._purge_analytics_snapshot_rows(receipt_id)
+
+    def _purge_analytics_snapshot_rows(self, receipt_id: str | None) -> int:
         rows = self.connection.execute(
             "SELECT id, api_context_json FROM performance_snapshots "
             "WHERE provider_purged_at IS NULL"
@@ -1626,7 +1637,7 @@ class PublishingRepositoryMixin:
         purged = 0
         for row in rows:
             if _is_analytics_context(row["api_context_json"]):
-                self.purge_provider_snapshot_payload("performance_snapshots", row["id"])
+                self._purge_snapshot_payload_rows("performance_snapshots", row["id"])
                 purged += 1
         return purged
 

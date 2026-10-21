@@ -905,3 +905,155 @@ def test_cli_analytics_commands_rehearse_then_run_live_with_backup(
         root / "backups-2",
     )
     assert code == 0 and report["live"]["result"] == {"collected": []}, report  # None due yet.
+
+
+# --- Final corrections: maintenance ordering, atomic deletion, deployment boundary ------------
+
+
+def _ordered_governance(monkeypatch, tmp_path, fail_calls):
+    """All three authorizations due; ``fail_calls`` maps (kind, call number) to a category."""
+
+    monkeypatch.setattr(youtube_consent, "ANALYTICS_ENABLED", True)
+
+    class NoData:
+        def purge_all_youtube_api_data(self):
+            return {}
+
+        def purge_stale_youtube_api_data(self, cutoff, analytics_authorized_at=None):
+            return {}
+
+    stores = _three_stores()
+    governance = governance_for(NoData(), tmp_path, stores=stores)
+    original = governance.reconfirm
+    governance.reconfirm = lambda kind, inner: original(
+        kind, inner, CountingChannels([TARGET_CHANNEL])
+    )
+    used: list[str] = []
+
+    def inner_for(kind):
+        used.append(kind)
+        return KindInner(kind, fail_calls.get((kind, used.count(kind))))
+
+    return governance, stores, used, inner_for
+
+
+def test_a_later_definitive_failure_invalidates_and_rechecks_an_earlier_reconfirmation(
+    monkeypatch, tmp_path
+) -> None:
+    governance, stores, used, inner_for = _ordered_governance(
+        monkeypatch, tmp_path, {("upload", 1): "authorization_revoked"}
+    )
+    report = governance.maintain(inner_for)
+    # readonly was reconfirmed, then invalidated by upload's failure, then really re-verified.
+    assert used == ["readonly", "upload", "analytics", "readonly"]
+    assert report["reconfirmation"] == {
+        "readonly": "reconfirmed",
+        "upload": "authorization_revoked",
+        "analytics": "reconfirmed",
+    }
+    assert not governance.registry.due("readonly", CLOCK)
+    assert not governance.registry.due("analytics", CLOCK)
+
+
+def test_a_definitive_failure_on_the_last_authorization_rechecks_all_earlier_ones(
+    monkeypatch, tmp_path
+) -> None:
+    governance, stores, used, inner_for = _ordered_governance(
+        monkeypatch, tmp_path, {("analytics", 1): "authorization_revoked"}
+    )
+    report = governance.maintain(inner_for)
+    assert used == ["readonly", "upload", "analytics", "readonly", "upload"]
+    assert report["reconfirmation"] == {
+        "readonly": "reconfirmed",
+        "upload": "reconfirmed",
+        "analytics": "authorization_revoked",
+    }
+    assert stores[ANALYTICS_KEYRING_ACCOUNT].token is None
+
+
+def test_a_recheck_that_itself_fails_definitively_is_reported_as_such(
+    monkeypatch, tmp_path
+) -> None:
+    governance, stores, used, inner_for = _ordered_governance(
+        monkeypatch,
+        tmp_path,
+        {("analytics", 1): "authorization_revoked", ("readonly", 2): "authorization_revoked"},
+    )
+    report = governance.maintain(inner_for)
+    assert report["reconfirmation"]["readonly"] == "authorization_revoked"
+    assert report["reconfirmation"]["analytics"] == "authorization_revoked"
+    assert stores[KEYRING_ACCOUNT].token is None
+    # upload was invalidated twice and re-verified each time; its final state is real.
+    assert report["reconfirmation"]["upload"] == "reconfirmed"
+    assert not governance.registry.due("upload", CLOCK)
+
+
+def test_transient_failures_after_reconfirmations_trigger_no_rechecks(
+    monkeypatch, tmp_path
+) -> None:
+    governance, _stores, used, inner_for = _ordered_governance(
+        monkeypatch, tmp_path, {("analytics", 1): "authorization_check_transient"}
+    )
+    report = governance.maintain(inner_for)
+    assert used == ["readonly", "upload", "analytics"]
+    assert report["reconfirmation"]["analytics"] == "authorization_check_transient"
+
+
+def test_missing_outcome_and_its_deletion_are_one_transaction(analytics, monkeypatch) -> None:
+    repo, service, fake, clock, receipt = analytics
+    clock.now = datetime(2026, 11, 2, 12, tzinfo=UTC)
+    service.verify_analytics_video("c-1", receipt.id)
+    service.collect_analytics(receipt.id)
+    assert _live_analytics(repo, receipt.id) == 3
+    original = repo._purge_snapshot_payload_rows
+    calls = []
+
+    def fail_on_second(table, snapshot_id):
+        calls.append(snapshot_id)
+        if len(calls) == 2:
+            raise sqlite3.OperationalError("disk I/O error")
+        original(table, snapshot_id)  # The first purge really runs inside the transaction.
+
+    monkeypatch.setattr(repo, "_purge_snapshot_payload_rows", fail_on_second)
+    fake.existence = "missing"
+    with pytest.raises(sqlite3.OperationalError):
+        service.verify_analytics_video("c-2", receipt.id)
+    assert len(calls) == 2
+    # Nothing committed: no missing outcome and no partial purge.
+    assert repo.latest_analytics_video_check(receipt.id)["id"] == "c-1"
+    assert _live_analytics(repo, receipt.id) == 3
+    monkeypatch.setattr(repo, "_purge_snapshot_payload_rows", original)
+    service.verify_analytics_video("c-2", receipt.id)
+    assert repo.latest_analytics_video_check(receipt.id)["outcome"] == "missing"
+    assert _live_analytics(repo, receipt.id) == 0
+
+
+def test_maintenance_and_production_entry_points_apply_pending_migrations(
+    tmp_path, monkeypatch
+) -> None:
+    """Deployment boundary: youtube_consent commands and the web server (used by
+    production_cli live commands) open AtlasRepository, which applies migration 32."""
+
+    from project_atlas.web import create_server
+
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS[:31])
+    consent_db, web_db = tmp_path / "consent.sqlite", tmp_path / "web.sqlite"
+    AtlasRepository(consent_db).close()
+    AtlasRepository(web_db).close()
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS)
+    # delete-data is local only (no network) but opens the repository like maintain does.
+    assert (
+        youtube_consent.main(
+            ["--consent-state", str(tmp_path / "s.json"), "--db", str(consent_db), "delete-data"]
+        )
+        == 0
+    )
+    server = create_server(port=0, database_path=web_db)
+    server.server_close()
+    for db in (consent_db, web_db):
+        connection = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
+        try:
+            version = connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()
+            assert version == (32,)
+        finally:
+            connection.close()
