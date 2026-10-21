@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from project_atlas.youtube_preflight import (
+    ANALYTICS_SCOPES,
     EXPECTED_CHANNEL_ID,
     KEYRING_ACCOUNT,
     YOUTUBE_READONLY_SCOPE,
@@ -57,6 +58,24 @@ AUTHORIZATIONS: dict[str, tuple[str, tuple[str, ...]]] = {
     "readonly": (KEYRING_ACCOUNT, (YOUTUBE_READONLY_SCOPE,)),
     "upload": (UPLOAD_KEYRING_ACCOUNT, UPLOAD_SCOPES),
 }
+# YouTube Analytics (Option B). Off by default: while off, no Analytics authorization, API use or
+# maintenance reconfirmation happens and existing behaviour is unchanged; stored Analytics data
+# still expires and revocation still covers any stored Analytics credential. Turning it on is a
+# separately authorized activation (with the new privacy policy and POLICY_VERSION).
+ANALYTICS_ENABLED = False
+ANALYTICS_KEYRING_ACCOUNT = f"{EXPECTED_CHANNEL_ID}:analytics-v1"
+ALL_AUTHORIZATIONS: dict[str, tuple[str, tuple[str, ...]]] = {
+    **AUTHORIZATIONS,
+    "analytics": (ANALYTICS_KEYRING_ACCOUNT, ANALYTICS_SCOPES),
+}
+
+
+def analytics_enabled() -> bool:
+    """Read at call time, so the switch is a single module constant."""
+
+    return bool(ANALYTICS_ENABLED)
+
+
 # Failures that prove the stored authorization is revoked or no longer the approved grant.
 DEFINITIVE_FAILURES = frozenset(
     {
@@ -156,7 +175,13 @@ class ConsentRegistry:
         if state["authorizations"].pop(kind, None) is not None:
             self._save(state)
 
+    def has_record(self, kind: str) -> bool:
+        return kind in self._load()["authorizations"]
+
     def status(self, now: datetime) -> dict[str, Any]:
+        kinds = list(AUTHORIZATIONS)
+        if analytics_enabled() or self.has_record("analytics"):
+            kinds.append("analytics")
         return {
             "policy_version_required": POLICY_VERSION,
             "policy_version_accepted": self.accepted_version(),
@@ -170,7 +195,7 @@ class ConsentRegistry:
                     ),
                     "reconfirmation_due": self.due(kind, now),
                 }
-                for kind in AUTHORIZATIONS
+                for kind in kinds
             },
         }
 
@@ -220,12 +245,37 @@ class YouTubeGovernance:
         return self.repository.purge_all_youtube_api_data()
 
     def enforce_stale_data(self) -> dict[str, int]:
-        return self.repository.purge_stale_youtube_api_data(self.clock() - RECONFIRM_AFTER)
+        cutoff = self.clock() - RECONFIRM_AFTER
+        analytics_at = self.registry.last_reconfirmed("analytics")
+        if analytics_at is None:
+            # Never (or no longer) authorized: the same call as before Analytics existed; any
+            # stored Analytics values are deleted by the default rule.
+            return self.repository.purge_stale_youtube_api_data(cutoff)
+        return self.repository.purge_stale_youtube_api_data(
+            cutoff, analytics_authorized_at=analytics_at
+        )
+
+    def active_kinds(self) -> list[str]:
+        """Authorizations maintenance may reconfirm: Analytics only while enabled."""
+
+        return list(AUTHORIZATIONS) + (["analytics"] if analytics_enabled() else [])
+
+    def present_kinds(self) -> list[str]:
+        """Authorizations revocation must cover: Analytics whenever anything of it remains."""
+
+        kinds = list(AUTHORIZATIONS)
+        if analytics_enabled() or self.registry.has_record("analytics"):
+            return kinds + ["analytics"]
+        try:
+            stored = self.store_for(ANALYTICS_KEYRING_ACCOUNT).get() is not None
+        except Exception:
+            stored = True  # Unknown: include it so revocation is attempted.
+        return kinds + (["analytics"] if stored else [])
 
     def _delete_credential(self, kind: str) -> dict[str, Any]:
         """Delete one local credential; a store failure is recorded, never raised."""
 
-        account, _scopes = AUTHORIZATIONS[kind]
+        account, _scopes = ALL_AUTHORIZATIONS[kind]
         self.registry.clear(kind)
         try:
             return {"local_credential_deleted": self.store_for(account).delete(), "error": None}
@@ -233,12 +283,21 @@ class YouTubeGovernance:
             return {"local_credential_deleted": False, "error": "credential_delete_failed"}
 
     def handle_definitive(self, kind: str) -> dict[str, Any]:
-        """Revoked or invalid authorization: delete it and the YouTube API data it covered."""
+        """Revoked or invalid authorization: delete it and the YouTube API data it covered.
+
+        With Analytics enabled, a Google-level revocation may affect every authorization: the
+        others become due, so each is re-verified before its next use (and at once by
+        maintenance). While Analytics is disabled this behaves exactly as before.
+        """
 
         try:
             return {"credential": self._delete_credential(kind)}
         finally:
             self.purge_api_data()
+            if analytics_enabled():
+                for other in self.active_kinds():
+                    if other != kind:
+                        self.registry.clear(other)
 
     def provider(
         self, kind: str, inner: Any, channel_client: Any | None = None
@@ -248,7 +307,7 @@ class YouTubeGovernance:
     def reconfirm(self, kind: str, inner: Any, channel_client: Any | None = None) -> Any:
         """Refresh + exact scope/channel verification; record success, act on the outcome."""
 
-        _account, scopes = AUTHORIZATIONS[kind]
+        _account, scopes = ALL_AUTHORIZATIONS[kind]
         now = self.clock()
         try:
             credentials = inner.acquire()
@@ -272,7 +331,7 @@ class YouTubeGovernance:
     def _revoke_one(self, kind: str) -> dict[str, Any]:
         """Revoke and delete one authorization; every failure is recorded, none raised."""
 
-        account, _scopes = AUTHORIZATIONS[kind]
+        account, _scopes = ALL_AUTHORIZATIONS[kind]
         errors: list[str] = []
         try:
             token = self.store_for(account).get()
@@ -303,7 +362,7 @@ class YouTubeGovernance:
 
         results: dict[str, Any] = {}
         try:
-            for kind in AUTHORIZATIONS:
+            for kind in self.present_kinds():
                 results[kind] = self._revoke_one(kind)
         finally:
             purged = self.purge_api_data()
@@ -336,7 +395,37 @@ class YouTubeGovernance:
             return report
         report["policy_acceptance"] = "current"
         results: dict[str, str] = {}
-        for kind, (account, _scopes) in AUTHORIZATIONS.items():
+        kinds = self.active_kinds()
+        self._reconfirm_due(inner_for, kinds, results)
+        if analytics_enabled():
+            # Cross-authorization re-check (Option B). A definitive failure makes every other
+            # authorization due (handle_definitive), which invalidates a "reconfirmed" or
+            # "not_due" result recorded earlier in this pass. Re-verify exactly those now and
+            # report each authorization's last actual check. Each further round needs a new
+            # definitive failure (which deletes a credential), so it ends within len(kinds).
+            for _round in range(len(kinds)):
+                invalidated = [
+                    kind
+                    for kind in kinds
+                    if results.get(kind) in {"reconfirmed", "not_due"}
+                    and self.registry.due(kind, self.clock())
+                ]
+                if not invalidated:
+                    break
+                self._reconfirm_due(inner_for, invalidated, results)
+            for kind in kinds:  # Never report an invalidated check as current.
+                if results.get(kind) in {"reconfirmed", "not_due"} and self.registry.due(
+                    kind, self.clock()
+                ):
+                    results[kind] = "due_after_definitive_failure"
+        report["reconfirmation"] = results
+        return report
+
+    def _reconfirm_due(
+        self, inner_for: Callable[[str], Any], kinds: list[str], results: dict[str, str]
+    ) -> None:
+        for kind in kinds:
+            account, _scopes = ALL_AUTHORIZATIONS[kind]
             try:
                 stored = self.store_for(account).get() is not None
             except Exception:
@@ -352,8 +441,6 @@ class YouTubeGovernance:
                     results[kind] = "reconfirmed"
                 except PreflightBlocked as exc:
                     results[kind] = exc.category
-        report["reconfirmation"] = results
-        return report
 
     def startup(self) -> dict[str, Any]:
         """Local-only inspection: due state and stale-data deletion; no YouTube API call."""
@@ -396,7 +483,7 @@ def governed_provider(
 ) -> GovernedCredentialProvider:
     """Non-interactive governed credentials for API use (never opens a consent window)."""
 
-    account, scopes = AUTHORIZATIONS[kind]
+    account, scopes = ALL_AUTHORIZATIONS[kind]
     inner = GoogleInstalledCredentialProvider(
         client_config,
         governance.store_for(account),
@@ -416,6 +503,64 @@ def _repository(db_path: str | None) -> Any:
     return AtlasRepository(Path(path))
 
 
+def authorize_analytics(
+    client_config: Path,
+    result_file: Path,
+    consent_state: Path,
+    *,
+    store: Any | None = None,
+    channel_client: Any | None = None,
+) -> int:
+    """Fresh consent for exactly youtube.readonly + yt-analytics.readonly (separate credential).
+
+    Refused before any consent window or API request while Analytics is disabled or the current
+    privacy policy is not accepted. The token is stored only after the exact scope set and the
+    exact SimilarStoic channel verify.
+    """
+
+    repository_root = Path(__file__).resolve().parents[2]
+    _outside_repository(result_file, repository_root)
+    registry = ConsentRegistry(consent_state, repository_root)
+    category = None
+    if not analytics_enabled():
+        category = "analytics_disabled"
+    elif not registry.is_current():
+        category = "privacy_policy_acceptance_required"
+    if category is not None:
+        evidence = {"status": "BLOCKER", "error_category": category}
+        _write_sanitized_json(result_file, {**evidence, "stored": False})
+        print(json.dumps(evidence, sort_keys=True))
+        return 2
+    store = store or WindowsCredentialRefreshTokenStore(account=ANALYTICS_KEYRING_ACCOUNT)
+    provider = GoogleInstalledCredentialProvider(
+        client_config,
+        store,
+        repository_root,
+        scopes=ANALYTICS_SCOPES,
+        interactive=True,
+        success_message=(
+            "Conveyor YouTube Analytics authorization completed. You may close this tab."
+        ),
+    )
+    try:
+        credentials = provider.fresh_consent()
+        result = verify_exact_channel(
+            credentials,
+            channel_client or GoogleReadOnlyChannelClient(),
+            required_scopes=frozenset(ANALYTICS_SCOPES),
+        )
+        evidence = {**result.evidence(), "stored": False}
+        if result.status == "PASS":
+            store.set(credentials.refresh_token)
+            registry.mark_reconfirmed("analytics", datetime.now(UTC))
+            evidence["stored"] = True
+    except PreflightBlocked as exc:
+        evidence = {"status": "BLOCKER", "error_category": exc.category, "stored": False}
+    _write_sanitized_json(result_file, evidence)
+    print(json.dumps(evidence, sort_keys=True))
+    return 0 if evidence.get("status") == "PASS" else 2
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--consent-state", type=Path, required=True)
@@ -425,6 +570,12 @@ def main(argv: list[str] | None = None) -> int:
     accept.add_argument("--actor", required=True)
     accept.add_argument("--accept-version", required=True)
     sub.add_parser("status", help="Local acceptance and reconfirmation state (no API call).")
+    analytics = sub.add_parser(
+        "authorize-analytics",
+        help="Fresh consent for the separate YouTube Analytics authorization (only when enabled).",
+    )
+    analytics.add_argument("--client-config", type=Path, required=True)
+    analytics.add_argument("--result-file", type=Path, required=True)
     reconfirm = sub.add_parser("reconfirm", help="Reconfirm stored authorizations now.")
     reconfirm.add_argument("--client-config", type=Path, required=True)
     maintain = sub.add_parser(
@@ -445,13 +596,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "status":
         print(json.dumps(registry.status(_now()), sort_keys=True))
         return 0
+    if args.command == "authorize-analytics":
+        return authorize_analytics(args.client_config, args.result_file, args.consent_state)
     repository = _repository(args.db)
     try:
         governance = YouTubeGovernance(registry, repository)
         if args.command == "maintain":
 
             def inner_for(kind: str) -> Any:
-                account, scopes = AUTHORIZATIONS[kind]
+                account, scopes = ALL_AUTHORIZATIONS[kind]
                 return GoogleInstalledCredentialProvider(
                     args.client_config,
                     governance.store_for(account),
@@ -475,7 +628,8 @@ def main(argv: list[str] | None = None) -> int:
         else:
             governance.require_acceptance()
             result = {}
-            for kind, (account, _scopes) in AUTHORIZATIONS.items():
+            for kind in governance.active_kinds():
+                account, _scopes = ALL_AUTHORIZATIONS[kind]
                 if governance.store_for(account).get() is None:
                     result[kind] = "no_stored_authorization"
                     continue

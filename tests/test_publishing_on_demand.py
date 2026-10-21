@@ -672,7 +672,7 @@ def test_fresh_schema_has_unbounded_slots_and_a_week_rule_scoped_to_legacy(tmp_p
     repo = AtlasRepository(tmp_path / "fresh.sqlite")
     try:
         connection = repo.connection
-        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 31
+        assert connection.execute("SELECT MAX(version) FROM schema_migrations").fetchone()[0] == 32
         sql = dict(connection.execute("SELECT name, sql FROM sqlite_master WHERE type = 'table'"))
         assert "CHECK (pilot_slot >= 1)" in sql["publishing_packages"]
         assert "BETWEEN 1 AND 3" not in sql["publishing_packages"]
@@ -713,7 +713,8 @@ def test_upgrade_30_to_31_preserves_every_row_trigger_and_reference(tmp_path, mo
     before_schema = _schema(repo.connection)
     repo.close()
     before_rows = _fingerprint(path)
-    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS)
+    # Exactly migration 31 (32 has its own upgrade test).
+    monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS[:31])
     upgraded = AtlasRepository(path)
     try:
         connection = upgraded.connection
@@ -900,7 +901,7 @@ def test_cli_status_is_read_only(cli_world, capsys) -> None:
     db, media, _metadata, _root = cli_world
     before = database_sha256(db)
     code, report = _cli(capsys, "status", "--db", db, "--media", media)
-    assert code == 0 and report["schema_version"] == 31 and report["on_demand"] == []
+    assert code == 0 and report["schema_version"] == 32 and report["on_demand"] == []
     assert database_sha256(db) == before == report["db_sha256"]
 
 
@@ -1106,7 +1107,7 @@ def test_cli_refuses_live_commands_below_the_code_schema_head(tmp_path, monkeypa
     monkeypatch.setattr(persistence, "MIGRATIONS", MIGRATIONS)
     before = database_sha256(db)
     code, report = _cli(capsys, "status", "--db", db, "--media", tmp_path / "media")
-    assert code == 0 and (report["schema_version"], report["code_schema_head"]) == (30, 31)
+    assert code == 0 and (report["schema_version"], report["code_schema_head"]) == (30, 32)
     code, report = _cli(
         capsys,
         "approve",

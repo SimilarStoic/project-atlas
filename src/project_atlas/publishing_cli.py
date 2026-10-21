@@ -450,6 +450,75 @@ def cmd_observe(args: argparse.Namespace) -> dict[str, Any]:
     )
 
 
+def _analytics_adapter(args: argparse.Namespace):
+    """The governed YouTube Analytics adapter, built only for a live (post-backup) run."""
+
+    def adapter():
+        from project_atlas.youtube_adapter import YouTubeAnalyticsAdapter
+        from project_atlas.youtube_consent import ConsentRegistry, YouTubeGovernance
+
+        db, _media = _paths(args)
+        root = Path(__file__).resolve().parents[2]
+        from project_atlas.persistence import AtlasRepository
+
+        governance = YouTubeGovernance(
+            ConsentRegistry(Path(args.consent_state), root), AtlasRepository(db)
+        )
+        return YouTubeAnalyticsAdapter.from_client_config(
+            Path(args.client_config), root, governance
+        )
+
+    return adapter
+
+
+def _require_analytics() -> None:
+    from project_atlas.youtube_consent import analytics_enabled
+
+    if not analytics_enabled():
+        raise CliError(
+            "YouTube Analytics is disabled (ANALYTICS_ENABLED is False); activation is a separate "
+            "founder-authorized step. Nothing was done."
+        )
+
+
+def cmd_analytics_check(args: argparse.Namespace) -> dict[str, Any]:
+    """One manual video-existence check (Analytics retention evidence)."""
+
+    _require_analytics()
+
+    def operation(service: Any) -> dict[str, Any]:
+        return service.verify_analytics_video(args.check_id, args.receipt_id)
+
+    return _live(
+        args,
+        f"analytics-check-{args.receipt_id}",
+        operation,
+        live_adapter=_analytics_adapter(args),
+    )
+
+
+def cmd_collect_analytics(args: argparse.Namespace) -> dict[str, Any]:
+    """One manual collection of every due, not-yet-mature checkpoint."""
+
+    _require_analytics()
+
+    def operation(service: Any) -> dict[str, Any]:
+        snapshots = service.collect_analytics(args.receipt_id)
+        return {
+            "collected": [
+                {"snapshot_id": item.id, "checkpoint": item.checkpoint, "maturity": item.maturity}
+                for item in snapshots
+            ]
+        }
+
+    return _live(
+        args,
+        f"collect-analytics-{args.receipt_id}",
+        operation,
+        live_adapter=_analytics_adapter(args),
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m project_atlas.publishing_cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -487,6 +556,19 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--status-id", required=True)
     p.add_argument("--client-config", required=True)
     p.add_argument("--consent-state", required=True)
+    p = sub.add_parser("analytics-check", help="one manual video-existence check (Analytics)")
+    live(p)
+    p.add_argument("receipt_id")
+    p.add_argument("--check-id", required=True)
+    p.add_argument("--client-config", required=True)
+    p.add_argument("--consent-state", required=True)
+    p = sub.add_parser(
+        "collect-analytics", help="one manual Analytics collection of due checkpoints"
+    )
+    live(p)
+    p.add_argument("receipt_id")
+    p.add_argument("--client-config", required=True)
+    p.add_argument("--consent-state", required=True)
     p = sub.add_parser("observe", help="one manual read-only status observation")
     live(p)
     p.add_argument("publication_id")
@@ -502,6 +584,8 @@ COMMANDS = {
     "approve": cmd_approve,
     "reconcile-scheduled": cmd_reconcile,
     "observe": cmd_observe,
+    "analytics-check": cmd_analytics_check,
+    "collect-analytics": cmd_collect_analytics,
 }
 
 

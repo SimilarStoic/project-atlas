@@ -920,6 +920,55 @@ after `. .\scripts\set_conveyor_environment.ps1`):
   procedure stays independently available.
 - Revocation and deletion are verified on isolated fixtures and rehearsals first. Live Google credentials and
   production data are never revoked or deleted without separate founder authorization.
+- **Design amendment (founder, 21 October 2026):** an additive migration 32, `analytics_video_checks`, holds durable,
+  independently purgeable video-existence evidence for Analytics retention. Authorized for isolated development
+  databases only, not for production.
+- **Offline implementation (branch `analytics-option-b`, draft PR; not merged, not applied, not activated).**
+  Disabled by default: `ANALYTICS_ENABLED = False` in `youtube_consent.py`.
+  - **Analytics authorization:** a separate credential with exactly `youtube.readonly` + `yt-analytics.readonly`
+    (`youtube_consent authorize-analytics`). It refuses before any consent or API call while disabled.
+  - **Cross-authorization re-check (enabled state only):** a definitive failure makes the other authorizations due.
+    Within maintenance, every result it invalidated (including one already reported `reconfirmed` earlier in the
+    pass) is re-verified in the same run, in bounded rounds, and the report shows each authorization's last actual
+    check. Transient failures trigger no re-checks.
+  - **Open design decision (not implemented):** a definitive failure *outside* maintenance (in any governed API use)
+    purges all stored YouTube API data and makes the other authorizations due. They are then re-verified before
+    their next use and at the next maintenance run, **not immediately**. Immediate re-verification there would need
+    governance to hold a way to build each kind's credential provider. The minimal amendment for a founder
+    decision: an optional `inner_for` given to `YouTubeGovernance` by the governed factories, used only by
+    `handle_definitive` while Analytics is enabled. Until decided, the approved immediate-check requirement is met
+    only within maintenance.
+  - **Collection:** `YouTubeAnalyticsAdapter` (`reports.query`, `ids=channel==MINE`, `filters=video==<id>`, using
+    the existing google-auth HTTP session; no new dependency).
+    - Metrics: views, estimatedMinutesWatched, averageViewDuration, averageViewPercentage, likes, comments, shares,
+      subscribersGained, subscribersLost, plus audience retention.
+    - Values are read by returned column header and stored as reported in the existing `performance_snapshots`,
+      with no migration for them.
+    - Checkpoints use whole Pacific-time days (24h/72h/7d/28d = the publication's Pacific date + 1/3/7/28 days). A
+      checkpoint stays `immature` until a 3-day data lag has passed, and is `partial` if any metric or the
+      retention series is missing.
+    - Each attempt is a new snapshot; a mature checkpoint is never collected again; a failed request records
+      nothing.
+  - **Retention:** Analytics snapshots are kept past 30 days only while the Analytics authorization was re-verified
+    within 30 days and the latest existence check (`analytics-check`, `videos.list`) says `exists` and is under 30
+    days old.
+    - For API-published (P11-type) videos, the identity must also be kept by a passed `observe` (the existing rule).
+    - A missing or inaccessible video deletes its Analytics at once.
+    - Expiry is enforced even after Analytics is turned off.
+    - Revocation and delete-data cover any stored Analytics credential and data.
+  - **Learning records** citing Analytics must stay qualitative (no standalone numbers or percentages; values are
+    cited by snapshot). This cannot catch every derived claim in prose; founder review covers that.
+  - **CLI:** `publishing_cli analytics-check` and `collect-analytics` are manual only, with the usual hash check,
+    rehearsal and verified backup. They refuse while disabled. There is no scheduling or maintenance hook.
+  - **Missing or inaccessible video:** recording that outcome and deleting the video's Analytics happen in one
+    SQLite transaction; a failed deletion leaves neither the outcome nor a partial purge.
+  - **Deployment boundary:** opening an `AtlasRepository` applies pending migrations. That happens in
+    `youtube_consent` (`maintain`, including the 03:00 task from the main checkout, and `reconfirm`, `revoke`,
+    `delete-data`) and in `production_cli` live commands (through the web server). Only `publishing_cli` live
+    commands refuse while the runtime is below the code's schema head. Once `main` contains migration 32, syncing
+    the Windows checkout and running any of those would apply it to the runtime.
+  - **This PR must stay unmerged** until migration 32 has a reviewed, founder-authorized rollout procedure:
+    maintenance isolation, verified backup, schema verification, and failure and rollback handling.
 
 **Phase 5 — P12: NOT AUTHORIZED; independent of Phase 4 (founder, 20 October 2026); needs explicit founder
 authorization.**
@@ -939,9 +988,9 @@ authorization.**
   email (15:24) saved. No case reference stated. Google's review and response are pending.
   Checkpoint on or after 23 October 2026: acknowledgement has arrived; check for Google's review decision and, only
   if needed, decide a proportionate follow-up. Do not resubmit automatically.
-- Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. It is the next
-  development priority. A read-only implementation plan was prepared on 21 October 2026; implementation needs
-  separate authorization. Activation also requires YouTube's approval of the 19 October submission (or written
+- Phase 4 (analytics): approved Option B design (amended with migration 32), implemented offline and disabled in a
+  draft PR (branch `analytics-option-b`); not merged, not applied to the runtime, NOT authorized for activation.
+  Merging needs a separately authorized migration-32 rollout procedure. Activation also requires YouTube's approval of the 19 October submission (or written
   confirmation that none is needed). The published privacy policy stays at version `2026-10-06` until an authorized
   Phase 4 activation step.
 - Phase 5 (P12): not authorized; independently available for separate founder consideration (20 October
