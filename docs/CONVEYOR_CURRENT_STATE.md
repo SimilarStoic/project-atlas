@@ -606,6 +606,13 @@ PENDING.**
 - No case or reference number is stated in the acknowledgement. **Google's review, approval or determination of the
   Analytics use is pending.** The submission is the formal written notification. Whether it satisfies the
   notification obligation is established only by Google's response.
+- **Google review update (founder's screenshot of the official YouTube API Services email thread):**
+  - 19 October 2026: Google acknowledged receipt of the submission.
+  - 20 October 2026: the YouTube API Services Team confirmed that its compliance review was already in progress and
+    that it had received the Project Key and Attachment. It will contact the submitter through the existing email
+    thread if further information is needed.
+  - This confirms an **active review only**. It is not approval, not authorization to activate Analytics, and not
+    confirmation that approval is unnecessary. **Google's written decision remains pending.**
 - Material difference from the approved Phase 4 design: the narrative commits that no Analytics request is made until
   YouTube **approves the change, or confirms in writing that approval is not required**. That is in addition to
   implementing and testing, the privacy-policy update, renewed acceptance and separate Analytics consent. The Phase
@@ -902,13 +909,35 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 7. `Enable-ScheduledTask -TaskName "Conveyor YouTube maintenance"`.
 8. Record the new database SHA-256, the backup path and the date here.
 
-**Phase 4 — YouTube Analytics: AFTER Phase 3.**
+**Phase 4 — YouTube Analytics: implemented offline in draft PR #5 (not merged, deployed or activated); Google's
+written decision pending.**
 
 - The approved Option B design (YouTube block below) and its activation sequence stand. The formal written
-  notification was submitted on 19 October 2026 through Google's audit form, and Google acknowledged receipt (Phase
-  2). Remaining sequence: switched-off implementation → YouTube's approval, or its written confirmation that none is
-  required (pending) → privacy-policy update with the matching `POLICY_VERSION` → renewed acceptance and analytics
-  consent → first authorized collection.
+  notification was submitted on 19 October 2026 through Google's audit form. Google acknowledged receipt and on 20
+  October confirmed its compliance review is in progress (Phase 2); that is not approval. Remaining sequence:
+  switched-off implementation (done offline, PR #5, unmerged) → YouTube's approval, or its written confirmation that
+  none is required (pending) → privacy-policy update with the matching `POLICY_VERSION` → renewed acceptance and
+  analytics consent → first authorized collection.
+- **Implementation status:** Analytics Option B is implemented offline, disabled by default
+  (`ANALYTICS_ENABLED = False`), in draft PR #5 (branch `analytics-option-b`). It includes the additive migration 32
+  (`analytics_video_checks`, durable and independently purgeable video-existence evidence), which the founder
+  authorized on 21 October 2026 for isolated offline implementation and testing only. It is not merged, not applied
+  to production, and not activated.
+- **Founder-approved amendment (21 October 2026), cross-authorization behaviour.** It replaces the earlier
+  immediate-re-check requirement outside maintenance; no extra credential plumbing is needed.
+  - A definitive authorization failure immediately invokes the existing purge of stored YouTube API data, and the
+    other authorizations' reconfirmation status is invalidated.
+  - Within maintenance, the affected authorizations are re-verified in the same pass (the bounded logic in PR #5).
+  - Outside maintenance, they are re-verified before their next use and at the next permitted maintenance run, not
+    immediately from the failing command.
+  - Access stays fail-closed until an authorization is successfully verified.
+  - This decision does not resolve P11's historical immutable `public_at` retention defect.
+- **Deployment boundary:** opening `AtlasRepository` applies pending migrations. That happens in `production_cli`
+  live commands and in `youtube_consent`, including the daily 03:00 maintenance task from the Windows checkout.
+  - **PR #5 must remain unmerged** until a migration-32 production rollout procedure has been independently
+    reviewed and separately authorized.
+  - Until then, the Windows checkout may be synchronized only to `main` commits whose highest database migration
+    is 31.
 - No analytics activation or additional scopes are authorized now.
 - Completion criteria: authorized Analytics collection, storage, refresh and revocation verified working, **and** at
   least one compliant production-linked learning review that interprets YouTube's reported values without creating
@@ -935,26 +964,27 @@ authorization.**
   `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
   obligation and no longer gates the P11 proof.
-- Analytics audit (Phase 2): formal audit submitted 19 October 2026; website confirmation and Google's acknowledgement
-  email (15:24) saved. No case reference stated. Google's review and response are pending.
-  Checkpoint on or after 23 October 2026: acknowledgement has arrived; check for Google's review decision and, only
-  if needed, decide a proportionate follow-up. Do not resubmit automatically.
-- Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. It is the next
-  development priority. A read-only implementation plan was prepared on 21 October 2026; implementation needs
-  separate authorization. Activation also requires YouTube's approval of the 19 October submission (or written
-  confirmation that none is needed). The published privacy policy stays at version `2026-10-06` until an authorized
-  Phase 4 activation step.
-- Phase 5 (P12): not authorized; independently available for separate founder consideration (20 October
+- Analytics audit (Phase 2): formal audit submitted 19 October 2026; Google acknowledged receipt (19 October) and
+  confirmed an active compliance review (20 October). No case reference stated. **Google's written decision is
+  pending; nothing is approved.** Checkpoint on or after 23 October 2026: check for Google's decision and, only if
+  needed, decide a proportionate follow-up. Do not resubmit or contact Google automatically.
+- Phase 4 (analytics): implemented offline and disabled in draft PR #5 (includes migration 32); not merged, not
+  deployed, NOT authorized for activation. PR #5 stays unmerged until a migration-32 rollout procedure is
+  independently reviewed and separately authorized. Activation also requires YouTube's approval of the 19 October
+  submission (or written confirmation that none is needed). The published privacy policy stays at version
+  `2026-10-06` until an authorized Phase 4 activation step.
+- Phase 5 (P12): not authorized; independent of Google's decision; needs its own founder authorization (20 October
   sequencing decision).
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next smallest useful action: the founder's decision on the Analytics implementation plan (offline
-  implementation and activation separately gated); check for Google's response to the 19 October audit; on or after
-  23 October, the OAuth durability check, when the founder authorizes it.
-- The Windows checkout `D:\ConveyorOS\source\Conveyor` was not updated by the PR #4 merge (or the documentation
-  commit after it). Synchronizing it is a separate step.
+- Next planned work (each step separately authorized): safely synchronize the Windows checkout to schema-31 code,
+  then return to P12 with the approved `similarstoic-flow-v1` method. Also: check for Google's decision; on or
+  after 23 October, the OAuth durability check, when the founder authorizes it.
+- The Windows checkout `D:\ConveyorOS\source\Conveyor` is still at `1ebcbdc` (not updated by the PR #4 merge or
+  the documentation commits after it). Synchronizing it is a separate step, and only to `main` commits whose highest
+  migration is 31 until the migration-32 rollout is authorized.
 - P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
   unused on 19 October 2026, as the founder decided (decision checkpoint above). P11 (`production-11-flow`) is public on YouTube
   (`62mEQWPWVpE`, public 2026-10-16T17:45:28Z) with a Conveyor publication receipt.
@@ -1392,8 +1422,9 @@ its only API-route package is the never-release private audit-evidence package b
   planned. A durability check (`youtube_consent reconfirm`, expected to show both authorizations `reconfirmed` beyond
   the former 7-day Testing limit) is scheduled for on or after 23 October 2026; it is pending and needs founder
   authorization (it makes API calls).
-- **YouTube Analytics design: approved (Option B as revised, 15 October 2026), NOT implemented.** Nothing below
-  exists in code; today the existing 30-day purge of all stored YouTube API data still applies.
+- **YouTube Analytics design: approved (Option B as revised, 15 October 2026; amended 21 October 2026, Phase 4).**
+  Not in `main`: implemented offline and disabled only in draft PR #5 (unmerged). On `main` and the runtime, the
+  existing 30-day purge of all stored YouTube API data still applies.
   - Data: YouTube Analytics `reports.query` for the channel's own videos, non-monetary metrics and audience retention,
     under a separate analytics authorization (`yt-analytics.readonly` + `youtube.readonly`) in the same Cloud
     project; collected at the existing 24h/72h/7d/28d checkpoints into the existing `performance_snapshots` (YouTube
