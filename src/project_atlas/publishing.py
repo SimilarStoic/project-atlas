@@ -595,15 +595,14 @@ class PublishingService:
             observation.observed_at,
             observation.provider_payload,
         )
+        # Conveyor-authored lineage stays in the immutable evidence; YouTube's public time is
+        # provider evidence, so the 30-day refresh-or-delete rule can purge it.
         self.repository.append_publication_operation_event(
             transition.id,
             "succeeded",
             "Conveyor",
-            {
-                "method": "independent-public-observation",
-                "public_status_id": status.id,
-                "public_at": observation.public_at,
-            },
+            {"method": "independent-public-observation", "public_status_id": status.id},
+            {"public_at": observation.public_at},
         )
         return self._complete_scheduled_receipt(
             receipt_id, publication_id, self.repository.get_publication_operation(transition.id)
@@ -617,6 +616,10 @@ class PublishingService:
         The status, the transition's success and the receipt are separate commits. A retry after
         a failure between them finishes from what the success event recorded: no new YouTube
         observation, status or event. A publication that already has its receipt is refused.
+
+        YouTube's public time is read only from the event's purgeable provider evidence. Recovery
+        refuses once that evidence is purged, and never uses a public time stored in the immutable
+        Conveyor evidence by earlier code.
         """
 
         row = self.repository.connection.execute(
@@ -633,15 +636,27 @@ class PublishingService:
             succeeded.kind != "succeeded"
             or observed.get("method") != "independent-public-observation"
             or not observed.get("public_status_id")
-            or not observed.get("public_at")
         ):
             raise ValueError("The succeeded transition lacks its recorded public observation.")
+        if "public_at" in observed:
+            raise ValueError(
+                "This success event stores the public time in immutable evidence (earlier format); "
+                "recovery refuses to use it. Nothing recorded."
+            )
+        if succeeded.provider_purged_at is not None:
+            raise ValueError(
+                "The recorded public time was purged under the 30-day rule; the receipt cannot be "
+                "recovered from it. Nothing recorded."
+            )
+        public_at = (succeeded.provider_evidence or {}).get("public_at")
+        if not public_at:
+            raise ValueError("The succeeded transition lacks its recorded public time.")
         return self.repository.create_publication_receipt(
             receipt_id,
             publication_id,
             transition.id,
             observed["public_status_id"],
-            observed["public_at"],
+            public_at,
             "provider-public-state",
             "second",
         )

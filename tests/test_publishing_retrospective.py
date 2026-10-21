@@ -775,3 +775,45 @@ def test_frozen_release_facts_match_the_attested_record(tmp_path) -> None:
     assert p8.metadata_provenance["metadata_source"] == (
         "founder-pasted from YouTube Studio 2026-10-07"
     )
+
+
+def test_cli_observe_refuses_a_retrospective_publication(world, capsys, monkeypatch) -> None:
+    """P8/P9-style founder-attested records authorize no observation, even as a dry run."""
+
+    from project_atlas import publishing_cli
+    from project_atlas.production_backup import database_sha256
+
+    repo, _storage, _service, _fake, p8, _p9, tmp_path = world
+    record_release(repo, _media(tmp_path), p8)
+    [row] = repo.connection.execute(
+        "SELECT id FROM platform_publications WHERE identity_source = 'founder_manual' "
+        "AND package_id = ?",
+        (f"publishing-package-{PILOT_KEY}-slot-1-v1",),
+    ).fetchall()
+    for name in ("ATLAS_DB_PATH", "ATLAS_MEDIA_STORAGE_ROOT"):
+        monkeypatch.delenv(name, raising=False)
+    db = tmp_path / "retrospective.sqlite"
+    before = database_sha256(db)
+    code = publishing_cli.main(
+        [
+            "observe",
+            row["id"],
+            "--status-id",
+            "s-1",
+            "--client-config",
+            str(tmp_path / "client-config.json"),
+            "--consent-state",
+            str(tmp_path / "consent-state.json"),
+            "--db",
+            str(db),
+            "--media",
+            str(_media(tmp_path)),
+            "--expect-db-sha256",
+            before,
+            "--dry-run",
+        ]
+    )
+    report = json.loads(capsys.readouterr().out)
+    assert code == 2 and report["mode"] == "refused-by-rehearsal", report
+    assert "retrospective founder-attested package" in report["rehearsal"]["error"]
+    assert database_sha256(db) == before

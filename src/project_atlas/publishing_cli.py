@@ -3,10 +3,11 @@
     python -m project_atlas.publishing_cli <command> ...
 
 ``status`` reads the database with ``mode=ro``. Every live command (``prepare``, ``approve``,
-``reconcile-scheduled``) refuses unless the database SHA-256 equals ``--expect-db-sha256``,
-rehearses on a temporary copy first (no YouTube call: the observation adapter is blocked, so a
-rehearsal validates preconditions and wiring only), then takes a verified backup and runs.
-``--dry-run`` stops after the rehearsal.
+``reconcile-scheduled``, ``observe``) refuses unless the database SHA-256 equals
+``--expect-db-sha256``, rehearses on a temporary copy first (no YouTube call: the observation
+adapter is blocked, so a rehearsal validates preconditions and wiring only), then takes a verified
+backup and runs. ``--dry-run`` stops after the rehearsal. ``observe`` is one manual read-only status
+observation through ``PublishingService.observe_status``; nothing schedules or repeats it.
 
 The publication itself is not a CLI command: the founder confirms the exact scheduled upload on
 the loopback YouTube upload screen, and that confirmation is the publication authorization.
@@ -35,6 +36,16 @@ from project_atlas.publishing_state import ON_DEMAND_SERIES, ON_DEMAND_TIMING
 REHEARSAL_NOTE = (
     "Rehearsal on a temporary copy: it validates preconditions and wiring only; no YouTube call "
     "was made."
+)
+GOVERNED_ACCESS_WARNING = (
+    "Governed YouTube access applies the stored-data rules before any call: it may have deleted "
+    "stale YouTube API data, and a definitive authorization failure deletes that credential and "
+    "all stored YouTube API data. Compare the database hashes and inspect read-only before any "
+    "further action."
+)
+SERVICE_REFUSAL_NOTE = (
+    "The service refused this step. The database may or may not have changed: compare the hashes "
+    "and inspect read-only before any further action."
 )
 BACKUP_LABEL_MAX = 100  # verified_backup's label limit
 BACKUP_LABEL_FINGERPRINT = 12  # hex characters of SHA-256 over the full original label
@@ -133,7 +144,18 @@ def _head_version() -> int:
     return max(version for version, _statements in MIGRATIONS)
 
 
-def _live(args: argparse.Namespace, label: str, operation, live_adapter=None) -> dict[str, Any]:
+def _youtube_refusals() -> tuple[type[BaseException], ...]:
+    """The expected observation and authorization refusals of governed read-only access."""
+
+    from project_atlas.youtube_adapter import YouTubeObservationBlocked
+    from project_atlas.youtube_preflight import PreflightBlocked
+
+    return (YouTubeObservationBlocked, PreflightBlocked)
+
+
+def _live(
+    args: argparse.Namespace, label: str, operation, live_adapter=None, on_refusal=None
+) -> dict[str, Any]:
     db, media = _paths(args)
     actual = database_sha256(db)
     if actual != args.expect_db_sha256:
@@ -170,13 +192,36 @@ def _live(args: argparse.Namespace, label: str, operation, live_adapter=None) ->
     report["backup"] = verified_backup(db, Path(args.backup_root), backup_label(label))
     if database_sha256(db) != actual:
         raise CliError("The database changed during the backup; nothing was written.")
-    service = _service(db, media, live_adapter() if live_adapter else _BlockedAdapter())
+    youtube_refusals = _youtube_refusals() if live_adapter else ()
+    service = None
     try:
+        service = _service(db, media, live_adapter() if live_adapter else _BlockedAdapter())
         report["live"] = {"result": operation(service)}
+        report["mode"] = "live"
+    except youtube_refusals as error:
+        # Expected observation or authorization refusal from governed YouTube access.
+        report["live"] = {
+            "refusal": "youtube",
+            "category": getattr(error, "category", None) or str(error),
+            "error": f"{type(error).__name__}: {error}",
+            "warning": GOVERNED_ACCESS_WARNING,
+        }
+        report["mode"] = "refused-live"
+    except ValueError as error:
+        # A service refusal (for example an observed identity that differs from the lineage).
+        report["live"] = {
+            "refusal": "service",
+            "error": f"{type(error).__name__}: {error}",
+            "warning": SERVICE_REFUSAL_NOTE,
+        }
+        report["mode"] = "refused-live"
     finally:
-        service.repository.close()
-    report["mode"] = "live"
+        if service is not None:
+            service.repository.close()
+    # Any other exception is an unexpected implementation failure and propagates unreported.
     report["db_sha256_after"] = database_sha256(db)
+    if report["mode"] == "refused-live" and on_refusal is not None:
+        report["live"].update(on_refusal(db))
     return report
 
 
@@ -305,7 +350,9 @@ def cmd_approve(args: argparse.Namespace) -> dict[str, Any]:
     return _live(args, f"approve-{args.package_id}", operation)
 
 
-def cmd_reconcile(args: argparse.Namespace) -> dict[str, Any]:
+def _observation_adapter(args: argparse.Namespace):
+    """The governed read-only YouTube adapter, built only for a live (post-backup) run."""
+
     def adapter():
         from project_atlas.youtube_adapter import YouTubeReadOnlyObservationAdapter
         from project_atlas.youtube_consent import ConsentRegistry, YouTubeGovernance
@@ -321,13 +368,86 @@ def cmd_reconcile(args: argparse.Namespace) -> dict[str, Any]:
             Path(args.client_config), root, governance
         )
 
+    return adapter
+
+
+RECONCILE_RECOVERY_NOTE = (
+    "The public status was recorded but no receipt exists: the authorized recovery is to rerun "
+    "reconcile-scheduled, subject to its normal checks. It can only complete from the "
+    "transition's unpurged, current-format recorded public time; it refuses purged or "
+    "earlier-format evidence."
+)
+
+
+def _reconcile_partial_state(args: argparse.Namespace):
+    """After a live refusal: read-only, was reconciliation evidence left without a receipt?"""
+
+    def inspect(db: Path) -> dict[str, Any]:
+        connection = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True)
+        try:
+            status = connection.execute(
+                "SELECT 1 FROM publication_status_snapshots WHERE id = ? AND publication_id = ?",
+                (args.status_id, args.publication_id),
+            ).fetchone()
+            receipt = connection.execute(
+                "SELECT 1 FROM publication_receipts WHERE publication_id = ?",
+                (args.publication_id,),
+            ).fetchone()
+        finally:
+            connection.close()
+        if status is not None and receipt is None:
+            return {"partial_reconciliation": True, "recovery": RECONCILE_RECOVERY_NOTE}
+        return {"partial_reconciliation": False}
+
+    return inspect
+
+
+def cmd_reconcile(args: argparse.Namespace) -> dict[str, Any]:
     def operation(service: Any) -> dict[str, Any]:
         receipt = service.reconcile_scheduled_publication(
             args.receipt_id, args.status_id, args.publication_id
         )
         return {"receipt_id": receipt.id, "public_at": receipt.public_at}
 
-    return _live(args, f"reconcile-{args.publication_id}", operation, live_adapter=adapter)
+    return _live(
+        args,
+        f"reconcile-{args.publication_id}",
+        operation,
+        live_adapter=_observation_adapter(args),
+        on_refusal=_reconcile_partial_state(args),
+    )
+
+
+def cmd_observe(args: argparse.Namespace) -> dict[str, Any]:
+    """One manual status observation through the existing ``observe_status`` (no scheduling)."""
+
+    def operation(service: Any) -> dict[str, Any]:
+        status = service.observe_status(args.status_id, args.publication_id)
+        refresh = status.verification == "passed"
+        return {
+            "status_id": status.id,
+            "publication_id": status.publication_id,
+            "privacy": status.privacy,
+            "processing": status.processing,
+            "verification": status.verification,
+            "api_locked": status.api_locked,
+            "observed_at": status.observed_at,
+            # Only a passed verification satisfies the existing identity-refresh rule.
+            "qualifies_as_identity_refresh": refresh,
+            "note": (
+                "Observation recorded; verification passed, so it counts as an identity refresh."
+                if refresh
+                else "Observation recorded as returned by YouTube; verification is "
+                f"{status.verification!r}, so it does NOT count as an identity refresh."
+            ),
+        }
+
+    return _live(
+        args,
+        f"observe-{args.publication_id}",
+        operation,
+        live_adapter=_observation_adapter(args),
+    )
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -367,6 +487,12 @@ def _parser() -> argparse.ArgumentParser:
     p.add_argument("--status-id", required=True)
     p.add_argument("--client-config", required=True)
     p.add_argument("--consent-state", required=True)
+    p = sub.add_parser("observe", help="one manual read-only status observation")
+    live(p)
+    p.add_argument("publication_id")
+    p.add_argument("--status-id", required=True)
+    p.add_argument("--client-config", required=True)
+    p.add_argument("--consent-state", required=True)
     return parser
 
 
@@ -375,6 +501,7 @@ COMMANDS = {
     "prepare": cmd_prepare,
     "approve": cmd_approve,
     "reconcile-scheduled": cmd_reconcile,
+    "observe": cmd_observe,
 }
 
 
@@ -389,8 +516,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"refused": str(error)}, indent=1), file=sys.stderr)
         return 2
     print(json.dumps(report, indent=1, default=str, ensure_ascii=False))
-    if report.get("mode") == "refused-by-rehearsal":
+    if report.get("mode") in {"refused-by-rehearsal", "refused-live"}:
         return 2
+    result = (report.get("live") or {}).get("result") or {}
+    if result.get("qualifies_as_identity_refresh") is False:
+        return 3  # Observation recorded, but not a passed identity refresh.
     return 0
 
 
