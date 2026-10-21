@@ -150,10 +150,11 @@ Preserved evidence:
 - production DB backup (post-Migration-28, pre-Claude-implementation):
   `D:\ConveyorBackups\post-migration-28-pre-claude-implementation-2026-10-03\`.
 
-Conveyor already models research provenance through `ResearchPack`, `Claim`, `Source`, `ClaimEvidence`, and
-`ScriptClaimSet`. The bounded remaining integration is to project the sources supporting a production's approved
-script claims into publishing-package source/credit metadata; extend those existing structures rather than inventing
-a second sourcing subsystem.
+Conveyor models research provenance through `ResearchPack`, `Claim`, `Source`, `ClaimEvidence`, and
+`ScriptClaimSet`. **Implemented for on-demand publishing (Phase 3, 16 October 2026):** `publishing_credits.py`
+projects the sources supporting a production's closed script claim set into the package description's "Sources:"
+block. Packaging fails closed on missing attribution, and the credits are frozen with the approval (first used for
+P11). Legacy pilot packages are not projected: their source lines were written by hand.
 
 **Production #6 was completed as a private diagnostic production cycle. It mechanically exercised the current
 Conveyor production path and produced useful evidence, but failed founder creative acceptance and was not approved
@@ -244,7 +245,8 @@ is `founder_accepted` and that artifact is the accepted artifact. Its **current 
 `publishing-package-similarstoic-youtube-pilot-1-slot-3-v2`** (pilot key `similarstoic-youtube-controlled-pilot-v1`,
 slot 3, version 2; package digest `0ab9aaec3da51739c8892c2696aa76921ca0562d5d7279c1c1b046cae5b01f2c`), created
 7 October 2026 through the normal `prepare_package` path after a verified backup and read-only confirmation of that
-accepted artifact and SHA-256 (packaging does not itself enforce the founder-accepted render). v2 differs from its
+accepted artifact and SHA-256 (legacy pilot packaging does not itself enforce the founder-accepted render; on-demand
+packaging does, Phase 3). v2 differs from its
 immutable predecessor `publishing-package-similarstoic-youtube-pilot-1-slot-3-v1` (digest
 `acfd4be7f0a84d77214d5f1c9d23bb8c6da8f5a4d4b52daedb3d3bfe5ee654f9`) only in the description's Sources line. Manual
 transfer and manual release, publication window 2026-10-12T00:00 to 2026-10-19T00:00 Europe/London (2026-W42,
@@ -253,8 +255,13 @@ clear). **v2 is founder-approved** for that manual W42 release: gate decision
 routes manual/manual, timing = the package window). v1 has no decision. P10 is **not uploaded and not published**;
 there are no publication operations. The founder does not intend to use this window (2026-10-12T00:00 to
 2026-10-19T00:00 Europe/London, end exclusive) and will let it expire (15 October 2026); **it expired unused on
-19 October 2026**. The video, package and approval remain. Any future P10 publication needs fresh verification of its packaging, approval and
-publishing-series requirements; do not assume re-approval is trivial. The publish-day runbook and SHA-manifested copy-paste metadata are kept outside
+19 October 2026**. The video, package and approval remain; P10 is unpublished. Its content states the Ofgem cap
+figure of £1,723 a year for a typical Direct Debit dual-fuel household, which applies to the cap period 1 October to
+31 December 2026, so its relevance ends with that period. **Founder publication decision checkpoint: by early
+December 2026** (publish, or let it lapse). Any future P10 publication needs fresh verification of its packaging,
+approval and publishing-series requirements. The legacy pilot series is full and windowed, so publication would
+need a new on-demand package, and that needs a closed claim set with complete source attribution. Do not assume
+re-approval is trivial. The publish-day runbook and SHA-manifested copy-paste metadata are kept outside
 the repository in `D:\ConveyorOS\channels\SimilarStoic\production-10\publish\`; the manual route needs only the
 `youtube.readonly` authorization.
 
@@ -297,18 +304,19 @@ completion, P11 or later work must check this list and must not silently treat a
 Completed: the runtime now records the P8 and P9 manual public releases (founder-attested receipts above), so
 that lesson is closed.
 
-Before the next publishing package:
+Publishing series (updated 19 October 2026):
 
-- The controlled pilot series `similarstoic-youtube-controlled-pilot-v1` is full (slots 1-3 are used), so an ongoing
-  publishing series is needed before the next package.
-- The manual publishing steps (reserve upload, complete manual private upload, observe, reserve release, reconcile
-  receipt) have no CLI yet; the P10 runbook drives them from a Python session.
+- The controlled pilot series `similarstoic-youtube-controlled-pilot-v1` is full (slots 1-3 are used). The ongoing
+  series is `similarstoic-youtube-on-demand-v1` (Phase 3), driven by `publishing_cli` and the loopback upload screen.
+- The legacy manual publishing steps (reserve upload, complete manual private upload, observe, reserve release,
+  reconcile receipt) still have no CLI; the P10 runbook drives them from a Python session.
 
 ## Production 11 (founder-accepted)
 
 Topic "Why Investing Feels Pointless at First". **`production-11-flow` is founder-accepted** (14 October 2026) and is
 the first production made with the narration-led flow method, now codified as the recipe `similarstoic-flow-v1` (see
-"Running a SimilarStoic production"). It is not packaged, uploaded or published; publication is a separate decision.
+"Running a SimilarStoic production"). It was packaged, uploaded and published through Conveyor's on-demand API path
+(public 16 October 2026 as `62mEQWPWVpE`, Conveyor receipt recorded 19 October; see Phase 3).
 
 - Run `production-11-flow` (request digest `138a193984f4c702563337ce22f8bd43d5ea6dd19f06a2615a473fa09cd68ec8`),
   VisualPlan `production-11-flow-visual-plan`: 15 states over 9 frozen worlds (new scenes, character-free states and
@@ -455,16 +463,20 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 ### Current founder boundaries
 
 - **P12 and any new story are not authorized** until the founder explicitly returns to P12. When authorized, P12
-  runs from the recipe `similarstoic-flow-v1` and the runbook above, unchanged.
-- **Publishing, packaging and YouTube changes are deferred.**
+  runs from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
+  controls.
+- **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
+  reconciliation or other YouTube action still needs its own founder authorization. YouTube changes (new scopes,
+  Analytics) are Phase 4 and are gated (below).
 - **Human acquisition review is retained**: tools propose (previews, templates, placements), the founder decides.
 - **Every provider step needs its own explicit founder authorization** (image spend per acquisition step, narration),
   and live runtime writes need authorization and a verified backup first.
 - **Tests, rehearsals and dry runs run with all provider keys removed** (enforced for tests by `tests/conftest.py`,
   for rehearsals by the CLI). Only the live step that needs a provider sees that provider's key.
 - **A cross-production pose library is deferred to after P12.**
-- **Before P12, follow the pre-P12 sequence** below (founder, 15 October 2026). No phase is authorized
-  automatically; each build, migration, runtime change and publication still needs its own authorization.
+- **Pre-P12 sequence** below (founder, 15 October 2026), as amended on 20 October 2026: P12 and Analytics are
+  independent (see "Founder sequencing decision"). No phase is authorized automatically; each build, migration,
+  runtime change and publication still needs its own authorization.
 - **Publication windows and the channel-week rule are not wanted** (founder, 15 October 2026). Since migration 31
   (applied 16 October 2026) they apply only to the legacy pilot series; the successor series
   `similarstoic-youtube-on-demand-v1` has neither. P11 was uploaded through the API with a YouTube-accepted schedule
@@ -492,6 +504,21 @@ duplication and report the verified live main SHA after pushing.
 **Permanent working rule:** complete the phases below in order. After each phase, record its verified outcome,
 decisions, remaining obligations and evidence here before moving to the next phase. Every new session must consult
 this section. No subsequent phase is authorized automatically.
+
+**Founder sequencing decision (20 October 2026), amending the order above for Phases 4 and 5:**
+
+- P12 and Analytics are independent. P12 does not require Phase 4 completion or Google's decision. P12 stays
+  separately authorized, with the unchanged `similarstoic-flow-v1` and the existing founder and spend controls. This
+  decision neither authorizes nor prioritizes P12.
+- Analytics remains the next development priority. Its next step is a read-only implementation plan for the approved
+  Option B design; implementation needs separate authorization.
+- Analytics activation stays gated by Google's written approval (or confirmation that none is required), the
+  privacy-policy update, renewed acceptance and separate Analytics consent. No new scopes or live Analytics access.
+- P12 checkpoint: reconsider authorizing P12 when the switched-off Analytics implementation is verified, when the plan
+  is not approved, or when implementation stalls awaiting an external decision. The founder may revisit P12 earlier.
+  Do not automatically substitute another engineering project.
+- Reason: the 19 October audit introduced an external approval wait that should constrain Analytics activation, not
+  P12.
 
 **Phase 1 — Skills and external capabilities: assessment COMPLETE.**
 
@@ -732,6 +759,24 @@ P11 publication reconciliation — Phase 3 completion (19 October 2026, founder-
   real publication ID) passed every synthetic test, and both failed closed before any external effect. Realistic
   browser submissions and full-length operational identifiers must be exercised through the actual workflow (real
   HTTP form path, real CLI backup path) before a live step relies on them.
+- **P11 provider-data purge horizon (existing 30-day refresh-or-delete rule, unchanged).** Without a fresh verified
+  observation, the daily maintenance (or the web app's start-up) deletes P11's YouTube-origin fields:
+  - from about **16 November 2026**: the provider evidence on the upload and transition events (recorded 16 October);
+  - from about **19 November 2026**: the status snapshot's observed values (observed 19 October), then the
+    publication identity (`remote_id`, binding digest) and the receipt's `public_at`, `first_public_observed_at` and
+    receipt digest.
+  - Retained: Conveyor-authored records, meaning the package and frozen manifest (title, description, credits),
+    approval, operation intents and journals, and the publication, status and receipt rows with their links and
+    `provider_purged_at`.
+  - After the purge, `collect_performance` and any analytics for P11 are refused ("purged provider binding"). P8 and
+    P9 are unaffected: their founder-attested identities are not API data.
+  - Refresh: a new verified status observation (the existing read-only `observe_status`, `videos.list`) within 30
+    days keeps the identity for another 30 days. It is a read-only YouTube call, has no CLI command, and is an
+    **unresolved founder decision**. Existing deletion behaviour is preserved until the founder decides otherwise.
+  - Noted for review: the transition's `succeeded` event evidence (Conveyor-authored) also records YouTube's
+    `public_at`, which the purge does not clear.
+
+Phase 3 plan as approved on 16 October 2026 (historical; completed, outcome recorded above):
 
 - Intended outcome: controlled YouTube publication of accepted videos on founder command, without publication
   windows or the channel-week restriction. **Phase 3 must prove that Conveyor itself publishes through the API.**
@@ -740,8 +785,8 @@ P11 publication reconciliation — Phase 3 completion (19 October 2026, founder-
 - Source credits: on-demand packages populate the publication description's source credits from the production's
   existing approved script claims and source evidence (`ScriptClaimSet`, `Claim`, `Source`, `ClaimEvidence`); the
   attribution is shown on the founder confirmation and frozen with the approval, and packaging fails closed where a
-  sourced claim's required attribution is missing. No parallel credit system. This closes the "source-credit
-  projection" gap for on-demand packages once implemented.
+  sourced claim's required attribution is missing. No parallel credit system. Implemented and first used for P11:
+  this closed the "source-credit projection" gap for on-demand packages.
 - Per-publication founder authorization: a single-use, expiring founder confirmation bound to the package digest,
   the artifact SHA-256, the exact metadata (title, description including source credits), the privacy and the
   scheduled `publishAt`. That confirmation, given before dispatch, **is** the publication authorization; any preview
@@ -799,8 +844,8 @@ Build result (branch `phase3-on-demand-publishing` at `2921ed9`, PR #1, 16 Octob
 - Compliance fit: scheduled publishing is the existing `videos.insert` / `youtube.upload` use (`status.publishAt` is
   a field of the declared endpoint; use case Video Uploading & Account Management). Policy 2026-10-06 covers "the
   selected video file and publishing metadata" when expressly authorised, and "authorised publishing features". It
-  is not a new API use, so no policy update or YouTube notice is needed for it. Caveat: whether the unaudited
-  project's private-only lock still applies stays unconfirmed until the P11 proof.
+  is not a new API use, so no policy update or YouTube notice is needed for it. Caveat (resolved 16 October 2026):
+  the unaudited project's private-only lock did not apply; P11 became public at its `publishAt`.
 
 Migration 31 apply procedure (completed 16 October 2026, record above; kept as the template for future
 migrations; PowerShell in `D:\ConveyorOS\source\Conveyor`
@@ -840,20 +885,24 @@ after `. .\scripts\set_conveyor_environment.ps1`):
 - No analytics activation or additional scopes are authorized now.
 - Completion criteria: authorized Analytics collection, storage, refresh and revocation verified working, **and** at
   least one compliant production-linked learning review that interprets YouTube's reported values without creating
-  prohibited derived metrics. Prefer P11; P8 or P9 are allowed if P11 data is not available.
+  prohibited derived metrics. Prefer P11, the first Conveyor-published video with a provider-verified receipt; P8
+  or P9 (the design's original first candidates, with founder-attested receipts whose identities are never purged)
+  are allowed if P11 data is not available. P11 stays usable only while its identity is refreshed within the 30-day
+  rule (purge horizon about 16-19 November 2026, Phase 3).
 - Applying the Studio-export alignment procedure to API data needs its own compliance check; the Studio-export
   procedure stays independently available.
 - Revocation and deletion are verified on isolated fixtures and rehearsals first. Live Google credentials and
   production data are never revoked or deleted without separate founder authorization.
 
-**Phase 5 — P12: AFTER the preceding phases, subject to explicit founder authorization.**
+**Phase 5 — P12: NOT AUTHORIZED; independent of Phase 4 (founder, 20 October 2026); needs explicit founder
+authorization.**
 
 - P12 tests whether the P11-approved production method is repeatable on new content, using the unchanged recipe
   `similarstoic-flow-v1` and the existing production runbook.
 - This sequencing decision authorizes no change to the production recipe, the production CLI, providers or spend
   gates.
 
-### Open items (as of 19 October 2026)
+### Open items (as of 21 October 2026)
 
 - Phase 3 (on-demand publishing): COMPLETE (19 October 2026). P11 is public as `62mEQWPWVpE` with receipt
   `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
@@ -863,14 +912,19 @@ after `. .\scripts\set_conveyor_environment.ps1`):
   email (15:24) saved. No case reference stated. Google's review and response are pending.
   Checkpoint on or after 23 October 2026: acknowledgement has arrived; check for Google's review decision and, only
   if needed, decide a proportionate follow-up. Do not resubmit automatically.
-- Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. Activation now also
-  requires YouTube's approval of the 19 October submission (or written confirmation that none is needed). The
-  published privacy policy stays at version `2026-10-06` until an authorized Phase 4 activation step.
-- Phase 5 (P12): not authorized.
-- Next smallest useful action: check for Google's response to the 19 October audit and, on or after 23 October, run
-  the OAuth durability check when the founder authorizes it.
+- Phase 4 (analytics): approved Option B design, NOT implemented and NOT authorized for activation. It is the next
+  development priority. A read-only implementation plan was prepared on 21 October 2026; implementation needs
+  separate authorization. Activation also requires YouTube's approval of the 19 October submission (or written
+  confirmation that none is needed). The published privacy policy stays at version `2026-10-06` until an authorized
+  Phase 4 activation step.
+- Phase 5 (P12): not authorized; independent of Phase 4. Checkpoint per the 20 October sequencing decision.
+- P11 provider-data purge horizon about 16-19 November 2026: refresh decision unresolved (Phase 3).
+- P10 publication decision by early December 2026 (cap period ends 31 December 2026).
+- Next smallest useful action: the founder's decision on the Analytics implementation plan; check for Google's
+  response to the 19 October audit; on or after 23 October, the OAuth durability check, when the founder authorizes
+  it.
 - P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
-  unused on 19 October 2026, as the founder decided. P11 (`production-11-flow`) is public on YouTube
+  unused on 19 October 2026, as the founder decided (decision checkpoint above). P11 (`production-11-flow`) is public on YouTube
   (`62mEQWPWVpE`, public 2026-10-16T17:45:28Z) with a Conveyor publication receipt.
 
 ## Approved visual evidence
@@ -1311,7 +1365,8 @@ its only API-route package is the never-release private audit-evidence package b
   - Data: YouTube Analytics `reports.query` for the channel's own videos, non-monetary metrics and audience retention,
     under a separate analytics authorization (`yt-analytics.readonly` + `youtube.readonly`) in the same Cloud
     project; collected at the existing 24h/72h/7d/28d checkpoints into the existing `performance_snapshots` (YouTube
-    computes the totals for each date range). No migration. First candidates: P8 and P9 (founder-attested receipts).
+    computes the totals for each date range). No migration. First candidates (original design): P8 and P9
+    (founder-attested receipts); Phase 4 now prefers P11 while its identity is retained (Phase 4 above).
   - Retention (Developer Policies III.E.4(b)): analytics data is kept while needed for editorial learning, provided
     the analytics authorization is re-verified within every 30 days. Proactive re-checks start about day 23;
     transient failures are retried until day 30; if not confirmed by day 30, the data is no longer used and is
