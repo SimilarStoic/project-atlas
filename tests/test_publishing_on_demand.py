@@ -1646,12 +1646,12 @@ def _fake_observer(monkeypatch, **changes) -> FakePublishingAdapter:
     from project_atlas import youtube_adapter
 
     observer = FakePublishingAdapter()
-    observer.remote = replace(
-        observer.remote,
-        privacy="public",
-        observed_at=datetime.now(UTC).replace(microsecond=0).isoformat(),
-        **changes,
-    )
+    fields = {
+        "privacy": "public",
+        "observed_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
+    }
+    fields.update(changes)
+    observer.remote = replace(observer.remote, **fields)
     monkeypatch.setattr(
         youtube_adapter.YouTubeReadOnlyObservationAdapter,
         "from_client_config",
@@ -1726,17 +1726,219 @@ def test_cli_observe_live_records_one_status_after_a_verified_backup(
         connection.close()
 
 
-def test_cli_observe_records_a_metadata_mismatch_as_failed_verification(
-    cli_world, capsys, monkeypatch
+@pytest.mark.parametrize(("matches", "verification"), [(False, "failed"), (None, "unknown")])
+def test_cli_observe_records_unverified_observations_but_not_as_a_refresh(
+    cli_world, capsys, monkeypatch, matches, verification
 ) -> None:
     db, media, _metadata, root = cli_world
     publication_id = _cli_publication(db, media)
-    _fake_observer(monkeypatch, metadata_matches=False)
+    _fake_observer(monkeypatch, metadata_matches=matches)
     code, report = _cli(
         capsys,
         *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
     )
-    assert code == 0 and report["live"]["result"]["verification"] == "failed", report
+    result = report["live"]["result"]
+    assert report["mode"] == "live" and result["verification"] == verification, report
+    assert result["qualifies_as_identity_refresh"] is False
+    assert "does NOT count as an identity refresh" in result["note"]
+    assert code == 3  # Recorded, but not a passed identity refresh.
+
+
+def test_cli_observe_reports_a_passed_observation_as_an_identity_refresh(
+    cli_world, capsys, monkeypatch
+) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    _fake_observer(monkeypatch)
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    result = report["live"]["result"]
+    assert code == 0 and result["verification"] == "passed", report
+    assert result["qualifies_as_identity_refresh"] is True
+
+
+def test_cli_observe_reports_an_inaccessible_video_as_a_youtube_refusal(
+    cli_world, capsys, monkeypatch
+) -> None:
+    from project_atlas.youtube_adapter import YouTubeObservationBlocked
+
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    observer = _fake_observer(monkeypatch)
+
+    def inaccessible(remote_id, package=None):
+        raise YouTubeObservationBlocked("remote_video_inaccessible")
+
+    observer.observe_remote = inaccessible
+    rows_before = _fingerprint(db)
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 2 and report["mode"] == "refused-live", report
+    live = report["live"]
+    assert (live["refusal"], live["category"]) == ("youtube", "remote_video_inaccessible")
+    assert "may have deleted" in live["warning"]  # A warning, not a claim that it did.
+    assert report["db_sha256_before"] and report["db_sha256_after"]
+    assert _fingerprint(db) == rows_before  # Here nothing was recorded or purged.
+
+
+def test_cli_observe_reports_a_real_adapter_authorization_failure(
+    cli_world, capsys, monkeypatch
+) -> None:
+    """The real read-only adapter turns a definitive preflight failure into a refusal."""
+
+    from project_atlas import youtube_adapter
+    from project_atlas.youtube_preflight import PreflightBlocked
+
+    class RevokedProvider:
+        def acquire(self):
+            raise PreflightBlocked("authorization_revoked")
+
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    monkeypatch.setattr(
+        youtube_adapter.YouTubeReadOnlyObservationAdapter,
+        "from_client_config",
+        lambda *_a, **_k: youtube_adapter.YouTubeReadOnlyObservationAdapter(
+            RevokedProvider(), client=object()
+        ),
+    )
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 2 and report["mode"] == "refused-live", report
+    assert (report["live"]["refusal"], report["live"]["category"]) == (
+        "youtube",
+        "authorization_revoked",
+    )
+
+
+def test_cli_observe_reports_a_policy_acceptance_refusal_before_any_call(
+    cli_world, capsys, monkeypatch
+) -> None:
+    from project_atlas import youtube_adapter
+    from project_atlas.youtube_consent import PolicyAcceptanceRequired
+
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+
+    def refuse(*_a, **_k):
+        raise PolicyAcceptanceRequired()
+
+    monkeypatch.setattr(
+        youtube_adapter.YouTubeReadOnlyObservationAdapter, "from_client_config", refuse
+    )
+    code, report = _cli(
+        capsys,
+        *_observe_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 2 and report["mode"] == "refused-live", report
+    assert report["live"]["category"] == "privacy_policy_acceptance_required"
+
+
+def test_cli_live_unexpected_failure_is_not_reported_as_a_refusal(
+    cli_world, capsys, monkeypatch
+) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    observer = _fake_observer(monkeypatch)
+
+    def broken(remote_id, package=None):
+        raise RuntimeError("implementation defect")
+
+    observer.observe_remote = broken
+    with pytest.raises(RuntimeError, match="implementation defect"):
+        publishing_cli.main(
+            [
+                str(arg)
+                for arg in _observe_args(
+                    publication_id, db, media, root, "--backup-root", root / "backups"
+                )
+            ]
+        )
+
+
+def _reconcile_args(publication_id, db, media, root, *mode):
+    return (
+        "reconcile-scheduled",
+        publication_id,
+        "--receipt-id",
+        "r-1",
+        "--status-id",
+        "s-1",
+        "--client-config",
+        root / "client-config.json",
+        "--consent-state",
+        root / "consent-state.json",
+        "--db",
+        db,
+        "--media",
+        media,
+        "--expect-db-sha256",
+        database_sha256(db),
+        *mode,
+    )
+
+
+def test_cli_reconcile_partial_evidence_reports_the_recovery_path(
+    cli_world, capsys, monkeypatch
+) -> None:
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    moment = datetime.now(UTC).replace(microsecond=0)
+    _fake_observer(
+        monkeypatch,
+        public_at=(moment + timedelta(seconds=30)).isoformat(),
+        observed_at=(moment + timedelta(seconds=60)).isoformat(),
+    )
+    create = AtlasRepository.create_publication_receipt
+
+    def refuse(*_args, **_kwargs):
+        raise ValueError("receipt refused after the success event")
+
+    # The rehearsal stops at the blocked observation, so only the live step reaches this.
+    monkeypatch.setattr(AtlasRepository, "create_publication_receipt", refuse)
+    code, report = _cli(
+        capsys,
+        *_reconcile_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 2 and report["mode"] == "refused-live", report
+    live = report["live"]
+    assert live["refusal"] == "service" and live["partial_reconciliation"] is True
+    assert "rerun reconcile-scheduled" in live["recovery"]
+    assert "refuses purged or earlier-format evidence" in live["recovery"]
+    monkeypatch.setattr(AtlasRepository, "create_publication_receipt", create)
+    code, report = _cli(  # Separate backup root: both runs may fall in the same second.
+        capsys,
+        *_reconcile_args(publication_id, db, media, root, "--backup-root", root / "backups-2"),
+    )
+    assert code == 0 and report["live"]["result"]["receipt_id"] == "r-1", report
+
+
+def test_cli_reconcile_refusal_without_partial_evidence_promises_no_recovery(
+    cli_world, capsys, monkeypatch
+) -> None:
+    from project_atlas.youtube_adapter import YouTubeObservationBlocked
+
+    db, media, _metadata, root = cli_world
+    publication_id = _cli_publication(db, media)
+    observer = _fake_observer(monkeypatch)
+
+    def inaccessible(remote_id, package=None):
+        raise YouTubeObservationBlocked("remote_video_inaccessible")
+
+    observer.observe_remote = inaccessible
+    code, report = _cli(
+        capsys,
+        *_reconcile_args(publication_id, db, media, root, "--backup-root", root / "backups"),
+    )
+    assert code == 2 and report["live"]["refusal"] == "youtube", report
+    assert report["live"]["partial_reconciliation"] is False
+    assert "recovery" not in report["live"]
 
 
 def test_cli_observe_refuses_a_different_remote_identity_in_the_live_step(
