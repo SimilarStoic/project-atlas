@@ -606,6 +606,13 @@ PENDING.**
 - No case or reference number is stated in the acknowledgement. **Google's review, approval or determination of the
   Analytics use is pending.** The submission is the formal written notification. Whether it satisfies the
   notification obligation is established only by Google's response.
+- **Google review update (founder's screenshot of the official YouTube API Services email thread):**
+  - 19 October 2026: Google acknowledged receipt of the submission.
+  - 20 October 2026: the YouTube API Services Team confirmed that its compliance review was already in progress and
+    that it had received the Project Key and Attachment. It will contact the submitter through the existing email
+    thread if further information is needed.
+  - This confirms an **active review only**. It is not approval, not authorization to activate Analytics, and not
+    confirmation that approval is unnecessary. **Google's written decision remains pending.**
 - Material difference from the approved Phase 4 design: the narrative commits that no Analytics request is made until
   YouTube **approves the change, or confirms in writing that approval is not required**. That is in addition to
   implementing and testing, the privacy-policy update, renewed acceptance and separate Analytics consent. The Phase
@@ -931,13 +938,16 @@ after `. .\scripts\set_conveyor_environment.ps1`):
     Within maintenance, every result it invalidated (including one already reported `reconfirmed` earlier in the
     pass) is re-verified in the same run, in bounded rounds, and the report shows each authorization's last actual
     check. Transient failures trigger no re-checks.
-  - **Open design decision (not implemented):** a definitive failure *outside* maintenance (in any governed API use)
-    purges all stored YouTube API data and makes the other authorizations due. They are then re-verified before
-    their next use and at the next maintenance run, **not immediately**. Immediate re-verification there would need
-    governance to hold a way to build each kind's credential provider. The minimal amendment for a founder
-    decision: an optional `inner_for` given to `YouTubeGovernance` by the governed factories, used only by
-    `handle_definitive` while Analytics is enabled. Until decided, the approved immediate-check requirement is met
-    only within maintenance.
+  - **Founder-approved amendment (21 October 2026)**, replacing the earlier immediate re-check requirement outside
+    maintenance:
+    - a definitive authorization failure immediately invokes the existing purge of stored YouTube API data, and
+      the other authorizations' reconfirmation status is invalidated;
+    - within maintenance, the affected authorizations are re-verified in the same pass (the bounded logic above);
+    - outside maintenance, they are re-verified before their next use and at the next permitted maintenance run;
+    - access stays fail-closed until verified.
+
+    No extra credential plumbing is needed (the `inner_for` alternative is not adopted). This does not resolve P11's
+    historical immutable `public_at` retention defect.
   - **Collection:** `YouTubeAnalyticsAdapter` (`reports.query`, `ids=channel==MINE`, `filters=video==<id>`, using
     the existing google-auth HTTP session; no new dependency).
     - Metrics: views, estimatedMinutesWatched, averageViewDuration, averageViewPercentage, likes, comments, shares,
@@ -984,10 +994,10 @@ authorization.**
   `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
 - OAuth durability check on or after 23 October 2026: pending, needs founder authorization. It is a separate
   obligation and no longer gates the P11 proof.
-- Analytics audit (Phase 2): formal audit submitted 19 October 2026; website confirmation and Google's acknowledgement
-  email (15:24) saved. No case reference stated. Google's review and response are pending.
-  Checkpoint on or after 23 October 2026: acknowledgement has arrived; check for Google's review decision and, only
-  if needed, decide a proportionate follow-up. Do not resubmit automatically.
+- Analytics audit (Phase 2): formal audit submitted 19 October 2026; Google acknowledged receipt (19 October) and
+  confirmed an active compliance review (20 October). No case reference stated. **Google's written decision is
+  pending; nothing is approved.** Checkpoint on or after 23 October 2026: check for Google's decision and, only if
+  needed, decide a proportionate follow-up. Do not resubmit or contact Google automatically.
 - Phase 4 (analytics): approved Option B design (amended with migration 32), implemented offline and disabled in a
   draft PR (branch `analytics-option-b`); not merged, not applied to the runtime, NOT authorized for activation.
   Merging needs a separately authorized migration-32 rollout procedure. Activation also requires YouTube's approval of the 19 October submission (or written
