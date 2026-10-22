@@ -950,11 +950,24 @@ written decision pending.**
 - Revocation and deletion are verified on isolated fixtures and rehearsals first. Live Google credentials and
   production data are never revoked or deleted without separate founder authorization.
 
-**Phase 5 — P12: NOT AUTHORIZED; independent of Phase 4 (founder, 20 October 2026); needs explicit founder
-authorization.**
+**Phase 5 — P12: STARTED as a hands-off production trial (founder authorization, 21 October 2026); independent of
+Phase 4.**
 
 - P12 tests whether the P11-approved production method is repeatable on new content, using the unchanged recipe
   `similarstoic-flow-v1` and the existing production runbook.
+- **Hands-off trial:** Claude Code independently generates, researches and selects the idea, then develops the
+  editorial package and story file; the founder approves, rejects or redirects one recommendation at each genuine
+  gate. The trial also audits Claude Code orchestration against native Conveyor automation.
+  - Working materials and the single running trial log live outside the repository under
+    `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
+  - **Authorized now:** only the zero-spend editorial start: free, read-only public-web research, idea evaluation
+    and the Idea Gate recommendation.
+  - **Unchanged gates:** the Idea Gate, Editorial Gate, room-plate approval, acquisition reviews, QA and founder
+    acceptance. Every live database write, provider call, `spend_authorization` and narration authorization still
+    needs its own founder authorization.
+  - No live database writes between 02:45 and 03:30 local time or while maintenance runs. YouTube upload and
+    publication are not authorized.
+  - The P11 room plates are locked to P11; any P12 room needs its own plate approval.
 - This sequencing decision authorizes no change to the production recipe, the production CLI, providers or spend
   gates.
 
@@ -973,18 +986,20 @@ authorization.**
   independently reviewed and separately authorized. Activation also requires YouTube's approval of the 19 October
   submission (or written confirmation that none is needed). The published privacy policy stays at version
   `2026-10-06` until an authorized Phase 4 activation step.
-- Phase 5 (P12): not authorized; independent of Google's decision; needs its own founder authorization (20 October
-  sequencing decision).
+- Phase 5 (P12): hands-off production trial started 21 October 2026 (zero-spend editorial start only); next gate
+  is the Idea Gate. Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next planned work (each step separately authorized): safely synchronize the Windows checkout to schema-31 code,
-  then return to P12 with the approved `similarstoic-flow-v1` method. Also: check for Google's decision; on or
-  after 23 October, the OAuth durability check, when the founder authorizes it.
-- The Windows checkout `D:\ConveyorOS\source\Conveyor` is still at `1ebcbdc` (not updated by the PR #4 merge or
-  the documentation commits after it). Synchronizing it is a separate step, and only to `main` commits whose highest
-  migration is 31 until the migration-32 rollout is authorized.
+- Next: the P12 Idea Gate. Also: check for Google's decision; on or after 23 October, the OAuth durability check,
+  when the founder authorizes it.
+- The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 21 October 2026, by fast-forward
+  (`git merge --ff-only`), from `1ebcbdc` to `dc28b26` (schema-31 code; 5 files: publishing, publishing CLI, two
+  publishing test files and this document). It stays clean, and the maintenance task's configuration is unchanged.
+  Later documentation-only commits need no re-sync. Further syncs only to `main` commits whose highest migration is
+  31 until the migration-32 rollout is authorized.
+- Analytics PR #5 (with migration 32) remains parked and unmerged.
 - P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
   unused on 19 October 2026, as the founder decided (decision checkpoint above). P11 (`production-11-flow`) is public on YouTube
   (`62mEQWPWVpE`, public 2026-10-16T17:45:28Z) with a Conveyor publication receipt.
