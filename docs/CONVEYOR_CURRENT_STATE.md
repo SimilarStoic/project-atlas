@@ -462,9 +462,10 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 
 ### Current founder boundaries
 
-- **P12 and any new story are not authorized** until the founder explicitly returns to P12. When authorized, P12
-  runs from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
-  controls.
+- **P12 is underway** as a hands-off production trial (started 21 October 2026; position in Phase 5 below). It runs
+  from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
+  controls. The Idea Gate is approved; the Editorial Gate, room plates, every paid step and publication are not.
+  Any other new story still needs its own founder authorization.
 - **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
   reconciliation or other YouTube action still needs its own founder authorization. YouTube changes (new scopes,
   Analytics) are Phase 4 and are gated (below).
@@ -490,6 +491,32 @@ findings must be recorded in the appropriate repository authority document befor
 short documentation commit in the same working session. Exploratory discussion is not approval. Avoid unnecessary
 duplication and report the verified live main SHA after pushing.
 
+Clarifications (founder, 22 October 2026):
+
+- **Provenance.** A consequential founder decision relayed explicitly from another conversation is recorded with
+  where it came from, its date and exactly what it authorizes (and what it does not).
+- **Stale references.** When an item is completed, cancelled or superseded, search the relevant authority documents
+  for its identifiers (production, finding, PR, branch, commit) and correct materially stale references.
+- **Evidence.** Work is complete only with verified evidence. A local fix, a draft PR or a successful rehearsal is
+  not a deployed production capability.
+- **Drift.** Before consequential work, compare this documentation with verified live repository state. Correct
+  material drift when authorized, without a commit for every task.
+
+### Claude Code permissions (founder, 22 October 2026)
+
+Claude Code operates in Auto mode by default. Routine authorized operations and approved non-migrating read-only
+inspections proceed without unnecessary founder interaction. Protected operations use narrowly scoped `ask` rules to
+request approval while remaining in Auto mode. Founder authorization in chat remains distinct from technical
+execution permission. Denied operations must never be circumvented or automatically retried. All existing schema,
+hash, maintenance, backup, provenance, provider-isolation and spending safeguards remain mandatory.
+
+- The rules are local configuration outside Git (`.claude/settings.local.json` in the Windows checkout and the
+  user-level `autoMode` guidance). They reduce prompts and route protected operations to an approval prompt; they
+  are not a complete security boundary and authorize nothing by themselves.
+- If an expected approval prompt is instead refused by the Auto-mode classifier, stop and report the rule mismatch.
+  Do not switch modes or try another execution route. (This replaces the earlier P12 practice of switching the
+  session to a manual permission mode for a live write.)
+
 ### Verification working rules (founder, 16 October 2026)
 
 - Any test run used to justify a commit must preserve and check pytest's real exit code (`set -o pipefail` or an
@@ -514,9 +541,10 @@ this section. No subsequent phase is authorized automatically.
   Option B design; implementation needs separate authorization.
 - Analytics activation stays gated by Google's written approval (or confirmation that none is required), the
   privacy-policy update, renewed acceptance and separate Analytics consent. No new scopes or live Analytics access.
-- P12 checkpoint: reconsider authorizing P12 when the switched-off Analytics implementation is verified, when the plan
-  is not approved, or when implementation stalls awaiting an external decision. The founder may revisit P12 earlier.
-  Do not automatically substitute another engineering project.
+- P12 checkpoint (historical: the founder started P12 on 21 October 2026, Phase 5): reconsider authorizing P12 when
+  the switched-off Analytics implementation is verified, when the plan is not approved, or when implementation stalls
+  awaiting an external decision. The founder may revisit P12 earlier. Do not automatically substitute another
+  engineering project.
 - Reason: the 19 October audit introduced an external approval wait that should constrain Analytics activation, not
   P12.
 
@@ -960,18 +988,70 @@ Phase 4.**
   gate. The trial also audits Claude Code orchestration against native Conveyor automation.
   - Working materials and the single running trial log live outside the repository under
     `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
-  - **Authorized now:** only the zero-spend editorial start: free, read-only public-web research, idea evaluation
-    and the Idea Gate recommendation.
-  - **Unchanged gates:** the Idea Gate, Editorial Gate, room-plate approval, acquisition reviews, QA and founder
-    acceptance. Every live database write, provider call, `spend_authorization` and narration authorization still
-    needs its own founder authorization.
+  - Initially authorized (21 October): only the zero-spend editorial start (free, read-only public-web research,
+    idea evaluation and the Idea Gate recommendation).
+  - **Unchanged gates:** the Editorial Gate, room-plate approval, acquisition reviews, QA and founder acceptance.
+    Every live database write, provider call, `spend_authorization` and narration authorization still needs its own
+    founder authorization.
   - No live database writes between 02:45 and 03:30 local time or while maintenance runs. YouTube upload and
     publication are not authorized.
   - The P11 room plates are locked to P11; any P12 room needs its own plate approval.
 - This sequencing decision authorizes no change to the production recipe, the production CLI, providers or spend
   gates.
 
-### Open items (as of 21 October 2026)
+**P12 position (verified 22 October 2026; founder decisions given in chat on 22 October, the latest relayed as the
+founder instruction "P12 continuity, F08 review and editorial recording"):**
+
+- Topic "The Minimum-Payment Anchor". **Idea Gate: approved** by the founder (Proceed on idea A), with authorization
+  of the editorial chain up to but excluding the Editorial Gate decision. FCA Occasional Papers 42, 43 and 45 entered
+  as reviewer research input at that gate (introduced during the founder's review, not found by the initial
+  research; P12-F01/F02).
+- **Editorial records:** the founder authorized one bounded P12 editorial-record write (operator scripts
+  `story\p12_editorial_write.py` and `story\p12_editorial_chain.py`). Until that write is verified, the runtime holds
+  no P12 records. **Editorial Gate: pending** (founder). Paid production (plates, acquisition, narration): pending
+  and not authorized.
+- **Story file:** `story\production-12-flow.story.json`, SHA-256
+  `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
+  `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
+  hourglass. Its formal approval is part of the pending Editorial Gate.
+- **Production database observation (read-only, 22 October 2026):** schema 31 (code head 31), no P12 rows, SHA-256
+  `6e61b351a05fd08d67907bda81aae76ea3c0f8049097ccb9dba148c9eb0826e8`, unchanged by both earlier refused write
+  attempts. This is a dated observation, not the current value; re-verify before any write.
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F14), the operator scripts, the
+  editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
+- **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
+  `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
+  AssetSpecs (the P11 precedent). Rehearsed end to end on an isolated copy with simulated approvals; it is an operator
+  procedure, **not native Conveyor automation** (P12-F07).
+- Historical provider-cost observations (founder-reported account figures, not independently verified per-image
+  costs and not P12 cost limits): about $5.30 of OpenAI expenditure from 23 September to 22 October 2026, including
+  P11; about $15 of OpenAI expenditure in total since August 2026.
+
+### Open lessons from Production 12
+
+These are **OPEN** under the Task Observer principle (Phase 1): recording a finding, or handling it in an operator
+script, does not close it. Closure needs a verified mechanism (a test or check) and, where stated, a demonstration in
+a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
+
+- **P12-F08 (Conveyor defect, correct during P12):** a `production_cli` live command proceeded to the backup and
+  the live write after its rehearsal reported an error, so `plan` could leave a partial VisualPlan. Fix on local
+  branch `fix-f08-rehearsal-gate`, commit `57a8ffc` (the shared `_live` boundary refuses before the backup unless the
+  rehearsal was clean; narration's designed provider block is the only accepted stop), with regression tests across
+  all nine live commands; reported 801 passed locally. **Not yet independently reviewed, merged or deployed.** Until
+  it is deployed: always `--dry-run` first and go live only on a null rehearsal error.
+- **P12-F11 (operator script):** the editorial write's "no other Conveyor process" guard matched its own venv
+  launcher parent. Cause confirmed by reproduction and corrected in the operator script, then rehearsed. **Open until
+  its first authorized live use is read and verified.**
+- **P12-F14 (operator script):** the editorial write restored the production database automatically on a partial
+  failure. Now opt-in (`--allow-restore`, a separate founder authorization); rehearsed both ways.
+- **P12-F09 (missing native capability, improve after P12):** provider usage and cost are not recorded
+  (`generation_executions` keeps no token usage), so image cost is only estimable.
+- Also open, improve after P12: F01 primary-source research procedure, F03 PDF access, F04 no native editorial-chain
+  command, F05 a second quote from the same source silently replaces the first in `link_claim_evidence`, F07 no native
+  plate step, F13 dating and group-level wording. Retained controls: F02 independent review, F06 the permission
+  control.
+
+### Open items (as of 22 October 2026)
 
 - Phase 3 (on-demand publishing): COMPLETE (19 October 2026). P11 is public as `62mEQWPWVpE` with receipt
   `publication-receipt-similarstoic-youtube-on-demand-v1-slot-1` (merges `c5a9729`, `83ba00c`, `be48afd`).
@@ -986,14 +1066,15 @@ Phase 4.**
   independently reviewed and separately authorized. Activation also requires YouTube's approval of the 19 October
   submission (or written confirmation that none is needed). The published privacy policy stays at version
   `2026-10-06` until an authorized Phase 4 activation step.
-- Phase 5 (P12): hands-off production trial started 21 October 2026 (zero-spend editorial start only); next gate
-  is the Idea Gate. Independent of Google's decision.
+- Phase 5 (P12): underway. Idea Gate approved; the authorized editorial-record write is pending; then the founder's
+  Editorial Gate decision. No paid step is authorized. F08 awaits independent review (Open lessons from Production
+  12). Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the P12 Idea Gate. Also: check for Google's decision; on or after 23 October, the OAuth durability check,
-  when the founder authorizes it.
+- Next: the P12 editorial-record write, then the Editorial Gate. Also: check for Google's decision; on or after 23
+  October, the OAuth durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 21 October 2026, by fast-forward
   (`git merge --ff-only`), from `1ebcbdc` to `dc28b26` (schema-31 code; 5 files: publishing, publishing CLI, two
   publishing test files and this document). It stays clean, and the maintenance task's configuration is unchanged.
