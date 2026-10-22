@@ -465,7 +465,7 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 - **P12 is underway** as a hands-off production trial (started 21 October 2026; position in Phase 5 below). It runs
   from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
   controls. The Idea Gate, the Editorial Gate and both room plates are approved; the run `production-12-flow` is
-  stopped in acquisition (technical rejections and one transient network failure). Further spend, narration and
+  at acquisition review with all 13 images acquired. The founder's acquisition review, further spend, narration and
   publication are
   not authorized.
   Any other new story still needs its own founder authorization.
@@ -1104,6 +1104,16 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
     (3 admitted: w1, w2, w3 base); 10 images still missing; 12 calls remain under the ceiling.** Findings P12-F20
     (object sources are judged by the full-frame aspect rule and their prompts carry no portrait wording) and
     P12-F21 (w1's bag strap is not continuous; founder review pending).
+  - **Continuation (founder, 22 October 2026):** "tall vertical 9:16 composition, full portrait frame" was added to
+    the four object specs and to w7, w8 and w9 (seven `revise-spec` calls, each with a verified backup; read-only
+    check: exactly those seven prompts changed). Spend authorization `production-12-flow:spend-authorization:4`: 10
+    calls, stop on technical rejection, no network recovery. `resume --step image` (backup
+    `pre-resume-production-12-flow-20261022-215237`): **all 10 admitted**.
+  - **Run `production-12-flow`: `acquisition_review_pending`, all 13 assets active, 16 of 18 calls counted, 2
+    remaining.** Agent review notes: `review\acquisition-review\P12-ACQUISITION-REVIEW-NOTES.md` (recommend failing w1
+    for the strap and w7 for blue-filled water; w8's black purse against the brown state-9 purse is for founder
+    judgement). Findings P12-F22 (cross-world visual consistency is guided, not enforced) and P12-F23 (the ceiling
+    leaves too little for review reacquisitions). No acquisition review is recorded.
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1114,10 +1124,11 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   after the Editorial Gate decision, `7c2f8405144eead535d9f4bbab7c10ff4ee71de6de0d8cc1e8904d2fc595555d`; after the
   room plates, `86dfb3633e993c1bb0ad4bfe12fabb9a48d0c808945675aa8540e0f8488b282d`; after the stopped `start`,
   `1e13cbf09222caa2f8c50183d043f843cfa5a99986a5e1441da2b5fbb9c2e726`; after the first stopped resume,
-  `997d244e5fe74011e28be886141e0b4ee6d30e23febeb9bf618b2b62ddcf2c5f`; **after resume 2, SHA-256
-  `4a956c8efbe30c8433daa2cd8970e076a5c105b9a6f6b4561e62eb9388c3b8b3`**, schema 31. These are dated observations, not
+  `997d244e5fe74011e28be886141e0b4ee6d30e23febeb9bf618b2b62ddcf2c5f`; after resume 2,
+  `4a956c8efbe30c8433daa2cd8970e076a5c105b9a6f6b4561e62eb9388c3b8b3`; **at acquisition review, SHA-256
+  `264e7dd8295da8e9f9a928a88e54aeb6be9a7a7d30eda47427b352874713e1e7`**, schema 31. These are dated observations, not
   the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F21), the operator scripts, the
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F23), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1178,15 +1189,16 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
 - Phase 5 (P12): underway. Idea Gate approved; editorial records written and verified; Editorial Gate approved and
   recorded; both room plates approved (3 plate calls) and registered; `plan` done; `start` stopped at a technical
   rejection; four prompts revised; `resume` stopped at a transient network failure; resume 2 stopped at the
-  `tall_stack` object's aspect rejection (all 22 October 2026; 6 of 18 run calls counted, 3 images admitted). Next:
-  founder decisions on the object prompts and a new spend authorization. No further paid step is authorized. F08
-  is merged and deployed (Open lessons from Production 12). Independent of Google's decision.
+  `tall_stack` object's aspect rejection; seven more prompts revised; resume 3 admitted the remaining 10 (all 22
+  October 2026). **At acquisition review: 13 of 13 assets, 16 of 18 run calls counted.** Next: the founder's
+  acquisition review. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production
+  12). Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the founder's P12 decisions on the object prompts and a new spend authorization. Also: check for Google's decision; on or
-  after 23 October, the OAuth durability check, when the founder authorizes it.
+- Next: the founder's P12 acquisition review. Also: check for Google's decision; on or after 23 October, the OAuth
+  durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
   (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
   and this document; persistence and migrations unchanged, schema-31 code), then to the documentation commit that
