@@ -465,7 +465,7 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 - **P12 is underway** as a hands-off production trial (started 21 October 2026; position in Phase 5 below). It runs
   from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
   controls. The Idea Gate, the Editorial Gate and both room plates are approved; the run `production-12-flow` is
-  stopped after a technical rejection in its first acquisition step. Further spend, narration and publication are
+  stopped in acquisition (a technical rejection, then a transient network failure on resume). Further spend, narration and publication are
   not authorized.
   Any other new story still needs its own founder authorization.
 - **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
@@ -1079,8 +1079,21 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   - `production_cli start` (backup `pre-start-production-12-flow-20261022-172749`; `spend_authorization` max 13, stop
     on technical rejection): w1 and w2 admitted; w3 (`production-12-flow-w3-base`) came back 1254×1254 and was
     technically rejected by the aspect admission check. The step stopped with no retry. **Run `production-12-flow`:
-    `failed` at stage `acquisition`, 3 of 18 image calls counted.** No acquisition review is recorded. Findings
-    P12-F17 (square output from a close-view prompt) and P12-F18 (w3's unspecified coin colour came back gold).
+    `failed` at stage `acquisition`, 3 of 18 image calls counted.** No acquisition review is recorded. Findings:
+    - P12-F17 (corrected wording): Conveyor supports an optional `ATLAS_OPENAI_IMAGE_SIZE` but does not set it by
+      default, so with no explicit size configured the provider may return a non-portrait image. The close-view
+      prompt is not proven to be the sole cause.
+    - P12-F18: w3's unspecified coin colour came back gold.
+  - **Resume (founder, 22 October 2026):** w1 and w2 kept unchanged. Exactly four prompts were revised through
+    `production_cli revise-spec`, each with a verified backup (`production-12-flow:spec-revision:1`–`:4`): w3–w6 gained
+    "tall vertical 9:16 composition, full portrait frame", and w3 and w6 "plain grey coins, the same grey as ordinary
+    coins". `ATLAS_OPENAI_IMAGE_SIZE` was left unchanged. Spend authorization `production-12-flow:spend-authorization:2`:
+    11 calls, stop on technical rejection.
+  - `resume --step image` (dry run clean; live with `--expect-targets` set to the 11 rehearsed targets; backup
+    `pre-resume-production-12-flow-20261022-212344`): the first dispatch (w3) **failed with a transient network error**
+    ("EOF occurred in violation of protocol", no provider request ID), and the run stopped. **Run
+    `production-12-flow`: `failed` at stage `acquisition`, 4 of 18 calls counted (2 admitted: w1, w2).** The step
+    consumed authorization 2, so a new founder spend authorization is needed to resume (P12-F19).
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1089,10 +1102,11 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   head 31), no P12 rows, SHA-256 `6e61b351a05fd08d67907bda81aae76ea3c0f8049097ccb9dba148c9eb0826e8` (unchanged by
   both earlier refused attempts); after it, `6fbeaaa9a65d8bb63488953d15b41d753db5909d32d16bfe0ee8488225798134`;
   after the Editorial Gate decision, `7c2f8405144eead535d9f4bbab7c10ff4ee71de6de0d8cc1e8904d2fc595555d`; after the
-  room plates, `86dfb3633e993c1bb0ad4bfe12fabb9a48d0c808945675aa8540e0f8488b282d`; **after the stopped `start`,
-  SHA-256 `1e13cbf09222caa2f8c50183d043f843cfa5a99986a5e1441da2b5fbb9c2e726`**, schema 31. These are dated
-  observations, not the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F18), the operator scripts, the
+  room plates, `86dfb3633e993c1bb0ad4bfe12fabb9a48d0c808945675aa8540e0f8488b282d`; after the stopped `start`,
+  `1e13cbf09222caa2f8c50183d043f843cfa5a99986a5e1441da2b5fbb9c2e726`; **after the stopped resume, SHA-256
+  `997d244e5fe74011e28be886141e0b4ee6d30e23febeb9bf618b2b62ddcf2c5f`**, schema 31. These are dated observations, not
+  the current value; re-verify before any write.
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F19), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1152,15 +1166,15 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   `2026-10-06` until an authorized Phase 4 activation step.
 - Phase 5 (P12): underway. Idea Gate approved; editorial records written and verified; Editorial Gate approved and
   recorded; both room plates approved (3 plate calls) and registered; `plan` done; `start` stopped at a technical
-  rejection after 3 acquisition calls (all 22 October 2026). Next: the founder's decision on revising w3 and a
-  new spend authorization to resume. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production 12).
-  Independent of Google's decision.
+  rejection; four prompts revised; `resume` stopped at a transient network failure (all 22 October 2026; 4 of 18
+  run calls counted). Next: a new founder spend authorization to resume. No further paid step is authorized. F08
+  is merged and deployed (Open lessons from Production 12). Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the founder's P12 resume decision (w3 revision and spend). Also: check for Google's decision; on or after 23 October, the OAuth
-  durability check, when the founder authorizes it.
+- Next: the founder's new P12 spend authorization to resume acquisition. Also: check for Google's decision; on or
+  after 23 October, the OAuth durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
   (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
   and this document; persistence and migrations unchanged, schema-31 code), then to the documentation commit that
