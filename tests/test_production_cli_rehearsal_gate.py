@@ -7,6 +7,7 @@ boundary with each command's label and provider step, then two commands end to e
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sqlite3
 
@@ -15,6 +16,7 @@ import pytest
 from project_atlas import production_cli
 from project_atlas.narration import InworldNarrationSynthesizer
 from project_atlas.persistence import AtlasRepository
+from project_atlas.production import ProductionLifecycleError
 from project_atlas.production_backup import database_sha256
 from tests.test_production_workflow import _cli, _live, _runtime, _story
 
@@ -152,6 +154,110 @@ def test_only_the_steps_own_provider_boundary_counts_as_a_clean_rehearsal(
     with pytest.raises(production_cli.CliError, match="rehearsal failed"):
         production_cli._live(args, label="resume", run_id=None, step=step, operation=operation)
     assert not (tmp_path / "backups").exists()
+
+
+def _stub_narration(monkeypatch) -> list[str]:
+    for key in ("INWORLD_API_KEY", "OPENAI_API_KEY"):
+        monkeypatch.setenv(key, "gate-test-not-a-key")
+    takes: list[str] = []
+    monkeypatch.setattr(
+        InworldNarrationSynthesizer, "synthesize", lambda *_a, **_k: takes.append("take")
+    )
+    return takes
+
+
+def _refused(args, step, operation) -> None:
+    with pytest.raises(production_cli.CliError, match="rehearsal failed"):
+        production_cli._live(args, label="resume", run_id=None, step=step, operation=operation)
+
+
+def test_an_unrelated_error_quoting_the_block_text_is_refused(tmp_path, monkeypatch) -> None:
+    args = _args(tmp_path)
+    takes = _stub_narration(monkeypatch)
+
+    def operation(_server):
+        with contextlib.suppress(production_cli.ProviderBlocked):
+            InworldNarrationSynthesizer.synthesize(None)
+        raise RuntimeError("later check failed; narration synthesis is not authorized in this step")
+
+    _refused(args, "narration", operation)
+    assert takes == [] and not (tmp_path / "backups").exists()
+
+
+@pytest.mark.parametrize("step", ["narration", "image", None])
+def test_a_swallowed_provider_block_is_refused(tmp_path, monkeypatch, step) -> None:
+    args = _args(tmp_path)
+    takes = _stub_narration(monkeypatch)
+
+    def operation(_server):
+        with contextlib.suppress(production_cli.ProviderBlocked):
+            InworldNarrationSynthesizer.synthesize(None)  # swallowed: no error reported
+        return "done"
+
+    _refused(args, step, operation)
+    assert takes == [] and not (tmp_path / "backups").exists()
+
+
+def test_the_lifecycles_own_record_of_the_narration_block_proceeds(tmp_path, monkeypatch) -> None:
+    args = _args(tmp_path)
+    takes = _stub_narration(monkeypatch)
+
+    def operation(_server):
+        try:
+            InworldNarrationSynthesizer.synthesize(None)
+        except production_cli.ProviderBlocked as error:
+            # What ProductionLifecycleService._fail does with a provider failure.
+            raise ProductionLifecycleError("run", "narration", str(error)) from error
+        return "narrated"
+
+    report = production_cli._live(
+        args, label="resume", run_id=None, step="narration", operation=operation
+    )
+    assert report["rehearsal"]["blocked_provider_calls"] == ["narration synthesis"]
+    assert report["live"]["error"] is None and takes == ["take"]
+
+
+@pytest.mark.parametrize("wrapper", [RuntimeError, ValueError])
+def test_any_other_wrapping_of_the_block_is_refused(tmp_path, monkeypatch, wrapper) -> None:
+    args = _args(tmp_path)
+    takes = _stub_narration(monkeypatch)
+
+    def operation(_server):
+        try:
+            InworldNarrationSynthesizer.synthesize(None)
+        except production_cli.ProviderBlocked as error:
+            raise wrapper(str(error)) from error
+
+    _refused(args, "narration", operation)
+    assert takes == []
+
+
+def test_a_lifecycle_error_not_caused_by_the_block_is_refused(tmp_path, monkeypatch) -> None:
+    args = _args(tmp_path)
+    takes = _stub_narration(monkeypatch)
+
+    def operation(_server):
+        try:
+            InworldNarrationSynthesizer.synthesize(None)
+        except production_cli.ProviderBlocked as error:
+            message = str(error)
+        raise ProductionLifecycleError("run", "narration", message)  # no causal link
+
+    _refused(args, "narration", operation)
+    assert takes == []
+
+
+def test_a_second_block_after_a_swallowed_one_is_refused(tmp_path, monkeypatch) -> None:
+    args = _args(tmp_path)
+    takes = _stub_narration(monkeypatch)
+
+    def operation(_server):
+        with contextlib.suppress(production_cli.ProviderBlocked):
+            InworldNarrationSynthesizer.synthesize(None)
+        InworldNarrationSynthesizer.synthesize(None)
+
+    _refused(args, "narration", operation)
+    assert takes == []
 
 
 def test_plan_with_an_unapproved_room_writes_nothing(tmp_path, monkeypatch, capsys) -> None:
