@@ -9,7 +9,8 @@ copy. Every live command (``plan``, ``start``, ``authorize-spend``, ``resume``, 
 
 1. refuses unless the database SHA-256 equals ``--expect-db-sha256``;
 2. rehearses the same operation on a temporary copy with every provider replaced or blocked,
-   which validates preconditions, authorization and wiring only (never image or voice quality);
+   which validates preconditions, authorization and wiring only (never image or voice quality),
+   and refuses if the rehearsal reports an error;
 3. takes a verified backup into ``--backup-root`` (``production_backup.verified_backup``);
 4. runs the operation through the unchanged ``ProductionLifecycleService`` with only the provider
    keys that step needs; every other provider entry point is blocked in-process.
@@ -92,6 +93,13 @@ def _keep_only_keys(keep: tuple[str, ...]) -> None:
         raise CliError(f"This step needs {missing} in the environment; nothing was changed.")
 
 
+PROVIDER_NAMES = {
+    "image": "image generation",
+    "narration": "narration synthesis",
+    "transcription": "transcription",
+}
+
+
 @contextlib.contextmanager
 def _providers(allowed: set[str]) -> Iterator[list[str]]:
     """Block, at class level (so per-request services are covered), every provider not allowed."""
@@ -108,16 +116,16 @@ def _providers(allowed: set[str]) -> Iterator[list[str]]:
     patches = []
     if "image" not in allowed:
         patches += [
-            (GenerationService, "generate_asset_spec", blocker("image generation")),
-            (OpenAIImageGenerator, "generate", blocker("image generation")),
+            (GenerationService, "generate_asset_spec", blocker(PROVIDER_NAMES["image"])),
+            (OpenAIImageGenerator, "generate", blocker(PROVIDER_NAMES["image"])),
         ]
     if "narration" not in allowed:
         patches += [
-            (MediaService, "generate_brand_narration", blocker("narration synthesis")),
-            (InworldNarrationSynthesizer, "synthesize", blocker("narration synthesis")),
+            (MediaService, "generate_brand_narration", blocker(PROVIDER_NAMES["narration"])),
+            (InworldNarrationSynthesizer, "synthesize", blocker(PROVIDER_NAMES["narration"])),
         ]
     if "transcription" not in allowed:
-        patches.append((WhisperTranscriber, "transcribe", blocker("transcription")))
+        patches.append((WhisperTranscriber, "transcribe", blocker(PROVIDER_NAMES["transcription"])))
     saved = [(owner, name, owner.__dict__[name]) for owner, name, _ in patches]
     try:
         for owner, name, replacement in patches:
@@ -286,6 +294,13 @@ def _live(
     if args.dry_run:
         report["mode"] = "dry-run"
         return report
+    if not _rehearsed_cleanly(rehearsal, allowed):
+        # Fail closed: a step that did not rehearse cleanly never reaches the backup, the live
+        # database or a provider.
+        raise CliError(
+            f"The rehearsal failed ({rehearsal['error']}); nothing was backed up, written or "
+            "sent to a provider."
+        )
     report["backup"] = verified_backup(db, Path(args.backup_root), _backup_label(label, run_id))
     if database_sha256(db) != actual:
         raise CliError("The database changed during the backup; nothing was written.")
@@ -306,6 +321,24 @@ def _live(
     report["mode"] = "live"
     report["db_sha256_after"] = database_sha256(db)
     return report
+
+
+def _rehearsed_cleanly(rehearsal: dict[str, Any], allowed: set[str]) -> bool:
+    """No error, or the only stop was this step's own provider, blocked by design in rehearsal.
+
+    Narration is never synthesized in a rehearsal, so a narration step's rehearsal ends at the
+    narration provider once every precondition has passed; any other error fails closed.
+    """
+
+    error = rehearsal["error"]
+    if error is None:
+        return True
+    reached = rehearsal["blocked_provider_calls"]
+    return (
+        bool(reached)
+        and set(reached) <= {PROVIDER_NAMES[key] for key in allowed}
+        and any(f"{name} is not authorized in this step" in error for name in reached)
+    )
 
 
 def _exists(server: Any, run_id: str) -> bool:
