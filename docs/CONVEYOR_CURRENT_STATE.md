@@ -1050,14 +1050,20 @@ script, does not close it. Closure needs a verified mechanism (a test or check) 
 a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
 
 - **P12-F08 (Conveyor defect, correct during P12):** a `production_cli` live command proceeded to the backup and
-  the live write after its rehearsal reported an error, so `plan` could leave a partial VisualPlan. Fix in **draft
-  PR #6** (branch `fix-f08-rehearsal-gate`, head `57a8ffcf49a14be83604c87dd92183c8fb137955`, opened 22 October 2026;
-  3 files: `production_cli.py` and two test files). The shared `_live` boundary refuses before the backup unless the
-  rehearsal was clean; narration's designed provider block is the only accepted stop. Regression tests cover all
-  nine live commands. Local full suite 801 passed (exit 0, provider keys removed); PR CI run 39790305842 passed.
-  Behaviour change: an undersized `start`/`resume` authorization is refused before any spend. **Not yet independently
-  reviewed, merged or deployed**; the Windows checkout does not contain it. Until it is deployed: always `--dry-run`
-  first and go live only on a null rehearsal error.
+  the live write after its rehearsal reported an error, so `plan` could leave a partial VisualPlan. **Corrected and
+  deployed (22 October 2026):** PR #6 (branch `fix-f08-rehearsal-gate`, head
+  `60180e8edbc335f0a3cb1889dde93b549e13d2bf`, 3 files: `production_cli.py` and two test files), independently
+  reviewed and merged with merge commit `fa4566cf2def6994327f435244f1492aaec29c9e` (parents `8604641`, `60180e8`);
+  CI on `main` run 39804720470 passed; the Windows checkout was fast-forwarded to it (Open items).
+  - The shared `_live` boundary refuses before the backup, the live database or any provider unless the rehearsal
+    was clean. The one accepted stop is the step's own provider, recognised by the exception object (the rehearsal's
+    own `ProviderBlocked`, bare or as the direct cause of the lifecycle's `ProductionLifecycleError`), never by
+    message text; a swallowed or second block is refused. This follows the review of the first head `57a8ffc`.
+  - Regression tests cover all nine live commands and the narration boundary (29 tests; 8 of the 9 review tests
+    fail on `57a8ffc`). Local full suite 810 passed (exit 0, provider keys removed); PR CI run 39801213204 passed;
+    focused tests in the Windows checkout after the sync: 47 passed (exit 0).
+  - Behaviour change: an undersized `start`/`resume` authorization is refused before any spend.
+  - Closure condition (regression test on `main`) is met. Its first live use will be the P12 `plan`.
 - **P12-F11 (operator script):** the editorial write's "no other Conveyor process" guard matched its own venv
   launcher parent. Corrected in the operator script; its first authorized live use (22 October 2026) passed the
   guard and its report was read and verified. Corrected for P12 only; the native capability remains F04.
@@ -1086,19 +1092,20 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   submission (or written confirmation that none is needed). The published privacy policy stays at version
   `2026-10-06` until an authorized Phase 4 activation step.
 - Phase 5 (P12): underway. Idea Gate approved; editorial records written and verified (22 October 2026); next is
-  the founder's Editorial Gate decision. No paid step is authorized. F08 is in draft PR #6 awaiting independent
-  review (Open lessons from Production 12). Independent of Google's decision.
+  the founder's Editorial Gate decision. No paid step is authorized. F08 is merged and deployed (Open lessons from
+  Production 12). Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the P12 Editorial Gate (founder); independent review of F08 PR #6. Also: check for Google's decision; on
-  or after 23 October, the OAuth durability check, when the founder authorizes it.
-- The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 21 October 2026, by fast-forward
-  (`git merge --ff-only`), from `1ebcbdc` to `dc28b26` (schema-31 code; 5 files: publishing, publishing CLI, two
-  publishing test files and this document). It stays clean, and the maintenance task's configuration is unchanged.
-  Later documentation-only commits need no re-sync. Further syncs only to `main` commits whose highest migration is
-  31 until the migration-32 rollout is authorized.
+- Next: the P12 Editorial Gate (founder). Also: check for Google's decision; on or after 23 October, the OAuth
+  durability check, when the founder authorizes it.
+- The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
+  (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
+  and this document; persistence and migrations unchanged, schema-31 code), then to the documentation commit that
+  records it. Before and after: clean tree, maintenance task Ready and unchanged, production database SHA-256
+  `6fbeaaa9…8134`, schema 31/31, integrity ok. (Previous sync: 21 October 2026, `1ebcbdc` to `dc28b26`.) Further
+  syncs only to `main` commits whose highest migration is 31 until the migration-32 rollout is authorized.
 - Analytics PR #5 (with migration 32) remains parked and unmerged.
 - P10 (`production-10-r2`) is founder-accepted, not uploaded and not published; its manual 2026-W42 window expired
   unused on 19 October 2026, as the founder decided (decision checkpoint above). P11 (`production-11-flow`) is public on YouTube
