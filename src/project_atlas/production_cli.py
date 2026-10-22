@@ -9,7 +9,8 @@ copy. Every live command (``plan``, ``start``, ``authorize-spend``, ``resume``, 
 
 1. refuses unless the database SHA-256 equals ``--expect-db-sha256``;
 2. rehearses the same operation on a temporary copy with every provider replaced or blocked,
-   which validates preconditions, authorization and wiring only (never image or voice quality);
+   which validates preconditions, authorization and wiring only (never image or voice quality),
+   and refuses if the rehearsal reports an error;
 3. takes a verified backup into ``--backup-root`` (``production_backup.verified_backup``);
 4. runs the operation through the unchanged ``ProductionLifecycleService`` with only the provider
    keys that step needs; every other provider entry point is blocked in-process.
@@ -58,6 +59,18 @@ class CliError(RuntimeError):
 class ProviderBlocked(RuntimeError):
     """A provider entry point was reached where this command allows none."""
 
+    def __init__(self, provider: str) -> None:
+        super().__init__(f"{provider} is not authorized in this step; no call was made.")
+        self.provider = provider
+
+
+class _Blocked(list):
+    """Blocked provider names (as reported), plus each ``ProviderBlocked`` actually raised."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.raised: list[ProviderBlocked] = []
+
 
 class RehearsalImageGenerator:
     """Stand-in image provider for rehearsals: a plain 9:16 canvas, never a real result."""
@@ -92,32 +105,40 @@ def _keep_only_keys(keep: tuple[str, ...]) -> None:
         raise CliError(f"This step needs {missing} in the environment; nothing was changed.")
 
 
+PROVIDER_NAMES = {
+    "image": "image generation",
+    "narration": "narration synthesis",
+    "transcription": "transcription",
+}
+
+
 @contextlib.contextmanager
-def _providers(allowed: set[str]) -> Iterator[list[str]]:
+def _providers(allowed: set[str]) -> Iterator[_Blocked]:
     """Block, at class level (so per-request services are covered), every provider not allowed."""
 
-    reached: list[str] = []
+    reached = _Blocked()
 
     def blocker(name):
         def refuse(*_args, **_kwargs):
             reached.append(name)
-            raise ProviderBlocked(f"{name} is not authorized in this step; no call was made.")
+            reached.raised.append(ProviderBlocked(name))
+            raise reached.raised[-1]
 
         return refuse
 
     patches = []
     if "image" not in allowed:
         patches += [
-            (GenerationService, "generate_asset_spec", blocker("image generation")),
-            (OpenAIImageGenerator, "generate", blocker("image generation")),
+            (GenerationService, "generate_asset_spec", blocker(PROVIDER_NAMES["image"])),
+            (OpenAIImageGenerator, "generate", blocker(PROVIDER_NAMES["image"])),
         ]
     if "narration" not in allowed:
         patches += [
-            (MediaService, "generate_brand_narration", blocker("narration synthesis")),
-            (InworldNarrationSynthesizer, "synthesize", blocker("narration synthesis")),
+            (MediaService, "generate_brand_narration", blocker(PROVIDER_NAMES["narration"])),
+            (InworldNarrationSynthesizer, "synthesize", blocker(PROVIDER_NAMES["narration"])),
         ]
     if "transcription" not in allowed:
-        patches.append((WhisperTranscriber, "transcribe", blocker("transcription")))
+        patches.append((WhisperTranscriber, "transcribe", blocker(PROVIDER_NAMES["transcription"])))
     saved = [(owner, name, owner.__dict__[name]) for owner, name, _ in patches]
     try:
         for owner, name, replacement in patches:
@@ -238,11 +259,11 @@ def _dispatched(server: Any, run_id: str, before: int) -> list[str]:
     ]
 
 
-def _attempt(operation, server: Any) -> tuple[Any, str | None]:
+def _attempt(operation, server: Any) -> tuple[Any, str | None, Exception | None]:
     try:
-        return operation(server), None
+        return operation(server), None, None
     except Exception as error:  # noqa: BLE001 - reported to the founder, never retried
-        return None, f"{type(error).__name__}: {error}"
+        return None, f"{type(error).__name__}: {error}", error
 
 
 def _live(
@@ -270,7 +291,7 @@ def _live(
     with _rehearsal(db, assets, media, run_id) as (server, generator, _copy):
         before = len(_dispatched(server, run_id, 0)) if run_id and _exists(server, run_id) else 0
         with _providers({"image"} if step == "image" else set()) as reached:
-            result, error = _attempt(operation, server)
+            result, error, raised = _attempt(operation, server)
         rehearsal = {
             "note": REHEARSAL_NOTE,
             "error": error,
@@ -286,6 +307,13 @@ def _live(
     if args.dry_run:
         report["mode"] = "dry-run"
         return report
+    if not _rehearsed_cleanly(raised, reached, allowed):
+        # Fail closed: a step that did not rehearse cleanly never reaches the backup, the live
+        # database or a provider.
+        raise CliError(
+            f"The rehearsal failed ({rehearsal['error']}); nothing was backed up, written or "
+            "sent to a provider."
+        )
     report["backup"] = verified_backup(db, Path(args.backup_root), _backup_label(label, run_id))
     if database_sha256(db) != actual:
         raise CliError("The database changed during the backup; nothing was written.")
@@ -293,7 +321,7 @@ def _live(
     server = _server(db, assets, media)
     try:
         with _providers(allowed) as reached:
-            result, error = _attempt(operation, server)
+            result, error, _raised = _attempt(operation, server)
         report["live"] = {
             "error": error,
             "blocked_provider_calls": reached,
@@ -306,6 +334,29 @@ def _live(
     report["mode"] = "live"
     report["db_sha256_after"] = database_sha256(db)
     return report
+
+
+def _rehearsed_cleanly(raised: Exception | None, reached: _Blocked, allowed: set[str]) -> bool:
+    """No error and no blocked call, or the only stop was this step's own provider.
+
+    Narration is never synthesized in a rehearsal, so a narration step's rehearsal ends at the
+    narration provider once every precondition has passed. That stop is recognised by the
+    exception object itself, never by its message: exactly one provider was blocked, it is one
+    this step allows, and the rehearsal ended with that very ``ProviderBlocked``, either bare or
+    as the direct cause of the lifecycle's own recorded failure (``ProductionLifecycleError``).
+    A swallowed block, a second block, any other exception or wrapping fails closed.
+    """
+
+    if raised is None:
+        return not reached
+    if len(reached.raised) != 1:
+        return False
+    block = reached.raised[0]
+    if block.provider not in {PROVIDER_NAMES[key] for key in allowed}:
+        return False
+    return raised is block or (
+        type(raised) is ProductionLifecycleError and raised.__cause__ is block
+    )
 
 
 def _exists(server: Any, run_id: str) -> bool:

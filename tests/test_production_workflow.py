@@ -50,12 +50,15 @@ class StandInGenerator:
 
     def __init__(self, scene: bytes, prop: bytes) -> None:
         self.scene, self.prop, self.calls = scene, prop, []
+        self.fail_from: int | None = None  # simulate a live provider failure from this call on
 
     def supports(self, asset_type: str) -> bool:
         return True
 
     def generate(self, generation_input):
         self.calls.append(generation_input.asset_type)
+        if self.fail_from is not None and len(self.calls) >= self.fail_from:
+            raise RuntimeError("stand-in provider failure")
         content = self.prop if generation_input.asset_type == "prop" else self.scene
         return GeneratedArtifact(content, "image/png", provider_key="workflow-stand-in")
 
@@ -397,25 +400,39 @@ def test_a_resume_whose_rehearsal_disagrees_with_the_founder_is_refused(
     run = f"{PREFIX}-run"
     assert _cli(capsys, ["plan", *paths, *_live(db, backups), str(story)])[0] == 0
     monkeypatch.setenv("OPENAI_API_KEY", "workflow-test-not-a-key")
-    code, started = _cli(
-        capsys,
-        [
-            "start",
-            *paths,
-            *_live(db, backups),
-            "--max-image-calls",
-            "2",
-            "--stop-on-technical-rejection",
-            "yes",
-            "--authorized-by",
-            "founder",
-            "--reason",
-            "test",
-            str(story),
-        ],
-    )
-    assert code == 1 and "allows 2 image call" in started["live"]["error"]
-    assert len(generator.calls) == 2
+
+    def start(max_calls: str) -> tuple[int, dict]:
+        return _cli(
+            capsys,
+            [
+                "start",
+                *paths,
+                *_live(db, backups),
+                "--max-image-calls",
+                max_calls,
+                "--stop-on-technical-rejection",
+                "yes",
+                "--authorized-by",
+                "founder",
+                "--reason",
+                "test",
+                str(story),
+            ],
+        )
+
+    # An authorization too small for the step fails its rehearsal, so nothing is spent.
+    before, backups_before = database_sha256(db), len(list(backups.iterdir()))
+    code, refused = start("2")
+    assert code == 2 and "allows 2 image call" in refused["refused"]
+    assert "nothing was backed up, written or sent to a provider" in refused["refused"]
+    assert generator.calls == [] and database_sha256(db) == before
+    assert len(list(backups.iterdir())) == backups_before
+    # A live provider failure the rehearsal could not foresee stops the run mid-acquisition.
+    generator.fail_from = 3
+    code, started = start("5")
+    assert code == 1 and "stand-in provider failure" in started["live"]["error"]
+    assert len(generator.calls) == 3
+    generator.fail_from = None
     # Without a new authorization the next step spends nothing, even in rehearsal.
     code, resumed = _cli(
         capsys,
@@ -464,7 +481,7 @@ def test_a_resume_whose_rehearsal_disagrees_with_the_founder_is_refused(
         ],
     )
     assert code == 2 and "not the expected" in refused["refused"]
-    assert database_sha256(db) == before and len(generator.calls) == 2
+    assert database_sha256(db) == before and len(generator.calls) == 3
     code, refused = _cli(
         capsys, ["resume", *paths, *_live(db, backups), run, "--step", "narration"]
     )
