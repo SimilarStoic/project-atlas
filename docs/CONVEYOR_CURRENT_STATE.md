@@ -464,7 +464,8 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 
 - **P12 is underway** as a hands-off production trial (started 21 October 2026; position in Phase 5 below). It runs
   from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
-  controls. The Idea Gate and the Editorial Gate are approved; room plates, every paid step and publication are not.
+  controls. The Idea Gate and the Editorial Gate are approved and the two room plates are generated; plate approvals,
+  every further paid step and publication are not.
   Any other new story still needs its own founder authorization.
 - **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
   reconciliation or other YouTube action still needs its own founder authorization. YouTube changes (new scopes,
@@ -517,6 +518,15 @@ prompts are exceptional; denied or unsafe operations must stop and be reported, 
   It is not a complete security boundary and authorizes nothing by itself.
 - If Auto mode refuses an authorized operation, stop and report the exact refusal. Do not switch modes, reintroduce
   blanket `ask` rules or try another execution route.
+
+### Standing operating rules (founder, 22 October 2026)
+
+1. **Recording commits are pre-authorized.** A documentation commit that records already-approved founder decisions
+   or verified outcomes needs no fresh approval. It must be docs-only, with the diff checked, pushed, CI verified and
+   the Windows checkout synchronized. Do not ask first.
+2. **No mid-run questions within an authorized stage.** Finish the current safe operation, then stop with one
+   consolidated report, only at the next founder gate or a genuine blocker. If something is unsafe or refused, stop
+   and report; never work around it.
 
 ### Verification working rules (founder, 16 October 2026)
 
@@ -1033,6 +1043,23 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
 
   Not approved by this decision: room plates and their spend, the P12-only use of the experimental treatment
   reference, `plan`, `start`, narration and publication.
+- **Room plates (founder decisions, 22 October 2026):** the experimental P11 treatment reference is approved for
+  P12's two room plates only (not canonical, not a default), and exactly two `gpt-image-2` calls were authorized,
+  one per plate, with no retries. Run at 17:04 local time by the guarded operator script
+  `story\p12_plate_stage_write.py` (isolated tests in `rehearsals\plate-stage-tests\`; hard two-call cap; live scope
+  must equal the rehearsal's):
+  - verified backup `D:\ConveyorBackups\pre-p12-room-plates-20261022-170436\conveyor.db` (content identical);
+  - staging plan `production-12-plate-staging-plan`, scenes `production-12-plate-staging-scene-1`/`-2`, specs
+    `production-12-sitting-room-plate-spec` and `production-12-harbour-plate-spec`;
+  - 2 calls, both succeeded (17:04:38 and 17:04:55 local): sitting room `asset-267465b52e3141a9b7d0866a3bcd8f78`
+    (`d7fcb879…40f3`) and harbour `asset-674cc95390f94163b287c3346eb8344f` (`775f7671…73a0`), each sent the global
+    style reference plus the P9 home and shop anchors;
+  - read-only verification: 14 rows added in 7 tables, nothing removed, schema 31/31, integrity ok, no FK
+    violations; no plate approval, room authority or production run.
+
+  Agent plate review (`review\plates\P12-PLATE-REVIEW.md`, evidence only): harbour all PASS; sitting room FAIL on the
+  zoomed defect check (malformed side-table legs). **The founder's plate decisions are pending**; no approval or room
+  authority is recorded.
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1040,9 +1067,10 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
 - **Production database observations (read-only, 22 October 2026):** before the editorial write, schema 31 (code
   head 31), no P12 rows, SHA-256 `6e61b351a05fd08d67907bda81aae76ea3c0f8049097ccb9dba148c9eb0826e8` (unchanged by
   both earlier refused attempts); after it, `6fbeaaa9a65d8bb63488953d15b41d753db5909d32d16bfe0ee8488225798134`;
-  **after the Editorial Gate decision, SHA-256 `7c2f8405144eead535d9f4bbab7c10ff4ee71de6de0d8cc1e8904d2fc595555d`**,
-  schema 31. These are dated observations, not the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F15), the operator scripts, the
+  after the Editorial Gate decision, `7c2f8405144eead535d9f4bbab7c10ff4ee71de6de0d8cc1e8904d2fc595555d`; **after the
+  room plates, SHA-256 `86dfb3633e993c1bb0ad4bfe12fabb9a48d0c808945675aa8540e0f8488b282d`**, schema 31. These are
+  dated observations, not the current value; re-verify before any write.
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F16), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1101,14 +1129,14 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   submission (or written confirmation that none is needed). The published privacy policy stays at version
   `2026-10-06` until an authorized Phase 4 activation step.
 - Phase 5 (P12): underway. Idea Gate approved; editorial records written and verified; Editorial Gate approved and
-  recorded (all 22 October 2026). Next: room plates (founder decisions on the experimental treatment reference and
-  the 2-call plate spend). No paid step is authorized. F08 is merged and deployed (Open lessons from
-  Production 12). Independent of Google's decision.
+  recorded; both room plates generated (2 authorized calls) and reviewed (all 22 October 2026). Next: the founder's
+  plate decisions. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production 12).
+  Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the P12 room-plate decisions (founder). Also: check for Google's decision; on or after 23 October, the OAuth
+- Next: the founder's P12 plate decisions. Also: check for Google's decision; on or after 23 October, the OAuth
   durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
   (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
