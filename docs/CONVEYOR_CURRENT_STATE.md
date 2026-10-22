@@ -502,20 +502,21 @@ Clarifications (founder, 22 October 2026):
 - **Drift.** Before consequential work, compare this documentation with verified live repository state. Correct
   material drift when authorized, without a commit for every task.
 
-### Claude Code permissions (founder, 22 October 2026)
+### Claude Code permissions (founder, 22 October 2026, revised the same day)
 
-Claude Code operates in Auto mode by default. Routine authorized operations and approved non-migrating read-only
-inspections proceed without unnecessary founder interaction. Protected operations use narrowly scoped `ask` rules to
-request approval while remaining in Auto mode. Founder authorization in chat remains distinct from technical
-execution permission. Denied operations must never be circumvented or automatically retried. All existing schema,
-hash, maintenance, backup, provenance, provider-isolation and spending safeguards remain mandatory.
+Founder authorization governs consequential decisions. Claude Code normally executes the authorized work in Auto
+mode without repeated technical approvals. Conveyor enforces operational, spending and safety boundaries. Permission
+prompts are exceptional; denied or unsafe operations must stop and be reported, never circumvented.
 
-- The rules are local configuration outside Git (`.claude/settings.local.json` in the Windows checkout and the
-  user-level `autoMode` guidance). They reduce prompts and route protected operations to an approval prompt; they
-  are not a complete security boundary and authorize nothing by themselves.
-- If an expected approval prompt is instead refused by the Auto-mode classifier, stop and report the rule mismatch.
-  Do not switch modes or try another execution route. (This replaces the earlier P12 practice of switching the
-  session to a manual permission mode for a live write.)
+- This replaces the earlier same-day model of routine scoped `ask` approvals, and before it the P12 practice of
+  switching the session to a manual permission mode for a live write. The founder gates, the verification rules and
+  every schema, hash, maintenance, backup, provenance, provider-isolation and spending safeguard are unchanged.
+- The local configuration lives outside Git (`.claude/settings.local.json` in the Windows checkout and the
+  user-level `autoMode` guidance). It keeps the deny rules (force-push and destructive Git pushes, direct edits of
+  the runtime and backups), the read-only helper allow rule and one exceptional `ask` rule, for `--allow-restore`.
+  It is not a complete security boundary and authorizes nothing by itself.
+- If Auto mode refuses an authorized operation, stop and report the exact refusal. Do not switch modes, reintroduce
+  blanket `ask` rules or try another execution route.
 
 ### Verification working rules (founder, 16 October 2026)
 
