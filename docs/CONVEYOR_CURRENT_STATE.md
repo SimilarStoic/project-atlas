@@ -466,8 +466,9 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
   from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
   controls. The Idea Gate, the Editorial Gate and both room plates are approved. The founder's acquisition review
   of `production-12-flow` is recorded (9 pass, 4 fail). R2 was superseded by the founder's choice of option B. The
-  run `production-12-flow-r3` (16 states, 32-call ceiling) is at acquisition review with all 16 images. R3's
-  acquisition review, further spend, narration and publication are not authorized.
+  run `production-12-flow-r3` (16 states, 32-call ceiling) has its founder acquisition review recorded (9 pass,
+  7 fail), and its seven-call recovery is acquired: it is at acquisition review for those 7, at 23 of 32 calls. The
+  review of the 7, further spend, narration, final rendering and publication are not authorized.
   Any other new story still needs its own founder authorization.
 - **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
   reconciliation or other YouTube action still needs its own founder authorization. YouTube changes (new scopes,
@@ -1225,6 +1226,29 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
       `auto_pile`, `hand_purse` (placement dependents of w5) and `falling_stacks` (of w9). That would make 25 of 32
       calls.
     - P12-F33: in state 1 the hook box covers the citation label. This needs a founder decision before render.
+  - **R3 founder review and seven-call recovery (founder, 23 October 2026).** This replaces the nine-call proposal.
+    - Preflight: the nine-call recovery had not run; the 16 active hashes matched the inspected images. The
+      `falling_stacks` placement preview against the accepted w9 was clearly satisfactory.
+    - `review` (backup `pre-review-production-12-flow-r3-20261023-134858`):
+      - **pass:** w1, w3, w4, w7, w9 (as drawn), `low_pile` [413, 861] 0.42, `tall_stack` [826, 870] 0.36,
+        `one_coin` [300, 1180] 0.38, `falling_stacks` [230, 1217] 0.40;
+      - **fail:** w2, w5, w8, `bank_card`, `minimum_coin` (the authorized deviation to a thought bubble is
+        recorded; the frozen Scene is unchanged), plus `auto_pile` and `hand_purse` (w5 dependency).
+    - Five `revise-spec` (w2, w5, w8, `bank_card`, `minimum_coin`; exactly those prompts changed),
+      `production-12-flow-r3:spend-authorization:2` (7 calls, stop on technical rejection), then `resume --step
+      image` (backup `pre-resume-production-12-flow-r3-20261023-135157`).
+    - **All 7 admitted first time** (12:52:09Z–12:53:27Z); no recovery used. **Run `production-12-flow-r3`:
+      `acquisition_review_pending`, 23 of 32 calls counted, 9 remaining.**
+    - Agent notes, before any founder decision (`review\r3b-acquisition-review\R3B-ACQUISITION-REVIEW-NOTES.md`):
+      - pass: `minimum_coin` (thought bubble) and `bank_card`;
+      - object pass, dependent on w5: `auto_pile` and `hand_purse`;
+      - founder judgement: w2 (staging fixed; toothy grimace mouth);
+      - fail: w5 (dial fixed; no arms to the dial paws, extra paws on the table rim) and w8 (purse under the
+        chin).
+    - Proposed placements: `minimum_coin` [680, 490] 0.55, `bank_card` [575, 1000] 0.45, `auto_pile` [545, 1120]
+      0.37, `hand_purse` [905, 1222] 0.60 (`placements\preview-4\`, with a stand-in video). Not recorded.
+    - Finding P12-F34 (plate–action incompatibility). Agent-versus-founder agreement through R3: 18 of 27 firm
+      recommendations (67%).
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1240,9 +1264,12 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   `264e7dd8295da8e9f9a928a88e54aeb6be9a7a7d30eda47427b352874713e1e7`; after the founder's acquisition review,
   `33373791137ea34d6da5595d3bc4baaa2902f985b5fd53b98f55cba90892e8c0`; after R2's `plan` and `start` (23 October
   2026), `2d4cbf6c9691b2754f3bf5bbc8520d4cf203a8dc7d1894aa972707136d2c12b9`; **after R3's `plan` and `start`,
-  SHA-256 `8b825df0ece6659992b493ec242a183ccf091c0eafe5373383de28204f528cc3`**, schema 31. These are dated
+  SHA-256 `8b825df0ece6659992b493ec242a183ccf091c0eafe5373383de28204f528cc3`; after the R3 review,
+  `9971af223f1022dcc0fcbbb634707d304761f47f2ebd9e8ac295b9b456147c9e`; **after the R3 recovery (revisions, spend
+  authorization and resume), SHA-256 `75fe42bb1a14bced5456c23605054634336acba441e559364a9d85c95ed91761`**,
+  schema 31. These are dated
   observations, not the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F33), the operator scripts, the
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F34), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1294,7 +1321,12 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
     - is it tied to the exact narration?
     - does it advance the story?
     - does it improve pacing through meaningful development?
-  - F33: the hook box covers the citation label; nothing checks overlay overlap.
+  - F33: the hook box covers the citation label; nothing checks overlay overlap. **Open; resolve before final
+    rendering.**
+  - F34: plate–action incompatibility. The plate's moored-boat arrangement left no room for the near oar. Restaging
+    the boat in open water fixed it first time (confirmed geometry). The separate hypothesis that references
+    dominate corrective wording stays with F27, which is preserved as a hypothesis; the character references are
+    unchanged.
 
 ### Open items (as of 22 October 2026)
 
@@ -1319,14 +1351,15 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   calls). R2 (`production-12-flow-r2`) approved, planned and acquired on 23 October 2026: all 13 admitted first time,
   13 of 26 calls counted. The founder's R2 creative review failed w1, w2, w6 and w9, and a P11-density option (R3
   draft) was prepared. The founder chose option B: R3 (`production-12-flow-r3`) was planned and acquired on 23
-  October 2026, with all 16 admitted first time and 16 of 32 calls counted. Next: the founder's R3 acquisition
-  review. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production 12).
+  October 2026, with all 16 admitted first time and 16 of 32 calls counted. The founder's R3 review was recorded
+  (9 pass, 7 fail) and the seven-call recovery acquired, all admitted (23 of 32). Next: the founder's review of the
+  7 replacements. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production 12).
   Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the founder's P12 R3 acquisition review. Also: check for Google's decision; on or after 23 October, the
+- Next: the founder's review of the 7 R3 replacements. Also: check for Google's decision; on or after 23 October, the
   OAuth durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
   (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
