@@ -467,8 +467,9 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
   controls. The Idea Gate, the Editorial Gate and both room plates are approved. The founder's acquisition review
   of `production-12-flow` is recorded (9 pass, 4 fail). R2 was superseded by the founder's choice of option B. The
   run `production-12-flow-r3` (16 states, 32-call ceiling) has its founder acquisition review recorded (9 pass,
-  7 fail), and its seven-call recovery is acquired: it is at acquisition review for those 7, at 23 of 32 calls. The
-  review of the 7, further spend, narration, final rendering and publication are not authorized.
+  7 fail), its first recovery reviewed (2 pass, 5 fail), and its second, five-call recovery acquired: it is at
+  acquisition review for those 5, at 28 of 32 calls. The review of the 5, further spend, narration, final
+  rendering and publication are not authorized.
   Any other new story still needs its own founder authorization.
 - **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
   reconciliation or other YouTube action still needs its own founder authorization. YouTube changes (new scopes,
@@ -1249,6 +1250,26 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
       0.37, `hand_purse` [905, 1222] 0.60 (`placements\preview-4\`, with a stand-in video). Not recorded.
     - Finding P12-F34 (plate–action incompatibility). Agent-versus-founder agreement through R3: 18 of 27 firm
       recommendations (67%).
+  - **R3 second recovery: recomposition and five calls (founder, 23 October 2026).**
+    - Review recorded (backup `pre-review-production-12-flow-r3-20261023-145414`):
+      - **pass:** `minimum_coin` [680, 490] 0.55, `bank_card` [575, 1000] 0.45;
+      - **fail:** w2 (fang mouth), w5 (no arms, extra paws), w8 (purse at the mouth), `auto_pile` and
+        `hand_purse` (w5 dependency; the state-12 purse placement also rejected).
+    - w2, w5 and w8 were recomposed by complete prompt replacement (`revise-spec`; exactly those three changed):
+      w2 as rear three-quarter rowing, w5 as a medium shot with the whole body, w8 with the purse in the lap.
+    - `production-12-flow-r3:spend-authorization:3` (5 calls); `resume --step image` (backup
+      `pre-resume-production-12-flow-r3-20261023-145603`). **All 5 admitted first time. Run
+      `production-12-flow-r3`: `acquisition_review_pending`, 28 of 32 calls counted, 4 remaining.**
+    - Agent notes, before any founder decision (`review\r3c-acquisition-review\R3C-ACQUISITION-REVIEW-NOTES.md`):
+      - w5: pass, with the uncertainties stated;
+      - w2: founder judgement, not a pass recommendation (weak effort; the bag drawn on its back; the boat is now
+        far from the mooring post, unlike w7 and w9);
+      - w8: fail (two mouth lines; the purse upright, reading as a bowl);
+      - objects: pass, dependent on w5;
+      - `auto_pile` proposed at [590, 972] 0.28;
+      - state-12 purse placement unresolved: on the table [705, 1002] 0.42 it is small; on the rug [600, 1330]
+        0.70 it is off the table.
+    - Contact sheet and stand-in video: `placements\preview-2\`. Findings P12-F35 and F36.
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1265,11 +1286,12 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   `33373791137ea34d6da5595d3bc4baaa2902f985b5fd53b98f55cba90892e8c0`; after R2's `plan` and `start` (23 October
   2026), `2d4cbf6c9691b2754f3bf5bbc8520d4cf203a8dc7d1894aa972707136d2c12b9`; **after R3's `plan` and `start`,
   SHA-256 `8b825df0ece6659992b493ec242a183ccf091c0eafe5373383de28204f528cc3`; after the R3 review,
-  `9971af223f1022dcc0fcbbb634707d304761f47f2ebd9e8ac295b9b456147c9e`; **after the R3 recovery (revisions, spend
-  authorization and resume), SHA-256 `75fe42bb1a14bced5456c23605054634336acba441e559364a9d85c95ed91761`**,
-  schema 31. These are dated
+  `9971af223f1022dcc0fcbbb634707d304761f47f2ebd9e8ac295b9b456147c9e`; after the R3 recovery (revisions, spend
+  authorization and resume), `75fe42bb1a14bced5456c23605054634336acba441e559364a9d85c95ed91761`; **after the second
+  recovery (review, three revisions, spend authorization and resume), SHA-256
+  `71cade554660de28bd1125bcb93dcc20b4b3f5123e04d143fab3ca9fd72eaa16`**, schema 31. These are dated
   observations, not the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F34), the operator scripts, the
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F36), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1327,6 +1349,17 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
     the boat in open water fixed it first time (confirmed geometry). The separate hypothesis that references
     dominate corrective wording stays with F27, which is preserved as a hypothesis; the character references are
     unchanged.
+  - F35: recomposing a base changes the space its progression objects need. The medium-shot w5 left no room on
+    the table for a phone-legible state-12 purse.
+  - F36: correction outcomes are recorded separately:
+    - an individual defect fixed;
+    - a different defect emerging on regeneration;
+    - improvement through recomposition rather than rewording (w5, w2, w8);
+    - agent recommendations that classified visibly defective results as acceptable.
+  - **Before P13**, the separate production-quality work must test whether Conveyor detects these actual P12
+    defects (fang and double mouths, missing arms, extra paws, collisions, a stuck-on coin, undersized placements).
+    It should prioritize fewer false passes over overall agreement. Not authorized yet; no new QA architecture in
+    P12.
 
 ### Open items (as of 22 October 2026)
 
@@ -1352,14 +1385,15 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   13 of 26 calls counted. The founder's R2 creative review failed w1, w2, w6 and w9, and a P11-density option (R3
   draft) was prepared. The founder chose option B: R3 (`production-12-flow-r3`) was planned and acquired on 23
   October 2026, with all 16 admitted first time and 16 of 32 calls counted. The founder's R3 review was recorded
-  (9 pass, 7 fail) and the seven-call recovery acquired, all admitted (23 of 32). Next: the founder's review of the
-  7 replacements. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production 12).
+  (9 pass, 7 fail) and the seven-call recovery acquired, all admitted (23 of 32). Recovery 1 was reviewed (2 pass,
+  5 fail), and the five-call recovery acquired, all admitted (28 of 32). Next: the founder's review of the 5
+  replacements. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production 12).
   Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the founder's review of the 7 R3 replacements. Also: check for Google's decision; on or after 23 October, the
+- Next: the founder's review of the 5 R3 second-recovery replacements. Also: check for Google's decision; on or after 23 October, the
   OAuth durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
   (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
