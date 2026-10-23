@@ -465,9 +465,9 @@ Retiming (`POST /api/v2/productions/{run}/retime`) stays a founder decision.
 - **P12 is underway** as a hands-off production trial (started 21 October 2026; position in Phase 5 below). It runs
   from the recipe `similarstoic-flow-v1` and the runbook above, unchanged, under the existing founder and spend
   controls. The Idea Gate, the Editorial Gate and both room plates are approved. The founder's acquisition review
-  of `production-12-flow` is recorded (9 pass, 4 fail), and a fresh run `production-12-flow-r2` is prepared offline.
-  R2's specification, ceiling and spend, narration and publication are
-  not authorized.
+  of `production-12-flow` is recorded (9 pass, 4 fail). The fresh run `production-12-flow-r2` (approved
+  specification, 26-call ceiling) is at acquisition review with all 13 images. R2's acquisition review, further
+  spend, narration and publication are not authorized.
   Any other new story still needs its own founder authorization.
 - **Publishing:** Phase 3 is complete and the on-demand API path is proven. Every new package, approval, upload,
   reconciliation or other YouTube action still needs its own founder authorization. YouTube changes (new scopes,
@@ -1135,7 +1135,18 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
     - `check-story` 0 findings. On a temporary copy, `plan` ran under the existing Editorial Gate with the
       approved P12 room authorities pinned, and `start --dry-run` made 13 dispatches. No new Editorial Gate is
       needed.
-    - **R2 live `plan`, `start` and spend are not authorized** (next founder gate). Findings P12-F24 and F25.
+    - Findings P12-F24 and F25.
+  - **R2 live (founder, 23 October 2026):** the R2 specification (story SHA-256 `cd171533…99fd7`) and the frozen
+    26-call ceiling were approved. Authorized: `plan`, `start` with up to 13 calls stopping on the first technical
+    rejection, and one conditional network recovery (not needed).
+    - `plan` and `start` each ran a dry run, then live with a verified backup (`pre-plan-20261023-083946`,
+      `pre-start-production-12-flow-r2-20261023-084008`).
+    - **All 13 were admitted first time** (07:40:26Z–07:43:15Z). **Run `production-12-flow-r2`:
+      `acquisition_review_pending`, 13 of 26 calls counted, 13 remaining.**
+    - Agent notes: `review\r2-acquisition-review\R2-ACQUISITION-REVIEW-NOTES.md`. The w2 face, w5 torso, w6 chute
+      and w7 water are fixed. Still open: w2's left oar overlaps the jetty corner (founder judgement), and w6's
+      jar coins still merge (recommend fail). Placements were proposed from the real R2 images by a zero-spend
+      preview. Finding P12-F26. No acquisition review is recorded.
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1148,10 +1159,11 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   `1e13cbf09222caa2f8c50183d043f843cfa5a99986a5e1441da2b5fbb9c2e726`; after the first stopped resume,
   `997d244e5fe74011e28be886141e0b4ee6d30e23febeb9bf618b2b62ddcf2c5f`; after resume 2,
   `4a956c8efbe30c8433daa2cd8970e076a5c105b9a6f6b4561e62eb9388c3b8b3`; at acquisition review,
-  `264e7dd8295da8e9f9a928a88e54aeb6be9a7a7d30eda47427b352874713e1e7`; **after the founder's acquisition review,
-  SHA-256 `33373791137ea34d6da5595d3bc4baaa2902f985b5fd53b98f55cba90892e8c0`**, schema 31. These are dated
+  `264e7dd8295da8e9f9a928a88e54aeb6be9a7a7d30eda47427b352874713e1e7`; after the founder's acquisition review,
+  `33373791137ea34d6da5595d3bc4baaa2902f985b5fd53b98f55cba90892e8c0`; **after R2's `plan` and `start` (23 October
+  2026), SHA-256 `2d4cbf6c9691b2754f3bf5bbc8520d4cf203a8dc7d1894aa972707136d2c12b9`**, schema 31. These are dated
   observations, not the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F25), the operator scripts, the
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F26), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1214,15 +1226,15 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   rejection; four prompts revised; `resume` stopped at a transient network failure; resume 2 stopped at the
   `tall_stack` object's aspect rejection; seven more prompts revised; resume 3 admitted the remaining 10 (all 22
   October 2026). Founder acquisition review recorded: 9 pass, 4 fail (run `failed` at `acquisition_review`, 16 of 18
-  calls). R2 (`production-12-flow-r2`) prepared and rehearsed offline. Next: the founder's decision on the R2
-  specification, the 26-call ceiling and the first 13-call spend. No further paid step is authorized. F08 is merged and deployed (Open lessons from Production
-  12). Independent of Google's decision.
+  calls). R2 (`production-12-flow-r2`) approved, planned and acquired on 23 October 2026: all 13 admitted first time,
+  13 of 26 calls counted. Next: the founder's R2 acquisition review. No further paid step is authorized. F08 is
+  merged and deployed (Open lessons from Production 12). Independent of Google's decision.
 - P11 provider-data purge horizon about 16-19 November 2026 (earlier on a definitive authorization failure): any
   live `publishing_cli observe` of P11 needs separate founder authorization (PR #4, merged `a74f2df`, Phase 3).
 - P11's historical immutable `public_at`: unresolved retention decision; not corrected or re-verified by PR #4.
 - P10 publication decision by early December 2026 (cap period ends 31 December 2026).
-- Next: the founder's P12 R2 production and spend decision. Also: check for Google's decision; on or after 23 October, the OAuth
-  durability check, when the founder authorizes it.
+- Next: the founder's P12 R2 acquisition review. Also: check for Google's decision; on or after 23 October, the
+  OAuth durability check, when the founder authorizes it.
 - The Windows checkout `D:\ConveyorOS\source\Conveyor` was synchronized on 22 October 2026, by fast-forward
   (`git merge --ff-only`), from `dc28b26` to `fa4566c` (the F08 merge; 4 files: `production_cli.py`, two test files
   and this document; persistence and migrations unchanged, schema-31 code), then to the documentation commit that
