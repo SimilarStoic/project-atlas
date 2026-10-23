@@ -1213,6 +1213,18 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
       rejected and reacquired with w9. `auto_pile` and `hand_purse` would follow w5 if w5 fails.
     - Baseline agent-versus-founder agreement: 8 of 15 decided assets (53%). Founder failures recommended as
       passes: 5, mostly mouths, marks and prop contacts. In the trial log.
+  - **R3 founder corrections (23 October 2026; zero-spend, nothing recorded).**
+    - The founder failed w5: the left body–arm join is unnatural and the dial is malformed (P12-F31; the agent had
+      recommended a pass).
+    - The founder rejected the state-2 composition: the coin reads as a puck stuck to the held bill.
+    - A side-table test (`preview-4`, centre [640, 1012], scale 0.34) is physically plausible, but it neither
+      carries the narration nor advances the story, so the concept is stopped (P12-F32).
+    - A conceptual mock-up, not generated, proposes a thought bubble holding one small coin, through `revise-spec`
+      of `minimum_coin` within R3.
+    - Proposed reacquisition targets, 9 (founder decision pending): w2, w5, w8, w9, `bank_card`, `minimum_coin`,
+      `auto_pile`, `hand_purse` (placement dependents of w5) and `falling_stacks` (of w9). That would make 25 of 32
+      calls.
+    - P12-F33: in state 1 the hook box covers the citation label. This needs a founder decision before render.
 - **Story file:** `story\production-12-flow.story.json`, SHA-256
   `515fb3f14dbd6e9b2b8d00f907d74d9db1753f96dc78f6da5e74a6347875534c` (13 states, 9 worlds, 4 objects, 2 new rooms;
   `check-story` 0 findings). State 13 now shows three coin stacks stepping down from left to right instead of an
@@ -1230,7 +1242,7 @@ founder instruction "P12 continuity, F08 review and editorial recording"):**
   2026), `2d4cbf6c9691b2754f3bf5bbc8520d4cf203a8dc7d1894aa972707136d2c12b9`; **after R3's `plan` and `start`,
   SHA-256 `8b825df0ece6659992b493ec242a183ccf091c0eafe5373383de28204f528cc3`**, schema 31. These are dated
   observations, not the current value; re-verify before any write.
-- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F30), the operator scripts, the
+- Working materials, the trial log (`P12-TRIAL-LOG.md`, findings P12-F01 to F33), the operator scripts, the
   editorial package and the staging procedure live under `D:\ConveyorOS\channels\SimilarStoic\production-12\`.
 - **Plate-before-plan staging route** (`STAGING-PLATES-PROCEDURE.md` there): `plan` needs the new rooms'
   `environment_family` authorities, so a staging VisualPlan under the same Editorial Gate decision carries the plate
@@ -1272,9 +1284,17 @@ a later production. The full register with evidence is `P12-TRIAL-LOG.md`.
   command, F05 a second quote from the same source silently replaces the first in `link_claim_evidence`, F07 no native
   plate step, F13 dating and group-level wording. Retained controls: F02 independent review, F06 the permission
   control. No change: F15 (the opportunity's idea-stage description still mentions the superseded hourglass).
-- Creative and review findings F22 and F25–F30 carry a durable-learning status table in the trial log (all
-  **documented** or **guided**; none checked or enforced yet). F30 (placements not bound to their base image) is
-  confirmed in code.
+- Creative and review findings F22 and F25–F33 carry a durable-learning status table in the trial log (all
+  **documented** or **guided**; none checked or enforced yet).
+  - F30: placements are not bound to their base image (confirmed in code).
+  - F31: a one-sided limb join and stray prop marks were missed by the agent.
+  - F32: a visual progression must make physical and narrative sense, not just add a clean object or improve
+    pacing figures. Planning and review should ask, for each added object:
+    - is it physically coherent?
+    - is it tied to the exact narration?
+    - does it advance the story?
+    - does it improve pacing through meaningful development?
+  - F33: the hook box covers the citation label; nothing checks overlay overlap.
 
 ### Open items (as of 22 October 2026)
 
